@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://eyumthbubj2l"]
+
+[ext_resource type="Script" uid="uid://deqlyitrvlikv" path="res://minigame/testing.gd" id="1_uqqoj"]
+
+[node name="Testing" type="Node2D" unique_id=944780546]
+script = ExtResource("1_uqqoj")
+
+[node name="ProgressBar" type="ProgressBar" parent="." unique_id=1653779691]
+offset_left = 166.0
+offset_top = 281.0
+offset_right = 941.0
+offset_bottom = 342.0
+value = 54.0
+
+[node name="TargetIndicator" type="ColorRect" parent="ProgressBar" unique_id=1015901110]
+layout_mode = 0
+offset_left = 365.0
+offset_right = 414.0
+offset_bottom = 60.0
+pivot_offset = Vector2(1, 1)
+color = Color(0.9411765, 0.25490198, 0.25882354, 0.5254902)
+
+[node name="Label" type="Label" parent="." unique_id=836529866]
+offset_left = 515.0
+offset_top = 251.0
+offset_right = 555.0
+offset_bottom = 274.0
+text = "testing"
+
+[node name="Marker" type="Control" parent="." unique_id=1250063770]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Button" type="Button" parent="." unique_id=1857218798]
+offset_left = 210.0
+offset_top = 78.0
+offset_right = 218.0
+offset_bottom = 86.0
+text = "Reset"
+
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]
