@@ -1,0 +1,71 @@
+[gd_scene format=3 uid="uid://dxsody7drolfc"]
+
+[ext_resource type="Texture2D" uid="uid://thn28muwxvfu" path="res://assets/NPC/Scott-Sheet.png" id="1_fkb5g"]
+[ext_resource type="Script" uid="uid://cimbp8umcicc6" path="res://NPC/base_npc.gd" id="2_1d4du"]
+[ext_resource type="Resource" uid="uid://bk0hkcys7plb0" path="res://NPC/yecott.tres" id="3_1d4du"]
+
+[sub_resource type="Animation" id="Animation_1d4du"]
+resource_name = "1"
+length = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_p0oii"]
+resource_name = "2"
+length = 0.06666667
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [1]
+}
+
+[sub_resource type="Animation" id="Animation_tjil0"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_fidbr"]
+_data = {
+&"1": SubResource("Animation_1d4du"),
+&"2": SubResource("Animation_p0oii"),
+&"RESET": SubResource("Animation_tjil0")
+}
+
+[node name="BaseNpc" type="Sprite3D" unique_id=1952283464]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+shaded = true
+texture_filter = 0
+texture = ExtResource("1_fkb5g")
+hframes = 3
+script = ExtResource("2_1d4du")
+npc_resource = ExtResource("3_1d4du")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=888297651]
+libraries/ = SubResource("AnimationLibrary_fidbr")

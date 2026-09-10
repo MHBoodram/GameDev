@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="NPC" format=3 uid="uid://1snr5r01nxfy"]
+
+[ext_resource type="Script" uid="uid://cafgtw527fei4" path="res://NPC/npc_class.gd" id="1_xtll7"]
+[ext_resource type="Texture2D" uid="uid://thn28muwxvfu" path="res://Assets/NPC/Scott-Sheet.png" id="2_cfcb4"]
+
+[resource]
+script = ExtResource("1_xtll7")
+sprite_sheet = ExtResource("2_cfcb4")
+metadata/_custom_type_script = "uid://cafgtw527fei4"

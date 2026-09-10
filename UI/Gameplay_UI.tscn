@@ -1,0 +1,71 @@
+[gd_scene format=3 uid="uid://byw6bbpmaen6w"]
+
+[ext_resource type="Script" uid="uid://btnyohqechm3m" path="res://outer_ui/gameplay_ui.gd" id="1_twi4a"]
+[ext_resource type="Shader" uid="uid://buyonhl3ws40j" path="res://3dfish.gdshader" id="2_p43d3"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_dd6x2"]
+shader = ExtResource("2_p43d3")
+shader_parameter/effect_amount = 1.00000016625
+
+[node name="GameplayUi" type="CanvasLayer" unique_id=8092202]
+script = ExtResource("1_twi4a")
+
+[node name="FishEye" type="ColorRect" parent="." unique_id=2143903058]
+material = SubResource("ShaderMaterial_dd6x2")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Left_Button" type="Button" parent="." unique_id=1787372622]
+modulate = Color(1, 1, 1, 0)
+offset_left = -7.0
+offset_top = 8.0
+offset_right = 41.0
+offset_bottom = 680.0
+
+[node name="Right_Button" type="Button" parent="." unique_id=1406125880]
+modulate = Color(1, 1, 1, 0)
+offset_left = 1236.0
+offset_top = 8.0
+offset_right = 1282.0
+offset_bottom = 684.0
+
+[node name="Bottom_button" type="Button" parent="." unique_id=1517012141]
+modulate = Color(1, 1, 1, 0)
+offset_left = 1287.7384
+offset_top = 679.0
+offset_right = 1328.7384
+offset_bottom = 1975.7433
+rotation = 1.5707964
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=85974010]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -318.0
+offset_right = 20.0
+offset_bottom = 331.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect2" type="ColorRect" parent="." unique_id=900267811]
+visible = false
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[connection signal="mouse_entered" from="Left_Button" to="." method="_on_left_button_mouse_entered"]
+[connection signal="mouse_exited" from="Left_Button" to="." method="_on_mouse_exited"]
+[connection signal="pressed" from="Left_Button" to="." method="_on_left_button_pressed"]
+[connection signal="mouse_entered" from="Right_Button" to="." method="_on_right_button_mouse_entered"]
+[connection signal="mouse_exited" from="Right_Button" to="." method="_on_mouse_exited"]
+[connection signal="pressed" from="Right_Button" to="." method="_on_right_button_pressed"]

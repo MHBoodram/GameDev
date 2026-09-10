@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="NPC" format=3 uid="uid://cn18jpevj50pu"]
+
+[ext_resource type="Script" uid="uid://cafgtw527fei4" path="res://NPC/npc_class.gd" id="1_i0p47"]
+[ext_resource type="Texture2D" uid="uid://dgu74fnngkwuu" path="res://Assets/NPC/Loan_Sheet.png" id="2_edawe"]
+
+[resource]
+script = ExtResource("1_i0p47")
+sprite_sheet = ExtResource("2_edawe")
+metadata/_custom_type_script = "uid://cafgtw527fei4"

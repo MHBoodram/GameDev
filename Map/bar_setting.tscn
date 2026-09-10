@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://hpxbjx0xsej2"]
+
+[ext_resource type="PackedScene" uid="uid://c8sr80c4m2kd3" path="res://assets/3D/bar.glb" id="1_ju7da"]
+
+[node name="BarSetting" type="Node3D" unique_id=1770039662]
+
+[node name="bar (2)" parent="." unique_id=908667887 instance=ExtResource("1_ju7da")]
+
+[node name="SpotLight3D" type="SpotLight3D" parent="." unique_id=1267194052]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 3.5863514, 0)
+light_energy = 2.5
+
+[node name="SpotLight3D2" type="SpotLight3D" parent="." unique_id=1679971590]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 3, 3.586, 0)
+
+[node name="SpotLight3D3" type="SpotLight3D" parent="." unique_id=1899202723]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 6, 3.586, 0)
