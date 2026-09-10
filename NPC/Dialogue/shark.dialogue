@@ -1,0 +1,19 @@
+~ start
+Shark: [[Hi|Hello|Howdy]], this is some dialogue.
+Scott: Here are some choices.
+- Option
+	Nathan: You picked the first one.
+- Option
+	Nathan: You picked the second one.
+- Start again => start
+- End the conversation => END
+Nathan: For more information see the online documentation.
+=> END
+
+~ mid
+Scott: Finished
+=> END
+
+~ finish
+Scott: Finished
+=> END

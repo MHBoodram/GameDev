@@ -1,7 +1,18 @@
 [gd_scene format=3 uid="uid://c8eh6cyj26twd"]
 
+[ext_resource type="PackedScene" uid="uid://ddi6comi7ic2c" path="res://Assets/3D/Lower_counter.glb" id="1_3qydi"]
+[ext_resource type="Script" uid="uid://c0vc11sy5fwva" path="res://Player/player.gd" id="1_q3lat"]
+[ext_resource type="PackedScene" uid="uid://byw6bbpmaen6w" path="res://UI/Gameplay_UI.tscn" id="3_tok1r"]
+
 [node name="Player" type="Node3D" unique_id=1043279115]
+script = ExtResource("1_q3lat")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=724990159]
-transform = Transform3D(1, 0, 0, 0, 0.9603813, 0.2786894, 0, -0.2786894, 0.9603813, 0.2271266, 2.6209848, 1.5628164)
+transform = Transform3D(1, 0, 0, 0, 0.960001, 0.27999657, 0, -0.27999657, 0.960001, 0.2271266, 2.7696548, 1.5628164)
 current = true
+
+[node name="Lower_counter" parent="." unique_id=1514348383 instance=ExtResource("1_3qydi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2674495, 0, 0.6854937)
+
+[node name="GameplayUi" parent="." unique_id=8092202 node_paths=PackedStringArray("player") instance=ExtResource("3_tok1r")]
+player = NodePath("..")

@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://cf7r3al55fu8p"
+path="res://.godot/imported/Scott.dialogue-34785a5a5a1ffc519719f8d7da8641ff.tres"
+
+[deps]
+
+source_file="res://NPC/Dialogue/Scott.dialogue"
+dest_files=["res://.godot/imported/Scott.dialogue-34785a5a5a1ffc519719f8d7da8641ff.tres"]
+
+[params]
+
+defaults=true

@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://dxsody7drolfc"]
 
-[ext_resource type="Texture2D" uid="uid://thn28muwxvfu" path="res://assets/NPC/Scott-Sheet.png" id="1_fkb5g"]
+[ext_resource type="Texture2D" uid="uid://thn28muwxvfu" path="res://Assets/NPC/Scott-Sheet.png" id="1_fkb5g"]
 [ext_resource type="Script" uid="uid://cimbp8umcicc6" path="res://NPC/base_npc.gd" id="2_1d4du"]
-[ext_resource type="Resource" uid="uid://bk0hkcys7plb0" path="res://NPC/yecott.tres" id="3_1d4du"]
+[ext_resource type="Resource" uid="uid://cn18jpevj50pu" path="res://NPC/shark.tres" id="3_yqpab"]
 
 [sub_resource type="Animation" id="Animation_1d4du"]
 resource_name = "1"
@@ -58,6 +58,9 @@ _data = {
 &"RESET": SubResource("Animation_tjil0")
 }
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_yqpab"]
+size = Vector3(1.961792, 2.5681152, 1)
+
 [node name="BaseNpc" type="Sprite3D" unique_id=1952283464]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 shaded = true
@@ -65,7 +68,15 @@ texture_filter = 0
 texture = ExtResource("1_fkb5g")
 hframes = 3
 script = ExtResource("2_1d4du")
-npc_resource = ExtResource("3_1d4du")
+npc_resource = ExtResource("3_yqpab")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=888297651]
 libraries/ = SubResource("AnimationLibrary_fidbr")
+
+[node name="Area3D" type="Area3D" parent="." unique_id=33473231]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.37303102)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=527309631]
+shape = SubResource("BoxShape3D_yqpab")
+
+[connection signal="input_event" from="Area3D" to="." method="_on_interaction_input_event"]
