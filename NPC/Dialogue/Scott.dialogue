@@ -1,13 +1,9 @@
 ~ start
-Scott: [[Hi|Hello|Howdy]], this is some dialogue.
-Scott: Here are some choices.
-- Option
-	Nathan: You picked the first one.
-- Option
-	Nathan: You picked the second one.
-- Start again => start
-- End the conversation => END
-Nathan: For more information see the online documentation.
+
+#do _pick_drink()
+%2 Scott: [[Hi|Yo|Howdy]], My Order is Beer.
+%2 Scott: [[Hi|Yo|Howdy]], My Order is Something.
+
 => END
 
 ~ mid

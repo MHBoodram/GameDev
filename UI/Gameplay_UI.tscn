@@ -81,4 +81,6 @@ grow_vertical = 2
 [connection signal="mouse_entered" from="Bottom_button" to="." method="_on_bottom_button_mouse_entered"]
 [connection signal="mouse_exited" from="Bottom_button" to="." method="_on_mouse_exited"]
 [connection signal="pressed" from="Bottom_button" to="." method="_on_bottom_button_pressed"]
+[connection signal="mouse_entered" from="Up_button" to="." method="_on_up_button_mouse_entered"]
+[connection signal="mouse_exited" from="Up_button" to="." method="_on_mouse_exited"]
 [connection signal="pressed" from="Up_button" to="." method="_on_up_button_pressed"]

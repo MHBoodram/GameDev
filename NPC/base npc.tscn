@@ -79,4 +79,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.37303102)
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=527309631]
 shape = SubResource("BoxShape3D_yqpab")
 
+[node name="VisibleOnScreenNotifier3D" type="VisibleOnScreenNotifier3D" parent="." unique_id=766988035]
+
 [connection signal="input_event" from="Area3D" to="." method="_on_interaction_input_event"]

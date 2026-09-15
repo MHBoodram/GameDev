@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://sx4hrn3cgwy1"]
+
+[ext_resource type="PackedScene" uid="uid://ddi6comi7ic2c" path="res://Assets/3D/Lower_counter.glb" id="1_5bdfl"]
+[ext_resource type="PackedScene" uid="uid://byi3dygtbngcm" path="res://Player/Drink/Shaker.tscn" id="2_ro3gl"]
+
+[node name="Coutner" type="Node3D" unique_id=183529817]
+
+[node name="Lower_counter" parent="." unique_id=1936322643 instance=ExtResource("1_5bdfl")]
+
+[node name="Shaker" type="Marker3D" parent="." unique_id=2017610341]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.638433, 0.59346557, 0)
+
+[node name="Shaker2" parent="." unique_id=691486503 instance=ExtResource("2_ro3gl")]
+transform = Transform3D(0.39539757, -0.038076606, 0.047020696, 0, 0.31085837, 0.25172818, -0.060504336, -0.24883173, 0.3072816, -0.678, 1.095, 0.53420717)

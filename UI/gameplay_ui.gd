@@ -7,6 +7,7 @@ var cur_position : int = 1
 var current_position : int = 3
 var camera : Camera3D
 var down : bool = false
+
 func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
 
@@ -61,14 +62,16 @@ func moving_around(right : bool) -> void:
 
 
 func mouse_screen(looking: String) -> void:
-	var tween = get_tree().create_tween()
-	tween.set_trans(Tween.TRANS_SINE)
-	tween.set_ease(Tween.EASE_OUT)
+	
 	match looking:
 		"left":
+			print(camera_movement_rotation)
 			var new_position = camera.rotation_degrees.y + camera_movement_rotation
 			new_position = clamp(new_position, -camera_movement_rotation, camera_movement_rotation)
 			if(new_position > -camera_movement_rotation):
+				var tween = get_tree().create_tween()
+				tween.set_trans(Tween.TRANS_SINE)
+				tween.set_ease(Tween.EASE_OUT)
 				tween.tween_property(camera,"rotation_degrees:y", new_position,0.15)
 			else:
 				camera.rotation_degrees.y = -camera_movement_rotation
@@ -78,6 +81,9 @@ func mouse_screen(looking: String) -> void:
 			var new_position = camera.rotation_degrees.y - camera_movement_rotation
 			new_position = clamp(new_position, -camera_movement_rotation, camera_movement_rotation)
 			if(new_position < camera_movement_rotation):
+				var tween = get_tree().create_tween()
+				tween.set_trans(Tween.TRANS_SINE)
+				tween.set_ease(Tween.EASE_OUT)
 				tween.tween_property(camera,"rotation_degrees:y", new_position,0.15)
 			else:
 				camera.rotation_degrees.y = camera_movement_rotation
@@ -86,14 +92,30 @@ func mouse_screen(looking: String) -> void:
 			if(!down):
 				var new_position = camera.rotation_degrees.x - camera_movement_rotation
 				new_position = clamp(new_position, -camera_movement_rotation - 16.3, camera_movement_rotation + 16.3)	
+				var tween = get_tree().create_tween()
+				tween.set_trans(Tween.TRANS_SINE)
+				tween.set_ease(Tween.EASE_OUT)
 				tween.tween_property(camera,"rotation_degrees:x", new_position,0.15)
 			return;
 		"up":
+			if(down):
+				var new_rotation = camera.rotation_degrees.x + camera_movement_rotation
+				new_rotation = clamp(new_rotation, -camera_movement_rotation - 16.3, camera_movement_rotation + 16.3)	
+				var tween = get_tree().create_tween()
+				tween.set_trans(Tween.TRANS_SINE)
+				tween.set_ease(Tween.EASE_OUT)
+				tween.tween_property(camera,"rotation_degrees:x", new_rotation,0.15)
+			
 			return;
 		_:
+			var tween = get_tree().create_tween()
+			tween.set_trans(Tween.TRANS_SINE)
+			tween.set_ease(Tween.EASE_OUT)
 			tween.tween_property(camera,"rotation_degrees:y", 0,0.15)
 			if(!down):
 				tween.tween_property(camera,"rotation_degrees:x", -16.3,0.15)
+			else:
+				tween.tween_property(camera,"rotation_degrees:x",-55.3,0.15 )
 			return;
 
 func _on_left_button_mouse_entered() -> void:
@@ -124,3 +146,7 @@ func _on_up_button_pressed() -> void:
 
 func _on_bottom_button_mouse_entered() -> void:
 	mouse_screen("down")
+
+
+func _on_up_button_mouse_entered() -> void:
+	mouse_screen("up")
