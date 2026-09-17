@@ -64,6 +64,7 @@ size = Vector3(1.961792, 2.5681152, 1)
 [node name="BaseNpc" type="Sprite3D" unique_id=1952283464]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 shaded = true
+alpha_cut = 2
 texture_filter = 0
 texture = ExtResource("1_fkb5g")
 hframes = 3

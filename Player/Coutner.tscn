@@ -10,5 +10,6 @@
 [node name="Shaker" type="Marker3D" parent="." unique_id=2017610341]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.638433, 0.59346557, 0)
 
-[node name="Shaker2" parent="." unique_id=691486503 instance=ExtResource("2_ro3gl")]
-transform = Transform3D(0.39539757, -0.038076606, 0.047020696, 0, 0.31085837, 0.25172818, -0.060504336, -0.24883173, 0.3072816, -0.678, 1.095, 0.53420717)
+[node name="Shaker2" parent="." unique_id=691486503 node_paths=PackedStringArray("counter_origin") instance=ExtResource("2_ro3gl")]
+transform = Transform3D(0.39539757, -0.038076606, 0.047020696, 0, 0.31085837, 0.25172818, -0.060504336, -0.24883173, 0.3072816, -0.678, 1.2, -0.126)
+counter_origin = NodePath("..")

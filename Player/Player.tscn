@@ -2,7 +2,11 @@
 
 [ext_resource type="Script" uid="uid://c0vc11sy5fwva" path="res://Player/player.gd" id="1_q3lat"]
 [ext_resource type="PackedScene" uid="uid://sx4hrn3cgwy1" path="res://Player/Coutner.tscn" id="2_tok1r"]
+[ext_resource type="Texture2D" uid="uid://dhrtxgt1q5ydw" path="res://icon.svg" id="3_ddoul"]
 [ext_resource type="PackedScene" uid="uid://byw6bbpmaen6w" path="res://UI/Gameplay_UI.tscn" id="3_tok1r"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_8g4oa"]
+radius = 0.23796713
 
 [node name="Player" type="Node3D" unique_id=1043279115]
 script = ExtResource("1_q3lat")
@@ -14,5 +18,20 @@ current = true
 [node name="Coutner" parent="." unique_id=183529817 instance=ExtResource("2_tok1r")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2674495, 0, 0.6854937)
 
+[node name="Area3D2" type="Area3D" parent="Coutner" unique_id=1622764961]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.81711745, 1.053846, 0.62434983)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/Area3D2" unique_id=131768973]
+shape = SubResource("SphereShape3D_8g4oa")
+
+[node name="Sprite3D" type="Sprite3D" parent="Coutner/Area3D2" unique_id=993642614]
+transform = Transform3D(0.22749029, 0, 0, 0, 0.24296804, 0, 0, 0, 0.7237263, 0, 0, 0)
+billboard = 1
+texture = ExtResource("3_ddoul")
+
+[node name="RayCast3D" type="RayCast3D" parent="." unique_id=243776880]
+
 [node name="GameplayUi" parent="." unique_id=8092202 node_paths=PackedStringArray("player") instance=ExtResource("3_tok1r")]
 player = NodePath("..")
+
+[connection signal="input_event" from="Coutner/Area3D2" to="." method="_on_area_3d_2_input_event"]
