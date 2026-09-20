@@ -3,6 +3,23 @@
 [ext_resource type="Texture2D" uid="uid://b5l0yoj3yjcmf" path="res://Assets/Items/inside_shot_glass.png" id="1_p1pq6"]
 [ext_resource type="Script" uid="uid://dyfvdlr6rj63o" path="res://Player/Drink/shaker.gd" id="2_p1pq6"]
 [ext_resource type="Texture2D" uid="uid://4sg263uyig2d" path="res://Assets/Items/outside_shot_glass.png" id="3_4egiw"]
+[ext_resource type="Shader" uid="uid://b5kpwtrmoc3g5" path="res://Shader/shot_cup.gdshader" id="3_id3av"]
+
+[sub_resource type="Gradient" id="Gradient_4egiw"]
+interpolation_mode = 1
+colors = PackedColorArray(0, 0, 0, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_id3av"]
+gradient = SubResource("Gradient_4egiw")
+fill_from = Vector2(1, 0.5)
+fill_to = Vector2(0.7, 0.5)
+metadata/_snap_enabled = true
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_l3v6c"]
+render_priority = 0
+shader = ExtResource("3_id3av")
+shader_parameter/texture_albedo = ExtResource("3_4egiw")
+shader_parameter/gradient_texture = SubResource("GradientTexture2D_id3av")
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_rvwmc"]
 
@@ -14,7 +31,9 @@ texture_filter = 0
 texture = ExtResource("1_p1pq6")
 script = ExtResource("2_p1pq6")
 
-[node name="Sprite3D" type="Sprite3D" parent="." unique_id=1532157949]
+[node name="Outisde" type="Sprite3D" parent="." unique_id=1532157949]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0045902655, 0)
+material_overlay = SubResource("ShaderMaterial_l3v6c")
 shaded = true
 alpha_cut = 2
 texture_filter = 0
