@@ -10,7 +10,6 @@ func _instiate(counter: Node3D):
 	counter_origin = counter
 
 func _ready() -> void:
-	
 	camera = get_viewport().get_camera_3d()
 	look_at(camera.global_position)
 

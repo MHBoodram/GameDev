@@ -30,6 +30,10 @@ window/stretch/mode="viewport"
 
 enabled=PackedStringArray("res://addons/dialogue_manager/plugin.cfg")
 
+[global_group]
+
+glass=""
+
 [input]
 
 Left_click={

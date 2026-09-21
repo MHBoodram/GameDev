@@ -41,3 +41,19 @@ func _on_area_3d_2_input_event(camera: Node, event: InputEvent, event_position: 
 		icup_spawn = "shot_glass"
 		await get_tree().create_timer(0.2).timeout
 		summoning = true
+
+
+func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		var glass_array : Array = []
+		var areas = $Coutner/CHUGCHUGBEER/BeerKeg.get_overlapping_areas()
+		while(Input.get_action_strength("Left_click")):
+			for x in areas:
+				print(x.is_in_group("glass"))
+				if(x.is_in_group("glass")):
+					glass_array.append(x)
+			
+			for glasses in glass_array:
+				glasses.get_parent()._pouring("beer", 0.01)
+			await get_tree().create_timer(0.1).timeout
+		
