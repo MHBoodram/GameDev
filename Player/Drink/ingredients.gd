@@ -12,7 +12,10 @@ func _instiate(counter: Node3D):
 func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
 	look_at(camera.global_position)
+	ready()
 
+func ready() -> void:
+	pass
 
 func _process(_delta: float) -> void:
 	if is_balls_dragging:

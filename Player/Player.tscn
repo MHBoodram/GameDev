@@ -12,6 +12,9 @@ radius = 0.23796713
 [sub_resource type="BoxShape3D" id="BoxShape3D_6ysni"]
 size = Vector3(1, 0.852417, 0.7199707)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_8g4oa"]
+size = Vector3(1, 0.15594482, 0.647583)
+
 [node name="Player" type="Node3D" unique_id=1043279115]
 script = ExtResource("1_q3lat")
 
@@ -33,6 +36,17 @@ transform = Transform3D(0.22749029, 0, 0, 0, 0.24296804, 0, 0, 0, 0.7237263, 0, 
 billboard = 1
 texture = ExtResource("3_ddoul")
 
+[node name="BeerGlass Button" type="Area3D" parent="Coutner/ShotGlass Button" unique_id=1891978038]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5562142, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/ShotGlass Button/BeerGlass Button" unique_id=2040354992]
+shape = SubResource("SphereShape3D_8g4oa")
+
+[node name="Sprite3D" type="Sprite3D" parent="Coutner/ShotGlass Button/BeerGlass Button" unique_id=770687469]
+transform = Transform3D(0.22749029, 0, 0, 0, 0.24296804, 0, 0, 0, 0.7237263, 0, 0, 0)
+billboard = 1
+texture = ExtResource("3_ddoul")
+
 [node name="CHUGCHUGBEER" type="Sprite3D" parent="Coutner" unique_id=1637863700]
 transform = Transform3D(0.29999995, 0, 0, 0, -0.19884086, 0.22463806, 0, -0.22463806, -0.19884086, 0.8801341, 1.4483287, -0.3325984)
 texture = ExtResource("4_8g4oa")
@@ -48,5 +62,14 @@ shape = SubResource("BoxShape3D_6ysni")
 [node name="GameplayUi" parent="." unique_id=8092202 node_paths=PackedStringArray("player") instance=ExtResource("3_tok1r")]
 player = NodePath("..")
 
+[node name="Trash" type="Area3D" parent="." unique_id=964303727]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.58585334, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Trash" unique_id=1967879857]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22943792, 1.0419598, 1.4114742)
+shape = SubResource("BoxShape3D_8g4oa")
+
 [connection signal="input_event" from="Coutner/ShotGlass Button" to="." method="_on_area_3d_2_input_event"]
+[connection signal="input_event" from="Coutner/ShotGlass Button/BeerGlass Button" to="." method="_on_beer_glass_button_input_event"]
 [connection signal="input_event" from="Coutner/CHUGCHUGBEER/BeerKeg" to="." method="_on_beer_keg_input_event"]
+[connection signal="area_entered" from="Trash" to="." method="_on_trash_area_entered"]

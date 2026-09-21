@@ -1,5 +1,6 @@
 extends Node3D
-@onready var shot_glass = preload("res://Player/Drink/shot_cup.tscn")
+@onready var shot_glass = preload("res://Player/Drink/Glasses/shot_cup.tscn")
+@onready var beer_glass = preload("res://Player/Drink/Glasses/beer_cup.tscn")
 var summoning : bool = false
 var icup_spawn : String = "shot_glass"
 
@@ -16,7 +17,6 @@ func get_mouse_world_position(camera: Camera3D, plane_y: float) -> Vector3:
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and summoning:
 		summoning = false
-
 		match icup_spawn:
 			"shot_glass":
 				icup_spawn = ""
@@ -27,8 +27,21 @@ func _input(event: InputEvent) -> void:
 					1.184 + $Coutner/Lower_counter.global_position.x
 				)
 				new_projection.z = max(new_projection.z, 0.28)
-
 				var new_instance = shot_glass.instantiate()
+				new_instance.scale = Vector3(0.2, 0.2, 0.2)
+				new_instance._instiate($Coutner/Lower_counter)
+				new_instance.position = new_projection
+				add_child(new_instance)
+			"beer_glass":
+				icup_spawn = ""
+				var new_projection = get_mouse_world_position($Camera3D, 1.2)
+				new_projection.x = clamp(
+					new_projection.x+0.3,
+					-1 + $Coutner/Lower_counter.global_position.x,
+					1.184 + $Coutner/Lower_counter.global_position.x
+				)
+				new_projection.z = max(new_projection.z, 0.28)
+				var new_instance = beer_glass.instantiate()
 				new_instance.scale = Vector3(0.2, 0.2, 0.2)
 				new_instance._instiate($Coutner/Lower_counter)
 				new_instance.position = new_projection
@@ -36,6 +49,7 @@ func _input(event: InputEvent) -> void:
 			_:
 				pass
 
+@warning_ignore("unused_parameter")
 func _on_area_3d_2_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		icup_spawn = "shot_glass"
@@ -43,6 +57,7 @@ func _on_area_3d_2_input_event(camera: Node, event: InputEvent, event_position: 
 		summoning = true
 
 
+@warning_ignore("unused_parameter")
 func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		var glass_array : Array = []
@@ -54,6 +69,19 @@ func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: V
 					glass_array.append(x)
 			
 			for glasses in glass_array:
-				glasses.get_parent()._pouring("beer", 0.01)
+				glasses.get_parent()._pouring("beer", 0.05)
 			await get_tree().create_timer(0.1).timeout
 		
+
+
+func _on_trash_area_entered(area: Area3D) -> void:
+	if(area.is_in_group("glass")):
+		area.get_parent()._delete()
+
+
+@warning_ignore("unused_parameter")
+func _on_beer_glass_button_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		icup_spawn = "beer_glass"
+		await get_tree().create_timer(0.2).timeout
+		summoning = true

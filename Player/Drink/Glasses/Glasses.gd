@@ -5,7 +5,8 @@ class_name Glasses
 var total_liquids : float = 0
 var current_position = 0
 
-
+func _delete():
+	queue_free()
 
 func _pouring(id : String, liquids_num : float) -> void:
 	if(len(liquids) != 0):

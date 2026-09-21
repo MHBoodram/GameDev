@@ -1,17 +1,19 @@
 [gd_scene format=3 uid="uid://bfuhk0eorv3q3"]
 
 [ext_resource type="Texture2D" uid="uid://b5l0yoj3yjcmf" path="res://Assets/Items/inside_shot_glass.png" id="1_p1pq6"]
-[ext_resource type="Script" uid="uid://dc30lcc5336nc" path="res://Player/Drink/shot_cup.gd" id="2_4egiw"]
+[ext_resource type="Script" uid="uid://dc30lcc5336nc" path="res://Player/Drink/Glasses/shot_cup.gd" id="2_4egiw"]
 [ext_resource type="Texture2D" uid="uid://4sg263uyig2d" path="res://Assets/Items/outside_shot_glass.png" id="3_4egiw"]
 [ext_resource type="Shader" uid="uid://b5kpwtrmoc3g5" path="res://Shader/shot_cup.gdshader" id="3_id3av"]
 
 [sub_resource type="Gradient" id="Gradient_4egiw"]
 interpolation_mode = 1
-offsets = PackedFloat32Array(0, 0.9701493)
-colors = PackedColorArray(1, 1, 1, 0, 0, 0, 0, 1)
+offsets = PackedFloat32Array(0, 0.92537314, 1)
+colors = PackedColorArray(0.38170326, 0.38170323, 0.38170323, 0, 1, 1, 1, 1, 0.98039216, 0.32156864, 0.050980393, 1)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_id3av"]
 gradient = SubResource("Gradient_4egiw")
+width = 120
+height = 67
 fill_from = Vector2(0, 0.5294118)
 fill_to = Vector2(1, 0.5294118)
 metadata/_snap_enabled = true

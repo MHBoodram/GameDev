@@ -1,0 +1,53 @@
+[gd_scene format=3 uid="uid://bntn4wke5bchf"]
+
+[ext_resource type="Texture2D" uid="uid://b5l0yoj3yjcmf" path="res://Assets/Items/inside_shot_glass.png" id="1_psbjw"]
+[ext_resource type="Script" uid="uid://dc30lcc5336nc" path="res://Player/Drink/Glasses/shot_cup.gd" id="2_isq7m"]
+[ext_resource type="Shader" uid="uid://b5kpwtrmoc3g5" path="res://Shader/shot_cup.gdshader" id="3_pq6lo"]
+[ext_resource type="Texture2D" uid="uid://4sg263uyig2d" path="res://Assets/Items/outside_shot_glass.png" id="4_i0lek"]
+
+[sub_resource type="Gradient" id="Gradient_4egiw"]
+interpolation_mode = 1
+offsets = PackedFloat32Array(0, 0.92537314, 1)
+colors = PackedColorArray(0.38170326, 0.38170323, 0.38170323, 0, 1, 1, 1, 1, 0.98039216, 0.32156864, 0.050980393, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_id3av"]
+gradient = SubResource("Gradient_4egiw")
+width = 120
+height = 67
+fill_from = Vector2(0, 0.5294118)
+fill_to = Vector2(1, 0.5294118)
+metadata/_snap_enabled = true
+metadata/_snap_count = 17
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_l3v6c"]
+render_priority = 0
+shader = ExtResource("3_pq6lo")
+shader_parameter/texture_albedo = ExtResource("4_i0lek")
+shader_parameter/gradient_texture = SubResource("GradientTexture2D_id3av")
+shader_parameter/gradient_offset = 0.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_rvwmc"]
+
+[node name="Beer_cup" type="Sprite3D" unique_id=691486503]
+transform = Transform3D(0.2, 0, 0, 0, 0.16932972, 0.106430486, 0, -0.106430486, 0.16932972, 0, 0, 0)
+shaded = true
+alpha_cut = 2
+texture_filter = 0
+texture = ExtResource("1_psbjw")
+script = ExtResource("2_isq7m")
+size = 10.0
+
+[node name="Outside" type="Sprite3D" parent="." unique_id=1532157949]
+transform = Transform3D(1.0350124, 0, 0, 0, 0.9999998, -8.940697e-08, 0, 8.940697e-08, 0.9999998, -0.022528395, 0.0045902645, 6.9849193e-10)
+material_override = SubResource("ShaderMaterial_l3v6c")
+shaded = true
+alpha_cut = 2
+texture_filter = 0
+texture = ExtResource("4_i0lek")
+
+[node name="Area3D" type="Area3D" parent="." unique_id=1487344012 groups=["glass"]]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=763278799 groups=["glass"]]
+shape = SubResource("SphereShape3D_rvwmc")
+
+[connection signal="input_event" from="Area3D" to="." method="_on_area_3d_input_event"]
