@@ -10,16 +10,16 @@
 [sub_resource type="SphereShape3D" id="SphereShape3D_8g4oa"]
 radius = 0.23796713
 
-[sub_resource type="SphereMesh" id="SphereMesh_8g4oa"]
-lightmap_size_hint = Vector2i(3, 2)
-radius = 0.05
-height = 0.01
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_6ysni"]
 size = Vector3(0.81274414, 0.852417, 0.17028809)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_vlldt"]
 size = Vector3(0.08284634, 0.24646378, 0.23828125)
+
+[sub_resource type="RibbonTrailMesh" id="RibbonTrailMesh_6ysni"]
+shape = 0
+sections = 2
+section_length = 0.02
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_8g4oa"]
 size = Vector3(1, 0.15594482, 0.647583)
@@ -64,14 +64,6 @@ script = ExtResource("4_6ysni")
 transform = Transform3D(1, 0, 0, 0, 1.0000001, 0, 0, 0, 1.0000001, 0, 0, 0)
 texture = ExtResource("4_8g4oa")
 
-[node name="CPUParticles3D" type="CPUParticles3D" parent="Coutner/BeerKeg/CHUGCHUGBEER" unique_id=1435390741]
-transform = Transform3D(1, 0, 0, 0, 1.0000004, 0, 0, 0, 1.0000004, 0, 0.124034405, -0.1401267)
-emitting = false
-lifetime = 0.25
-mesh = SubResource("SphereMesh_8g4oa")
-spread = 0.0
-color = Color(0.7082639, 0.37348062, 0, 1)
-
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/BeerKeg" unique_id=1428526495]
 transform = Transform3D(1, 0, 0, 0, 1.0000005, 8.940697e-08, 0, -8.940697e-08, 1.0000005, 0.01985383, -0.073792934, -0.004944563)
 shape = SubResource("BoxShape3D_6ysni")
@@ -86,6 +78,13 @@ shape = SubResource("BoxShape3D_vlldt")
 [node name="PourZone" type="Sprite3D" parent="Coutner/BeerKeg/PourArea" unique_id=1101810920]
 transform = Transform3D(0.49999994, 0, 0, 0, 0.3738308, -0.33204207, 0, 0.33204207, 0.3738308, 0.12629151, 0.33737755, -0.19176018)
 texture = ExtResource("3_ddoul")
+
+[node name="CPUParticles3D" type="CPUParticles3D" parent="Coutner/BeerKeg" unique_id=1435390741]
+transform = Transform3D(-0.05843271, 0.97376543, -0.21992514, 0.52902687, -0.15662004, -0.834027, -0.8465911, -0.16508089, -0.50599635, 0, 1.1994112, -1.2267581)
+emitting = false
+amount = 6
+mesh = SubResource("RibbonTrailMesh_6ysni")
+spread = 0.0
 
 [node name="RayCast3D" type="RayCast3D" parent="." unique_id=243776880]
 

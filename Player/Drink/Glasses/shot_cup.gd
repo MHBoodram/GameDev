@@ -7,7 +7,7 @@ func ready() -> void:
 	var material_overlay_x = $Outside.material_override
 	var gradient_tex = material_overlay_x.get_shader_parameter("gradient_texture")
 	gradient_tex.fill_to.x = 1
-	pass
+
 
 func _visuals_change(liquids_num: float) -> void:
 	total_liquids += liquids_num
@@ -21,7 +21,6 @@ func _visuals_change(liquids_num: float) -> void:
 			print("total_liquids: " + str(total_liquids))
 			print(to_value.x)
 			gradient_tex.fill_to = to_value
-
 
 func _on_area_3d_area_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
