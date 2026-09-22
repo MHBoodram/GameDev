@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://byi3dygtbngcm"]
 
-[ext_resource type="Texture2D" uid="uid://bpmytve8r8g7w" path="res://Assets/Items/shaker.png" id="1_cck5l"]
+[ext_resource type="Texture2D" uid="uid://dg7r8hb0gj200" path="res://Assets/Items/shaker.png" id="1_cck5l"]
 [ext_resource type="Script" uid="uid://dyfvdlr6rj63o" path="res://Player/Drink/shaker.gd" id="2_rvwmc"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_rvwmc"]

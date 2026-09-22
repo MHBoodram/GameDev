@@ -3,6 +3,7 @@ extends Node3D
 @onready var beer_glass = preload("res://Player/Drink/Glasses/beer_cup.tscn")
 var summoning : bool = false
 var icup_spawn : String = "shot_glass"
+var in_pour_zone : Area3D
 
 func get_mouse_world_position(camera: Camera3D, plane_y: float) -> Vector3:
 	var mouse_pos = get_viewport().get_mouse_position()
@@ -50,34 +51,11 @@ func _input(event: InputEvent) -> void:
 				pass
 
 @warning_ignore("unused_parameter")
-func _on_area_3d_2_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
+func _on_shot_glass_button_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		icup_spawn = "shot_glass"
 		await get_tree().create_timer(0.2).timeout
 		summoning = true
-
-
-@warning_ignore("unused_parameter")
-func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		var glass_array : Array = []
-		var areas = $Coutner/CHUGCHUGBEER/BeerKeg.get_overlapping_areas()
-		while(Input.get_action_strength("Left_click")):
-			for x in areas:
-				print(x.is_in_group("glass"))
-				if(x.is_in_group("glass")):
-					glass_array.append(x)
-			
-			for glasses in glass_array:
-				glasses.get_parent()._pouring("beer", 0.05)
-			await get_tree().create_timer(0.1).timeout
-		
-
-
-func _on_trash_area_entered(area: Area3D) -> void:
-	if(area.is_in_group("glass")):
-		area.get_parent()._delete()
-
 
 @warning_ignore("unused_parameter")
 func _on_beer_glass_button_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
@@ -85,3 +63,7 @@ func _on_beer_glass_button_input_event(camera: Node, event: InputEvent, event_po
 		icup_spawn = "beer_glass"
 		await get_tree().create_timer(0.2).timeout
 		summoning = true
+		
+func _on_trash_area_entered(area: Area3D) -> void:
+	if(area.is_in_group("glass")):
+		area.get_parent()._delete()

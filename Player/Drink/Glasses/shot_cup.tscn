@@ -50,4 +50,5 @@ texture = ExtResource("3_4egiw")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=763278799 groups=["glass"]]
 shape = SubResource("SphereShape3D_rvwmc")
 
+[connection signal="area_entered" from="Area3D" to="." method="_on_area_3d_area_entered"]
 [connection signal="input_event" from="Area3D" to="." method="_on_area_3d_input_event"]

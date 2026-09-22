@@ -21,3 +21,8 @@ func _visuals_change(liquids_num: float) -> void:
 			print("total_liquids: " + str(total_liquids))
 			print(to_value.x)
 			gradient_tex.fill_to = to_value
+
+
+func _on_area_3d_area_entered(area: Area3D) -> void:
+	if(area.is_in_group("glass")):
+		_pushing_glass(area)

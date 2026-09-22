@@ -4,13 +4,22 @@
 [ext_resource type="PackedScene" uid="uid://sx4hrn3cgwy1" path="res://Player/Coutner.tscn" id="2_tok1r"]
 [ext_resource type="Texture2D" uid="uid://dhrtxgt1q5ydw" path="res://icon.svg" id="3_ddoul"]
 [ext_resource type="PackedScene" uid="uid://byw6bbpmaen6w" path="res://UI/Gameplay_UI.tscn" id="3_tok1r"]
+[ext_resource type="Script" uid="uid://kofwuslr42fm" path="res://Player/Beer_Pour.gd" id="4_6ysni"]
 [ext_resource type="Texture2D" uid="uid://4sg263uyig2d" path="res://Assets/Items/outside_shot_glass.png" id="4_8g4oa"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_8g4oa"]
 radius = 0.23796713
 
+[sub_resource type="SphereMesh" id="SphereMesh_8g4oa"]
+lightmap_size_hint = Vector2i(3, 2)
+radius = 0.05
+height = 0.01
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_6ysni"]
-size = Vector3(1, 0.852417, 0.7199707)
+size = Vector3(0.81274414, 0.852417, 0.17028809)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vlldt"]
+size = Vector3(0.08284634, 0.24646378, 0.23828125)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_8g4oa"]
 size = Vector3(1, 0.15594482, 0.647583)
@@ -25,6 +34,17 @@ current = true
 [node name="Coutner" parent="." unique_id=183529817 instance=ExtResource("2_tok1r")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2674495, 0, 0.6854937)
 
+[node name="BeerGlass Button" type="Area3D" parent="Coutner" unique_id=1891978038]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26090324, 1.053846, 0.62434983)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/BeerGlass Button" unique_id=2040354992]
+shape = SubResource("SphereShape3D_8g4oa")
+
+[node name="Sprite3D" type="Sprite3D" parent="Coutner/BeerGlass Button" unique_id=770687469]
+transform = Transform3D(0.22749029, 0, 0, 0, 0.24296804, 0, 0, 0, 0.7237263, 0, 0, 0)
+billboard = 1
+texture = ExtResource("3_ddoul")
+
 [node name="ShotGlass Button" type="Area3D" parent="Coutner" unique_id=1622764961]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.81711745, 1.053846, 0.62434983)
 
@@ -36,26 +56,36 @@ transform = Transform3D(0.22749029, 0, 0, 0, 0.24296804, 0, 0, 0, 0.7237263, 0, 
 billboard = 1
 texture = ExtResource("3_ddoul")
 
-[node name="BeerGlass Button" type="Area3D" parent="Coutner/ShotGlass Button" unique_id=1891978038]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5562142, 0, 0)
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/ShotGlass Button/BeerGlass Button" unique_id=2040354992]
-shape = SubResource("SphereShape3D_8g4oa")
-
-[node name="Sprite3D" type="Sprite3D" parent="Coutner/ShotGlass Button/BeerGlass Button" unique_id=770687469]
-transform = Transform3D(0.22749029, 0, 0, 0, 0.24296804, 0, 0, 0, 0.7237263, 0, 0, 0)
-billboard = 1
-texture = ExtResource("3_ddoul")
-
-[node name="CHUGCHUGBEER" type="Sprite3D" parent="Coutner" unique_id=1637863700]
+[node name="BeerKeg" type="Area3D" parent="Coutner" unique_id=263369593]
 transform = Transform3D(0.29999995, 0, 0, 0, -0.19884086, 0.22463806, 0, -0.22463806, -0.19884086, 0.8801341, 1.4483287, -0.3325984)
+script = ExtResource("4_6ysni")
+
+[node name="CHUGCHUGBEER" type="Sprite3D" parent="Coutner/BeerKeg" unique_id=1637863700]
+transform = Transform3D(1, 0, 0, 0, 1.0000001, 0, 0, 0, 1.0000001, 0, 0, 0)
 texture = ExtResource("4_8g4oa")
 
-[node name="BeerKeg" type="Area3D" parent="Coutner/CHUGCHUGBEER" unique_id=263369593]
+[node name="CPUParticles3D" type="CPUParticles3D" parent="Coutner/BeerKeg/CHUGCHUGBEER" unique_id=1435390741]
+transform = Transform3D(1, 0, 0, 0, 1.0000004, 0, 0, 0, 1.0000004, 0, 0.124034405, -0.1401267)
+emitting = false
+lifetime = 0.25
+mesh = SubResource("SphereMesh_8g4oa")
+spread = 0.0
+color = Color(0.7082639, 0.37348062, 0, 1)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/CHUGCHUGBEER/BeerKeg" unique_id=1428526495]
-transform = Transform3D(1, 0, 0, 0, 1.0000005, 8.940697e-08, 0, -8.940697e-08, 1.0000005, 0, -0.07379246, -0.18176341)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/BeerKeg" unique_id=1428526495]
+transform = Transform3D(1, 0, 0, 0, 1.0000005, 8.940697e-08, 0, -8.940697e-08, 1.0000005, 0.01985383, -0.073792934, -0.004944563)
 shape = SubResource("BoxShape3D_6ysni")
+
+[node name="PourArea" type="Area3D" parent="Coutner/BeerKeg" unique_id=1249846069]
+transform = Transform3D(1, 0, 0, 0, 1.0000002, 2.9802322e-08, 0, -2.9802322e-08, 1.0000002, -0.049114704, 0.7178364, -0.8578613)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/BeerKeg/PourArea" unique_id=965552651]
+transform = Transform3D(0.9999999, 0, 0, 0, 0.7476614, -0.664084, 0, 0.664084, 0.7476614, -0.21345973, -0.16121936, -0.14319992)
+shape = SubResource("BoxShape3D_vlldt")
+
+[node name="PourZone" type="Sprite3D" parent="Coutner/BeerKeg/PourArea" unique_id=1101810920]
+transform = Transform3D(0.49999994, 0, 0, 0, 0.3738308, -0.33204207, 0, 0.33204207, 0.3738308, 0.12629151, 0.33737755, -0.19176018)
+texture = ExtResource("3_ddoul")
 
 [node name="RayCast3D" type="RayCast3D" parent="." unique_id=243776880]
 
@@ -69,7 +99,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.58585334, 0, 0)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22943792, 1.0419598, 1.4114742)
 shape = SubResource("BoxShape3D_8g4oa")
 
-[connection signal="input_event" from="Coutner/ShotGlass Button" to="." method="_on_area_3d_2_input_event"]
-[connection signal="input_event" from="Coutner/ShotGlass Button/BeerGlass Button" to="." method="_on_beer_glass_button_input_event"]
-[connection signal="input_event" from="Coutner/CHUGCHUGBEER/BeerKeg" to="." method="_on_beer_keg_input_event"]
+[node name="Marker3D" type="Marker3D" parent="." unique_id=1251923210]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1571385, 1.4529363, 1.1352441)
+
+[connection signal="input_event" from="Coutner/BeerGlass Button" to="." method="_on_beer_glass_button_input_event"]
+[connection signal="input_event" from="Coutner/ShotGlass Button" to="." method="_on_shot_glass_button_input_event"]
+[connection signal="input_event" from="Coutner/BeerKeg" to="Coutner/BeerKeg" method="_on_beer_keg_input_event"]
+[connection signal="area_entered" from="Coutner/BeerKeg/PourArea" to="Coutner/BeerKeg" method="_on_pour_area_area_entered"]
+[connection signal="area_exited" from="Coutner/BeerKeg/PourArea" to="Coutner/BeerKeg" method="_on_pour_area_area_exited"]
 [connection signal="area_entered" from="Trash" to="." method="_on_trash_area_entered"]

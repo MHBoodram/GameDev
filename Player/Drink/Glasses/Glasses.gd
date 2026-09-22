@@ -25,6 +25,15 @@ func _pouring(id : String, liquids_num : float) -> void:
 		liquids.push_back(temp_liquid)
 		_visuals_change(liquids_num)
 
+func _pushing_glass(other_glass : Area3D) -> void:
+	var push_dir = (global_position - other_glass.global_position)
+	push_dir.y = 0 
+	if push_dir.length() < 0.001:
+		push_dir = Vector3(1, 0, 0) 
+	push_dir = push_dir.normalized()
+	var push_strength = 0.03 
+	global_position += push_dir * push_strength
+
 func _visuals_change(liquids_num: float) -> void:
 	print(liquids_num)
 	pass
