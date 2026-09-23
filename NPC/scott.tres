@@ -8,4 +8,5 @@
 script = ExtResource("1_xtll7")
 sprite_sheet = ExtResource("2_cfcb4")
 dialogue_resource = ExtResource("1_g426y")
+hframe = 3
 metadata/_custom_type_script = "uid://cafgtw527fei4"

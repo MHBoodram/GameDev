@@ -5,12 +5,14 @@ enum State { SEAT, SIT, EXIT }
 var current_state : State = State.SEAT
 var camera = null
 var drink : String = "Beer"
+var liquid_number : float = 0.0
 var dialogue_resource : DialogueResource
 @onready var custom_balloon = load("res://addons/dialogue_manager/example_balloon/main_balloon.tscn")
 
 func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
 	self.texture = npc_resource.sprite_sheet
+	hframes = npc_resource.hframe
 	_tween_bounce()
 	dialogue_resource = npc_resource.dialogue_resource
 
@@ -28,8 +30,6 @@ func _tween_bounce() -> void:
 	var tween = get_tree().create_tween()
 	var rand_time = randf_range(0.503,0.505)
 	tween.tween_property(self, "scale", Vector3(0.505,rand_time,0.5), 0.5)
-	#await tween.finished
-	#tween.stop()
 	tween.tween_property(self, "scale", Vector3(0.5,0.5,0.5), 0.4)
 	await tween.finished
 	await get_tree().create_timer(0.1).timeout
@@ -42,9 +42,11 @@ func _on_interaction_input_event(camera: Node, event: InputEvent, event_position
 			DialogueManager.show_dialogue_balloon_scene(custom_balloon,dialogue_resource,"start")
 
 func _want_drink(seat: int) -> String:
-	var drink_list = ["beer","Something","Random"]
+	var drink_list = ["beer","tea"]
+	var liquid_num = randf_range(80,100)
 	drink = drink_list.pick_random()
-	return drink_list.pick_random()
+	liquid_number = liquid_num
+	return drink
 
 func _get_drink() -> String:
 	return drink

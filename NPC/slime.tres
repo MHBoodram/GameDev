@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="NPC" format=3 uid="uid://b4ee3j21iy7a5"]
+
+[ext_resource type="Resource" uid="uid://cf7r3al55fu8p" path="res://NPC/Dialogue/Scott.dialogue" id="1_5khnq"]
+[ext_resource type="Script" uid="uid://cafgtw527fei4" path="res://NPC/npc_class.gd" id="1_833r4"]
+[ext_resource type="Texture2D" uid="uid://ja6v0xypngdy" path="res://Assets/NPC/Slime/slime1.png" id="3_40qpv"]
+
+[resource]
+script = ExtResource("1_833r4")
+sprite_sheet = ExtResource("3_40qpv")
+dialogue_resource = ExtResource("1_5khnq")
+metadata/_custom_type_script = "uid://cafgtw527fei4"

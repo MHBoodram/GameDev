@@ -25,7 +25,15 @@ func _input(event: InputEvent) -> void:
 
 func _add_npc() -> void:
 	var npc = BASE_NPC.instantiate()
-	npc._institate(load("res://NPC/scott.tres"))
+	var resource_npc = randi_range(1,3)
+	match resource_npc:
+		1:
+			npc._institate(load("res://NPC/scott.tres"))
+		2:
+			npc._institate(load("res://NPC/slime.tres"))
+		3:
+			npc._institate(load("res://NPC/shark.tres"))
+	
 	add_child(npc)
 	npc.global_position = $Spawn.global_position
 	if(seat1_npc == null):
@@ -39,14 +47,12 @@ func _add_npc() -> void:
 		npc.name = "seat2_npc"
 		npc._moving_to($Seat2)
 		GameState.seat2_order = npc._want_drink(2)
-
 		return
 	elif(seat3_npc == null):
 		seat3_npc = npc
 		npc.name = "seat3_npc"
 		npc._moving_to($Seat3)
 		GameState.seat3_order = npc._want_drink(3)
-
 		return
 	else:
 		npc.queue_free()

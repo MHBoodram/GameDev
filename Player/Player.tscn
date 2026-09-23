@@ -21,6 +21,8 @@ shape = 0
 sections = 2
 section_length = 0.02
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_s1rgi"]
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_8g4oa"]
 size = Vector3(1, 0.15594482, 0.647583)
 
@@ -86,10 +88,16 @@ amount = 6
 mesh = SubResource("RibbonTrailMesh_6ysni")
 spread = 0.0
 
-[node name="RayCast3D" type="RayCast3D" parent="." unique_id=243776880]
+[node name="turnin_template" type="Sprite3D" parent="Coutner" unique_id=140501815]
+transform = Transform3D(0.8843943, 0, 0, 0, -8.742278e-09, -0.2, 0, 0.2, -8.742278e-09, -0.2674495, 1.0085251, -0.29309165)
+texture = ExtResource("3_ddoul")
 
-[node name="GameplayUi" parent="." unique_id=8092202 node_paths=PackedStringArray("player") instance=ExtResource("3_tok1r")]
-player = NodePath("..")
+[node name="turnitin_area" type="Area3D" parent="Coutner/turnin_template" unique_id=1426320805]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/turnin_template/turnitin_area" unique_id=868790985]
+shape = SubResource("BoxShape3D_s1rgi")
+
+[node name="RayCast3D" type="RayCast3D" parent="." unique_id=243776880]
 
 [node name="Trash" type="Area3D" parent="." unique_id=964303727]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.58585334, 0, 0)
@@ -100,6 +108,9 @@ shape = SubResource("BoxShape3D_8g4oa")
 
 [node name="Marker3D" type="Marker3D" parent="." unique_id=1251923210]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1571385, 1.4529363, 1.1352441)
+
+[node name="GameplayUi" parent="." unique_id=8092202 node_paths=PackedStringArray("player") instance=ExtResource("3_tok1r")]
+player = NodePath("..")
 
 [connection signal="input_event" from="Coutner/BeerGlass Button" to="." method="_on_beer_glass_button_input_event"]
 [connection signal="input_event" from="Coutner/ShotGlass Button" to="." method="_on_shot_glass_button_input_event"]
