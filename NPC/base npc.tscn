@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://thn28muwxvfu" path="res://Assets/NPC/Scott-Sheet.png" id="1_fkb5g"]
 [ext_resource type="Script" uid="uid://cimbp8umcicc6" path="res://NPC/base_npc.gd" id="2_1d4du"]
 [ext_resource type="Resource" uid="uid://cn18jpevj50pu" path="res://NPC/shark.tres" id="3_yqpab"]
+[ext_resource type="PackedScene" uid="uid://sxpelqgf14ku" path="res://NPC/2D Subports/Patience.tscn" id="4_3bvdc"]
 
 [sub_resource type="Animation" id="Animation_1d4du"]
 resource_name = "1"
@@ -61,6 +62,9 @@ _data = {
 [sub_resource type="BoxShape3D" id="BoxShape3D_yqpab"]
 size = Vector3(1.961792, 2.5681152, 1)
 
+[sub_resource type="ViewportTexture" id="ViewportTexture_3bvdc"]
+viewport_path = NodePath("Sprite3D/SubViewport")
+
 [node name="BaseNpc" type="Sprite3D" unique_id=1952283464]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 shaded = true
@@ -81,5 +85,17 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.37303102)
 shape = SubResource("BoxShape3D_yqpab")
 
 [node name="VisibleOnScreenNotifier3D" type="VisibleOnScreenNotifier3D" parent="." unique_id=766988035]
+
+[node name="Patience_timer" type="Timer" parent="." unique_id=1194771440]
+autostart = true
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=1251642218]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5376898, 0)
+texture = SubResource("ViewportTexture_3bvdc")
+
+[node name="SubViewport" type="SubViewport" parent="Sprite3D" unique_id=1333856061]
+transparent_bg = true
+
+[node name="Patience" parent="Sprite3D/SubViewport" unique_id=43226661 instance=ExtResource("4_3bvdc")]
 
 [connection signal="input_event" from="Area3D" to="." method="_on_interaction_input_event"]

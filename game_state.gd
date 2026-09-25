@@ -1,4 +1,4 @@
 extends Node
-var seat1_order : String = ""
-var seat2_order : String = ""
-var seat3_order : String = ""
+var seat1_order : Array = []
+var seat2_order : Array = []
+var seat3_order : Array = []

@@ -3,7 +3,7 @@ const BASE_NPC = preload("res://NPC/base npc.tscn")
 var seat1_npc : Base_NPC = null
 var seat2_npc : Base_NPC = null
 var seat3_npc : Base_NPC = null
-
+@onready var player = get_node("Player")
 
 #func _ready() -> void:
 
@@ -58,8 +58,16 @@ func _add_npc() -> void:
 		npc.queue_free()
 	print("Full")
 	
-	
 func _remove_npc(seat: int) -> void:
 	var seat_delete = get_node("seat" + str(seat) + "_npc")
 	seat_delete._leaving()
 	#seat_delete.queue_free()
+
+func _add_recipt(seat: int) -> void:
+	var string_recipt = "Recipt" + str(seat) + "Paper"
+	var recipt_node = get_node(string_recipt)
+	var marker_node = get_node("Recipt" + str(seat))
+	var tween = get_tree().create_tween()
+	recipt_node.global_position = player.global_position
+	tween.tween_property(recipt_node,"global_position",marker_node.global_position,1)
+	

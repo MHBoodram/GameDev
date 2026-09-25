@@ -1,5 +1,14 @@
 [gd_scene format=3 uid="uid://coqoxop80fduy"]
 
+[ext_resource type="PackedScene" uid="uid://sxpelqgf14ku" path="res://NPC/2D Subports/Patience.tscn" id="1_axi3y"]
+
 [node name="Testing" type="Node3D" unique_id=505024724]
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=447642528]
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=1439862417]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.5071651)
+
+[node name="SubViewport" type="SubViewport" parent="Sprite3D" unique_id=984315400]
+
+[node name="Patience" parent="Sprite3D/SubViewport" unique_id=43226661 instance=ExtResource("1_axi3y")]

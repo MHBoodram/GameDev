@@ -8,13 +8,22 @@ var drink : String = "Beer"
 var liquid_number : float = 0.0
 var dialogue_resource : DialogueResource
 @onready var custom_balloon = load("res://addons/dialogue_manager/example_balloon/main_balloon.tscn")
+@onready var patience_timer = get_node("Patience_timer")
+@onready var patient_2d = get_node("Sprite3D/SubViewport/Patience")
 
 func _ready() -> void:
+	patience_timer.wait_time = npc_resource.patience_time
+	patient_2d._change_max_progress(npc_resource.patience_time)
 	camera = get_viewport().get_camera_3d()
 	self.texture = npc_resource.sprite_sheet
 	hframes = npc_resource.hframe
 	_tween_bounce()
 	dialogue_resource = npc_resource.dialogue_resource
+	patience_timer.start()
+
+@warning_ignore("unused_parameter")
+func _process(delta: float) -> void:
+	patient_2d._change_curent(patience_timer.time_left)
 
 func _institate(npc_source : NPC) -> void:
 	npc_resource = npc_source
@@ -35,18 +44,20 @@ func _tween_bounce() -> void:
 	await get_tree().create_timer(0.1).timeout
 	_tween_bounce()
 
+@warning_ignore("shadowed_variable", "unused_parameter")
 func _on_interaction_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if(event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and abs(camera.global_position.x - global_position.x) < 2):
 		print("Camera Global_position - self: " + str(camera.global_position - global_position))
 		if(dialogue_resource):
 			DialogueManager.show_dialogue_balloon_scene(custom_balloon,dialogue_resource,"start")
 
-func _want_drink(seat: int) -> String:
+func _want_drink(seat: int) -> Array:
 	var drink_list = ["beer","tea"]
 	var liquid_num = randf_range(80,100)
 	drink = drink_list.pick_random()
 	liquid_number = liquid_num
-	return drink
+	var total = [drink,liquid_num]
+	return total
 
 func _get_drink() -> String:
 	return drink
