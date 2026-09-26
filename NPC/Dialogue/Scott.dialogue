@@ -1,0 +1,16 @@
+~ start
+
+#do _pick_drink()
+Scott: [[Hi|Yo|Howdy]], My Order is GameState.seat1_order[0]
+
+#%2 Scott: [[Hi|Yo|Howdy]], My Order is Something.
+
+=> END
+
+~ mid
+Scott: Finished
+=> END
+
+~ finish
+Scott: Finished
+=> END
