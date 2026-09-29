@@ -3,6 +3,7 @@ class_name Base_NPC
 @export var npc_resource : NPC
 enum State { SEAT, SIT, EXIT }
 var current_state : State = State.SEAT
+var seat_num : int
 var camera = null
 var drink_list : Array = []
 var dialogue_resource : DialogueResource
@@ -26,8 +27,9 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	patient_2d._change_curent(patience_timer.time_left)
 
-func _institate(npc_source : NPC) -> void:
+func _institate(npc_source : NPC,seat: int) -> void:
 	npc_resource = npc_source
+	seat_num = seat
 
 func _moving_to(to: Marker3D) -> void:
 	var tween = get_tree().create_tween()
@@ -35,6 +37,10 @@ func _moving_to(to: Marker3D) -> void:
 	tween.set_ease(Tween.EASE_OUT)
 	tween.tween_property(self,"position",to.position,0.8)
 	current_state = State.SIT
+
+func _moving_recipet_to(to: Marker3D) -> void:
+	
+	pass
 
 func _tween_bounce() -> void:
 	var tween = get_tree().create_tween()
