@@ -75,6 +75,9 @@ size = Vector3(1.0968018, 1.1721191, 1)
 [sub_resource type="ViewportTexture" id="ViewportTexture_pvhn2"]
 viewport_path = NodePath("ReciptPaper/Base_viewport/SubViewport")
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_ahtfh"]
+size = Vector3(1.8876953, 0.59472656, 1.6621399)
+
 [node name="BaseNpc" type="Sprite3D" unique_id=1952283464]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 shaded = true
@@ -123,6 +126,7 @@ transform = Transform3D(0.19258629, 0, 0, 0, 1, 0, 0, 0, 0.34523576, 0.5, -11.29
 mesh = SubResource("PlaneMesh_lmq4y")
 
 [node name="Base_viewport" type="Sprite3D" parent="ReciptPaper" unique_id=289407840]
+transform = Transform3D(0.3673945, 0, 0, 0, -1.6279754e-08, 0.9999999, 0, -0.37243733, -4.371138e-08, 0, 0.02098465, 0)
 texture = SubResource("ViewportTexture_pvhn2")
 
 [node name="SubViewport" type="SubViewport" parent="ReciptPaper/Base_viewport" unique_id=257687222]
@@ -130,5 +134,12 @@ transparent_bg = true
 
 [node name="Recipt" parent="ReciptPaper/Base_viewport/SubViewport" unique_id=2118297349 instance=ExtResource("6_ahtfh")]
 
+[node name="recipt_area" type="Area3D" parent="ReciptPaper" unique_id=1614966014]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ReciptPaper/recipt_area" unique_id=741357112]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.9999999, -0.06982422, 0, -0.019515991)
+shape = SubResource("BoxShape3D_ahtfh")
+
 [connection signal="input_event" from="Area3D" to="." method="_on_interaction_input_event"]
 [connection signal="area_entered" from="Obtain_drink/Area3D" to="." method="_on_area_Obtain_drink_entered"]
+[connection signal="input_event" from="ReciptPaper/recipt_area" to="." method="_on_recipt_area_input_event"]

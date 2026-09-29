@@ -27,15 +27,15 @@ func _add_npc() -> void:
 
 	var npc = BASE_NPC.instantiate()
 	var paths = ["res://NPC/scott.tres", "res://NPC/slime.tres"]
-	npc._institate(load(paths.pick_random()))
 
 	add_child(npc)
 	npc.global_position = $Spawn.global_position
 	seats[free_seat] = npc
 	npc.name = "seat%d_npc" % (free_seat + 1)
 	npc._moving_to(get_node("Seat%d" % (free_seat + 1)))
-
-	var order = npc._want_drink(free_seat + 1)
+	var marker_grab = get_node("Recipt" + str(free_seat +1))
+	npc._institate(load(paths.pick_random()),free_seat+1,marker_grab)
+	var order = npc._want_drink()
 	match free_seat:
 		0: GameState.seat1_order = order
 		1: GameState.seat2_order = order
@@ -66,4 +66,3 @@ func _add_recipt(seat: int) -> void:
 	var tween = get_tree().create_tween()
 	recipt_node.global_position = player.global_position
 	tween.tween_property(recipt_node,"global_position",marker_node.global_position,1)
-	

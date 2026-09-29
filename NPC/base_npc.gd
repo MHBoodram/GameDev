@@ -7,10 +7,14 @@ var seat_num : int
 var camera = null
 var drink_list : Array = []
 var dialogue_resource : DialogueResource
+
 @export var drink_offset : float = 5
 @onready var custom_balloon = load("res://addons/dialogue_manager/example_balloon/main_balloon.tscn")
 @onready var patience_timer = get_node("Patience_timer")
 @onready var patient_2d = get_node("Sprite3D/SubViewport/Patience")
+@onready var recipt = get_node("ReciptPaper")
+var recipt_marker : Marker3D
+
 
 func _ready() -> void:
 	patience_timer.wait_time = npc_resource.patience_time
@@ -27,9 +31,10 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	patient_2d._change_curent(patience_timer.time_left)
 
-func _institate(npc_source : NPC,seat: int) -> void:
+func _institate(npc_source : NPC,seat: int,rec_marker: Marker3D) -> void:
 	npc_resource = npc_source
 	seat_num = seat
+	recipt_marker = rec_marker
 
 func _moving_to(to: Marker3D) -> void:
 	var tween = get_tree().create_tween()
@@ -38,9 +43,6 @@ func _moving_to(to: Marker3D) -> void:
 	tween.tween_property(self,"position",to.position,0.8)
 	current_state = State.SIT
 
-func _moving_recipet_to(to: Marker3D) -> void:
-	
-	pass
 
 func _tween_bounce() -> void:
 	var tween = get_tree().create_tween()
@@ -91,7 +93,7 @@ func _obtain_drink(drink: Array) -> float:
 		_leaving()
 	return ranking	# always between 0 and 5
 	
-func _want_drink(seat: int) -> Array:
+func _want_drink() -> Array:
 	var drink_list_want = ["beer"]
 	var liquid_num = randi_range(80,100)
 	var drink_name = drink_list_want.pick_random()
@@ -111,9 +113,38 @@ func _leaving() -> void:
 	await $VisibleOnScreenNotifier3D.screen_exited
 	queue_free()
 
-
+func _add_recipt() -> void:
+	recipt.global_position = camera.global_position
+	$ReciptPaper/Base_viewport/SubViewport/Recipt._label_change(_item_print())
+	var tween = get_tree().create_tween()
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(recipt,"global_position", recipt_marker.global_position,1.5)
+	
 func _on_area_Obtain_drink_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
 		_obtain_drink(area.get_parent()._return_drink())
 		area.get_parent()._dranked()
-		
+
+func _item_print() -> String:
+	var total = ""
+	for x in drink_list:
+		for y in x:
+			for z in y:
+				total += str(str(z) + " ")
+		total += "\n"
+	return total
+
+func _on_recipt_area_mouse_exited() -> void:
+	var tween = get_tree().create_tween()
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(recipt,"global_position", recipt_marker.global_position,1)
+
+func _on_recipt_area_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
+	if(event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and abs(camera.global_position.x - global_position.x) < 2):
+		if(true):
+			var tween = get_tree().create_tween()
+			tween.set_trans(Tween.TRANS_SINE)
+			tween.set_ease(Tween.EASE_OUT)
+			tween.tween_property(recipt,"global_position", camera.global_position - Vector3(0,0,0.5),1)

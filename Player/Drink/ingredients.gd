@@ -30,6 +30,7 @@ func _process(_delta: float) -> void:
 			is_balls_dragging = false
 		look_at(camera.global_position)
 
+@warning_ignore("shadowed_variable", "unused_parameter", "shadowed_variable_base_class")
 func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:

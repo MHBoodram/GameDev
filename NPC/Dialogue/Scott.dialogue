@@ -1,7 +1,7 @@
 ~ start
 
-
 Scott: [[Hi|Yo|Howdy]], My Order is {{drink_list}}
+do _add_recipt()
 
 => END
 
