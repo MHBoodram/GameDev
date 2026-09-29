@@ -14,6 +14,7 @@ var dialogue_resource : DialogueResource
 @onready var patient_2d = get_node("Sprite3D/SubViewport/Patience")
 @onready var recipt = get_node("ReciptPaper")
 var recipt_marker : Marker3D
+var recipt_clicked : bool = true
 
 
 func _ready() -> void:
@@ -110,7 +111,9 @@ func _leaving() -> void:
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
 	tween.tween_property(self,"global_position:x", -7,1.5)
+	
 	await $VisibleOnScreenNotifier3D.screen_exited
+	get_parent()._remove(seat_num)
 	queue_free()
 
 func _add_recipt() -> void:
@@ -143,8 +146,20 @@ func _on_recipt_area_mouse_exited() -> void:
 
 func _on_recipt_area_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if(event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and abs(camera.global_position.x - global_position.x) < 2):
-		if(true):
-			var tween = get_tree().create_tween()
+		if(recipt_clicked):
+			var tween = get_tree().create_tween().set_parallel(true)
 			tween.set_trans(Tween.TRANS_SINE)
 			tween.set_ease(Tween.EASE_OUT)
-			tween.tween_property(recipt,"global_position", camera.global_position - Vector3(0,0,0.5),1)
+			tween.tween_property(recipt,"global_position", camera.global_position - Vector3(0,0.2,0.8),0.5)
+			tween.tween_property(recipt,"rotation_degrees:x", 90,0.5)
+		else:
+			var tween = get_tree().create_tween().set_parallel(true)
+			tween.set_trans(Tween.TRANS_SINE)
+			tween.set_ease(Tween.EASE_OUT)
+			tween.tween_property(recipt,"global_position", recipt_marker.global_position,0.5)
+			tween.tween_property(recipt,"rotation_degrees:x", 0,0.5)
+		recipt_clicked = !recipt_clicked
+
+
+func _on_patience_timer_timeout() -> void:
+	_leaving()

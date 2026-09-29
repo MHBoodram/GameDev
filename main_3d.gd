@@ -59,6 +59,9 @@ func _remove_npc(seat: int) -> void:
 	seats[seat - 1] = null
 	npc._leaving()
 
+func _remove(seat: int) -> void:
+	seats[seat -1] = null
+
 func _add_recipt(seat: int) -> void:
 	var string_recipt = "Recipt" + str(seat) + "Paper"
 	var recipt_node = get_node(string_recipt)
