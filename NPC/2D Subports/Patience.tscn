@@ -1,0 +1,53 @@
+[gd_scene format=3 uid="uid://sxpelqgf14ku"]
+
+[ext_resource type="Script" uid="uid://cq377l8frv3w7" path="res://NPC/2D Subports/patience.gd" id="1_d02iv"]
+[ext_resource type="Texture2D" uid="uid://dgn2ru7dmg8bk" path="res://Assets/NPC/UI/Logos-Sheet.png" id="2_vwuhb"]
+
+[node name="Patience" type="Control" unique_id=43226661]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_d02iv")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1304956050]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=688050608]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -185.0
+offset_top = -13.5
+offset_right = 185.0
+offset_bottom = 13.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Timer" type="ProgressBar" parent="HBoxContainer" unique_id=1589485117]
+layout_mode = 2
+size_flags_horizontal = 3
+value = 50.0
+
+[node name="Patience_Face" type="Sprite2D" parent="HBoxContainer/Timer" unique_id=667182168]
+position = Vector2(399, 0)
+texture = ExtResource("2_vwuhb")
+hframes = 12
+frame = 2
+
+[node name="Race_Face" type="Sprite2D" parent="HBoxContainer/Timer" unique_id=173033687]
+position = Vector2(-29, 0)
+texture = ExtResource("2_vwuhb")
+hframes = 12
+frame = 9
