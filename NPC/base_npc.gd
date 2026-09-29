@@ -7,7 +7,7 @@ var seat_num : int
 var camera = null
 var drink_list : Array = []
 var dialogue_resource : DialogueResource
-
+var speaking_title : String = "start"
 @export var drink_offset : float = 5
 @onready var custom_balloon = load("res://addons/dialogue_manager/example_balloon/main_balloon.tscn")
 @onready var patience_timer = get_node("Patience_timer")
@@ -59,7 +59,7 @@ func _on_interaction_input_event(camera: Node, event: InputEvent, event_position
 	if(event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and abs(camera.global_position.x - global_position.x) < 2):
 		#print("Camera Global_position - self: " + str(camera.global_position - global_position))
 		if(dialogue_resource):
-			DialogueManager.show_dialogue_balloon_scene(custom_balloon,dialogue_resource,"start",[self])
+			DialogueManager.show_dialogue_balloon_scene(custom_balloon,dialogue_resource,speaking_title,[self])
 
 const NAME_POINTS := 2.0	# max from matching ingredients
 const AMOUNT_POINTS := 3.0	# max from matching amounts
@@ -142,7 +142,7 @@ func _on_recipt_area_mouse_exited() -> void:
 	var tween = get_tree().create_tween()
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_property(recipt,"global_position", recipt_marker.global_position,1)
+	tween.tween_property(recipt,"global_position", recipt_marker.global_position,0.5)
 
 func _on_recipt_area_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if(event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and abs(camera.global_position.x - global_position.x) < 2):
