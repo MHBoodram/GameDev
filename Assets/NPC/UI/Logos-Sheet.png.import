@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://deyt6vldggrie"
-path="res://.godot/imported/Scott.png-d95748617fda57de533f981b9e69d77b.ctex"
+uid="uid://dgn2ru7dmg8bk"
+path="res://.godot/imported/Logos-Sheet.png-53732e1b4d364528a043368435f41bd4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/NPC/Scott.png"
-dest_files=["res://.godot/imported/Scott.png-d95748617fda57de533f981b9e69d77b.ctex"]
+source_file="res://Assets/NPC/UI/Logos-Sheet.png"
+dest_files=["res://.godot/imported/Logos-Sheet.png-53732e1b4d364528a043368435f41bd4.ctex"]
 
 [params]
 

@@ -21,8 +21,6 @@ shape = 0
 sections = 2
 section_length = 0.02
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_s1rgi"]
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_8g4oa"]
 size = Vector3(1, 0.15594482, 0.647583)
 
@@ -88,26 +86,15 @@ amount = 6
 mesh = SubResource("RibbonTrailMesh_6ysni")
 spread = 0.0
 
-[node name="turnin_template" type="Sprite3D" parent="Coutner" unique_id=140501815]
-transform = Transform3D(0.8843943, 0, 0, 0, -8.742278e-09, -0.2, 0, 0.2, -8.742278e-09, -0.2674495, 1.0085251, -0.29309165)
-texture = ExtResource("3_ddoul")
+[node name="Trash" type="Area3D" parent="Coutner" unique_id=964303727]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85330284, 0, -0.6854937)
 
-[node name="turnitin_area" type="Area3D" parent="Coutner/turnin_template" unique_id=1426320805]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/turnin_template/turnitin_area" unique_id=868790985]
-shape = SubResource("BoxShape3D_s1rgi")
-
-[node name="RayCast3D" type="RayCast3D" parent="." unique_id=243776880]
-
-[node name="Trash" type="Area3D" parent="." unique_id=964303727]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.58585334, 0, 0)
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Trash" unique_id=1967879857]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/Trash" unique_id=1967879857]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22943792, 1.0419598, 1.4114742)
 shape = SubResource("BoxShape3D_8g4oa")
 
-[node name="Marker3D" type="Marker3D" parent="." unique_id=1251923210]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1571385, 1.4529363, 1.1352441)
+[node name="Marker3D" type="Marker3D" parent="Coutner" unique_id=1251923210]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.88968897, 1.4529363, 0.24294817)
 
 [node name="GameplayUi" parent="." unique_id=8092202 node_paths=PackedStringArray("player") instance=ExtResource("3_tok1r")]
 player = NodePath("..")
@@ -117,4 +104,4 @@ player = NodePath("..")
 [connection signal="input_event" from="Coutner/BeerKeg" to="Coutner/BeerKeg" method="_on_beer_keg_input_event"]
 [connection signal="area_entered" from="Coutner/BeerKeg/PourArea" to="Coutner/BeerKeg" method="_on_pour_area_area_entered"]
 [connection signal="area_exited" from="Coutner/BeerKeg/PourArea" to="Coutner/BeerKeg" method="_on_pour_area_area_exited"]
-[connection signal="area_entered" from="Trash" to="." method="_on_trash_area_entered"]
+[connection signal="area_entered" from="Coutner/Trash" to="." method="_on_trash_area_entered"]

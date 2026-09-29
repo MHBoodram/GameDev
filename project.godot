@@ -48,6 +48,13 @@ Left_click={
 ]
 }
 
+HEAD
+
+[internationalization]
+
+locale/translations_pot_files=PackedStringArray("res://NPC/Dialogue/Scott.dialogue", "res://NPC/Dialogue/shark.dialogue", "res://NPC/Dialogue/Slime.dialogue")
+
+313286a272f41fd9e9c7b84e875fa635e1a26a45
 [physics]
 
 3d/physics_engine="Jolt Physics"

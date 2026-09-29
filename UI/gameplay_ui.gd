@@ -10,9 +10,9 @@ var down : bool = false
 
 func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
+	$FishEye.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 func bendover() -> void:
-	
 	if(down):
 		$Left_Button.disabled = false
 		$Right_Button.disabled = false

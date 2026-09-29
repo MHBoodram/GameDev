@@ -27,7 +27,7 @@ shader_parameter/gradient_texture = SubResource("GradientTexture2D_id3av")
 shader_parameter/gradient_offset = 0.0
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_psbjw"]
-radius = 0.29785156
+radius = 0.38378906
 height = 1.2072754
 
 [node name="Beer_cup" type="Sprite3D" unique_id=691486503]

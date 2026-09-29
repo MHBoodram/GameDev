@@ -1,5 +1,4 @@
 extends Glasses
-var liquid_stack: Array = []
 
 func ready() -> void:
 	$Outside.material_overlay = $Outside.material_override.duplicate(true)
@@ -17,9 +16,9 @@ func _visuals_change(liquids_num: float) -> void:
 		if gradient_tex is GradientTexture2D:
 			var to_value = gradient_tex.fill_to
 			to_value.x = 1- total_liquids/size
-			print("size" + str(size))
-			print("total_liquids: " + str(total_liquids))
-			print(to_value.x)
+			#print("size" + str(size))
+			#print("total_liquids: " + str(total_liquids))
+			#print(to_value.x)
 			gradient_tex.fill_to = to_value
 
 func _on_area_3d_area_entered(area: Area3D) -> void:

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bc5nveskre38w"
-path="res://.godot/imported/Yecott-Sheet.png-ca3ab24241484fa189ec34e1c6619221.ctex"
+uid="uid://c83kk3jnstpc7"
+path="res://.godot/imported/downArrow.png-28dd21710a711241a103890e10a224e9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/NPC/Yecott-Sheet.png"
-dest_files=["res://.godot/imported/Yecott-Sheet.png-ca3ab24241484fa189ec34e1c6619221.ctex"]
+source_file="res://Assets/NPC/UI/downArrow.png"
+dest_files=["res://.godot/imported/downArrow.png-28dd21710a711241a103890e10a224e9.ctex"]
 
 [params]
 
