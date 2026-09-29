@@ -10,6 +10,7 @@ config_version=5
 
 [application]
 
+
 config/name="BarGame"
 run/main_scene="uid://bd5ueityo7sxq"
 config/features=PackedStringArray("4.6", "Forward Plus")
