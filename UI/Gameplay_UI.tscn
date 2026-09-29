@@ -11,7 +11,6 @@ shader_parameter/effect_amount = 1.00000016625
 script = ExtResource("1_twi4a")
 
 [node name="FishEye" type="ColorRect" parent="." unique_id=2143903058]
-visible = false
 z_index = -1
 material = SubResource("ShaderMaterial_dd6x2")
 anchors_preset = 15

@@ -1,9 +1,20 @@
 extends Node3D
 @onready var shot_glass = preload("res://Player/Drink/Glasses/shot_cup.tscn")
 @onready var beer_glass = preload("res://Player/Drink/Glasses/beer_cup.tscn")
+@onready var counter = get_node("Coutner/Lower_counter")
 var summoning : bool = false
 var icup_spawn : String = "shot_glass"
 var in_pour_zone : Area3D
+
+@export var counter_min_x: float = -1.0   
+@export var counter_max_x: float = 1.184  
+@export var min_z: float = 0.28
+@export var spawn_y: float = 1.2
+@export var spawn_scale: Vector3 = Vector3(0.2, 0.2, 0.2)
+var cup_offsets := {
+	"shot_glass": Vector3(0, 0, 0),
+	"beer_glass": Vector3(0, 0, 0),
+}
 
 func get_mouse_world_position(camera: Camera3D, plane_y: float) -> Vector3:
 	var mouse_pos = get_viewport().get_mouse_position()
@@ -15,40 +26,33 @@ func get_mouse_world_position(camera: Camera3D, plane_y: float) -> Vector3:
 		return hit
 	return global_position
 
+
 func _input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and summoning:
+	if event is InputEventMouseButton and event.pressed \
+			and event.button_index == MOUSE_BUTTON_LEFT and summoning:
 		summoning = false
 		match icup_spawn:
 			"shot_glass":
-				icup_spawn = ""
-				var new_projection = get_mouse_world_position($Camera3D, 1.2)
-				new_projection.x = clamp(
-					new_projection.x+0.3,
-					-1 + $Coutner/Lower_counter.global_position.x,
-					1.184 + $Coutner/Lower_counter.global_position.x
-				)
-				new_projection.z = max(new_projection.z, 0.28)
-				var new_instance = shot_glass.instantiate()
-				new_instance.scale = Vector3(0.2, 0.2, 0.2)
-				new_instance._instiate($Coutner/Lower_counter)
-				new_instance.position = new_projection
-				add_child(new_instance)
+				_spawn_cup(shot_glass, "shot_glass")
 			"beer_glass":
-				icup_spawn = ""
-				var new_projection = get_mouse_world_position($Camera3D, 1.2)
-				new_projection.x = clamp(
-					new_projection.x+0.3,
-					-1 + $Coutner/Lower_counter.global_position.x,
-					1.184 + $Coutner/Lower_counter.global_position.x
-				)
-				new_projection.z = max(new_projection.z, 0.28)
-				var new_instance = beer_glass.instantiate()
-				new_instance.scale = Vector3(0.2, 0.2, 0.2)
-				new_instance._instiate($Coutner/Lower_counter)
-				new_instance.position = new_projection
-				add_child(new_instance)
-			_:
-				pass
+				_spawn_cup(beer_glass, "beer_glass")
+		icup_spawn = ""
+
+func _spawn_cup(scene: PackedScene, cup_name: String) -> void:
+	var pos := get_mouse_world_position($Camera3D, spawn_y)
+
+	var min_x : float = counter.global_position.x + counter_min_x
+	var max_x : float = counter.global_position.x + counter_max_x
+	pos.x = clamp(pos.x , min_x, max_x)
+	pos.z = max(pos.z, min_z)
+
+	pos += cup_offsets.get(cup_name, Vector3.ZERO)
+
+	var new_instance = scene.instantiate()
+	new_instance.scale = spawn_scale
+	new_instance._instiate(counter)
+	add_child(new_instance)
+	new_instance.global_position = pos  # set after add_child so it's in world space
 
 @warning_ignore("unused_parameter")
 func _on_shot_glass_button_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
