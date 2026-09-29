@@ -1,0 +1,14 @@
+~ start
+
+
+Scott: [[Hi|Yo|Howdy]], My Order is {{drink_list}}
+
+=> END
+
+~ mid
+Scott: Finished
+=> END
+
+~ finish
+Scott: Finished
+=> END
