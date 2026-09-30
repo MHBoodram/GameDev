@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c0vc11sy5fwva" path="res://Player/player.gd" id="1_q3lat"]
 [ext_resource type="PackedScene" uid="uid://sx4hrn3cgwy1" path="res://Player/Coutner.tscn" id="2_tok1r"]
+[ext_resource type="Script" uid="uid://fd57v8j81k7f" path="res://Player/camera.gd" id="2_vlldt"]
 [ext_resource type="Texture2D" uid="uid://dhrtxgt1q5ydw" path="res://icon.svg" id="3_ddoul"]
 [ext_resource type="PackedScene" uid="uid://byw6bbpmaen6w" path="res://UI/Gameplay_UI.tscn" id="3_tok1r"]
 [ext_resource type="Script" uid="uid://kofwuslr42fm" path="res://Player/Beer_Pour.gd" id="4_6ysni"]
@@ -28,10 +29,17 @@ size = Vector3(1, 0.15594482, 0.647583)
 script = ExtResource("1_q3lat")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=724990159]
-transform = Transform3D(1, 0, 0, 0, 0.960001, 0.27999657, 0, -0.27999657, 0.960001, 0.2271266, 2.7696548, 1.5628164)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2271266, 2.2670434, 1.5628164)
 current = true
+script = ExtResource("2_vlldt")
+
+[node name="RayCast3D" type="RayCast3D" parent="Camera3D" unique_id=1921503870]
+transform = Transform3D(1, 0, 0, 0, 0.14916995, -0.87428266, 0, 1.552314, 0.08401441, 0, 0, 0)
+target_position = Vector3(0, -1.78, 0)
+collide_with_areas = true
 
 [node name="Coutner" parent="." unique_id=183529817 instance=ExtResource("2_tok1r")]
+auto_translate_mode = 2
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2674495, 0, 0.6854937)
 
 [node name="BeerGlass Button" type="Area3D" parent="Coutner" unique_id=1891978038]
@@ -97,6 +105,7 @@ shape = SubResource("BoxShape3D_8g4oa")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.88968897, 1.4529363, 0.24294817)
 
 [node name="GameplayUi" parent="." unique_id=8092202 node_paths=PackedStringArray("player") instance=ExtResource("3_tok1r")]
+auto_translate_mode = 2
 player = NodePath("..")
 
 [connection signal="input_event" from="Coutner/BeerGlass Button" to="." method="_on_beer_glass_button_input_event"]

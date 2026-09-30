@@ -5,6 +5,8 @@ extends Node3D
 var summoning : bool = false
 var icup_spawn : String = "shot_glass"
 var in_pour_zone : Area3D
+#default camera pos = 0.22, 2.77, 1.56
+#default camera rotation = -16.3, 0.0, 0.0
 
 @export var counter_min_x: float = -1.0   
 @export var counter_max_x: float = 1.184  
@@ -16,6 +18,9 @@ var cup_offsets := {
 	"beer_glass": Vector3(0, 0, 0),
 }
 
+func _ready() -> void:
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
 func get_mouse_world_position(camera: Camera3D, plane_y: float) -> Vector3:
 	var mouse_pos = get_viewport().get_mouse_position()
 	var ray_origin = camera.project_ray_origin(mouse_pos)
@@ -25,6 +30,7 @@ func get_mouse_world_position(camera: Camera3D, plane_y: float) -> Vector3:
 	if hit != null:
 		return hit
 	return global_position
+
 
 
 func _input(event: InputEvent) -> void:

@@ -34,7 +34,9 @@ func _add_npc() -> void:
 	npc.name = "seat%d_npc" % (free_seat + 1)
 	npc._moving_to(get_node("Seat%d" % (free_seat + 1)))
 	var marker_grab = get_node("Recipt" + str(free_seat +1))
-	npc._institate(load(paths.pick_random()),free_seat+1,marker_grab)
+	var random_path = paths.pick_random()
+	print(random_path)
+	npc._institate(load(random_path),free_seat+1,marker_grab)
 	var order = npc._want_drink()
 	match free_seat:
 		0: GameState.seat1_order = order

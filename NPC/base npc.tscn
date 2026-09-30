@@ -1,11 +1,12 @@
 [gd_scene format=3 uid="uid://dxsody7drolfc"]
 
-[ext_resource type="Texture2D" uid="uid://thn28muwxvfu" path="res://Assets/NPC/Human/Scott-Sheet.png" id="1_lmq4y"]
 [ext_resource type="Script" uid="uid://cimbp8umcicc6" path="res://NPC/base_npc.gd" id="2_1d4du"]
-[ext_resource type="Resource" uid="uid://1snr5r01nxfy" path="res://NPC/scott.tres" id="3_ahtfh"]
+[ext_resource type="Resource" uid="uid://b4ee3j21iy7a5" path="res://NPC/slime.tres" id="2_lmq4y"]
+[ext_resource type="Script" uid="uid://byhp8f3gdgr8q" path="res://NPC/talking_area.gd" id="3_ahtfh"]
 [ext_resource type="PackedScene" uid="uid://sxpelqgf14ku" path="res://NPC/2D Subports/Patience.tscn" id="4_3bvdc"]
 [ext_resource type="Texture2D" uid="uid://dhrtxgt1q5ydw" path="res://icon.svg" id="5_lmq4y"]
 [ext_resource type="PackedScene" uid="uid://bcghbjc5vt6x0" path="res://NPC/2D Subports/recipt.tscn" id="6_ahtfh"]
+[ext_resource type="Script" uid="uid://cckhwvqr8g8ys" path="res://NPC/areaInteracts/recipt_area.gd" id="7_pvhn2"]
 
 [sub_resource type="Animation" id="Animation_1d4du"]
 resource_name = "1"
@@ -76,23 +77,23 @@ size = Vector3(1.0968018, 1.1721191, 1)
 viewport_path = NodePath("ReciptPaper/Base_viewport/SubViewport")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ahtfh"]
-size = Vector3(1.8876953, 0.59472656, 1.6621399)
+size = Vector3(2.2180176, 0.59472656, 3.252964)
 
 [node name="BaseNpc" type="Sprite3D" unique_id=1952283464]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 shaded = true
 alpha_cut = 2
 texture_filter = 0
-texture = ExtResource("1_lmq4y")
 hframes = 3
 script = ExtResource("2_1d4du")
-npc_resource = ExtResource("3_ahtfh")
+npc_resource = ExtResource("2_lmq4y")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=888297651]
 libraries/ = SubResource("AnimationLibrary_fidbr")
 
-[node name="Area3D" type="Area3D" parent="." unique_id=33473231]
+[node name="Area3D" type="Area3D" parent="." unique_id=33473231 groups=["interactable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.37303102)
+script = ExtResource("3_ahtfh")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=527309631]
 shape = SubResource("BoxShape3D_yqpab")
@@ -134,10 +135,12 @@ transparent_bg = true
 
 [node name="Recipt" parent="ReciptPaper/Base_viewport/SubViewport" unique_id=2118297349 instance=ExtResource("6_ahtfh")]
 
-[node name="recipt_area" type="Area3D" parent="ReciptPaper" unique_id=1614966014]
+[node name="recipt_area" type="Area3D" parent="ReciptPaper" unique_id=1614966014 node_paths=PackedStringArray("base_npc") groups=["interactable"]]
+script = ExtResource("7_pvhn2")
+base_npc = NodePath("../..")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ReciptPaper/recipt_area" unique_id=741357112]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.9999999, -0.06982422, 0, -0.019515991)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.9999999, -0.021362305, 0, 0.37948018)
 shape = SubResource("BoxShape3D_ahtfh")
 
 [connection signal="input_event" from="Area3D" to="." method="_on_interaction_input_event"]
