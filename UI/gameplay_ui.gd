@@ -12,6 +12,9 @@ func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
 	$FishEye.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
+func _process(delta: float) -> void:
+	$Main_Container/FPS.text = "FPS: " + str(Engine.get_frames_per_second())
+
 func bendover() -> void:
 	if(down):
 		$Left_Button.disabled = false

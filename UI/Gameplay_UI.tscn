@@ -110,6 +110,10 @@ initial_velocity_min = 148.52
 initial_velocity_max = 148.52
 color_ramp = SubResource("Gradient_ea1ie")
 
+[node name="FPS" type="Label" parent="Main_Container" unique_id=945363114]
+layout_mode = 2
+text = "Fps"
+
 [node name="ColorRect3" type="ColorRect" parent="." unique_id=1347038361]
 anchors_preset = 8
 anchor_left = 0.5

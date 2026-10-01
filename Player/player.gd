@@ -60,6 +60,16 @@ func _spawn_cup(scene: PackedScene, cup_name: String) -> void:
 	add_child(new_instance)
 	new_instance.global_position = pos  # set after add_child so it's in world space
 
+func _summon_beer():
+	icup_spawn = "beer_glass"
+	await get_tree().create_timer(0.2).timeout
+	summoning = true
+	
+func _summon_shotglass():
+	icup_spawn = "shot_glass"
+	await get_tree().create_timer(0.2).timeout
+	summoning = true
+
 @warning_ignore("unused_parameter")
 func _on_shot_glass_button_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:

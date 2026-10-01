@@ -4,7 +4,7 @@ const SENSITIVITY: float = 0.1
 var twist_input: float = 0.0
 var pitch_input: float = 0.0
 var current_position : int = 3
-
+var match_position_counter : Dictionary ={"1" : -0.2,"2":2.8,"3": 5.8}
 @onready var ray_cast = get_node("RayCast3D")
 
 #func _ready() -> void:
@@ -24,32 +24,32 @@ func _unhandled_input(event: InputEvent) -> void:
 	
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode == KEY_D:
-			moving_around(true)
-		elif event.physical_keycode == KEY_A:
 			moving_around(false)
+		elif event.physical_keycode == KEY_A:
+			moving_around(true)
 			
 				
 func moving_around(right : bool) -> void:
 	if(right):
-		print(right)
 		if(current_position > 1):
-			var new_position = get_parent().position.x + 3
-			new_position = clamp(new_position,0,9)
+			current_position -= 1
+			var new_position = match_position_counter[str(current_position)]
+			 #= get_parent().position.x + 3
+			#new_position = clamp(new_position,-0.2,9)
 			var tween = get_tree().create_tween()
 			tween.set_trans(Tween.TRANS_SINE)
 			tween.set_ease(Tween.EASE_OUT)
 			tween.tween_property(get_parent(),"position:x",new_position,0.15)
-			current_position -= 1
+			
 	else:
 		if(current_position < 3):
-			var new_position = get_parent().position.x - 3
-			new_position = clamp(new_position,0,9)
+			current_position += 1
+			var new_position = match_position_counter[str(current_position)]
 
 			var tween = get_tree().create_tween()
 			tween.set_trans(Tween.TRANS_SINE)
 			tween.set_ease(Tween.EASE_OUT)
 			tween.tween_property(get_parent(),"position:x",new_position,0.15)
-			current_position += 1
 			
 
 func try_interact() -> void:
@@ -58,7 +58,7 @@ func try_interact() -> void:
 		collider = ray_cast.get_collider()
 	print(collider)
 	if collider is Area3D:
-		if(collider.has_method("interact") && collider.is_in_group("interactable")):
+		if(collider.has_method("interact")):
 			collider.interact()
 
 func _process(delta: float) -> void:

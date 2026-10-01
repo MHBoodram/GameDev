@@ -27,10 +27,10 @@ func _add_npc() -> void:
 
 	var npc = BASE_NPC.instantiate()
 	var paths = ["res://NPC/scott.tres", "res://NPC/slime.tres"]
-
+	seats[free_seat] = npc
 	add_child(npc)
 	npc.global_position = $Spawn.global_position
-	seats[free_seat] = npc
+	
 	npc.name = "seat%d_npc" % (free_seat + 1)
 	npc._moving_to(get_node("Seat%d" % (free_seat + 1)))
 	var marker_grab = get_node("Recipt" + str(free_seat +1))
@@ -56,9 +56,6 @@ func seats_wanting(drink_name: String) -> Array:
 	
 func _remove_npc(seat: int) -> void:
 	var npc = seats[seat - 1]
-	if npc == null:
-		return
-	seats[seat - 1] = null
 	npc._leaving()
 
 func _remove(seat: int) -> void:
