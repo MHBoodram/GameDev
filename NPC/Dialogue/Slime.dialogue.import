@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://drm40ru8srhic"
+path="res://.godot/imported/Slime.dialogue-52536b41e7ff502bfd0e5680a8ee60fd.tres"
+
+[deps]
+
+source_file="res://NPC/Dialogue/Slime.dialogue"
+dest_files=["res://.godot/imported/Slime.dialogue-52536b41e7ff502bfd0e5680a8ee60fd.tres"]
+
+[params]
+
+defaults=true
