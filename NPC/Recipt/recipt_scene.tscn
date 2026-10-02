@@ -1,0 +1,38 @@
+[gd_scene format=3 uid="uid://bgsic7kmppbed"]
+
+[ext_resource type="Script" uid="uid://cbsif4n34hmiq" path="res://NPC/Recipt/Recipt.gd" id="1_26fq8"]
+[ext_resource type="PackedScene" uid="uid://bcghbjc5vt6x0" path="res://NPC/2D Subports/recipt.tscn" id="2_w43kb"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_wk5cn"]
+flip_faces = true
+size = Vector2(0.25, 0.35)
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_v88eg"]
+viewport_path = NodePath("Base_viewport/SubViewport")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_pka58"]
+size = Vector3(0.2442627, 0.13586426, 0.38259172)
+
+[node name="ReciptPaper" type="MeshInstance3D" unique_id=1049324574]
+transform = Transform3D(-1, -1.5099582e-07, 0, 2.1014573e-08, -0.13917324, -0.9902682, 1.4952631e-07, -0.9902682, 0.13917324, 0, 0, 0)
+mesh = SubResource("PlaneMesh_wk5cn")
+script = ExtResource("1_26fq8")
+
+[node name="Base_viewport" type="Sprite3D" parent="." unique_id=96737958]
+transform = Transform3D(-0.049562767, 0.00011018357, 0.006763168, -0.00053406315, -0.0012722295, -0.62899595, -6.5573215e-05, -0.07291917, 0.0109844655, 2.872527e-09, -0.005765382, 0.01349288)
+texture = SubResource("ViewportTexture_v88eg")
+
+[node name="SubViewport" type="SubViewport" parent="Base_viewport" unique_id=1639890423]
+transparent_bg = true
+
+[node name="Recipt" parent="Base_viewport/SubViewport" unique_id=2118297349 instance=ExtResource("2_w43kb")]
+
+[node name="recipt_area" type="Area3D" parent="." unique_id=2022018590]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="recipt_area" unique_id=1236974318]
+transform = Transform3D(1, 3.0020444e-13, -4.2699167e-13, -3.002043e-13, 1, 3.427306e-07, 4.2699178e-13, -3.427306e-07, 1, 0.0004608631, -0.0035998821, -0.01934421)
+shape = SubResource("BoxShape3D_pka58")
+
+[connection signal="area_entered" from="recipt_area" to="." method="_on_recipt_area_area_entered"]
+[connection signal="area_exited" from="recipt_area" to="." method="_on_recipt_area_area_exited"]
+[connection signal="input_event" from="recipt_area" to="." method="_on_recipt_area_input_event"]

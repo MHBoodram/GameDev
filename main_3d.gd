@@ -27,7 +27,7 @@ func _add_npc() -> void:
 		return
 
 	var npc = BASE_NPC.instantiate()
-	var paths = ["res://NPC/scott.tres", "res://NPC/slime.tres"]
+	var paths = ["res://NPC/Resources/scott.tres", "res://NPC/Resources/slime.tres"]
 
 	add_child(npc)
 	npc.global_position = $Spawn.global_position
@@ -64,9 +64,9 @@ func _remove(seat: int) -> void:
 	seats[seat -1] = null
 
 func _add_recipt(seat: int) -> void:
-	var string_recipt = "Recipt" + str(seat) + "Paper"
+	var string_recipt = "ReciptPaper" + str(seat)
 	var recipt_node = get_node(string_recipt)
 	var marker_node = get_node("Recipt" + str(seat))
 	var tween = get_tree().create_tween()
 	recipt_node.global_position = player.global_position
-	tween.tween_property(recipt_node,"global_position",marker_node.global_position,1)
+	tween.tween_property(recipt_node,"global_position",marker_node.global_position,0.5)

@@ -12,7 +12,6 @@ var speaking_title : String = "start"
 @onready var custom_balloon = load("res://addons/dialogue_manager/example_balloon/main_balloon.tscn")
 @onready var patience_timer = get_node("Patience_timer")
 @onready var patient_2d = get_node("Sprite3D/SubViewport/Patience")
-@onready var recipt = get_node("ReciptPaper")
 var recipt_marker : Marker3D
 var recipt_clicked : bool = true
 
@@ -36,6 +35,7 @@ func _institate(npc_source : NPC,seat: int,rec_marker: Marker3D) -> void:
 	npc_resource = npc_source
 	seat_num = seat
 	recipt_marker = rec_marker
+	_ready()
 
 func _moving_to(to: Marker3D) -> void:
 	var tween = get_tree().create_tween()
@@ -116,13 +116,15 @@ func _leaving() -> void:
 	queue_free()
 
 func _add_recipt() -> void:
-	recipt.global_position = camera.global_position
-	$ReciptPaper/Base_viewport/SubViewport/Recipt._label_change(_item_print())
-	var tween = get_tree().create_tween()
-	tween.set_trans(Tween.TRANS_SINE)
-	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_property(recipt,"global_position", recipt_marker.global_position,1.5)
-	
+	GameState
+	pass
+	#recipt.global_position = camera.global_position
+	#$ReciptPaper/Base_viewport/SubViewport/Recipt._label_change(_item_print())
+	#var tween = get_tree().create_tween()
+	#tween.set_trans(Tween.TRANS_SINE)
+	#tween.set_ease(Tween.EASE_OUT)
+	#tween.tween_property(recipt,"global_position", recipt_marker.global_position,1.5)
+	#
 func _on_area_Obtain_drink_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
 		_obtain_drink(area.get_parent()._return_drink())
@@ -137,27 +139,7 @@ func _item_print() -> String:
 		total += "\n"
 	return total
 
-func _on_recipt_area_mouse_exited() -> void:
-	var tween = get_tree().create_tween()
-	tween.set_trans(Tween.TRANS_SINE)
-	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_property(recipt,"global_position", recipt_marker.global_position,0.5)
 
-func _on_recipt_area_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
-	if(event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and abs(camera.global_position.x - global_position.x) < 2):
-		if(recipt_clicked):
-			var tween = get_tree().create_tween().set_parallel(true)
-			tween.set_trans(Tween.TRANS_SINE)
-			tween.set_ease(Tween.EASE_OUT)
-			tween.tween_property(recipt,"global_position", camera.global_position - Vector3(0,0.2,0.8),0.5)
-			tween.tween_property(recipt,"rotation_degrees:x", 90,0.5)
-		else:
-			var tween = get_tree().create_tween().set_parallel(true)
-			tween.set_trans(Tween.TRANS_SINE)
-			tween.set_ease(Tween.EASE_OUT)
-			tween.tween_property(recipt,"global_position", recipt_marker.global_position,0.5)
-			tween.tween_property(recipt,"rotation_degrees:x", 0,0.5)
-		recipt_clicked = !recipt_clicked
 
 
 func _on_patience_timer_timeout() -> void:

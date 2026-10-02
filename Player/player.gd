@@ -48,7 +48,6 @@ func _input(event: InputEvent) -> void:
 		if(in_game):
 			_out_of_game()
 
-
 func _spawn_cup(scene: PackedScene, cup_name: String) -> void:
 	var pos := get_mouse_world_position($Camera3D, spawn_y)
 	var min_x : float = counter.global_position.x + counter_min_x
@@ -79,7 +78,6 @@ func _out_of_game() -> void:
 	in_game = false
 	var drink = in_game_drinks["Drink"]["Node"]
 	var glass = in_game_drinks["Glass"]["Node"]
-	
 	var tween = get_tree().create_tween().set_parallel(true)
 	tween.tween_property(drink,"global_position",in_game_drinks["Drink"]["position"],0.5)
 	tween.tween_property(glass,"global_position",in_game_drinks["Glass"]["position"],0.5)

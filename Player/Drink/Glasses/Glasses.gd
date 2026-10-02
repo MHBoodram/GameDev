@@ -29,8 +29,6 @@ func _process(_delta: float) -> void:
 func _pouring(id : String, liquids_num : float) -> void:
 	if(len(liquids) != 0):
 		var top_drink = liquids[len(liquids)-1]
-		#print(top_drink==)
-		
 		if(top_drink[0] == id):
 			top_drink[1] += liquids_num
 			_visuals_change(liquids_num)
@@ -38,7 +36,6 @@ func _pouring(id : String, liquids_num : float) -> void:
 			var temp_liquid = [id,liquids_num]
 			liquids.push_back(temp_liquid)
 			_visuals_change(liquids_num)
-
 	else:
 		var temp_liquid = [id,liquids_num]
 		liquids.push_back(temp_liquid)

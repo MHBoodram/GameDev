@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://thn28muwxvfu" path="res://Assets/NPC/Human/Scott-Sheet.png" id="1_lmq4y"]
 [ext_resource type="Script" uid="uid://cimbp8umcicc6" path="res://NPC/base_npc.gd" id="2_1d4du"]
-[ext_resource type="Resource" uid="uid://1snr5r01nxfy" path="res://NPC/scott.tres" id="3_ahtfh"]
+[ext_resource type="Resource" uid="uid://1snr5r01nxfy" path="res://NPC/Resources/scott.tres" id="3_ahtfh"]
 [ext_resource type="PackedScene" uid="uid://sxpelqgf14ku" path="res://NPC/2D Subports/Patience.tscn" id="4_3bvdc"]
 [ext_resource type="Texture2D" uid="uid://dhrtxgt1q5ydw" path="res://icon.svg" id="5_lmq4y"]
 
