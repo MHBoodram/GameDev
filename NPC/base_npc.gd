@@ -8,10 +8,6 @@ var camera = null
 var drink_list : Array = []
 var dialogue_resource : DialogueResource
 var speaking_title : String = "start"
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/TanTwo
 @export var drink_offset : float = 5
 @onready var custom_balloon = load("res://addons/dialogue_manager/example_balloon/main_balloon.tscn")
 @onready var patience_timer = get_node("Patience_timer")
@@ -32,25 +28,14 @@ func _ready() -> void:
 	dialogue_resource = npc_resource.dialogue_resource
 	patience_timer.start()
 
-<<<<<<< HEAD
-=======
 @warning_ignore("unused_parameter")
 func _process(delta: float) -> void:
 	patient_2d._change_curent(patience_timer.time_left)
 
->>>>>>> origin/TanTwo
 func _institate(npc_source : NPC,seat: int,rec_marker: Marker3D) -> void:
 	npc_resource = npc_source
 	seat_num = seat
 	recipt_marker = rec_marker
-<<<<<<< HEAD
-	_ready()
-
-@warning_ignore("unused_parameter")
-func _process(delta: float) -> void:
-	patient_2d._change_curent(patience_timer.time_left)
-=======
->>>>>>> origin/TanTwo
 
 func _moving_to(to: Marker3D) -> void:
 	var tween = get_tree().create_tween()
@@ -59,19 +44,6 @@ func _moving_to(to: Marker3D) -> void:
 	tween.tween_property(self,"position",to.position,0.8)
 	current_state = State.SIT
 
-<<<<<<< HEAD
-func _add_recipt() -> void:
-	$ReciptPaper/recipt_area.recipt_spawned = true
-	recipt.global_position = camera.global_position
-	$ReciptPaper/Base_viewport/SubViewport/Recipt._label_change(_item_print())
-	var tween = get_tree().create_tween()
-	tween.set_trans(Tween.TRANS_SINE)
-	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_property(recipt,"global_position", recipt_marker.global_position,1.5)
-	
-=======
-
->>>>>>> origin/TanTwo
 func _tween_bounce() -> void:
 	var tween = get_tree().create_tween()
 	var rand_time = randf_range(0.503,0.505)
@@ -81,14 +53,6 @@ func _tween_bounce() -> void:
 	await get_tree().create_timer(0.1).timeout
 	_tween_bounce()
 
-<<<<<<< HEAD
-func _talking() -> void:
-	if(dialogue_resource):
-		DialogueManager.show_dialogue_balloon_scene(custom_balloon,dialogue_resource,speaking_title,[self])
-
-
-# Drink calculation returns
-=======
 @warning_ignore("shadowed_variable", "unused_parameter")
 func _on_interaction_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if(event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and abs(camera.global_position.x - global_position.x) < 2):
@@ -96,7 +60,6 @@ func _on_interaction_input_event(camera: Node, event: InputEvent, event_position
 		if(dialogue_resource):
 			DialogueManager.show_dialogue_balloon_scene(custom_balloon,dialogue_resource,speaking_title,[self])
 
->>>>>>> origin/TanTwo
 const NAME_POINTS := 2.0	# max from matching ingredients
 const AMOUNT_POINTS := 3.0	# max from matching amounts
 const MAX_DIFF := 15.0	# difference at which amount points hit 0
@@ -142,12 +105,6 @@ func _want_drink() -> Array:
 func _get_drink() -> String:
 	return drink_list[0][0]
 
-<<<<<<< HEAD
-func _on_patience_timer_timeout() -> void:
-	_leaving()
-	
-=======
->>>>>>> origin/TanTwo
 func _leaving() -> void:
 	var tween = get_tree().create_tween()
 	tween.set_trans(Tween.TRANS_SINE)
@@ -158,9 +115,6 @@ func _leaving() -> void:
 	get_parent()._remove(seat_num)
 	queue_free()
 
-<<<<<<< HEAD
-
-=======
 func _add_recipt() -> void:
 	recipt.global_position = camera.global_position
 	$ReciptPaper/Base_viewport/SubViewport/Recipt._label_change(_item_print())
@@ -169,7 +123,6 @@ func _add_recipt() -> void:
 	tween.set_ease(Tween.EASE_OUT)
 	tween.tween_property(recipt,"global_position", recipt_marker.global_position,1.5)
 	
->>>>>>> origin/TanTwo
 func _on_area_Obtain_drink_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
 		_obtain_drink(area.get_parent()._return_drink())
@@ -184,22 +137,6 @@ func _item_print() -> String:
 		total += "\n"
 	return total
 
-<<<<<<< HEAD
-#Unused Functions
-
-#func _on_recipt_area_mouse_exited() -> void:
-	#var tween = get_tree().create_tween()
-	#tween.set_trans(Tween.TRANS_SINE)
-	#tween.set_ease(Tween.EASE_OUT)
-	#tween.tween_property(recipt,"global_position", recipt_marker.global_position,0.5)
-
-#@warning_ignore("shadowed_variable", "unused_parameter")
-#func _on_interaction_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
-	#if(event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and abs(camera.global_position.x - global_position.x) < 2):
-		##print("Camera Global_position - self: " + str(camera.global_position - global_position))
-		#if(dialogue_resource):
-			#DialogueManager.show_dialogue_balloon_scene(custom_balloon,dialogue_resource,speaking_title,[self])
-=======
 func _on_recipt_area_mouse_exited() -> void:
 	var tween = get_tree().create_tween()
 	tween.set_trans(Tween.TRANS_SINE)
@@ -225,4 +162,3 @@ func _on_recipt_area_input_event(camera: Node, event: InputEvent, event_position
 
 func _on_patience_timer_timeout() -> void:
 	_leaving()
->>>>>>> origin/TanTwo
