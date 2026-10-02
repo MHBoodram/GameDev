@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://dxsody7drolfc"]
 
+<<<<<<< HEAD
 [ext_resource type="Script" uid="uid://cimbp8umcicc6" path="res://NPC/base_npc.gd" id="2_1d4du"]
 [ext_resource type="Resource" uid="uid://b4ee3j21iy7a5" path="res://NPC/slime.tres" id="2_lmq4y"]
 [ext_resource type="Script" uid="uid://byhp8f3gdgr8q" path="res://NPC/talking_area.gd" id="3_ahtfh"]
@@ -7,6 +8,13 @@
 [ext_resource type="Texture2D" uid="uid://dhrtxgt1q5ydw" path="res://icon.svg" id="5_lmq4y"]
 [ext_resource type="PackedScene" uid="uid://bcghbjc5vt6x0" path="res://NPC/2D Subports/recipt.tscn" id="6_ahtfh"]
 [ext_resource type="Script" uid="uid://cckhwvqr8g8ys" path="res://NPC/areaInteracts/recipt_area.gd" id="7_pvhn2"]
+=======
+[ext_resource type="Texture2D" uid="uid://thn28muwxvfu" path="res://Assets/NPC/Human/Scott-Sheet.png" id="1_lmq4y"]
+[ext_resource type="Script" uid="uid://cimbp8umcicc6" path="res://NPC/base_npc.gd" id="2_1d4du"]
+[ext_resource type="Resource" uid="uid://1snr5r01nxfy" path="res://NPC/scott.tres" id="3_ahtfh"]
+[ext_resource type="PackedScene" uid="uid://sxpelqgf14ku" path="res://NPC/2D Subports/Patience.tscn" id="4_3bvdc"]
+[ext_resource type="Texture2D" uid="uid://dhrtxgt1q5ydw" path="res://icon.svg" id="5_lmq4y"]
+>>>>>>> origin/TanTwo
 
 [sub_resource type="Animation" id="Animation_1d4du"]
 resource_name = "1"
@@ -71,6 +79,7 @@ viewport_path = NodePath("Sprite3D/SubViewport")
 [sub_resource type="BoxShape3D" id="BoxShape3D_lmq4y"]
 size = Vector3(1.0968018, 1.1721191, 1)
 
+<<<<<<< HEAD
 [sub_resource type="PlaneMesh" id="PlaneMesh_lmq4y"]
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_pvhn2"]
@@ -79,21 +88,35 @@ viewport_path = NodePath("ReciptPaper/Base_viewport/SubViewport")
 [sub_resource type="BoxShape3D" id="BoxShape3D_ahtfh"]
 size = Vector3(2.2180176, 0.59472656, 3.252964)
 
+=======
+>>>>>>> origin/TanTwo
 [node name="BaseNpc" type="Sprite3D" unique_id=1952283464]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 shaded = true
 alpha_cut = 2
 texture_filter = 0
+<<<<<<< HEAD
 hframes = 3
 script = ExtResource("2_1d4du")
 npc_resource = ExtResource("2_lmq4y")
+=======
+texture = ExtResource("1_lmq4y")
+hframes = 3
+script = ExtResource("2_1d4du")
+npc_resource = ExtResource("3_ahtfh")
+>>>>>>> origin/TanTwo
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=888297651]
 libraries/ = SubResource("AnimationLibrary_fidbr")
 
+<<<<<<< HEAD
 [node name="Area3D" type="Area3D" parent="." unique_id=33473231 groups=["interactable"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.37303102)
 script = ExtResource("3_ahtfh")
+=======
+[node name="Area3D" type="Area3D" parent="." unique_id=33473231]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.37303102)
+>>>>>>> origin/TanTwo
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=527309631]
 shape = SubResource("BoxShape3D_yqpab")
@@ -122,6 +145,7 @@ texture = ExtResource("5_lmq4y")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.04840088, -0.08605957, 0)
 shape = SubResource("BoxShape3D_lmq4y")
 
+<<<<<<< HEAD
 [node name="ReciptPaper" type="MeshInstance3D" parent="." unique_id=1177579410]
 transform = Transform3D(0.19258629, 0, 0, 0, 1, 0, 0, 0, 0.34523576, 0.5, -11.295842, -0.34)
 mesh = SubResource("PlaneMesh_lmq4y")
@@ -147,3 +171,8 @@ shape = SubResource("BoxShape3D_ahtfh")
 [connection signal="timeout" from="Patience_timer" to="." method="_on_patience_timer_timeout"]
 [connection signal="area_entered" from="Obtain_drink/Area3D" to="." method="_on_area_Obtain_drink_entered"]
 [connection signal="input_event" from="ReciptPaper/recipt_area" to="." method="_on_recipt_area_input_event"]
+=======
+[connection signal="input_event" from="Area3D" to="." method="_on_interaction_input_event"]
+[connection signal="timeout" from="Patience_timer" to="." method="_on_patience_timer_timeout"]
+[connection signal="area_entered" from="Obtain_drink/Area3D" to="." method="_on_area_Obtain_drink_entered"]
+>>>>>>> origin/TanTwo

@@ -22,23 +22,24 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="Left_Button" type="Button" parent="." unique_id=1787372622]
-visible = false
+modulate = Color(1, 1, 1, 0)
 offset_left = -7.0
 offset_top = 8.0
 offset_right = 41.0
 offset_bottom = 680.0
 
 [node name="Right_Button" type="Button" parent="." unique_id=1406125880]
-visible = false
+modulate = Color(1, 1, 1, 0)
 offset_left = 1236.0
 offset_top = 8.0
 offset_right = 1282.0
 offset_bottom = 684.0
 
 [node name="Bottom_button" type="Button" parent="." unique_id=1517012141]
-visible = false
+modulate = Color(1, 1, 1, 0)
 offset_left = 1287.7384
 offset_top = 679.0
 offset_right = 1328.7384
@@ -46,7 +47,7 @@ offset_bottom = 1975.7433
 rotation = 1.5707964
 
 [node name="Up_button" type="Button" parent="." unique_id=1319049737]
-visible = false
+modulate = Color(1, 1, 1, 0)
 offset_left = 1287.7384
 offset_right = 1328.7384
 offset_bottom = 1296.7433
@@ -110,25 +111,15 @@ initial_velocity_min = 148.52
 initial_velocity_max = 148.52
 color_ramp = SubResource("Gradient_ea1ie")
 
-[node name="FPS" type="Label" parent="Main_Container" unique_id=945363114]
-layout_mode = 2
-text = "Fps"
-
-[node name="ColorRect3" type="ColorRect" parent="." unique_id=1347038361]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -2.0
-offset_top = -2.0
-offset_right = 2.0
-offset_bottom = 2.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
+[connection signal="mouse_entered" from="Left_Button" to="." method="_on_left_button_mouse_entered"]
+[connection signal="mouse_exited" from="Left_Button" to="." method="_on_mouse_exited"]
 [connection signal="pressed" from="Left_Button" to="." method="_on_left_button_pressed"]
+[connection signal="mouse_entered" from="Right_Button" to="." method="_on_right_button_mouse_entered"]
+[connection signal="mouse_exited" from="Right_Button" to="." method="_on_mouse_exited"]
 [connection signal="pressed" from="Right_Button" to="." method="_on_right_button_pressed"]
+[connection signal="mouse_entered" from="Bottom_button" to="." method="_on_bottom_button_mouse_entered"]
+[connection signal="mouse_exited" from="Bottom_button" to="." method="_on_mouse_exited"]
 [connection signal="pressed" from="Bottom_button" to="." method="_on_bottom_button_pressed"]
+[connection signal="mouse_entered" from="Up_button" to="." method="_on_up_button_mouse_entered"]
+[connection signal="mouse_exited" from="Up_button" to="." method="_on_mouse_exited"]
 [connection signal="pressed" from="Up_button" to="." method="_on_up_button_pressed"]

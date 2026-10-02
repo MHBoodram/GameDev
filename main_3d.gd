@@ -3,7 +3,12 @@ const BASE_NPC = preload("res://NPC/base npc.tscn")
 var seats: Array[Base_NPC] = [null, null, null]
 @onready var player = get_node("Player")
 
+<<<<<<< HEAD
 #func _ready() -> void:
+=======
+func _ready() -> void:
+	GameState.player = $Player
+>>>>>>> origin/TanTwo
 
 func _print_reading_dialogue() -> void:
 	print("Printing dialgoue or something")
@@ -27,6 +32,7 @@ func _add_npc() -> void:
 
 	var npc = BASE_NPC.instantiate()
 	var paths = ["res://NPC/scott.tres", "res://NPC/slime.tres"]
+<<<<<<< HEAD
 	seats[free_seat] = npc
 	add_child(npc)
 	npc.global_position = $Spawn.global_position
@@ -37,6 +43,16 @@ func _add_npc() -> void:
 	var random_path = paths.pick_random()
 	print(random_path)
 	npc._institate(load(random_path),free_seat+1,marker_grab)
+=======
+
+	add_child(npc)
+	npc.global_position = $Spawn.global_position
+	seats[free_seat] = npc
+	npc.name = "seat%d_npc" % (free_seat + 1)
+	npc._moving_to(get_node("Seat%d" % (free_seat + 1)))
+	var marker_grab = get_node("Recipt" + str(free_seat +1))
+	npc._institate(load(paths.pick_random()),free_seat+1,marker_grab)
+>>>>>>> origin/TanTwo
 	var order = npc._want_drink()
 	match free_seat:
 		0: GameState.seat1_order = order
@@ -56,6 +72,12 @@ func seats_wanting(drink_name: String) -> Array:
 	
 func _remove_npc(seat: int) -> void:
 	var npc = seats[seat - 1]
+<<<<<<< HEAD
+=======
+	if npc == null:
+		return
+	seats[seat - 1] = null
+>>>>>>> origin/TanTwo
 	npc._leaving()
 
 func _remove(seat: int) -> void:
