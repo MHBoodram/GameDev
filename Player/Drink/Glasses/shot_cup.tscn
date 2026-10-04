@@ -40,6 +40,14 @@ script = ExtResource("2_4egiw")
 size = 5.0
 area_body = NodePath("Area3D/CollisionShape3D")
 
+[node name="highlight" type="Sprite3D" parent="." unique_id=1850656926]
+transform = Transform3D(1.246164, 0, 0, 0, 1.2017572, -2.9802322e-07, 0, 4.172325e-07, 1.1268122, -0.009412654, -0.0025333124, 0.011333531)
+modulate = Color(1, 1, 0, 1)
+shaded = true
+alpha_cut = 2
+texture_filter = 0
+texture = ExtResource("3_4egiw")
+
 [node name="Outside" type="Sprite3D" parent="." unique_id=1532157949]
 transform = Transform3D(1.0350124, 0, 0, 0, 0.9999998, -8.940697e-08, 0, 8.940697e-08, 0.9999998, -0.022528395, 0.0045902645, 6.9849193e-10)
 material_override = SubResource("ShaderMaterial_l3v6c")

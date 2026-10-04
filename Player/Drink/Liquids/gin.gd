@@ -16,9 +16,24 @@ func setup(og_position: Marker3D,Counter: Node3D) -> void:
 	counter_origin = Counter
 	global_position = og_position.global_position
 	rotation_degrees = Vector3.ZERO
+	
+func _process(_delta: float) -> void:
+	if is_balls_dragging:
+		var mouse_pos = get_viewport().get_mouse_position()
+		var new_projection = camera.project_position(mouse_pos, drag_z_depth)
+		new_projection.x = clamp(new_projection.x, -1.2 + counter_origin.global_position.x,1.4+ counter_origin.global_position.x)
+		new_projection.z = clamp(new_projection.z, counter_origin.global_position.z - 0.4,counter_origin.global_position.z + 0.4)
+		if(new_projection.z < 0.28):
+			new_projection.y = base_y_position + 0.2
+		else:
+			new_projection.y = base_y_position
+		global_position = new_projection
+		if(Input.is_action_just_released("Left_click")):
+			is_balls_dragging = false
+			_return_original()
+		else:
+			look_at(camera.global_position)
 
-
-		
 @warning_ignore("shadowed_variable", "unused_parameter", "shadowed_variable_base_class")
 func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
@@ -29,6 +44,7 @@ func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
 				var forward = -camera.global_transform.basis.z
 				drag_z_depth = to_object.dot(forward)
 			else:
+				print("returning original")
 				is_balls_dragging = false
 				if(pouring_into):
 					_pouring_game()
@@ -58,10 +74,13 @@ func _return_original():
 	
 func _in_game():
 	in_game = true
+	pouring_into._on_hover(false)
 
 func _out_of_game():
 	in_game = false
 	_return_original()
+	pouring_into = null
+	
 
 func _pouring_game() -> void:
 	pouring_into.in_game = true
@@ -73,7 +92,7 @@ func _pouring_game() -> void:
 	is_balls_dragging = false
 
 func _on_interact_area_entered(area: Area3D) -> void:
-	if(area.is_in_group("glass") && is_balls_dragging):
+	if(area.is_in_group("glass") && is_balls_dragging && pouring_into == null):
 		pouring_into = area.get_parent()
 		area.get_parent()._on_hover(true)
 		

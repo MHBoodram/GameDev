@@ -48,6 +48,14 @@ alpha_cut = 2
 texture_filter = 0
 texture = ExtResource("5_pq6lo")
 
+[node name="highlight" type="Sprite3D" parent="." unique_id=23743985]
+transform = Transform3D(1.2539052, 0, 0, 0, 1.2053055, -3.5762787e-07, 0, 1.7881393e-07, 1.1290426, 0.0004220754, -0.07575068, 0.015916757)
+modulate = Color(1, 1, 0, 1)
+shaded = true
+alpha_cut = 2
+texture_filter = 0
+texture = ExtResource("5_pq6lo")
+
 [node name="Area3D" type="Area3D" parent="." unique_id=1487344012 groups=["glass"]]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=763278799 groups=["glass"]]

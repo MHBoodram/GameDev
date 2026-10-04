@@ -77,6 +77,7 @@ func _perfect_pour(drink : Drinks, glass : Glasses) -> void: #minigame Section
 	tween.tween_property(drink,"global_position",$Camera3D/drink_mark.global_position,0.5)
 	tween.tween_property(glass,"global_position",$Camera3D/glass_mark.global_position,0.5)
 	await tween.finished
+	await get_tree().process_frame
 	drink.look_at($Camera3D.global_position)
 	glass.look_at($Camera3D.global_position)
 
