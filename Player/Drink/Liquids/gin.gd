@@ -2,7 +2,7 @@ extends Glasses
 class_name Drinks
 var pouring_into : Node3D
 @export var type_drink : String = "beer"
-
+var original_position : Marker3D
 
 #func ready() -> void:
 	#$Outside.material_overlay = $Outside.material_override.duplicate(true)
@@ -11,16 +11,13 @@ var pouring_into : Node3D
 	#var gradient_tex = material_overlay_x.get_shader_parameter("gradient_texture")
 	#gradient_tex.fill_to.x = 1
 
-func _on_interact_area_entered(area: Area3D) -> void:
-	if(area.is_in_group("glass")):
-		pouring_into = area.get_parent()
-		pouring_into.in_game = true
-		in_game = true
-		GameState.player._perfect_pour(self,area.get_parent())
-		$Interact/CollisionShape3D.disabled = true
-		await get_tree().create_timer(0.2).timeout
-		$Interact/CollisionShape3D.disabled = false
-		is_balls_dragging = false
+func setup(og_position: Marker3D,Counter: Node3D) -> void:
+	original_position = og_position
+	counter_origin = Counter
+	global_position = og_position.global_position
+	rotation_degrees = Vector3.ZERO
+
+
 		
 @warning_ignore("shadowed_variable", "unused_parameter", "shadowed_variable_base_class")
 func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
@@ -33,6 +30,10 @@ func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
 				drag_z_depth = to_object.dot(forward)
 			else:
 				is_balls_dragging = false
+				if(pouring_into):
+					_pouring_game()
+				else:
+					_return_original()
 		else:
 			if event.pressed:
 				rotation_degrees.z = 80
@@ -47,8 +48,38 @@ func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
 				await get_tree().create_timer(0.1).timeout
 				rotation_degrees.z = 0
 
+func _return_original():
+	var tween = get_tree().create_tween().set_parallel(true)
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(self,"global_position",original_position.global_position,0.5)
+	tween.tween_property(self,"global_position",original_position.global_position,0.5)
+	rotation_degrees = Vector3.ZERO
+	
 func _in_game():
 	in_game = true
 
 func _out_of_game():
 	in_game = false
+	_return_original()
+
+func _pouring_game() -> void:
+	pouring_into.in_game = true
+	in_game = true
+	GameState.player._perfect_pour(self,pouring_into)
+	$Interact/CollisionShape3D.disabled = true
+	await get_tree().create_timer(0.2).timeout
+	$Interact/CollisionShape3D.disabled = false
+	is_balls_dragging = false
+
+func _on_interact_area_entered(area: Area3D) -> void:
+	if(area.is_in_group("glass") && is_balls_dragging):
+		pouring_into = area.get_parent()
+		area.get_parent()._on_hover(true)
+		
+
+func _on_interact_area_exited(area: Area3D) -> void:
+	if(area.is_in_group("glass") && is_balls_dragging):
+		if(area.get_parent() == pouring_into):
+			pouring_into = null
+			area.get_parent()._on_hover(false)

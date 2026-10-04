@@ -8,7 +8,6 @@
 [ext_resource type="Texture2D" uid="uid://dhrtxgt1q5ydw" path="res://icon.svg" id="5_g6ul3"]
 [ext_resource type="Script" uid="uid://kofwuslr42fm" path="res://Player/Beer_Pour.gd" id="6_n776p"]
 [ext_resource type="Texture2D" uid="uid://4sg263uyig2d" path="res://Assets/Items/outside_shot_glass.png" id="7_wk5cn"]
-[ext_resource type="PackedScene" uid="uid://47xad203pngm" path="res://Player/Drink/Liquids/Gin.tscn" id="8_g6ul3"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_v88eg"]
 radius = 0.23796713
@@ -75,10 +74,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.9415827, -0.8089119)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2993567, 0, 0)
 counter = NodePath("../Coutner")
 spawn_y = 1.8
-
-[node name="Gin" parent="." unique_id=1574004840 node_paths=PackedStringArray("counter_origin") instance=ExtResource("8_g6ul3")]
-transform = Transform3D(0.5, -3.5527137e-15, -3.5527137e-15, 0, 0.5000001, -1.4901161e-08, 0, 1.4901161e-08, 0.5000001, 2.7157001, 2.3371668, 2.6627347)
-counter_origin = NodePath("../Coutner")
 
 [node name="Coutner" parent="." unique_id=183529817 instance=ExtResource("4_5ujjy")]
 transform = Transform3D(-1, 0, 1.509958e-07, 0, 1, 0, -1.509958e-07, 0, -1, 3.2777615, 0.4712156, 2.156)
@@ -158,12 +153,22 @@ spot_range = 4.2570515
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.3275614, 2.1037471, 3.0460563)
 mesh = SubResource("BoxMesh_n776p")
 
+[node name="Gin_marker" type="Marker3D" parent="." unique_id=495649145]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7157001, 2.3371668, 2.6627347)
+
 [node name="Shelf2" type="MeshInstance3D" parent="." unique_id=581495402]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4107304, 2.1037471, 3.0460563)
 mesh = SubResource("BoxMesh_n776p")
 
+[node name="Gin_marker2" type="Marker3D" parent="Shelf2" unique_id=580399797]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.25, 0.233, -0.383)
+
 [node name="Shelf3" type="MeshInstance3D" parent="." unique_id=1697880945]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4107304, 2.6112828, 3.0460563)
+mesh = SubResource("BoxMesh_n776p")
+
+[node name="Shelf4" type="MeshInstance3D" parent="." unique_id=463507085]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.328133, 2.6112828, 3.0460563)
 mesh = SubResource("BoxMesh_n776p")
 
 [connection signal="input_event" from="Coutner/BeerGlass Button" to="Player" method="_on_beer_glass_button_input_event"]

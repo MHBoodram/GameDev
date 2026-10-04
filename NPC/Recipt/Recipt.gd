@@ -27,7 +27,6 @@ func _process(delta: float) -> void:
 		global_position = new_projection
 		if(Input.is_action_just_released("Left_click")):
 			is_balls_dragging = false
-		
 	elif(ordered):
 		var tween = get_tree().create_tween()
 		tween.set_trans(Tween.TRANS_SINE)
@@ -54,6 +53,7 @@ func _on_recipt_area_input_event(camera: Node, event: InputEvent, event_position
 func _on_recipt_area_area_entered(area: Area3D) -> void:
 	if is_balls_dragging && area.is_in_group("glass"):
 		put_on = area
+		area.get_parent()
 		print(put_on)
 
 func _on_recipt_area_area_exited(area: Area3D) -> void:

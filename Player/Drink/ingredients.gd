@@ -40,10 +40,3 @@ func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
 			drag_z_depth = to_object.dot(forward)
 		else:
 			is_balls_dragging = false
-
-func _return_original():
-	var tween = get_tree().create_tween().set_parallel(true)
-	tween.set_trans(Tween.TRANS_SINE)
-	tween.set_ease(Tween.EASE_OUT)
-	#tween.tween_property(self,"position",original_position,0.5)
-	#tween.tween_property(self,"position",original_position,0.5)

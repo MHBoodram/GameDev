@@ -6,6 +6,31 @@ var seats: Array[Base_NPC] = [null, null, null]
 func _ready() -> void:
 	GameState.player = $Player
 	GameState.main_node = self
+	_check_unlocks_drinks()
+	
+func _check_upgrades() -> void:
+	pass
+
+func _check_unlocks_drinks() -> void:
+	for i in PlayerStats.unlocks["Drinks"]:
+		print(i)
+		var temp_scene_check = "res://Player/Drink/Liquids/" + str(i) +".tscn"
+		temp_scene_check = "res://Player/Drink/Liquids/Gin.tscn"
+		print(temp_scene_check)
+		add_scene_once_drink(temp_scene_check, str(i))
+
+func add_scene_once_drink(path: String, node_name: String, parent: Node = self) -> Node:
+	var existing = parent.get_node_or_null(node_name)
+	if existing:
+		return existing
+
+	var instance = load(path).instantiate()
+	existing = parent.get_node_or_null(node_name + "_marker")
+	instance.name = node_name
+	parent.add_child(instance)
+	instance.setup(existing,$Coutner/Lower_counter)
+
+	return instance
 
 func _print_reading_dialogue() -> void:
 	print("Printing dialgoue or something")

@@ -10,6 +10,7 @@ height = 1.0991211
 [node name="Gin" type="Sprite3D" unique_id=1574004840 node_paths=PackedStringArray("area_body")]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 flip_h = true
+texture_filter = 0
 texture = ExtResource("1_agxvp")
 script = ExtResource("2_7tf0a")
 type_drink = "gin"
@@ -22,4 +23,5 @@ area_body = NodePath("Interact/CollisionShape3D")
 shape = SubResource("CapsuleShape3D_s74th")
 
 [connection signal="area_entered" from="Interact" to="." method="_on_interact_area_entered"]
+[connection signal="area_exited" from="Interact" to="." method="_on_interact_area_exited"]
 [connection signal="input_event" from="Interact" to="." method="_on_area_3d_input_event"]
