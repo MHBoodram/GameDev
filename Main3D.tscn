@@ -27,6 +27,9 @@ section_length = 0.02
 [sub_resource type="BoxShape3D" id="BoxShape3D_2tkpp"]
 size = Vector3(1.0180664, 0.15594482, 0.647583)
 
+[sub_resource type="BoxMesh" id="BoxMesh_n776p"]
+size = Vector3(1, 0.01, 1)
+
 [node name="Main3d" type="Node3D" unique_id=692509091]
 script = ExtResource("1_8iyjh")
 
@@ -42,8 +45,18 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 2.001, -0.71)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2.001, -0.71)
 
 [node name="ReciptPaper1" parent="." unique_id=1049324574 node_paths=PackedStringArray("recipt_marker", "counter_origin") instance=ExtResource("3_n776p")]
-transform = Transform3D(1, 8.5078966e-10, 1.2166902e-08, 1.21668995e-08, -0.1391731, -0.9902681, 8.5079677e-10, 0.9902681, -0.1391731, 3.667755, 2.30947, 2.7356412)
+transform = Transform3D(1, 8.5078966e-10, 1.2166902e-08, 1.21668995e-08, -0.1391731, -0.9902681, 8.5079677e-10, 0.9902681, -0.1391731, 3.667755, 2.30947, 3.4525545)
 recipt_marker = NodePath("../Recipt1")
+counter_origin = NodePath("../Coutner")
+
+[node name="ReciptPaper2" parent="." unique_id=2069618204 node_paths=PackedStringArray("recipt_marker", "counter_origin") instance=ExtResource("3_n776p")]
+transform = Transform3D(1, 8.5078966e-10, 1.2166902e-08, 1.21668995e-08, -0.1391731, -0.9902681, 8.5079677e-10, 0.9902681, -0.1391731, 3.667755, 2.30947, 3.4525545)
+recipt_marker = NodePath("../Recipt2")
+counter_origin = NodePath("../Coutner")
+
+[node name="ReciptPaper3" parent="." unique_id=969439179 node_paths=PackedStringArray("recipt_marker", "counter_origin") instance=ExtResource("3_n776p")]
+transform = Transform3D(1, 8.5078966e-10, 1.2166902e-08, 1.21668995e-08, -0.1391731, -0.9902681, 8.5079677e-10, 0.9902681, -0.1391731, 3.667755, 2.30947, 3.4525545)
+recipt_marker = NodePath("../Recipt3")
 counter_origin = NodePath("../Coutner")
 
 [node name="Recipt1" type="Marker3D" parent="." unique_id=1812126100]
@@ -64,7 +77,7 @@ counter = NodePath("../Coutner")
 spawn_y = 1.8
 
 [node name="Gin" parent="." unique_id=1574004840 node_paths=PackedStringArray("counter_origin") instance=ExtResource("8_g6ul3")]
-transform = Transform3D(0.5, -3.5527137e-15, -3.5527137e-15, 0, 0.5000001, -1.4901161e-08, 0, 1.4901161e-08, 0.5000001, 3.102294, 1.6456339, 2.132341)
+transform = Transform3D(0.5, -3.5527137e-15, -3.5527137e-15, 0, 0.5000001, -1.4901161e-08, 0, 1.4901161e-08, 0.5000001, 2.7157001, 2.3371668, 2.6627347)
 counter_origin = NodePath("../Coutner")
 
 [node name="Coutner" parent="." unique_id=183529817 instance=ExtResource("4_5ujjy")]
@@ -140,6 +153,18 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22699976, 2, 0.6376587)
 transform = Transform3D(1, 0, 0, 0, -0.04410759, 0.9990268, 0, -0.9990268, -0.04410759, 3.360123, 3.9035022, 1.9684811)
 light_energy = 5.119
 spot_range = 4.2570515
+
+[node name="Shelf" type="MeshInstance3D" parent="." unique_id=1131100511]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.3275614, 2.1037471, 3.0460563)
+mesh = SubResource("BoxMesh_n776p")
+
+[node name="Shelf2" type="MeshInstance3D" parent="." unique_id=581495402]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4107304, 2.1037471, 3.0460563)
+mesh = SubResource("BoxMesh_n776p")
+
+[node name="Shelf3" type="MeshInstance3D" parent="." unique_id=1697880945]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4107304, 2.6112828, 3.0460563)
+mesh = SubResource("BoxMesh_n776p")
 
 [connection signal="input_event" from="Coutner/BeerGlass Button" to="Player" method="_on_beer_glass_button_input_event"]
 [connection signal="input_event" from="Coutner/ShotGlass Button" to="Player" method="_on_shot_glass_button_input_event"]

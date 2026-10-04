@@ -1,6 +1,7 @@
 extends Node3D
 @onready var shot_glass = preload("res://Player/Drink/Glasses/shot_cup.tscn")
 @onready var beer_glass = preload("res://Player/Drink/Glasses/beer_cup.tscn")
+@onready var gameplay_ui = get_node("GameplayUi")
 @export var counter : Node3D
 #@onready var counter = get_node("Coutner/Lower_counter")
 var summoning : bool = false
@@ -46,6 +47,7 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.is_pressed() and event.button_index == MOUSE_BUTTON_RIGHT:
 		summoning = false
 		if(in_game):
+			gameplay_ui._out_down_minigame()
 			_out_of_game()
 
 func _spawn_cup(scene: PackedScene, cup_name: String) -> void:
@@ -63,6 +65,7 @@ func _spawn_cup(scene: PackedScene, cup_name: String) -> void:
 
 func _perfect_pour(drink : Drinks, glass : Glasses) -> void: #minigame Section
 	var tween = get_tree().create_tween().set_parallel(true)
+	gameplay_ui._in_down_minigame()
 	in_game = true
 	in_game_drinks["Drink"]["Node"] = drink
 	in_game_drinks["Drink"]["position"] = drink.global_position
@@ -73,6 +76,9 @@ func _perfect_pour(drink : Drinks, glass : Glasses) -> void: #minigame Section
 	glass._in_game()
 	tween.tween_property(drink,"global_position",$Camera3D/drink_mark.global_position,0.5)
 	tween.tween_property(glass,"global_position",$Camera3D/glass_mark.global_position,0.5)
+	await tween.finished
+	drink.look_at($Camera3D.global_position)
+	glass.look_at($Camera3D.global_position)
 
 func _out_of_game() -> void:
 	in_game = false

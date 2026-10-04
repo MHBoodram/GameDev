@@ -8,6 +8,7 @@ var drag_z_depth
 var base_y_position = 1.6
 var is_balls_dragging : bool = false
 var camera : Camera3D
+var ordered : bool = false
 
 func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
@@ -27,7 +28,7 @@ func _process(delta: float) -> void:
 		if(Input.is_action_just_released("Left_click")):
 			is_balls_dragging = false
 		
-	else:
+	elif(ordered):
 		var tween = get_tree().create_tween()
 		tween.set_trans(Tween.TRANS_SINE)
 		tween.set_ease(Tween.EASE_OUT)

@@ -5,6 +5,7 @@ var seats: Array[Base_NPC] = [null, null, null]
 
 func _ready() -> void:
 	GameState.player = $Player
+	GameState.main_node = self
 
 func _print_reading_dialogue() -> void:
 	print("Printing dialgoue or something")
@@ -63,10 +64,12 @@ func _remove_npc(seat: int) -> void:
 func _remove(seat: int) -> void:
 	seats[seat -1] = null
 
-func _add_recipt(seat: int) -> void:
+func _add_recipt(seat: int,change_words: String) -> void:
 	var string_recipt = "ReciptPaper" + str(seat)
 	var recipt_node = get_node(string_recipt)
 	var marker_node = get_node("Recipt" + str(seat))
 	var tween = get_tree().create_tween()
+	recipt_node._write(change_words)
+	recipt_node.ordered = true
 	recipt_node.global_position = player.global_position
 	tween.tween_property(recipt_node,"global_position",marker_node.global_position,0.5)

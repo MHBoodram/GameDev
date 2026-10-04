@@ -116,8 +116,7 @@ func _leaving() -> void:
 	queue_free()
 
 func _add_recipt() -> void:
-	GameState
-	pass
+	GameState.main_node._add_recipt(seat_num,str(_item_print()))
 	#recipt.global_position = camera.global_position
 	#$ReciptPaper/Base_viewport/SubViewport/Recipt._label_change(_item_print())
 	#var tween = get_tree().create_tween()

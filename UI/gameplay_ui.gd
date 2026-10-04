@@ -171,7 +171,21 @@ func _on_right_button_pressed() -> void:
 
 func _on_bottom_button_pressed() -> void:
 	bendover()
-#
+
+func _out_down_minigame() -> void:
+	$Bottom_button.disabled = false
+	$Up_button.disabled = false
+	$Bottom_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	$Up_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	
+
+func _in_down_minigame() -> void:
+	$Bottom_button.disabled = true
+	$Up_button.disabled = true
+	$Bottom_button.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	$Up_button.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
 #func _on_up_button_pressed() -> void:
 	#bendover()
 

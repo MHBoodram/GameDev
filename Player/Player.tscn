@@ -5,16 +5,21 @@
 
 [node name="Player" type="Node3D" unique_id=1043279115]
 script = ExtResource("1_q3lat")
+counter_min_x = null
+counter_max_x = null
+min_z = null
+spawn_y = null
+spawn_scale = null
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=724990159]
 transform = Transform3D(1, 0, 0, 0, 0.960001, 0.27999657, 0, -0.27999657, 0.960001, 0.2271266, 2.7696548, 1.5628164)
 current = true
 
 [node name="glass_mark" type="Marker3D" parent="Camera3D" unique_id=790759100]
-transform = Transform3D(1, 0, 0, 0, 0.960001, -0.27999657, 0, 0.27999657, 0.960001, 0.25296485, -0.14213133, -0.50483537)
+transform = Transform3D(1, 0, 0, 0, 0.960001, -0.27999657, 0, 0.27999657, 0.960001, 0.25296485, -0.10093236, -0.64609194)
 
 [node name="drink_mark" type="Marker3D" parent="Camera3D" unique_id=1369718932]
-transform = Transform3D(0.99999994, 0, 0, 0, 0.9999999, 0, 0, 0, 1, -0.13314986, 0.17112088, -0.41347122)
+transform = Transform3D(0.99999994, 0, 0, 0, 0.9999998, 0, 0, 0, 1, -0.13314986, 0.211169, -0.55078125)
 
 [node name="GameplayUi" parent="." unique_id=8092202 node_paths=PackedStringArray("player") instance=ExtResource("3_tok1r")]
 player = NodePath("..")
