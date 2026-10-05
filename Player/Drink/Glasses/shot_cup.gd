@@ -19,7 +19,7 @@ func ready() -> void:
 	var gradient_tex = material_overlay_x.get_shader_parameter("gradient_texture")
 	gradient_tex.fill_to.x = 1
 	$highlight.modulate = Color(1.5, 1.5, 0.0, 5.0)   # brighter than normal
-	
+
 func _on_hover(hovered: bool):
 	$highlight.visible = hovered
 

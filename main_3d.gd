@@ -1,13 +1,15 @@
 extends Node3D
+const PAUSE_MENU = preload("res://UI/PauseMenu.tscn")
 const BASE_NPC = preload("res://NPC/base npc.tscn")
 var seats: Array[Base_NPC] = [null, null, null]
 @onready var player = get_node("Player")
 
 func _ready() -> void:
+	add_child(PAUSE_MENU.instantiate())
 	GameState.player = $Player
 	GameState.main_node = self
 	_check_unlocks_drinks()
-	
+
 func _check_upgrades() -> void:
 	pass
 
@@ -78,7 +80,7 @@ func seats_wanting(drink_name: String) -> Array:
 		if seats[i] and seats[i]._get_drink() == drink_name:
 			result.append(i + 1)
 	return result
-	
+
 func _remove_npc(seat: int) -> void:
 	var npc = seats[seat - 1]
 	if npc == null:
@@ -110,5 +112,3 @@ func _give_drink(recipt: Node3D, drink:Glasses, seat: int) -> void:
 	tween.tween_property(recipt,"global_position",seat_marker.global_position,0.5)
 	tween.tween_property(drink,"global_position",seat_marker.global_position,0.5)
 	tween.tween_property(recipt,"global_position",$HiddenRecipt.global_position,0.5)
-
-	

@@ -1,7 +1,7 @@
 extends Ingredients
 class_name Glasses
 @export var liquids : Array = []
-@export var size : float = 1.0 
+@export var size : float = 1.0
 @export var area_body : CollisionShape3D
 var total_liquids : float = 0
 var current_position = 0
@@ -49,11 +49,11 @@ func _pouring(id : String, liquids_num : float) -> void:
 
 func _pushing_glass(other_glass : Area3D) -> void:
 	var push_dir = (global_position - other_glass.global_position)
-	push_dir.y = 0 
+	push_dir.y = 0
 	if push_dir.length() < 0.001:
-		push_dir = Vector3(1, 0, 0) 
+		push_dir = Vector3(1, 0, 0)
 	push_dir = push_dir.normalized()
-	var push_strength = 0.03 
+	var push_strength = 0.03
 	global_position += push_dir * push_strength
 	look_at(camera.global_position)
 

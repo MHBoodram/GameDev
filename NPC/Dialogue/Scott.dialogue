@@ -1,14 +1,32 @@
 ~ start
-
 Scott: [[Hi|Yo|Howdy]], My Order is {{drink_list}}
-do _add_recipt()
-set speaking_title = "mid"
 => END
-
 ~ mid
 Scott: GET IT DONE
 => END
-
 ~ finish
 Scott: Finished
+=> END
+#~ introduction
+
+#Scott: Yo must be one of those 'pop-ups' that they talk about being all the rage in the capital. Strange uniform, but I'm not up to what's trendy right now
+#- Yeah man, welcome to Interstate Paradise, uhm I'll make your first drink free if you tell me what's going on around here?
+#	Scott: Oh sweet, I mean there's not much to say if I'm being honest. Just another weekend 
+#- Hey kind of a weird question, but do you know where we are right now?
+#	Scott: Yeah man, is this a trick question? Or are you on shroomdrops right now... be honest
+#	Scott: Oh damn sorry to hear, yeah we're in Demsem right now... that should pretty much cover it?
+#	Oh ok yeah that checks out, thanks
+#=> END
+
+~ Positive
+Scott: Solid stuff, Thanks man
+=> END
+~ Negative
+Scott: Damn this taste like crap, I'm not tipping
+=> END
+~ TimeWarning1
+Scott: Damn bartender, you making the spirits by hand or something? What's taking so long
+=> END
+~ Mid
+Bartender, you got anything better in the back?
 => END

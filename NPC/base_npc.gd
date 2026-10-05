@@ -92,7 +92,7 @@ func _obtain_drink(drink: Array) -> float:
 		await get_tree().create_timer(1).timeout
 		_leaving()
 	return ranking	# always between 0 and 5
-	
+
 func _want_drink() -> Array:
 	var drink_list_want = ["beer"]
 	var liquid_num = randi_range(80,100)
@@ -110,7 +110,7 @@ func _leaving() -> void:
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
 	tween.tween_property(self,"global_position:x", -7,1.5)
-	
+
 	await $VisibleOnScreenNotifier3D.screen_exited
 	get_parent()._remove(seat_num)
 	queue_free()

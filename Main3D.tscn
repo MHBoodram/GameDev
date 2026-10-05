@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://c8eh6cyj26twd" path="res://Player/Player.tscn" id="3_c30fp"]
 [ext_resource type="PackedScene" uid="uid://bgsic7kmppbed" path="res://NPC/Recipt/recipt_scene.tscn" id="3_n776p"]
 [ext_resource type="PackedScene" uid="uid://sx4hrn3cgwy1" path="res://Player/Coutner.tscn" id="4_5ujjy"]
-[ext_resource type="Texture2D" uid="uid://dhrtxgt1q5ydw" path="res://icon.svg" id="5_g6ul3"]
+[ext_resource type="Texture2D" uid="uid://dmfxc6txg3mkt" path="res://icon.svg" id="5_g6ul3"]
 [ext_resource type="Script" uid="uid://kofwuslr42fm" path="res://Player/Beer_Pour.gd" id="6_n776p"]
 [ext_resource type="Texture2D" uid="uid://4sg263uyig2d" path="res://Assets/Items/outside_shot_glass.png" id="7_wk5cn"]
 [ext_resource type="Texture2D" uid="uid://bxv0tx0mkbbhx" path="res://Assets/UI/peter.png" id="9_n776p"]
