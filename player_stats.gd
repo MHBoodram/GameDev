@@ -7,4 +7,14 @@ var reputation_species : Dictionary = {
 	"Fish" : 0,
 	"Tiny" : 0,
 }
-var upgrades : Dictionary = {}
+
+var upgrades : Dictionary = {
+	
+}
+
+var unlocks : Dictionary = {
+	"Drinks" :{
+		"Gin" : true
+		
+	}
+}

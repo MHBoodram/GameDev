@@ -1,5 +1,45 @@
 [gd_scene format=3 uid="uid://bcghbjc5vt6x0"]
 
+[ext_resource type="Script" uid="uid://44ovy0n0yn0i" path="res://NPC/2D Subports/recipt.gd" id="1_383mu"]
+[ext_resource type="FontFile" uid="uid://cq83j1cam8lw" path="res://Assets/Font/Merchant Copy.ttf" id="1_y5c7y"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_383mu"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(1, 1, 1, 0.75)
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+expand_margin_left = 2.0
+expand_margin_top = 2.0
+expand_margin_right = 2.0
+expand_margin_bottom = 2.0
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_v8l20"]
+
+[sub_resource type="Theme" id="Theme_mfd7k"]
+Label/colors/font_color = Color(1, 1, 1, 1)
+Label/colors/font_outline_color = Color(0, 0, 0, 1)
+Label/colors/font_shadow_color = Color(0, 0, 0, 0)
+Label/constants/line_spacing = 3
+Label/constants/outline_size = 50
+Label/constants/shadow_offset_x = 1
+Label/constants/shadow_offset_y = 1
+Label/constants/shadow_outline_size = 1
+Label/font_sizes/font_size = 200
+Label/fonts/font = ExtResource("1_y5c7y")
+Label/styles/focus = SubResource("StyleBoxFlat_383mu")
+Label/styles/normal = SubResource("StyleBoxEmpty_v8l20")
+
 [node name="Recipt" type="Control" unique_id=2118297349]
 layout_mode = 3
 anchors_preset = 15
@@ -7,17 +47,20 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_383mu")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1426596345]
 layout_mode = 1
-anchors_preset = 8
+anchors_preset = 5
 anchor_left = 0.5
-anchor_top = 0.5
 anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -71.5
-offset_top = -102.0
-offset_right = 71.5
-offset_bottom = 102.0
+offset_left = -212.5
+offset_right = 212.5
+offset_bottom = 723.0
 grow_horizontal = 2
-grow_vertical = 2
+
+[node name="Label" type="Label" parent="VBoxContainer" unique_id=598583150]
+layout_mode = 2
+theme = SubResource("Theme_mfd7k")
+text = "Beer"
+autowrap_mode = 2

@@ -2,7 +2,7 @@
 Scott: [[Hi|Yo|Howdy]], My Order is {{drink_list}}
 => END
 ~ mid
-Scott: Finished
+Scott: GET IT DONE
 => END
 ~ finish
 Scott: Finished

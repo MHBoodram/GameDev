@@ -1,4 +1,5 @@
 extends Glasses
+var highlight_mat: StandardMaterial3D
 
 func ready() -> void:
 	$Outside.material_overlay = $Outside.material_override.duplicate(true)
@@ -6,7 +7,10 @@ func ready() -> void:
 	var material_overlay_x = $Outside.material_override
 	var gradient_tex = material_overlay_x.get_shader_parameter("gradient_texture")
 	gradient_tex.fill_to.x = 1
-
+	$highlight.modulate = Color(1.5, 1.5, 0.0, 5.0)   # brighter than normal
+	
+func _on_hover(hovered: bool):
+	$highlight.visible = hovered
 
 func _visuals_change(liquids_num: float) -> void:
 	total_liquids += liquids_num

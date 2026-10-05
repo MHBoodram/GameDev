@@ -3,7 +3,34 @@ const BASE_NPC = preload("res://NPC/base npc.tscn")
 var seats: Array[Base_NPC] = [null, null, null]
 @onready var player = get_node("Player")
 
-#func _ready() -> void:
+func _ready() -> void:
+	GameState.player = $Player
+	GameState.main_node = self
+	_check_unlocks_drinks()
+	
+func _check_upgrades() -> void:
+	pass
+
+func _check_unlocks_drinks() -> void:
+	for i in PlayerStats.unlocks["Drinks"]:
+		print(i)
+		var temp_scene_check = "res://Player/Drink/Liquids/" + str(i) +".tscn"
+		temp_scene_check = "res://Player/Drink/Liquids/Gin.tscn"
+		print(temp_scene_check)
+		add_scene_once_drink(temp_scene_check, str(i))
+
+func add_scene_once_drink(path: String, node_name: String, parent: Node = self) -> Node:
+	var existing = parent.get_node_or_null(node_name)
+	if existing:
+		return existing
+
+	var instance = load(path).instantiate()
+	existing = parent.get_node_or_null(node_name + "_marker")
+	instance.name = node_name
+	parent.add_child(instance)
+	instance.setup(existing,$Coutner/Lower_counter)
+
+	return instance
 
 func _print_reading_dialogue() -> void:
 	print("Printing dialgoue or something")
@@ -26,16 +53,16 @@ func _add_npc() -> void:
 		return
 
 	var npc = BASE_NPC.instantiate()
-	var paths = ["res://NPC/scott.tres", "res://NPC/slime.tres"]
-	npc._institate(load(paths.pick_random()))
+	var paths = ["res://NPC/Resources/scott.tres", "res://NPC/Resources/slime.tres"]
 
 	add_child(npc)
 	npc.global_position = $Spawn.global_position
 	seats[free_seat] = npc
 	npc.name = "seat%d_npc" % (free_seat + 1)
 	npc._moving_to(get_node("Seat%d" % (free_seat + 1)))
-
-	var order = npc._want_drink(free_seat + 1)
+	var marker_grab = get_node("Recipt" + str(free_seat +1))
+	npc._institate(load(paths.pick_random()),free_seat+1,marker_grab)
+	var order = npc._want_drink()
 	match free_seat:
 		0: GameState.seat1_order = order
 		1: GameState.seat2_order = order
@@ -59,11 +86,15 @@ func _remove_npc(seat: int) -> void:
 	seats[seat - 1] = null
 	npc._leaving()
 
-func _add_recipt(seat: int) -> void:
-	var string_recipt = "Recipt" + str(seat) + "Paper"
+func _remove(seat: int) -> void:
+	seats[seat -1] = null
+
+func _add_recipt(seat: int,change_words: String) -> void:
+	var string_recipt = "ReciptPaper" + str(seat)
 	var recipt_node = get_node(string_recipt)
 	var marker_node = get_node("Recipt" + str(seat))
 	var tween = get_tree().create_tween()
+	recipt_node._write(change_words)
+	recipt_node.ordered = true
 	recipt_node.global_position = player.global_position
-	tween.tween_property(recipt_node,"global_position",marker_node.global_position,1)
-	
+	tween.tween_property(recipt_node,"global_position",marker_node.global_position,0.5)
