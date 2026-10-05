@@ -4,7 +4,6 @@
 [ext_resource type="Script" uid="uid://cimbp8umcicc6" path="res://NPC/base_npc.gd" id="2_1d4du"]
 [ext_resource type="Resource" uid="uid://1snr5r01nxfy" path="res://NPC/Resources/scott.tres" id="3_ahtfh"]
 [ext_resource type="PackedScene" uid="uid://sxpelqgf14ku" path="res://NPC/2D Subports/Patience.tscn" id="4_3bvdc"]
-[ext_resource type="Texture2D" uid="uid://dhrtxgt1q5ydw" path="res://icon.svg" id="5_lmq4y"]
 
 [sub_resource type="Animation" id="Animation_1d4du"]
 resource_name = "1"
@@ -102,16 +101,13 @@ transparent_bg = true
 
 [node name="Patience" parent="Sprite3D/SubViewport" unique_id=43226661 instance=ExtResource("4_3bvdc")]
 
-[node name="Obtain_drink" type="Sprite3D" parent="." unique_id=780808077]
+[node name="Area3D2" type="Area3D" parent="." unique_id=692643570]
 transform = Transform3D(1, 0, 0, 0, 0, 1.0000001, 0, -1.0000001, 0, 0, -1.441681, 0.4174888)
-texture = ExtResource("5_lmq4y")
 
-[node name="Area3D" type="Area3D" parent="Obtain_drink" unique_id=692643570]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Obtain_drink/Area3D" unique_id=63110579]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D2" unique_id=63110579]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.04840088, -0.08605957, 0)
 shape = SubResource("BoxShape3D_lmq4y")
 
 [connection signal="input_event" from="Area3D" to="." method="_on_interaction_input_event"]
 [connection signal="timeout" from="Patience_timer" to="." method="_on_patience_timer_timeout"]
-[connection signal="area_entered" from="Obtain_drink/Area3D" to="." method="_on_area_Obtain_drink_entered"]
+[connection signal="area_entered" from="Area3D2" to="." method="_on_area_Obtain_drink_entered"]

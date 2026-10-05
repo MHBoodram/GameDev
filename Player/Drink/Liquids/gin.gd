@@ -30,7 +30,10 @@ func _process(_delta: float) -> void:
 		global_position = new_projection
 		if(Input.is_action_just_released("Left_click")):
 			is_balls_dragging = false
-			_return_original()
+			if(!pouring_into):
+				_return_original()
+			else:
+				_pouring_game()
 		else:
 			look_at(camera.global_position)
 
@@ -43,13 +46,6 @@ func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
 				var to_object = global_position - camera.global_position
 				var forward = -camera.global_transform.basis.z
 				drag_z_depth = to_object.dot(forward)
-			else:
-				print("returning original")
-				is_balls_dragging = false
-				if(pouring_into):
-					_pouring_game()
-				else:
-					_return_original()
 		else:
 			if event.pressed:
 				rotation_degrees.z = 80
@@ -58,9 +54,6 @@ func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
 						pouring_into._pouring(type_drink, 0.25)
 						await get_tree().create_timer(0.1).timeout
 			else:
-				
-				#for glasses in glass_array:
-					#glasses.get_parent()._pouring("beer", 0.05)
 				await get_tree().create_timer(0.1).timeout
 				rotation_degrees.z = 0
 
@@ -95,7 +88,6 @@ func _on_interact_area_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass") && is_balls_dragging && pouring_into == null):
 		pouring_into = area.get_parent()
 		area.get_parent()._on_hover(true)
-		
 
 func _on_interact_area_exited(area: Area3D) -> void:
 	if(area.is_in_group("glass") && is_balls_dragging):

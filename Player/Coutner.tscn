@@ -3,6 +3,16 @@
 [ext_resource type="PackedScene" uid="uid://ddi6comi7ic2c" path="res://Assets/3D/Lower_counter.glb" id="1_5bdfl"]
 [ext_resource type="PackedScene" uid="uid://byi3dygtbngcm" path="res://Player/Drink/Shaker.tscn" id="2_ro3gl"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ro3gl"]
+albedo_color = Color(0, 0, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_p0ji4"]
+material = SubResource("StandardMaterial3D_ro3gl")
+size = Vector3(0.5, 1, 0.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ro3gl"]
+size = Vector3(1, 0.01, 1)
+
 [node name="Coutner" type="Node3D" unique_id=183529817]
 
 [node name="Lower_counter" parent="." unique_id=1936322643 instance=ExtResource("1_5bdfl")]
@@ -13,3 +23,28 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.638433, 0.59346557, 0)
 [node name="Shaker2" parent="." unique_id=691486503 node_paths=PackedStringArray("counter_origin") instance=ExtResource("2_ro3gl")]
 transform = Transform3D(0.39539757, -0.038076606, 0.047020696, 0, 0.31085837, 0.25172818, -0.060504336, -0.24883173, 0.3072816, -0.678, 1.2, -0.126)
 counter_origin = NodePath("..")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=761466262]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4806209, 0.47230542, 0)
+mesh = SubResource("BoxMesh_p0ji4")
+
+[node name="Shelf" type="MeshInstance3D" parent="." unique_id=806780473]
+transform = Transform3D(-1, 0, -1.509958e-07, 0, 1, 0, 1.509958e-07, 0, -1, -1.0498002, 1.6325315, -0.89005613)
+mesh = SubResource("BoxMesh_ro3gl")
+
+[node name="Shelf2" type="MeshInstance3D" parent="." unique_id=2006890080]
+transform = Transform3D(-1, 0, -1.509958e-07, 0, 1, 0, 1.509958e-07, 0, -1, 0.86703086, 1.6325315, -0.8900564)
+mesh = SubResource("BoxMesh_ro3gl")
+
+[node name="Shelf3" type="MeshInstance3D" parent="." unique_id=1282551432]
+transform = Transform3D(-1, 0, -1.509958e-07, 0, 1, 0, 1.509958e-07, 0, -1, 0.86703086, 2.140067, -0.8900564)
+mesh = SubResource("BoxMesh_ro3gl")
+
+[node name="Shelf4" type="MeshInstance3D" parent="." unique_id=2016773533]
+transform = Transform3D(-1, 0, -1.509958e-07, 0, 1, 0, 1.509958e-07, 0, -1, -1.0503719, 2.140067, -0.89005613)
+mesh = SubResource("BoxMesh_ro3gl")
+
+[node name="SpotLight3D" type="SpotLight3D" parent="." unique_id=818362530]
+transform = Transform3D(1, 0, 0, 0, -0.04410759, 0.9990268, 0, -0.9990268, -0.04410759, -0.03294635, 3.7166026, -0.036703765)
+light_energy = 5.119
+spot_range = 4.2570515

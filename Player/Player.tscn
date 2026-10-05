@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://c8eh6cyj26twd"]
 
 [ext_resource type="Script" uid="uid://c0vc11sy5fwva" path="res://Player/player.gd" id="1_q3lat"]
+[ext_resource type="Script" uid="uid://ilqlfi7mgoyf" path="res://Player/Dynamic_camera.gd" id="2_tok1r"]
 [ext_resource type="PackedScene" uid="uid://byw6bbpmaen6w" path="res://UI/Gameplay_UI.tscn" id="3_tok1r"]
 
 [node name="Player" type="Node3D" unique_id=1043279115]
@@ -14,6 +15,7 @@ spawn_scale = null
 [node name="Camera3D" type="Camera3D" parent="." unique_id=724990159]
 transform = Transform3D(1, 0, 0, 0, 0.960001, 0.27999657, 0, -0.27999657, 0.960001, 0.2271266, 2.7696548, 1.5628164)
 current = true
+script = ExtResource("2_tok1r")
 
 [node name="glass_mark" type="Marker3D" parent="Camera3D" unique_id=790759100]
 transform = Transform3D(1, 0, 0, 0, 0.960001, -0.27999657, 0, 0.27999657, 0.960001, 0.25296485, -0.10093236, -0.64609194)

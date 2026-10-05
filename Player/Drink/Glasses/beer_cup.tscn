@@ -50,6 +50,7 @@ texture = ExtResource("5_pq6lo")
 
 [node name="highlight" type="Sprite3D" parent="." unique_id=23743985]
 transform = Transform3D(1.2539052, 0, 0, 0, 1.2053055, -3.5762787e-07, 0, 1.7881393e-07, 1.1290426, 0.0004220754, -0.07575068, 0.015916757)
+visible = false
 modulate = Color(1, 1, 0, 1)
 shaded = true
 alpha_cut = 2

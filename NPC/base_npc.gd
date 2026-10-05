@@ -88,7 +88,7 @@ func _obtain_drink(drink: Array) -> float:
 			break
 	print(ranking)
 	if(drink_list.size() <= 0):
-		$Obtain_drink/Area3D/CollisionShape3D.disabled = true
+		$Area3D/CollisionShape3D.disabled = true
 		await get_tree().create_timer(1).timeout
 		_leaving()
 	return ranking	# always between 0 and 5
@@ -137,9 +137,6 @@ func _item_print() -> String:
 				total += str(str(z) + " ")
 		total += "\n"
 	return total
-
-
-
 
 func _on_patience_timer_timeout() -> void:
 	_leaving()
