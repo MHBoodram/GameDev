@@ -7,6 +7,12 @@ var total_liquids : float = 0
 var current_position = 0
 var base_y_position = 1.6
 var in_game: bool = false
+const LIQUID_COLOR = {
+	"gin" : Color(0.0, 0.953, 0.0, 1.0),
+	"beer" : Color(0.98, 0.322, 0.051, 1.0),
+
+}
+
 
 func _delete():
 	queue_free()
@@ -31,15 +37,15 @@ func _pouring(id : String, liquids_num : float) -> void:
 		var top_drink = liquids[len(liquids)-1]
 		if(top_drink[0] == id):
 			top_drink[1] += liquids_num
-			_visuals_change(liquids_num)
+			_visuals_change(liquids_num,id,false)
 		else:
 			var temp_liquid = [id,liquids_num]
 			liquids.push_back(temp_liquid)
-			_visuals_change(liquids_num)
+			_visuals_change(liquids_num,id,true)
 	else:
 		var temp_liquid = [id,liquids_num]
 		liquids.push_back(temp_liquid)
-		_visuals_change(liquids_num)
+		_visuals_change(liquids_num,id,true)
 
 func _pushing_glass(other_glass : Area3D) -> void:
 	var push_dir = (global_position - other_glass.global_position)
@@ -59,7 +65,7 @@ func _out_of_game():
 	in_game = false
 	area_body.disabled = false
 
-func _visuals_change(liquids_num: float) -> void:
+func _visuals_change(liquids_num: float,liquid_name: String,new: bool) -> void:
 	print(liquids_num)
 
 func _dranked() -> void:

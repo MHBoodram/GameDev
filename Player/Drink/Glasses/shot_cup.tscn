@@ -25,6 +25,7 @@ shader = ExtResource("3_id3av")
 shader_parameter/texture_albedo = ExtResource("3_4egiw")
 shader_parameter/gradient_texture = SubResource("GradientTexture2D_id3av")
 shader_parameter/gradient_offset = 0.0
+shader_parameter/flip_gradient = false
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_t6etq"]
 radius = 0.4453125
@@ -42,6 +43,7 @@ area_body = NodePath("Area3D/CollisionShape3D")
 
 [node name="highlight" type="Sprite3D" parent="." unique_id=1850656926]
 transform = Transform3D(1.246164, 0, 0, 0, 1.2017572, -2.9802322e-07, 0, 4.172325e-07, 1.1268122, -0.009412654, -0.0025333124, 0.011333531)
+visible = false
 modulate = Color(1, 1, 0, 1)
 shaded = true
 alpha_cut = 2

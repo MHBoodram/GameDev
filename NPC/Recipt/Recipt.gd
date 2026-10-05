@@ -5,6 +5,7 @@ var recipt_clicked : bool = false
 var put_on : Area3D
 var drag_z_depth
 @export var counter_origin : Node3D
+@export var seat_num : int = 1
 var base_y_position = 1.6
 var is_balls_dragging : bool = false
 var camera : Camera3D
@@ -27,6 +28,9 @@ func _process(delta: float) -> void:
 		global_position = new_projection
 		if(Input.is_action_just_released("Left_click")):
 			is_balls_dragging = false
+			if(put_on):
+				ordered = false
+				get_parent()._give_drink(self,put_on.get_parent(),seat_num)
 	elif(ordered):
 		var tween = get_tree().create_tween()
 		tween.set_trans(Tween.TRANS_SINE)
@@ -53,9 +57,10 @@ func _on_recipt_area_input_event(camera: Node, event: InputEvent, event_position
 func _on_recipt_area_area_entered(area: Area3D) -> void:
 	if is_balls_dragging && area.is_in_group("glass"):
 		put_on = area
-		area.get_parent()
-		print(put_on)
+		area.get_parent()._on_hover(true)
+		
 
 func _on_recipt_area_area_exited(area: Area3D) -> void:
 	if is_balls_dragging && put_on == area:
 		put_on = null
+		area.get_parent()._on_hover(false)

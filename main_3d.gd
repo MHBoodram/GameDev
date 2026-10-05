@@ -98,3 +98,17 @@ func _add_recipt(seat: int,change_words: String) -> void:
 	recipt_node.ordered = true
 	recipt_node.global_position = player.global_position
 	tween.tween_property(recipt_node,"global_position",marker_node.global_position,0.5)
+
+func _give_drink(recipt: Node3D, drink:Glasses, seat: int) -> void:
+	var seat_marker = get_node_or_null("SeatDrink" + str(seat))
+	if(!seat_marker):
+		push_warning("Can't find seat marker")
+		return
+	var tween = get_tree().create_tween().set_parallel(true)
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(recipt,"global_position",seat_marker.global_position,0.5)
+	tween.tween_property(drink,"global_position",seat_marker.global_position,0.5)
+	tween.tween_property(recipt,"global_position",$HiddenRecipt.global_position,0.5)
+
+	

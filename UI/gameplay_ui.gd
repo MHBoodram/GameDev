@@ -11,7 +11,7 @@ var up_down_checks : bool = false
 func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
 	$FishEye.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	print(camera.global_position.y)
+	#print(camera.global_position.y)
 
 func bendover() -> void:
 	if(down):
@@ -52,7 +52,6 @@ func moving_around(right : bool) -> void:
 	if(right):
 		if(current_position > 1):
 			current_position -= 1
-			
 			var new_position = match_position_counter[current_position]
 			var tween = get_tree().create_tween()
 			tween.set_trans(Tween.TRANS_SINE)
@@ -74,7 +73,7 @@ func mouse_screen(looking: String) -> void:
 	if(!down):
 		match looking:
 			"left":
-				print(camera_movement_rotation)
+				#print(camera_movement_rotation)
 				var new_position = camera.rotation_degrees.y + camera_movement_rotation
 				new_position = clamp(new_position, -camera_movement_rotation, camera_movement_rotation)
 				if(new_position > -camera_movement_rotation):
@@ -132,7 +131,7 @@ func mouse_screen(looking: String) -> void:
 			"down":
 				up_down_checks = true
 				while(up_down_checks):
-					print("something Check")
+					#print("something Check")
 					var new_position = camera.rotation_degrees.x - 5
 					new_position = clamp(new_position, -camera_movement_rotation - 45, camera_movement_rotation + 16.3)	
 					var tween = get_tree().create_tween()
@@ -185,7 +184,13 @@ func _in_down_minigame() -> void:
 	$Bottom_button.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	$Up_button.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
+func _on_bottom_button_mouse_entered() -> void:
+	mouse_screen("down")
 
+func _on_up_button_mouse_entered() -> void:
+	mouse_screen("up")
+
+#OLD CODE
 #func _on_up_button_pressed() -> void:
 	#bendover()
 
@@ -205,10 +210,3 @@ func _in_down_minigame() -> void:
 	#tween.tween_property(camera,"position:y",1.9,0.15)
 	#tween.tween_property(camera,"position:z",1.3,0.15)
 	#tween.tween_property(camera,"rotation_degrees:x",-55.3,0.15)
-
-func _on_bottom_button_mouse_entered() -> void:
-	mouse_screen("down")
-
-func _on_up_button_mouse_entered() -> void:
-	print("working")
-	mouse_screen("up")
