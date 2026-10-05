@@ -55,7 +55,7 @@ func _on_recipt_area_input_event(camera: Node, event: InputEvent, event_position
 		drag_z_depth = to_object.dot(forward)
 
 func _on_recipt_area_area_entered(area: Area3D) -> void:
-	if is_balls_dragging && area.is_in_group("glass"):
+	if is_balls_dragging && area.is_in_group("glass") && put_on == null:
 		put_on = area
 		area.get_parent()._on_hover(true)
 		
