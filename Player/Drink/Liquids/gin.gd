@@ -16,7 +16,7 @@ func setup(og_position: Marker3D,Counter: Node3D) -> void:
 	counter_origin = Counter
 	global_position = og_position.global_position
 	rotation_degrees = Vector3.ZERO
-	
+
 func _process(_delta: float) -> void:
 	if is_balls_dragging:
 		var mouse_pos = get_viewport().get_mouse_position()
@@ -64,7 +64,7 @@ func _return_original():
 	tween.tween_property(self,"global_position",original_position.global_position,0.5)
 	tween.tween_property(self,"global_position",original_position.global_position,0.5)
 	rotation_degrees = Vector3.ZERO
-	
+
 func _in_game():
 	in_game = true
 	pouring_into._on_hover(false)
@@ -73,7 +73,7 @@ func _out_of_game():
 	in_game = false
 	_return_original()
 	pouring_into = null
-	
+
 
 func _pouring_game() -> void:
 	pouring_into.in_game = true
