@@ -10,7 +10,6 @@ var in_game: bool = false
 const LIQUID_COLOR = {
 	"gin" : Color(0.0, 0.953, 0.0, 1.0),
 	"beer" : Color(0.98, 0.322, 0.051, 1.0),
-
 }
 
 

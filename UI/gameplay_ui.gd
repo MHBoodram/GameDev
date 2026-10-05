@@ -8,9 +8,11 @@ var match_position_counter : Dictionary ={1 : 5.8,2:2.8,3: -0.2}
 var camera : Camera3D
 var down : bool = false
 var up_down_checks : bool = false
+
 func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
 	$FishEye.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	GameState.gameplay_ui = self
 	#print(camera.global_position.y)
 
 func bendover() -> void:
@@ -163,10 +165,8 @@ func _on_mouse_exited() -> void:
 func _on_left_button_pressed() -> void:
 	moving_around(false)
 
-
 func _on_right_button_pressed() -> void:
 	moving_around(true)
-
 
 func _on_bottom_button_pressed() -> void:
 	bendover()
@@ -176,7 +176,6 @@ func _out_down_minigame() -> void:
 	$Up_button.disabled = false
 	$Bottom_button.mouse_filter = Control.MOUSE_FILTER_STOP
 	$Up_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	
 
 func _in_down_minigame() -> void:
 	$Bottom_button.disabled = true
@@ -189,6 +188,18 @@ func _on_bottom_button_mouse_entered() -> void:
 
 func _on_up_button_mouse_entered() -> void:
 	mouse_screen("up")
+
+func _night_title_popup()-> void:
+	var hey_peter = randi_range(1,500)
+	print(hey_peter)
+	if(hey_peter == 67):
+		$ColorRect3/Night/HeyPeter.show()
+	else:
+		$ColorRect3/Night/HeyPeter.hide()
+		
+	$AnimationPlayer.play("Night_Animation")
+	pass
+
 
 #OLD CODE
 #func _on_up_button_pressed() -> void:

@@ -9,7 +9,6 @@
 [ext_resource type="Script" uid="uid://kofwuslr42fm" path="res://Player/Beer_Pour.gd" id="6_n776p"]
 [ext_resource type="Texture2D" uid="uid://4sg263uyig2d" path="res://Assets/Items/outside_shot_glass.png" id="7_wk5cn"]
 [ext_resource type="Texture2D" uid="uid://bxv0tx0mkbbhx" path="res://Assets/UI/peter.png" id="9_n776p"]
-[ext_resource type="PackedScene" uid="uid://cm05k37ejgq5p" path="res://UI/Debug_Menu.tscn" id="10_wk5cn"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_v88eg"]
 radius = 0.23796713
@@ -171,8 +170,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.081238, 0.5536709, 3.426609
 [node name="Sprite3D" type="Sprite3D" parent="HiddenRecipt" unique_id=1983726433]
 transform = Transform3D(0.05, 0, 0, 0, 0.05, 0, 0, 0, 0.05, 0.02605009, -0.11582613, -0.21608734)
 texture = ExtResource("9_n776p")
-
-[node name="DebugMenu" parent="." unique_id=249711118 instance=ExtResource("10_wk5cn")]
 
 [connection signal="input_event" from="Coutner/BeerGlass Button" to="Player" method="_on_beer_glass_button_input_event"]
 [connection signal="input_event" from="Coutner/ShotGlass Button" to="Player" method="_on_shot_glass_button_input_event"]

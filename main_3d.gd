@@ -9,6 +9,8 @@ func _ready() -> void:
 	GameState.player = $Player
 	GameState.main_node = self
 	_check_unlocks_drinks()
+	if(GameState.gameplay_ui):
+		GameState.gameplay_ui._night_title_popup()
 
 func _check_upgrades() -> void:
 	pass
@@ -40,13 +42,11 @@ func _print_reading_dialogue() -> void:
 func _input(event: InputEvent) -> void:
 	#if(Input.is_action_just_pressed("ui_accept")):
 		#get_tree().quit()
-	if(Input.is_action_just_pressed("ui_accept")):
-		_add_npc()
-	if Input.is_action_just_pressed("ui_left"):
-		for i in seats.size():
-			if seats[i] != null:
-				_remove_npc(i + 1)
-				break
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_P or event.physical_keycode == KEY_P:
+			$DebugMenu.visible = !$DebugMenu.visible
+
+
 
 func _add_npc() -> void:
 	var free_seat = seats.find(null)
@@ -83,6 +83,7 @@ func seats_wanting(drink_name: String) -> Array:
 
 func _remove_npc(seat: int) -> void:
 	var npc = seats[seat - 1]
+	print("REMOVE NPC")
 	if npc == null:
 		return
 	seats[seat - 1] = null
