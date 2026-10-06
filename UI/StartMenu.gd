@@ -20,7 +20,7 @@ func _on_play_pressed() -> void:
 	GameState.seat2_order = []
 	GameState.seat3_order = []
 	get_tree().change_scene_to_file(GAME_SCENE)
-	
+
 
 func _on_quit_pressed() -> void:
 	await get_tree().create_timer(0.15).timeout

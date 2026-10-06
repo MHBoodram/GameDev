@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://3wvbn47ka5nv"]
+[gd_scene format=3 uid="uid://dhcmul7disjs7"]
 
 [ext_resource type="Script" uid="uid://2gx5dxe01r2o" path="res://UI/UIAudio.gd" id="1_audio"]
 [ext_resource type="AudioStream" uid="uid://dgxvuqgnsv4eg" path="res://UI/VideoGameMenuButtonShort.wav" id="2_6m1qx"]

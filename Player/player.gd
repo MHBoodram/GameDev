@@ -13,8 +13,8 @@ var in_game_drinks : Dictionary = \
 	"Drink" : {"Node" : Node3D, "position" : Vector3.ZERO},
 	"Glass" : {"Node" : Node3D, "position" : Vector3.ZERO}
 }
-@export var counter_min_x: float = -1.0   
-@export var counter_max_x: float = 1.184  
+@export var counter_min_x: float = -1.0
+@export var counter_max_x: float = 1.184
 @export var min_z: float = 0.28
 @export var spawn_y: float = 5
 @export var spawn_scale: Vector3 = Vector3(0.2, 0.2, 0.2)
@@ -106,7 +106,7 @@ func _on_beer_glass_button_input_event(camera: Node, event: InputEvent, event_po
 		icup_spawn = "beer_glass"
 		await get_tree().create_timer(0.2).timeout
 		summoning = true
-		
+
 func _on_trash_area_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
 		area.get_parent()._delete()
