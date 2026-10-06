@@ -5,6 +5,9 @@
 [ext_resource type="Texture2D" uid="uid://xk8p6bfsbe0w" path="res://Assets/UI/Coin.png" id="3_ea1ie"]
 [ext_resource type="Texture2D" uid="uid://d36ww05lajjsl" path="res://Assets/UI/circle_progress_outline.png" id="3_xl5tu"]
 [ext_resource type="Texture2D" uid="uid://cmy1e1mvuqoli" path="res://Assets/UI/circle_progress.png" id="4_jsh06"]
+[ext_resource type="FontFile" uid="uid://cq83j1cam8lw" path="res://Assets/Font/Merchant Copy.ttf" id="6_0kmbd"]
+[ext_resource type="FontFile" uid="uid://b82bj4uglyu75" path="res://Assets/Font/fs-a-pixel-away.otf" id="6_bfal7"]
+[ext_resource type="Texture2D" uid="uid://bxv0tx0mkbbhx" path="res://Assets/UI/peter.png" id="8_ybnoy"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_dd6x2"]
 shader = ExtResource("2_p43d3")
@@ -12,6 +15,44 @@ shader_parameter/effect_amount = 1.00000016625
 
 [sub_resource type="Gradient" id="Gradient_ea1ie"]
 colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 0)
+
+[sub_resource type="Animation" id="Animation_bfal7"]
+resource_name = "Night_Animation"
+length = 3.0
+step = 0.05
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("ColorRect3:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3, 1.6, 2.25, 2.65),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(248, -179), Vector2(248, 212), Vector2(248, 212), Vector2(248, 212), Vector2(248, -179)]
+}
+
+[sub_resource type="Animation" id="Animation_0kmbd"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("ColorRect3:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(248, 212)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_ybnoy"]
+_data = {
+&"Night_Animation": SubResource("Animation_bfal7"),
+&"RESET": SubResource("Animation_0kmbd")
+}
 
 [node name="GameplayUi" type="CanvasLayer" unique_id=8092202]
 script = ExtResource("1_twi4a")
@@ -86,14 +127,16 @@ offset_bottom = 40.0
 offset_right = 150.0
 offset_bottom = 177.0
 
-[node name="TextureProgressBar" type="TextureProgressBar" parent="Left Container" unique_id=1415814912]
+[node name="Timer" type="TextureProgressBar" parent="Left Container" unique_id=1415814912]
 layout_mode = 2
-value = 50.0
+max_value = 300.0
+value = 300.0
 fill_mode = 5
 texture_under = ExtResource("3_xl5tu")
 texture_progress = ExtResource("4_jsh06")
 
 [node name="Label" type="Label" parent="Left Container" unique_id=1938570450]
+visible = false
 layout_mode = 2
 text = "Time"
 
@@ -101,8 +144,8 @@ text = "Time"
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -219.0
-offset_bottom = 64.0
+offset_left = -174.0
+offset_bottom = 68.0
 grow_horizontal = 0
 
 [node name="Money" type="HBoxContainer" parent="Right Container" unique_id=965083668]
@@ -114,7 +157,12 @@ texture = ExtResource("3_ea1ie")
 
 [node name="Label" type="Label" parent="Right Container/Money" unique_id=2003636857]
 layout_mode = 2
-text = "Number of Scopper"
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("6_0kmbd")
+theme_override_font_sizes/font_size = 100
+text = "500"
 
 [node name="CPUParticles2D" type="CPUParticles2D" parent="Right Container/Money" unique_id=189273426]
 position = Vector2(32, 30)
@@ -127,6 +175,103 @@ gravity = Vector2(0, 941.235)
 initial_velocity_min = 148.52
 initial_velocity_max = 148.52
 color_ramp = SubResource("Gradient_ea1ie")
+
+[node name="ColorRect3" type="ColorRect" parent="." unique_id=1524664127]
+offset_left = 248.0
+offset_top = 212.0
+offset_right = 1055.9529
+offset_bottom = 389.00012
+color = Color(0, 0, 0, 1)
+
+[node name="Background" type="ColorRect" parent="ColorRect3" unique_id=468878370]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -392.97644
+offset_top = 8.0
+offset_right = 481.46802
+offset_bottom = 188.00002
+grow_horizontal = 2
+scale = Vector2(0.9, 0.9)
+color = Color(0.3019608, 0.1764706, 0, 1)
+
+[node name="String" type="ColorRect" parent="ColorRect3" unique_id=1744880908]
+layout_mode = 0
+offset_left = 8.0
+offset_top = -464.0
+offset_right = 42.0
+offset_bottom = 2.0
+color = Color(0, 0, 0, 1)
+
+[node name="String" type="ColorRect" parent="ColorRect3/String" unique_id=1402572168]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -7.0
+offset_top = -218.0
+offset_right = 7.0
+offset_bottom = 226.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Night" type="Label" parent="ColorRect3" unique_id=205910052]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -388.97644
+offset_top = -78.5
+offset_right = 395.02356
+offset_bottom = 78.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_shadow_color = Color(0.14406255, 0.14406255, 0.14406255, 0)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/shadow_offset_x = 5
+theme_override_constants/shadow_offset_y = 5
+theme_override_constants/outline_size = 10
+theme_override_fonts/font = ExtResource("6_bfal7")
+theme_override_font_sizes/font_size = 150
+text = "Night 1"
+
+[node name="HeyPeter" type="Sprite2D" parent="ColorRect3/Night" unique_id=1572215728]
+visible = false
+position = Vector2(389.37405, 79.461685)
+rotation = -1.5707964
+scale = Vector2(0.19301559, 0.7631643)
+texture = ExtResource("8_ybnoy")
+
+[node name="String2" type="ColorRect" parent="ColorRect3" unique_id=774504969]
+layout_mode = 0
+offset_left = 766.0
+offset_top = -458.0
+offset_right = 800.0
+offset_bottom = 2.0
+color = Color(0, 0, 0, 1)
+
+[node name="String" type="ColorRect" parent="ColorRect3/String2" unique_id=1345422951]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -7.0
+offset_top = -215.0
+offset_right = 7.0
+offset_bottom = 221.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1530023701]
+libraries/ = SubResource("AnimationLibrary_ybnoy")
 
 [connection signal="mouse_entered" from="Left_Button" to="." method="_on_left_button_mouse_entered"]
 [connection signal="mouse_exited" from="Left_Button" to="." method="_on_mouse_exited"]

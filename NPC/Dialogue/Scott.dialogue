@@ -1,5 +1,7 @@
 ~ start
 Scott: [[Hi|Yo|Howdy]], My Order is {{drink_list}}
+do _add_recipt()
+set speaking_title = "mid"
 => END
 ~ mid
 Scott: GET IT DONE

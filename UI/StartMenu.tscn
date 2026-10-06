@@ -1,4 +1,4 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bdpvjjayusxo7"]
 
 [ext_resource type="Script" uid="uid://cdw65vses6vur" path="res://UI/StartMenu.gd" id="1_start"]
 [ext_resource type="Texture2D" uid="uid://b1g27nful45ro" path="res://UI/Game_Title_Asset.png" id="2_logo"]
@@ -7,7 +7,7 @@
 atlas = ExtResource("2_logo")
 region = Rect2(23, 33, 463, 289)
 
-[node name="StartMenu" type="Control"]
+[node name="StartMenu" type="Control" unique_id=1809742072]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -16,7 +16,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_start")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=1959663630]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -25,7 +25,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.09, 0.07, 0.12, 1)
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=894323069]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -33,7 +33,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="CenterContainer"]
+[node name="VBox" type="VBoxContainer" parent="CenterContainer" unique_id=302025385]
 layout_mode = 2
 theme_override_constants/separation = 16
 
@@ -45,13 +45,13 @@ texture = SubResource("AtlasTexture_logo")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="PlayButton" type="Button" parent="CenterContainer/VBox"]
+[node name="PlayButton" type="Button" parent="CenterContainer/VBox" unique_id=71465580]
 custom_minimum_size = Vector2(240, 48)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Play"
 
-[node name="QuitButton" type="Button" parent="CenterContainer/VBox"]
+[node name="QuitButton" type="Button" parent="CenterContainer/VBox" unique_id=504631371]
 custom_minimum_size = Vector2(240, 48)
 layout_mode = 2
 size_flags_horizontal = 4

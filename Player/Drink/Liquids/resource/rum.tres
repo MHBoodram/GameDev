@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="Liquid" format=3 uid="uid://ckypifgush45m"]
+
+[ext_resource type="Script" uid="uid://ouggsev6087j" path="res://Player/Drink/Liquids/Liquid_resource.gd" id="1_orhwx"]
+[ext_resource type="Texture2D" uid="uid://dfbn72ee85nuo" path="res://Assets/Items/Drinks/Beer6.png" id="2_wu1x3"]
+
+[resource]
+script = ExtResource("1_orhwx")
+sprite = ExtResource("2_wu1x3")
+alchol = true
+id = "rum"
+metadata/_custom_type_script = "uid://ouggsev6087j"

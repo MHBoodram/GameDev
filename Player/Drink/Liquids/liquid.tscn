@@ -1,21 +1,16 @@
 [gd_scene format=3 uid="uid://47xad203pngm"]
 
-[ext_resource type="Texture2D" uid="uid://dw85f2nirodu7" path="res://Assets/Items/Drinks/Beer2.png" id="1_agxvp"]
-[ext_resource type="Script" uid="uid://dyius6a3dgffd" path="res://Player/Drink/Liquids/gin.gd" id="2_7tf0a"]
+[ext_resource type="Script" uid="uid://dyius6a3dgffd" path="res://Player/Drink/Liquids/gin.gd" id="2_mic12"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_s74th"]
 radius = 0.28564453
 height = 1.0991211
 
-[node name="Gin" type="Sprite3D" unique_id=1574004840 node_paths=PackedStringArray("area_body")]
+[node name="Liquids" type="Sprite3D" unique_id=1574004840]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 flip_h = true
 texture_filter = 0
-texture = ExtResource("1_agxvp")
-script = ExtResource("2_7tf0a")
-type_drink = "gin"
-size = 50.0
-area_body = NodePath("Interact/CollisionShape3D")
+script = ExtResource("2_mic12")
 
 [node name="Interact" type="Area3D" parent="." unique_id=1520610536]
 
