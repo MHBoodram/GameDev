@@ -194,9 +194,18 @@ func _night_title_popup()-> void:
 		$ColorRect3/Night/HeyPeter.show()
 	else:
 		$ColorRect3/Night/HeyPeter.hide()
-		
+	$ColorRect3/Night.text = "Night 1"
 	$AnimationPlayer.play("Night_Animation")
-	pass
+
+func _night_title_finish()->void:
+	var hey_peter = randi_range(1,500)
+	print(hey_peter)
+	if(hey_peter == 67):
+		$ColorRect3/Night/HeyPeter.show()
+	else:
+		$ColorRect3/Night/HeyPeter.hide()
+	$ColorRect3/Night.text = "Finish"
+	$AnimationPlayer.play("Night_Animation")
 
 func _change_money(new_value: float) -> void:
 	var old_value = float($"Right Container/Money/Label".text)

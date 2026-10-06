@@ -56,9 +56,11 @@ func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
 				GameState.player._update_hand("holding")
 				rotation_degrees.z = 80
 				if(pouring_into):
+					$CPUParticles3D.emitting = true
 					while(Input.get_action_strength("Left_click")):
 						pouring_into._pouring(liquid_resource.id, 0.25)
 						await get_tree().create_timer(0.1).timeout
+				$CPUParticles3D.emitting = false
 			else:
 				GameState.player._update_hand("idle")
 				await get_tree().create_timer(0.1).timeout

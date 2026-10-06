@@ -1,21 +1,39 @@
 [gd_scene format=3 uid="uid://47xad203pngm"]
 
+[ext_resource type="Texture2D" uid="uid://dw85f2nirodu7" path="res://Assets/Items/Drinks/Beer2.png" id="1_46qyp"]
 [ext_resource type="Script" uid="uid://dyius6a3dgffd" path="res://Player/Drink/Liquids/gin.gd" id="2_mic12"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_s74th"]
 radius = 0.28564453
 height = 1.0991211
 
+[sub_resource type="RibbonTrailMesh" id="RibbonTrailMesh_46qyp"]
+shape = 0
+size = 0.5
+sections = 2
+section_length = 0.02
+
 [node name="Liquids" type="Sprite3D" unique_id=1574004840]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 flip_h = true
 texture_filter = 0
+texture = ExtResource("1_46qyp")
 script = ExtResource("2_mic12")
 
 [node name="Interact" type="Area3D" parent="." unique_id=1520610536]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Interact" unique_id=1051334637]
 shape = SubResource("CapsuleShape3D_s74th")
+
+[node name="CPUParticles3D" type="CPUParticles3D" parent="." unique_id=462436255]
+transform = Transform3D(0.99956757, 0.029404588, -2.1049148e-08, 0.0254651, -0.865651, -0.50000006, -0.014702309, 0.49978396, -0.8660255, -0.51867396, 0.53087556, 0)
+visible = false
+emitting = false
+amount = 1
+lifetime = 0.2
+mesh = SubResource("RibbonTrailMesh_46qyp")
+spread = 0.0
+gravity = Vector3(0, 0, -9.8)
 
 [connection signal="area_entered" from="Interact" to="." method="_on_interact_area_entered"]
 [connection signal="area_exited" from="Interact" to="." method="_on_interact_area_exited"]

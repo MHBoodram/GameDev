@@ -3,7 +3,7 @@ const PAUSE_MENU = preload("res://UI/PauseMenu.tscn")
 const BASE_NPC = preload("res://NPC/base npc.tscn")
 var seats: Array[Base_NPC] = [null, null, null]
 @onready var player = get_node("Player")
-
+var frame_count = 0
 func _ready() -> void:
 	add_child(PAUSE_MENU.instantiate())
 	GameState.player = $Player
@@ -12,9 +12,18 @@ func _ready() -> void:
 	if(GameState.gameplay_ui):
 		GameState.gameplay_ui._night_title_popup()
 
+
+@warning_ignore("unused_parameter")
 func _process(delta: float) -> void:
 	GameState.gameplay_ui._change_time($Night_Time.time_left)
-	pass
+	frame_count += 1
+
+	if frame_count >= 75:
+		print("CHECK")
+		var random_number = randi_range(1,50)
+		if(19 == random_number):
+			_add_npc()
+		frame_count = 0 
 
 func _check_upgrades() -> void:
 	pass
@@ -23,6 +32,11 @@ func _check_unlocks_drinks() -> void:
 	for i in PlayerStats.unlocks["Drinks"]:
 		var temp_scene_check = "res://Player/Drink/Liquids/liquid.tscn"
 		add_scene_once_drink(temp_scene_check, str(i))
+
+func _night_select() -> void:
+	match GameState.night:
+		1:
+			_add_npc()
 
 func add_scene_once_drink(path: String, node_name: String, parent: Node = self) -> Node:
 	var existing = parent.get_node_or_null(node_name)

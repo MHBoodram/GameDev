@@ -26,6 +26,7 @@ func _ready() -> void:
 	_tween_bounce()
 	dialogue_resource = npc_resource.dialogue_resource
 	patience_timer.start()
+	
 
 @warning_ignore("unused_parameter")
 func _process(delta: float) -> void:
@@ -95,7 +96,7 @@ func _obtain_drink(drink: Array) -> float:
 	return ranking	# always between 0 and 5
 
 func _want_drink() -> Array:
-	var drink_list_want = ["beer"]
+	var drink_list_want = ["beer","gin","vodka"]
 	var liquid_num = randi_range(80,100)
 	var drink_name = drink_list_want.pick_random()
 	var total = [[drink_name,liquid_num]]

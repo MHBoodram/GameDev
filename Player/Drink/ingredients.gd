@@ -41,4 +41,4 @@ func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
 			drag_z_depth = to_object.dot(forward)
 		else:
 			is_balls_dragging = false
-			GameState.player._update_hand("interact")
+			GameState.player._update_hand("idle")

@@ -7,6 +7,9 @@
 [ext_resource type="PackedScene" uid="uid://sx4hrn3cgwy1" path="res://Player/Coutner.tscn" id="4_5ujjy"]
 [ext_resource type="Texture2D" uid="uid://dmfxc6txg3mkt" path="res://icon.svg" id="5_g6ul3"]
 [ext_resource type="Script" uid="uid://kofwuslr42fm" path="res://Player/Beer_Pour.gd" id="6_n776p"]
+[ext_resource type="Texture2D" uid="uid://1yul4dtngbg4" path="res://Assets/Items/beer.png" id="6_p0p6f"]
+[ext_resource type="Texture2D" uid="uid://d1lg7pdai3jyu" path="res://Assets/Items/beer_outside.png" id="6_ris41"]
+[ext_resource type="Texture2D" uid="uid://b5l0yoj3yjcmf" path="res://Assets/Items/inside_shot_glass.png" id="7_ris41"]
 [ext_resource type="Texture2D" uid="uid://4sg263uyig2d" path="res://Assets/Items/outside_shot_glass.png" id="7_wk5cn"]
 [ext_resource type="Texture2D" uid="uid://bxv0tx0mkbbhx" path="res://Assets/UI/peter.png" id="9_n776p"]
 [ext_resource type="PackedScene" uid="uid://cm05k37ejgq5p" path="res://UI/Debug_Menu.tscn" id="10_wk5cn"]
@@ -18,7 +21,7 @@ radius = 0.23796713
 size = Vector3(0.81274414, 0.7680054, 0.17028809)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ris41"]
-size = Vector3(0.08284634, 0.24646378, 0.23828125)
+size = Vector3(0.08284634, 0.20541477, 0.23828125)
 
 [sub_resource type="RibbonTrailMesh" id="RibbonTrailMesh_pka58"]
 shape = 0
@@ -89,18 +92,23 @@ spawn_y = 1.8
 transform = Transform3D(-1, 0, 1.509958e-07, 0, 1, 0, -1.509958e-07, 0, -1, 3.2777615, 0.4712156, 2.156)
 
 [node name="BeerGlass Button" type="Area3D" parent="Coutner" unique_id=2100852152]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26090324, 1.053846, 0.62434983)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.98018, 1.053846, 0.099915504)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/BeerGlass Button" unique_id=1985639721]
 shape = SubResource("SphereShape3D_v88eg")
 
+[node name="Sprite3D2" type="Sprite3D" parent="Coutner/BeerGlass Button" unique_id=1014117098]
+transform = Transform3D(0.22749029, 0, -1.24207785e-14, 0, 0.24296804, 0, 3.9042476e-15, 0, 0.7237263, 0, 0, 0)
+billboard = 1
+texture = ExtResource("6_ris41")
+
 [node name="Sprite3D" type="Sprite3D" parent="Coutner/BeerGlass Button" unique_id=2140262908]
 transform = Transform3D(0.22749029, 0, 0, 0, 0.24296804, 0, 0, 0, 0.7237263, 0, 0, 0)
 billboard = 1
-texture = ExtResource("5_g6ul3")
+texture = ExtResource("6_p0p6f")
 
 [node name="ShotGlass Button" type="Area3D" parent="Coutner" unique_id=746714498]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.81711745, 1.053846, 0.62434983)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9951551, 1.053846, 0.3553003)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/ShotGlass Button" unique_id=692371114]
 shape = SubResource("SphereShape3D_v88eg")
@@ -108,7 +116,12 @@ shape = SubResource("SphereShape3D_v88eg")
 [node name="Sprite3D" type="Sprite3D" parent="Coutner/ShotGlass Button" unique_id=815208176]
 transform = Transform3D(0.22749029, 0, 0, 0, 0.24296804, 0, 0, 0, 0.7237263, 0, 0, 0)
 billboard = 1
-texture = ExtResource("5_g6ul3")
+texture = ExtResource("7_ris41")
+
+[node name="Sprite3D2" type="Sprite3D" parent="Coutner/ShotGlass Button" unique_id=199702498]
+transform = Transform3D(0.22749029, 0, 0, 0, 0.24296804, 0, 0, 0, 0.7237263, 0, 0, 0)
+billboard = 1
+texture = ExtResource("7_wk5cn")
 
 [node name="BeerKeg" type="Area3D" parent="Coutner" unique_id=70738904]
 transform = Transform3D(0.29999995, 0, 0, 0, -0.19884086, 0.22463806, 0, -0.22463806, -0.19884086, 0.8801341, 1.4483287, -0.3325984)
@@ -127,7 +140,7 @@ transform = Transform3D(1, -7.1054274e-15, 0, -1.4210855e-14, 1.0000004, 0, -7.1
 input_ray_pickable = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/BeerKeg/PourArea" unique_id=153202913]
-transform = Transform3D(0.9999999, 0, 0, 0, 0.7476614, -0.664084, 0, 0.664084, 0.7476614, -0.21345973, -0.16121936, -0.14319992)
+transform = Transform3D(0.9999999, -4.2632564e-14, 2.2387647e-13, 0, 0.74766237, -0.6640834, 8.100187e-13, 0.6640834, 0.74766237, 0.08523893, -0.019207954, -0.017189026)
 shape = SubResource("BoxShape3D_ris41")
 
 [node name="PourZone" type="Sprite3D" parent="Coutner/BeerKeg/PourArea" unique_id=487294679]
