@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://ci6fovgg0i85"]
+
+[ext_resource type="PackedScene" uid="uid://b4bo32owx0ri7" path="res://Assets/3D/new_bar.glb" id="1_sh2qq"]
+
+[node name="new_bar" unique_id=47131528 instance=ExtResource("1_sh2qq")]
+
+[node name="Ingredients" parent="Working_counter2" parent_id_path=PackedInt32Array(420156195) index="0" unique_id=185401927]
+transform = Transform3D(2.54954, 0, 0, 0, 0.13277937, 0, 0, 0, 1.0940902, 0, -1.9027383, 0.3321324)
+
+[node name="Working_counter" parent="Working_counter2" parent_id_path=PackedInt32Array(420156195) index="1" unique_id=1913056304]
+transform = Transform3D(2.2017038, 0, 0, 0, 0.98042417, 0, 0, 0, 1.3058101, 0, -3.0136824, 0)

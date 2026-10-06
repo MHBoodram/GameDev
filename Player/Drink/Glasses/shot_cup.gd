@@ -57,3 +57,11 @@ func _giving_drink() -> void:
 func _on_area_3d_area_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
 		_pushing_glass(area)
+
+
+func _on_area_3d_mouse_entered() -> void:
+	_on_hover(true)
+
+
+func _on_area_3d_mouse_exited() -> void:
+	_on_hover(false)

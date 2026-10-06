@@ -10,6 +10,19 @@ Scott: Here are some choices.
 Nathan: For more information see the online documentation.
 => END
 
+~ introduction_game
+Shark: You really want to start this business huh...
+- Yeah what about it
+	Shark: Sharp tongue from someone who wants my money
+- I'm excited about it
+	Shark: Yeah yeah yeah, just gotta give me my money at the end of this deal
+- ...
+	Shark: Cat got your tongune,...[wait=0.5] doesn't really matter to me
+Shark: doesn't matter
+Shark: Just show me what you got
+
+=> END
+
 ~ mid
 Scott: Finished
 => END

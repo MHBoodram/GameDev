@@ -14,6 +14,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	GameState.gameplay_ui._change_time($Night_Time.time_left)
+	pass
 
 func _check_upgrades() -> void:
 	pass

@@ -37,7 +37,7 @@ grow_vertical = 2
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Logo" type="TextureRect" parent="CenterContainer/VBox"]
+[node name="Logo" type="TextureRect" parent="CenterContainer/VBox" unique_id=450784215]
 texture_filter = 1
 custom_minimum_size = Vector2(695, 434)
 layout_mode = 2

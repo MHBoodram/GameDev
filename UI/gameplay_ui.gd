@@ -15,6 +15,9 @@ func _ready() -> void:
 	GameState.gameplay_ui = self
 	#print(camera.global_position.y)
 
+
+
+
 func bendover() -> void:
 	if(down):
 		$Left_Button.disabled = false

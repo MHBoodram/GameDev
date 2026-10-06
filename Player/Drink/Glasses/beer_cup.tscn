@@ -25,6 +25,7 @@ shader = ExtResource("3_pq6lo")
 shader_parameter/texture_albedo = ExtResource("5_pq6lo")
 shader_parameter/gradient_texture = SubResource("GradientTexture2D_id3av")
 shader_parameter/gradient_offset = 0.0
+shader_parameter/flip_gradient = false
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_psbjw"]
 radius = 0.38378906
@@ -65,3 +66,5 @@ shape = SubResource("CapsuleShape3D_psbjw")
 
 [connection signal="area_entered" from="Area3D" to="." method="_on_area_3d_area_entered"]
 [connection signal="input_event" from="Area3D" to="." method="_on_area_3d_input_event"]
+[connection signal="mouse_entered" from="Area3D" to="." method="_on_area_3d_mouse_entered"]
+[connection signal="mouse_exited" from="Area3D" to="." method="_on_area_3d_mouse_exited"]

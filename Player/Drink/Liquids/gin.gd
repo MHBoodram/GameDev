@@ -28,6 +28,8 @@ func _process(_delta: float) -> void:
 			new_projection.y = base_y_position + 0.2
 		else:
 			new_projection.y = base_y_position
+		var tween = get_tree().create_tween()
+		tween.tween_property(self,"global_position",new_projection,0.25)
 		global_position = new_projection
 		if(Input.is_action_just_released("Left_click")):
 			is_balls_dragging = false
