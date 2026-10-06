@@ -43,20 +43,24 @@ func _process(_delta: float) -> void:
 @warning_ignore("shadowed_variable", "unused_parameter", "shadowed_variable_base_class")
 func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		
 		if !in_game:
 			if event.pressed:
+				GameState.player._update_hand("holding")
 				is_balls_dragging = true
 				var to_object = global_position - camera.global_position
 				var forward = -camera.global_transform.basis.z
 				drag_z_depth = to_object.dot(forward)
 		else:
 			if event.pressed:
+				GameState.player._update_hand("holding")
 				rotation_degrees.z = 80
 				if(pouring_into):
 					while(Input.get_action_strength("Left_click")):
 						pouring_into._pouring(liquid_resource.id, 0.25)
 						await get_tree().create_timer(0.1).timeout
 			else:
+				GameState.player._update_hand("idle")
 				await get_tree().create_timer(0.1).timeout
 				rotation_degrees.z = 0
 
@@ -97,3 +101,13 @@ func _on_interact_area_exited(area: Area3D) -> void:
 		if(area.get_parent() == pouring_into):
 			pouring_into = null
 			area.get_parent()._on_hover(false)
+
+
+func _on_interact_mouse_entered() -> void:
+	if(!is_balls_dragging):
+		GameState.player._update_hand("interact")
+
+
+func _on_interact_mouse_exited() -> void:
+	if(!is_balls_dragging):
+		GameState.player._update_hand("idle")

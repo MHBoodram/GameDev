@@ -21,6 +21,8 @@ func _delete():
 
 func _process(_delta: float) -> void:
 	if is_balls_dragging:
+		
+
 		var mouse_pos = get_viewport().get_mouse_position()
 		var new_projection = camera.project_position(mouse_pos, drag_z_depth)
 		new_projection.x = clamp(new_projection.x, -1.2 + counter_origin.global_position.x,1.4+ counter_origin.global_position.x)
@@ -31,6 +33,8 @@ func _process(_delta: float) -> void:
 			new_projection.y = base_y_position
 		global_position = new_projection
 		if(Input.is_action_just_released("Left_click")):
+			print("hand Idle")
+			GameState.player._update_hand("idle")
 			is_balls_dragging = false
 		look_at(camera.global_position)
 

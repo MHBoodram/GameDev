@@ -1,11 +1,159 @@
 [gd_scene format=3 uid="uid://ci6fovgg0i85"]
 
 [ext_resource type="PackedScene" uid="uid://b4bo32owx0ri7" path="res://Assets/3D/new_bar.glb" id="1_sh2qq"]
+[ext_resource type="Shader" uid="uid://qothrby8gojn" path="res://Shader/per_object_pixel_shader.gdshader" id="2_5snmu"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_byjj7"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_v8qlf"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_l25nj"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_2joti"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bq4gq"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_0j8rr"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_on0uf"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_x4qe3"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_0p5id"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_x4n3n"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xjrtr"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_glf7r"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_chapp"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_4itrx"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_r7riq"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_cfncv"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_tyxmf"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_5snmu"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
 
 [node name="new_bar" unique_id=47131528 instance=ExtResource("1_sh2qq")]
 
-[node name="Ingredients" parent="Working_counter2" parent_id_path=PackedInt32Array(420156195) index="0" unique_id=185401927]
+[node name="Ingredients" parent="Working_counter2" parent_id_path=PackedInt32Array(1054452615) index="0" unique_id=2116501982]
 transform = Transform3D(2.54954, 0, 0, 0, 0.13277937, 0, 0, 0, 1.0940902, 0, -1.9027383, 0.3321324)
 
-[node name="Working_counter" parent="Working_counter2" parent_id_path=PackedInt32Array(420156195) index="1" unique_id=1913056304]
+[node name="Working_counter" parent="Working_counter2" parent_id_path=PackedInt32Array(1054452615) index="1" unique_id=1898781622]
 transform = Transform3D(2.2017038, 0, 0, 0, 0.98042417, 0, 0, 0, 1.3058101, 0, -3.0136824, 0)
+
+[node name="Back counter pattern" parent="." index="2" unique_id=1155643625]
+transform = Transform3D(-2.6917652e-07, 0, 1.0640978, 0, 2.3574443, 0, -6.158041, 0, -4.6513193e-08, -5.8180113, 3.6521893, -9.786367)
+
+[node name="Counter" parent="." index="3" unique_id=1320299928]
+material_overlay = SubResource("ShaderMaterial_byjj7")
+
+[node name="Cushion_007" parent="." index="7" unique_id=1923909163]
+material_overlay = SubResource("ShaderMaterial_v8qlf")
+
+[node name="Table_001" parent="." index="9" unique_id=1945998652]
+material_overlay = SubResource("ShaderMaterial_l25nj")
+
+[node name="Cushion_001" parent="." index="13" unique_id=17482808]
+material_overlay = SubResource("ShaderMaterial_2joti")
+
+[node name="Frame_001" parent="." index="14" unique_id=1269631175]
+material_overlay = SubResource("ShaderMaterial_bq4gq")
+
+[node name="Table_002" parent="." index="15" unique_id=411884704]
+material_overlay = SubResource("ShaderMaterial_0j8rr")
+
+[node name="Cushion_002" parent="." index="16" unique_id=2012992025]
+material_overlay = SubResource("ShaderMaterial_on0uf")
+
+[node name="Frame_003" parent="." index="17" unique_id=1994530617]
+material_overlay = SubResource("ShaderMaterial_x4qe3")
+
+[node name="Table_003" parent="." index="18" unique_id=651257157]
+material_overlay = SubResource("ShaderMaterial_0p5id")
+
+[node name="Cushion_003" parent="." index="19" unique_id=2077635633]
+material_overlay = SubResource("ShaderMaterial_x4n3n")
+
+[node name="Frame_004" parent="." index="20" unique_id=1754606734]
+material_overlay = SubResource("ShaderMaterial_xjrtr")
+
+[node name="Table_004" parent="." index="21" unique_id=1369273303]
+material_overlay = SubResource("ShaderMaterial_glf7r")
+
+[node name="Cushion_004" parent="." index="22" unique_id=47041587]
+material_overlay = SubResource("ShaderMaterial_chapp")
+
+[node name="Frame_005" parent="." index="23" unique_id=1075054035]
+material_overlay = SubResource("ShaderMaterial_4itrx")
+
+[node name="Table_005" parent="." index="24" unique_id=93124234]
+material_overlay = SubResource("ShaderMaterial_r7riq")
+
+[node name="Floor" parent="." index="27" unique_id=1430165337]
+material_overlay = SubResource("ShaderMaterial_cfncv")
+
+[node name="Cube_001" parent="." index="28" unique_id=585835832]
+material_overlay = SubResource("ShaderMaterial_tyxmf")
+
+[node name="Walls" parent="." index="29" unique_id=703651654]
+material_overlay = SubResource("ShaderMaterial_5snmu")

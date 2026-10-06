@@ -15,9 +15,6 @@ func _ready() -> void:
 	GameState.gameplay_ui = self
 	#print(camera.global_position.y)
 
-
-
-
 func bendover() -> void:
 	if(down):
 		$Left_Button.disabled = false
@@ -76,6 +73,7 @@ func moving_around(right : bool) -> void:
 
 func mouse_screen(looking: String) -> void:
 	if(!down):
+		GameState.player._update_hand("interact")
 		match looking:
 			"left":
 				#print(camera_movement_rotation)
@@ -101,18 +99,12 @@ func mouse_screen(looking: String) -> void:
 				else:
 					camera.rotation_degrees.y = camera_movement_rotation
 				return
-			#"down":
-				#if(!down):
-					#var new_position = camera.rotation_degrees.x - camera_movement_rotation
-					#new_position = clamp(new_position, -camera_movement_rotation - 16.3, camera_movement_rotation + 16.3)	
-					#var tween = get_tree().create_tween()
-					#tween.set_trans(Tween.TRANS_SINE)
-					#tween.set_ease(Tween.EASE_OUT)
-					#tween.tween_property(camera,"rotation_degrees:x", new_position,0.15)
-				#return;
+			"down":
+				GameState.player._update_hand("interact")
+
 			
 			_:
-			
+				GameState.player._update_hand("idle")
 				var tween = get_tree().create_tween()
 				tween.set_trans(Tween.TRANS_SINE)
 				tween.set_ease(Tween.EASE_OUT)
@@ -120,6 +112,7 @@ func mouse_screen(looking: String) -> void:
 				#tween.tween_property(camera,"rotation_degrees:x", -55.3,0.15)
 				return;
 	else:
+		GameState.player._update_hand("interact")
 		match looking:
 			"up":
 				up_down_checks = true
@@ -147,6 +140,7 @@ func mouse_screen(looking: String) -> void:
 				up_down_checks = false
 				return;
 			_:
+				GameState.player._update_hand("idle")
 				up_down_checks = false
 
 			#tween.tween_property(camera,"rotation_degrees:x", -16.3,0.15)
@@ -187,6 +181,7 @@ func _in_down_minigame() -> void:
 	$Up_button.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 func _on_bottom_button_mouse_entered() -> void:
+	GameState.player._update_hand("interact")
 	mouse_screen("down")
 
 func _on_up_button_mouse_entered() -> void:

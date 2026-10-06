@@ -2,6 +2,7 @@ extends Node3D
 @onready var shot_glass = preload("res://Player/Drink/Glasses/shot_cup.tscn")
 @onready var beer_glass = preload("res://Player/Drink/Glasses/beer_cup.tscn")
 @onready var gameplay_ui = get_node("GameplayUi")
+
 @export var counter : Node3D
 #@onready var counter = get_node("Coutner/Lower_counter")
 var summoning : bool = false
@@ -23,6 +24,28 @@ var cup_offsets := {
 	"shot_glass": Vector3(0, 0, 0),
 	"beer_glass": Vector3(0, 0, 0),
 }
+
+func _ready():
+	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
+	_update_hand("idle")
+
+func _process(delta: float) -> void:
+	$GameplayUi/Hand.global_position = get_viewport().get_mouse_position()
+
+func _update_hand(change: String) -> void:
+	match change:
+		"interact":
+			if(!$GameplayUi/Hand/AnimationPlayer.current_animation == "interact"):
+				$GameplayUi/Hand/AnimationPlayer.play("interact")
+			return
+		"holding":
+			if(!$GameplayUi/Hand/AnimationPlayer.current_animation == "hold"):
+				$GameplayUi/Hand/AnimationPlayer.play("hold")
+			return
+		_:
+			if(!$GameplayUi/Hand/AnimationPlayer.current_animation == "idle"):
+				$GameplayUi/Hand/AnimationPlayer.play("idle")
+			return
 
 func get_mouse_world_position(camera: Camera3D, plane_y: float) -> Vector3:
 	var mouse_pos = get_viewport().get_mouse_position()

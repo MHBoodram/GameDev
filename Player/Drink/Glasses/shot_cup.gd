@@ -60,8 +60,11 @@ func _on_area_3d_area_entered(area: Area3D) -> void:
 
 
 func _on_area_3d_mouse_entered() -> void:
+	if(!is_balls_dragging):
+		GameState.player._update_hand("interact")
 	_on_hover(true)
 
-
 func _on_area_3d_mouse_exited() -> void:
+	if(!is_balls_dragging):
+		GameState.player._update_hand("idle")
 	_on_hover(false)

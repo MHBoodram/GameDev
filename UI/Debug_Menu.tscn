@@ -22,6 +22,13 @@ grow_vertical = 2
 [node name="HBoxContainer" type="VBoxContainer" parent="TextureRect/VBoxContainer" unique_id=1210498679]
 layout_mode = 2
 
+[node name="Fps" type="Label" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1785563584]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 5
+text = "FPS:"
+
 [node name="Add_NPC" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1510861576]
 layout_mode = 2
 text = "Random Add NPC"

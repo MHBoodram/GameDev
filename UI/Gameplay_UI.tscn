@@ -8,7 +8,6 @@
 [ext_resource type="FontFile" uid="uid://cq83j1cam8lw" path="res://Assets/Font/Merchant Copy.ttf" id="6_0kmbd"]
 [ext_resource type="FontFile" uid="uid://b82bj4uglyu75" path="res://Assets/Font/fs-a-pixel-away.otf" id="6_bfal7"]
 [ext_resource type="Texture2D" uid="uid://bxv0tx0mkbbhx" path="res://Assets/UI/peter.png" id="8_ybnoy"]
-[ext_resource type="Texture2D" uid="uid://6sfbebk1yfeh" path="res://Assets/UI/Hand-Sheet.png" id="9_cvtm7"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_dd6x2"]
 shader = ExtResource("2_p43d3")
@@ -273,10 +272,6 @@ grow_vertical = 2
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1530023701]
 libraries/ = SubResource("AnimationLibrary_ybnoy")
-
-[node name="Cursor" type="Sprite2D" parent="." unique_id=1437936290]
-texture = ExtResource("9_cvtm7")
-hframes = 2
 
 [connection signal="mouse_entered" from="Left_Button" to="." method="_on_left_button_mouse_entered"]
 [connection signal="mouse_exited" from="Left_Button" to="." method="_on_mouse_exited"]

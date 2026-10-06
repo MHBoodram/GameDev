@@ -34,9 +34,11 @@ func _process(_delta: float) -> void:
 func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
+			GameState.player._update_hand("holding")
 			is_balls_dragging = true
 			var to_object = global_position - camera.global_position
 			var forward = -camera.global_transform.basis.z
 			drag_z_depth = to_object.dot(forward)
 		else:
 			is_balls_dragging = false
+			GameState.player._update_hand("interact")
