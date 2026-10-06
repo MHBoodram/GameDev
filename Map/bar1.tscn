@@ -13,6 +13,11 @@ render_priority = 0
 shader = ExtResource("2_5snmu")
 shader_parameter/pixel_size = 3
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_tyxmf"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_l25nj"]
 render_priority = 0
 shader = ExtResource("2_5snmu")
@@ -83,7 +88,7 @@ render_priority = 0
 shader = ExtResource("2_5snmu")
 shader_parameter/pixel_size = 3
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_tyxmf"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_i6scb"]
 render_priority = 0
 shader = ExtResource("2_5snmu")
 shader_parameter/pixel_size = 3
@@ -109,6 +114,9 @@ material_overlay = SubResource("ShaderMaterial_byjj7")
 
 [node name="Cushion_007" parent="." index="7" unique_id=1923909163]
 material_overlay = SubResource("ShaderMaterial_v8qlf")
+
+[node name="Frame_002" parent="." index="8" unique_id=369093493]
+material_overlay = SubResource("ShaderMaterial_tyxmf")
 
 [node name="Table_001" parent="." index="9" unique_id=1945998652]
 material_overlay = SubResource("ShaderMaterial_l25nj")
@@ -153,7 +161,7 @@ material_overlay = SubResource("ShaderMaterial_r7riq")
 material_overlay = SubResource("ShaderMaterial_cfncv")
 
 [node name="Cube_001" parent="." index="28" unique_id=585835832]
-material_overlay = SubResource("ShaderMaterial_tyxmf")
+material_overlay = SubResource("ShaderMaterial_i6scb")
 
 [node name="Walls" parent="." index="29" unique_id=703651654]
 material_overlay = SubResource("ShaderMaterial_5snmu")

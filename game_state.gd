@@ -6,7 +6,7 @@ var night : int = 1
 var player : Node3D
 var main_node : Node3D
 var gameplay_ui : CanvasLayer
-var special_state : bool = false
+var special_state : bool = true
 
 func _add_recipit(seat: int):
 	pass

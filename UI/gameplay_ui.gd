@@ -207,6 +207,7 @@ func _night_title_finish()->void:
 	$ColorRect3/Night.text = "Finish"
 	$AnimationPlayer.play("Night_Animation")
 
+
 func _change_money(new_value: float) -> void:
 	var old_value = float($"Right Container/Money/Label".text)
 	if(new_value < old_value):

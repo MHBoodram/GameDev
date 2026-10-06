@@ -1,13 +1,6 @@
 ~ start
 Shark: [[Hi|Hello|Howdy]], this is some dialogue.
-Scott: Here are some choices.
-- Option
-	Nathan: You picked the first one.
-- Option
-	Nathan: You picked the second one.
-- Start again => start
-- End the conversation => END
-Nathan: For more information see the online documentation.
+do _add_recipt()
 => END
 
 ~ introduction_game
@@ -17,10 +10,44 @@ Shark: You really want to start this business huh...
 - I'm excited about it
 	Shark: Yeah yeah yeah, just gotta give me my money at the end of this deal
 - ...
-	Shark: Cat got your tongune,...[wait=0.5] doesn't really matter to me
+	Shark: Cat got your tongue,...[wait=0.5] doesn't really matter to me
 Shark: doesn't matter
 Shark: Just show me what you got
+do _add_recipt()
+set speaking_title = "introduction_mid_talk"
 
+=> END
+
+~ introduction_mid_talk
+Shark: Why are you still talking to me
+Shark: Start making my drink
+=> END
+
+~ introduction_mid_bad
+Shark: Did you just give me straight gasoline you punk
+Shark: Is this really what I put my money into...
+Shark: Welp I'm gonna tear your business if you do bad
+Shark: Good luck buddy
+do GameState.main_node.night_popup()
+do _leaving()
+=> END
+
+~ introduction_mid_mid
+Shark: Hey this isn't half bad
+Shark: I could get this somewhere better
+Shark: I feeling the potential...
+Shark: Good luck buddy
+do GameState.main_node.night_popup()
+do _leaving()
+=> END
+
+~ introduction_mid_good
+Shark: Hey this is pretty good
+Shark: Not bad kiddo I would get another if I didn't have other business to tear up
+Shark: I feeling my money coming in
+Shark: Yeah you got that I believe
+do GameState.main_node.night_popup()
+do _leaving()
 => END
 
 ~ mid

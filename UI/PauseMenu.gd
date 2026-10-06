@@ -7,7 +7,7 @@ const START_MENU_SCENE := "res://UI/StartMenu.tscn"
 @onready var quit_button: Button = $CenterContainer/VBox/QuitButton
 
 func _ready() -> void:
-	Window.MODE_FULLSCREEN = true
+	#DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	# The rest of ht egame stops when the tree is paused; this menu must keep running.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	hide()

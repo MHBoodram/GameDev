@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://c7e1o70yhke0k"]
+
+[ext_resource type="FontFile" uid="uid://cq83j1cam8lw" path="res://Assets/Font/Merchant Copy.ttf" id="1_anvix"]
+
+[sub_resource type="Theme" id="Theme_1i4lr"]
+Label/colors/font_color = Color(0, 0, 0, 1)
+Label/colors/font_outline_color = Color(1, 1, 1, 1)
+Label/constants/outline_size = 10
+Label/fonts/font = ExtResource("1_anvix")
+
+[node name="AfterNightMenu" type="Control" unique_id=69194250]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_1i4lr")
+
+[node name="TextureRect" type="ColorRect" parent="." unique_id=1574170902]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.1584723, 0.15847233, 0.1584723, 1)
+
+[node name="Label" type="Label" parent="TextureRect" unique_id=325522279]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -310.0
+offset_right = 310.0
+offset_bottom = 168.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 250
+text = "Night Results"

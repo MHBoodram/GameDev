@@ -64,3 +64,13 @@ func _on_recipt_area_area_exited(area: Area3D) -> void:
 	if is_balls_dragging && put_on == area:
 		put_on = null
 		area.get_parent()._on_hover(false)
+
+
+func _on_recipt_area_mouse_entered() -> void:
+	if(!is_balls_dragging):
+		GameState.player._update_hand("interact")
+
+
+func _on_recipt_area_mouse_exited() -> void:
+	if(!is_balls_dragging):
+		GameState.player._update_hand("idle")
