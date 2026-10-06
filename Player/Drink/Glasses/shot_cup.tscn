@@ -25,12 +25,13 @@ shader = ExtResource("3_id3av")
 shader_parameter/texture_albedo = ExtResource("3_4egiw")
 shader_parameter/gradient_texture = SubResource("GradientTexture2D_id3av")
 shader_parameter/gradient_offset = 0.0
+shader_parameter/flip_gradient = false
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_t6etq"]
 radius = 0.4453125
 height = 0.890625
 
-[node name="Shot_gun" type="Sprite3D" unique_id=691486503]
+[node name="Shot_gun" type="Sprite3D" unique_id=691486503 node_paths=PackedStringArray("area_body")]
 transform = Transform3D(0.2, 0, 0, 0, 0.16932972, 0.106430486, 0, -0.106430486, 0.16932972, 0, 0, 0)
 shaded = true
 alpha_cut = 2
@@ -38,6 +39,16 @@ texture_filter = 0
 texture = ExtResource("1_p1pq6")
 script = ExtResource("2_4egiw")
 size = 5.0
+area_body = NodePath("Area3D/CollisionShape3D")
+
+[node name="highlight" type="Sprite3D" parent="." unique_id=1850656926]
+transform = Transform3D(1.246164, 0, 0, 0, 1.2017572, -2.9802322e-07, 0, 4.172325e-07, 1.1268122, -0.009412654, -0.0025333124, 0.011333531)
+visible = false
+modulate = Color(1, 1, 0, 1)
+shaded = true
+alpha_cut = 2
+texture_filter = 0
+texture = ExtResource("3_4egiw")
 
 [node name="Outside" type="Sprite3D" parent="." unique_id=1532157949]
 transform = Transform3D(1.0350124, 0, 0, 0, 0.9999998, -8.940697e-08, 0, 8.940697e-08, 0.9999998, -0.022528395, 0.0045902645, 6.9849193e-10)

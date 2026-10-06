@@ -1,0 +1,179 @@
+[gd_scene format=3 uid="uid://bd5ueityo7sxq"]
+
+[ext_resource type="Script" uid="uid://dxnxyiem3ntwt" path="res://main_3d.gd" id="1_8iyjh"]
+[ext_resource type="PackedScene" uid="uid://hpxbjx0xsej2" path="res://Map/bar_setting.tscn" id="2_qgfr0"]
+[ext_resource type="PackedScene" uid="uid://c8eh6cyj26twd" path="res://Player/Player.tscn" id="3_c30fp"]
+[ext_resource type="PackedScene" uid="uid://bgsic7kmppbed" path="res://NPC/Recipt/recipt_scene.tscn" id="3_n776p"]
+[ext_resource type="PackedScene" uid="uid://sx4hrn3cgwy1" path="res://Player/Coutner.tscn" id="4_5ujjy"]
+[ext_resource type="Texture2D" uid="uid://dmfxc6txg3mkt" path="res://icon.svg" id="5_g6ul3"]
+[ext_resource type="Script" uid="uid://kofwuslr42fm" path="res://Player/Beer_Pour.gd" id="6_n776p"]
+[ext_resource type="Texture2D" uid="uid://4sg263uyig2d" path="res://Assets/Items/outside_shot_glass.png" id="7_wk5cn"]
+[ext_resource type="Texture2D" uid="uid://bxv0tx0mkbbhx" path="res://Assets/UI/peter.png" id="9_n776p"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_v88eg"]
+radius = 0.23796713
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_p0p6f"]
+size = Vector3(0.81274414, 0.7680054, 0.17028809)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ris41"]
+size = Vector3(0.08284634, 0.24646378, 0.23828125)
+
+[sub_resource type="RibbonTrailMesh" id="RibbonTrailMesh_pka58"]
+shape = 0
+sections = 2
+section_length = 0.02
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2tkpp"]
+size = Vector3(1.0180664, 0.15594482, 0.647583)
+
+[node name="Main3d" type="Node3D" unique_id=692509091]
+script = ExtResource("1_8iyjh")
+
+[node name="BarSetting" parent="." unique_id=1770039662 instance=ExtResource("2_qgfr0")]
+
+[node name="Seat1" type="Marker3D" parent="." unique_id=659153647]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.001, -0.71)
+
+[node name="Seat2" type="Marker3D" parent="." unique_id=301102786]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 2.001, -0.71)
+
+[node name="Seat3" type="Marker3D" parent="." unique_id=825412235]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2.001, -0.71)
+
+[node name="SeatDrink1" type="Marker3D" parent="." unique_id=1533204773]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4798261, -0.36288327)
+
+[node name="SeatDrink2" type="Marker3D" parent="." unique_id=1829500111]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 1.48, -0.363)
+
+[node name="SeatDrink3" type="Marker3D" parent="." unique_id=1492462176]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1.48, -0.363)
+
+[node name="ReciptPaper1" parent="." unique_id=1049324574 node_paths=PackedStringArray("recipt_marker", "counter_origin") instance=ExtResource("3_n776p")]
+transform = Transform3D(1, 8.5078966e-10, 1.2166902e-08, 1.21668995e-08, -0.1391731, -0.9902681, 8.5079677e-10, 0.9902681, -0.1391731, 3.667755, 0.36866653, 3.4525545)
+recipt_marker = NodePath("../Recipt1")
+counter_origin = NodePath("../Coutner")
+
+[node name="ReciptPaper2" parent="." unique_id=2069618204 node_paths=PackedStringArray("recipt_marker", "counter_origin") instance=ExtResource("3_n776p")]
+transform = Transform3D(1, 8.5078966e-10, 1.2166902e-08, 1.21668995e-08, -0.1391731, -0.9902681, 8.5079677e-10, 0.9902681, -0.1391731, 3.667755, 0.36866653, 3.4525545)
+recipt_marker = NodePath("../Recipt2")
+counter_origin = NodePath("../Coutner")
+seat_num = 2
+
+[node name="ReciptPaper3" parent="." unique_id=969439179 node_paths=PackedStringArray("recipt_marker", "counter_origin") instance=ExtResource("3_n776p")]
+transform = Transform3D(1, 8.5078966e-10, 1.2166902e-08, 1.21668995e-08, -0.1391731, -0.9902681, 8.5079677e-10, 0.9902681, -0.1391731, 3.667755, 0.36866653, 3.4525545)
+recipt_marker = NodePath("../Recipt3")
+counter_origin = NodePath("../Coutner")
+seat_num = 3
+
+[node name="Recipt1" type="Marker3D" parent="." unique_id=1812126100]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.668, 2.3, 2.736)
+
+[node name="Recipt2" type="Marker3D" parent="." unique_id=1028708705]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.388, 2.3, 2.736)
+
+[node name="Recipt3" type="Marker3D" parent="." unique_id=781699835]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.108, 2.3, 2.736)
+
+[node name="Spawn" type="Marker3D" parent="." unique_id=25745977]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.9415827, -0.8089119)
+
+[node name="Player" parent="." unique_id=1043279115 node_paths=PackedStringArray("counter") instance=ExtResource("3_c30fp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2993567, 0, 0)
+counter = NodePath("../Coutner")
+counter_min_x = -1.0
+counter_max_x = 1.184
+min_z = 0.28
+spawn_y = 1.8
+spawn_scale = Vector3(0.2, 0.2, 0.2)
+
+[node name="Coutner" parent="." unique_id=183529817 instance=ExtResource("4_5ujjy")]
+transform = Transform3D(-1, 0, 1.509958e-07, 0, 1, 0, -1.509958e-07, 0, -1, 3.2777615, 0.4712156, 2.156)
+
+[node name="BeerGlass Button" type="Area3D" parent="Coutner" unique_id=2100852152]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26090324, 1.053846, 0.62434983)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/BeerGlass Button" unique_id=1985639721]
+shape = SubResource("SphereShape3D_v88eg")
+
+[node name="Sprite3D" type="Sprite3D" parent="Coutner/BeerGlass Button" unique_id=2140262908]
+transform = Transform3D(0.22749029, 0, 0, 0, 0.24296804, 0, 0, 0, 0.7237263, 0, 0, 0)
+billboard = 1
+texture = ExtResource("5_g6ul3")
+
+[node name="ShotGlass Button" type="Area3D" parent="Coutner" unique_id=746714498]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.81711745, 1.053846, 0.62434983)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/ShotGlass Button" unique_id=692371114]
+shape = SubResource("SphereShape3D_v88eg")
+
+[node name="Sprite3D" type="Sprite3D" parent="Coutner/ShotGlass Button" unique_id=815208176]
+transform = Transform3D(0.22749029, 0, 0, 0, 0.24296804, 0, 0, 0, 0.7237263, 0, 0, 0)
+billboard = 1
+texture = ExtResource("5_g6ul3")
+
+[node name="BeerKeg" type="Area3D" parent="Coutner" unique_id=70738904]
+transform = Transform3D(0.29999995, 0, 0, 0, -0.19884086, 0.22463806, 0, -0.22463806, -0.19884086, 0.8801341, 1.4483287, -0.3325984)
+script = ExtResource("6_n776p")
+
+[node name="CHUGCHUGBEER" type="Sprite3D" parent="Coutner/BeerKeg" unique_id=1652949852]
+transform = Transform3D(1, -2.2678286e-08, 1.6621345e-07, 1.6223157e-07, 0.38286093, -0.9238062, -4.2686278e-08, 0.9238062, 0.38286093, 0, 0, 0)
+texture = ExtResource("7_wk5cn")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/BeerKeg" unique_id=2000382401]
+transform = Transform3D(1, -2.287966e-08, 1.6579861e-07, 1.6179524e-07, 0.38568088, -0.92263275, -4.283607e-08, 0.92263275, 0.38568088, 0.019853592, -0.0315876, -0.0049438477)
+shape = SubResource("BoxShape3D_p0p6f")
+
+[node name="PourArea" type="Area3D" parent="Coutner/BeerKeg" unique_id=1234912694]
+transform = Transform3D(1, -7.1054274e-15, 0, -1.4210855e-14, 1.0000004, 0, -7.1054274e-15, 0, 1.0000004, -0.049114227, 0.6406405, -0.77065086)
+input_ray_pickable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/BeerKeg/PourArea" unique_id=153202913]
+transform = Transform3D(0.9999999, 0, 0, 0, 0.7476614, -0.664084, 0, 0.664084, 0.7476614, -0.21345973, -0.16121936, -0.14319992)
+shape = SubResource("BoxShape3D_ris41")
+
+[node name="PourZone" type="Sprite3D" parent="Coutner/BeerKeg/PourArea" unique_id=487294679]
+transform = Transform3D(0.49999994, 0, 1.1934898e-15, 0, 0.37383083, -0.33204204, 7.1054274e-15, 0.33204204, 0.37383083, 0.1262908, 0.25927472, -0.10352516)
+texture = ExtResource("5_g6ul3")
+
+[node name="CPUParticles3D" type="CPUParticles3D" parent="Coutner/BeerKeg" unique_id=357297809]
+transform = Transform3D(-0.05843271, 0.97376543, -0.21992514, 0.52902687, -0.15662004, -0.834027, -0.8465911, -0.16508089, -0.50599635, 0, 1.1994112, -1.2267581)
+emitting = false
+amount = 6
+mesh = SubResource("RibbonTrailMesh_pka58")
+spread = 0.0
+
+[node name="Trash" type="Area3D" parent="Coutner" unique_id=1858386361]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9724557, 0, -1.3709536)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/Trash" unique_id=1252558082]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2280426, 1.0538671, 1.4114742)
+shape = SubResource("BoxShape3D_2tkpp")
+
+[node name="Marker3D" type="Marker3D" parent="Coutner" unique_id=1047419930]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.88968897, 1.4529363, 0.24294817)
+
+[node name="Camera mark" type="Marker3D" parent="Coutner" unique_id=734330987 groups=["counter_mark"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13251233, 2, 0.6376586)
+visible = false
+
+[node name="Gin_marker" type="Marker3D" parent="." unique_id=495649145]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7157001, 2.3371668, 2.6627347)
+
+[node name="Bottle_marke" type="Marker3D" parent="." unique_id=580399797]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1607304, 2.3367472, 2.6630564)
+
+[node name="HiddenRecipt" type="Marker3D" parent="." unique_id=1336744346]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.081238, 0.5536709, 3.426609)
+
+[node name="Sprite3D" type="Sprite3D" parent="HiddenRecipt" unique_id=1983726433]
+transform = Transform3D(0.05, 0, 0, 0, 0.05, 0, 0, 0, 0.05, 0.02605009, -0.11582613, -0.21608734)
+texture = ExtResource("9_n776p")
+
+[connection signal="input_event" from="Coutner/BeerGlass Button" to="Player" method="_on_beer_glass_button_input_event"]
+[connection signal="input_event" from="Coutner/ShotGlass Button" to="Player" method="_on_shot_glass_button_input_event"]
+[connection signal="input_event" from="Coutner/BeerKeg" to="Coutner/BeerKeg" method="_on_beer_keg_input_event"]
+[connection signal="area_entered" from="Coutner/BeerKeg/PourArea" to="Coutner/BeerKeg" method="_on_pour_area_area_entered"]
+[connection signal="area_exited" from="Coutner/BeerKeg/PourArea" to="Coutner/BeerKeg" method="_on_pour_area_area_exited"]
+[connection signal="area_entered" from="Coutner/Trash" to="Player" method="_on_trash_area_entered"]

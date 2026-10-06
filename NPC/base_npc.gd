@@ -7,10 +7,14 @@ var seat_num : int
 var camera = null
 var drink_list : Array = []
 var dialogue_resource : DialogueResource
+var speaking_title : String = "start"
 @export var drink_offset : float = 5
 @onready var custom_balloon = load("res://addons/dialogue_manager/example_balloon/main_balloon.tscn")
 @onready var patience_timer = get_node("Patience_timer")
 @onready var patient_2d = get_node("Sprite3D/SubViewport/Patience")
+var recipt_marker : Marker3D
+var recipt_clicked : bool = true
+
 
 func _ready() -> void:
 	patience_timer.wait_time = npc_resource.patience_time
@@ -27,9 +31,11 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	patient_2d._change_curent(patience_timer.time_left)
 
-func _institate(npc_source : NPC,seat: int) -> void:
+func _institate(npc_source : NPC,seat: int,rec_marker: Marker3D) -> void:
 	npc_resource = npc_source
 	seat_num = seat
+	recipt_marker = rec_marker
+	_ready()
 
 func _moving_to(to: Marker3D) -> void:
 	var tween = get_tree().create_tween()
@@ -37,10 +43,6 @@ func _moving_to(to: Marker3D) -> void:
 	tween.set_ease(Tween.EASE_OUT)
 	tween.tween_property(self,"position",to.position,0.8)
 	current_state = State.SIT
-
-func _moving_recipet_to(to: Marker3D) -> void:
-	
-	pass
 
 func _tween_bounce() -> void:
 	var tween = get_tree().create_tween()
@@ -56,7 +58,7 @@ func _on_interaction_input_event(camera: Node, event: InputEvent, event_position
 	if(event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and abs(camera.global_position.x - global_position.x) < 2):
 		#print("Camera Global_position - self: " + str(camera.global_position - global_position))
 		if(dialogue_resource):
-			DialogueManager.show_dialogue_balloon_scene(custom_balloon,dialogue_resource,"start",[self])
+			DialogueManager.show_dialogue_balloon_scene(custom_balloon,dialogue_resource,speaking_title,[self])
 
 const NAME_POINTS := 2.0	# max from matching ingredients
 const AMOUNT_POINTS := 3.0	# max from matching amounts
@@ -86,12 +88,13 @@ func _obtain_drink(drink: Array) -> float:
 			break
 	print(ranking)
 	if(drink_list.size() <= 0):
-		$Obtain_drink/Area3D/CollisionShape3D.disabled = true
+		$Area3D/CollisionShape3D.disabled = true
 		await get_tree().create_timer(1).timeout
 		_leaving()
+	PlayerStats._change_money(PlayerStats.money +5 * ranking)
 	return ranking	# always between 0 and 5
-	
-func _want_drink(seat: int) -> Array:
+
+func _want_drink() -> Array:
 	var drink_list_want = ["beer"]
 	var liquid_num = randi_range(80,100)
 	var drink_name = drink_list_want.pick_random()
@@ -108,12 +111,33 @@ func _leaving() -> void:
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
 	tween.tween_property(self,"global_position:x", -7,1.5)
+
 	await $VisibleOnScreenNotifier3D.screen_exited
+	get_parent()._remove(seat_num)
 	queue_free()
 
-
+func _add_recipt() -> void:
+	GameState.main_node._add_recipt(seat_num,str(_item_print()))
+	#recipt.global_position = camera.global_position
+	#$ReciptPaper/Base_viewport/SubViewport/Recipt._label_change(_item_print())
+	#var tween = get_tree().create_tween()
+	#tween.set_trans(Tween.TRANS_SINE)
+	#tween.set_ease(Tween.EASE_OUT)
+	#tween.tween_property(recipt,"global_position", recipt_marker.global_position,1.5)
+	#
 func _on_area_Obtain_drink_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
 		_obtain_drink(area.get_parent()._return_drink())
 		area.get_parent()._dranked()
-		
+
+func _item_print() -> String:
+	var total = ""
+	for x in drink_list:
+		for y in x:
+			for z in y:
+				total += str(str(z) + " ")
+		total += "\n"
+	return total
+
+func _on_patience_timer_timeout() -> void:
+	_leaving()

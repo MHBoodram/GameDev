@@ -30,6 +30,7 @@ func _process(_delta: float) -> void:
 			is_balls_dragging = false
 		look_at(camera.global_position)
 
+@warning_ignore("shadowed_variable", "unused_parameter", "shadowed_variable_base_class")
 func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
@@ -39,10 +40,3 @@ func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
 			drag_z_depth = to_object.dot(forward)
 		else:
 			is_balls_dragging = false
-
-func _return_original():
-	var tween = get_tree().create_tween().set_parallel(true)
-	tween.set_trans(Tween.TRANS_SINE)
-	tween.set_ease(Tween.EASE_OUT)
-	#tween.tween_property(self,"position",original_position,0.5)
-	#tween.tween_property(self,"position",original_position,0.5)

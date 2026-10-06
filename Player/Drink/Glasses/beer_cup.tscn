@@ -30,7 +30,7 @@ shader_parameter/gradient_offset = 0.0
 radius = 0.38378906
 height = 1.2072754
 
-[node name="Beer_cup" type="Sprite3D" unique_id=691486503]
+[node name="Beer_cup" type="Sprite3D" unique_id=691486503 node_paths=PackedStringArray("area_body")]
 transform = Transform3D(0.2, 0, 0, 0, 0.16932972, 0.106430486, 0, -0.106430486, 0.16932972, 0, 0, 0)
 shaded = true
 alpha_cut = 2
@@ -38,10 +38,20 @@ texture_filter = 0
 texture = ExtResource("1_isq7m")
 script = ExtResource("2_isq7m")
 size = 10.0
+area_body = NodePath("Area3D/CollisionShape3D")
 
 [node name="Outside" type="Sprite3D" parent="." unique_id=1532157949]
 transform = Transform3D(1.0350124, 0, 0, 0, 0.9999998, -8.940697e-08, 0, 8.940697e-08, 0.9999998, -0.022528395, 0.0045902645, 6.9849193e-10)
 material_override = SubResource("ShaderMaterial_l3v6c")
+shaded = true
+alpha_cut = 2
+texture_filter = 0
+texture = ExtResource("5_pq6lo")
+
+[node name="highlight" type="Sprite3D" parent="." unique_id=23743985]
+transform = Transform3D(1.2539052, 0, 0, 0, 1.2053055, -3.5762787e-07, 0, 1.7881393e-07, 1.1290426, 0.0004220754, -0.07575068, 0.015916757)
+visible = false
+modulate = Color(1, 1, 0, 1)
 shaded = true
 alpha_cut = 2
 texture_filter = 0

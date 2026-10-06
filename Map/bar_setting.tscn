@@ -1,10 +1,8 @@
 [gd_scene format=3 uid="uid://hpxbjx0xsej2"]
 
-[ext_resource type="PackedScene" uid="uid://c8sr80c4m2kd3" path="res://Assets/3D/bar.glb" id="1_ju7da"]
+[ext_resource type="PackedScene" uid="uid://mctlk8acgykt" path="res://Map/bar.tscn" id="1_qvavo"]
 
 [node name="BarSetting" type="Node3D" unique_id=1770039662]
-
-[node name="bar (2)" parent="." unique_id=908667887 instance=ExtResource("1_ju7da")]
 
 [node name="SpotLight3D" type="SpotLight3D" parent="." unique_id=1267194052]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 3.5863514, 0)
@@ -18,3 +16,23 @@ light_energy = 2.5
 [node name="SpotLight3D3" type="SpotLight3D" parent="." unique_id=1899202723]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 6, 3.586, 0)
 light_energy = 2.5
+
+[node name="bar (1)2" parent="." unique_id=1351789714 instance=ExtResource("1_qvavo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.01185894, 0, 0.31322804)
+
+[node name="SpotLight3D4" type="SpotLight3D" parent="." unique_id=1503085795]
+transform = Transform3D(1, 0, 0, 0, -0.7708469, 0.6370204, 0, -0.6370204, -0.7708469, -1.7492222, 3.5863514, -5.842403)
+light_energy = 2.5
+light_volumetric_fog_energy = 2.0
+
+[node name="SpotLight3D5" type="SpotLight3D" parent="." unique_id=1753912366]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 6, 3.586, -3.181)
+visible = false
+light_energy = 2.5
+light_volumetric_fog_energy = 2.0
+
+[node name="SpotLight3D6" type="SpotLight3D" parent="." unique_id=1830510307]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 3, 3.586, -3.181)
+visible = false
+light_energy = 2.5
+light_volumetric_fog_energy = 2.0

@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://47xad203pngm"]
+
+[ext_resource type="Script" uid="uid://dyius6a3dgffd" path="res://Player/Drink/Liquids/gin.gd" id="2_mic12"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_s74th"]
+radius = 0.28564453
+height = 1.0991211
+
+[node name="Liquids" type="Sprite3D" unique_id=1574004840]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+flip_h = true
+texture_filter = 0
+script = ExtResource("2_mic12")
+
+[node name="Interact" type="Area3D" parent="." unique_id=1520610536]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Interact" unique_id=1051334637]
+shape = SubResource("CapsuleShape3D_s74th")
+
+[connection signal="area_entered" from="Interact" to="." method="_on_interact_area_entered"]
+[connection signal="area_exited" from="Interact" to="." method="_on_interact_area_exited"]
+[connection signal="input_event" from="Interact" to="." method="_on_area_3d_input_event"]

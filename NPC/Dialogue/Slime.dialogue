@@ -1,4 +1,10 @@
 ~ start
-Slime: [[Hi|Yo|Howdy]], My Order is {{drink_list}}
 
+Slime:[wave amp=25 freq=5] [[Jello|O|Slowdy]], My Order is {{drink_list}}[/wave]
+do _add_recipt()
+set speaking_title = "mid"
+=> END
+
+~ mid
+Slime:[wave amp=25 freq=5]GET IT DONE[/wave]
 => END
