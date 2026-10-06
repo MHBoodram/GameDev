@@ -7,6 +7,7 @@ const GAME_SCENE := "res://Main3D.tscn"
 
 func _ready() -> void:
 	get_tree().paused = false #in case we come here from the pause menu
+	UIAudio.hook_buttons(self)
 	play_button.pressed.connect(_on_play_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
 	play_button.grab_focus()
@@ -21,4 +22,5 @@ func _on_play_pressed() -> void:
 	get_tree().change_scene_to_file(GAME_SCENE)
 
 func _on_quit_pressed() -> void:
+	await get_tree().create_timer(0.15).timeout
 	get_tree().quit()

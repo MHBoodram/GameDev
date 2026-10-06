@@ -1,6 +1,11 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" uid="uid://cdw65vses6vur" path="res://UI/StartMenu.gd" id="1_start"]
+[ext_resource type="Texture2D" uid="uid://b1g27nful45ro" path="res://UI/Game_Title_Asset.png" id="2_logo"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_logo"]
+atlas = ExtResource("2_logo")
+region = Rect2(23, 33, 463, 289)
 
 [node name="StartMenu" type="Control"]
 layout_mode = 3
@@ -32,22 +37,22 @@ grow_vertical = 2
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="CenterContainer/VBox"]
+[node name="Logo" type="TextureRect" parent="CenterContainer/VBox"]
+texture_filter = 1
+custom_minimum_size = Vector2(695, 434)
 layout_mode = 2
-theme_override_font_sizes/font_size = 56
-text = "BarGame"
-horizontal_alignment = 1
-
-[node name="Spacer" type="Control" parent="CenterContainer/VBox"]
-custom_minimum_size = Vector2(0, 24)
-layout_mode = 2
+texture = SubResource("AtlasTexture_logo")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="PlayButton" type="Button" parent="CenterContainer/VBox"]
 custom_minimum_size = Vector2(240, 48)
 layout_mode = 2
+size_flags_horizontal = 4
 text = "Play"
 
 [node name="QuitButton" type="Button" parent="CenterContainer/VBox"]
 custom_minimum_size = Vector2(240, 48)
 layout_mode = 2
+size_flags_horizontal = 4
 text = "Quit"

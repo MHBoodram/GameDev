@@ -10,6 +10,7 @@ func _ready() -> void:
 	# The rest of ht egame stops when the tree is paused; this menu must keep running.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	hide()
+	UIAudio.hook_buttons(self)
 	resume_button.pressed.connect(resume)
 	menu_button.pressed.connect(_on_main_menu_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
@@ -18,6 +19,7 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
+		UIAudio.play_pause()
 		if get_tree().paused:
 			resume()
 		else:
@@ -38,4 +40,5 @@ func _on_main_menu_pressed() -> void:
 	get_tree().change_scene_to_file(START_MENU_SCENE)
 
 func _on_quit_pressed() -> void:
+	await get_tree().create_timer(0.15).timeout
 	get_tree().quit()
