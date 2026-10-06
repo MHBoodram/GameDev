@@ -3,12 +3,12 @@
 importer="wav"
 type="AudioStreamWAV"
 uid="uid://dgxvuqgnsv4eg"
-path="res://.godot/imported/VideoGameMenuButtonShort.wav-fa3b046544fc45308b8a134f43b74410.sample"
+path="res://.godot/imported/VideoGameMenuButtonShort.wav-34e2eac0ad434f2adb0722448dcd6e32.sample"
 
 [deps]
 
-source_file="res://UI/VideoGameMenuButtonShort.wav"
-dest_files=["res://.godot/imported/VideoGameMenuButtonShort.wav-fa3b046544fc45308b8a134f43b74410.sample"]
+source_file="res://Assets/Audio/SFX/VideoGameMenuButtonShort.wav"
+dest_files=["res://.godot/imported/VideoGameMenuButtonShort.wav-34e2eac0ad434f2adb0722448dcd6e32.sample"]
 
 [params]
 

@@ -16,12 +16,17 @@ config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 <<<<<<<HEADconfig/name="TechDemo"
 
+[audio]
+
+buses/default_bus_layout="uid://g8pei7ewj4ad"
+
 [autoload]
 
 DialogueManager="*uid://c3rodes2l3gxb"
 GameState="*uid://c0vdm1x1jn41b"
 PlayerStats="*uid://dwr0w6ek46qk1"
 UIAudio="*res://UI/UIAudio.tscn"
+MusicPlayer="*uid://bx0ui2flch67q"
 
 [display]
 
