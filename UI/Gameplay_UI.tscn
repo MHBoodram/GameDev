@@ -127,9 +127,10 @@ offset_bottom = 40.0
 offset_right = 150.0
 offset_bottom = 177.0
 
-[node name="TextureProgressBar" type="TextureProgressBar" parent="Left Container" unique_id=1415814912]
+[node name="Timer" type="TextureProgressBar" parent="Left Container" unique_id=1415814912]
 layout_mode = 2
-value = 100.0
+max_value = 300.0
+value = 300.0
 fill_mode = 5
 texture_under = ExtResource("3_xl5tu")
 texture_progress = ExtResource("4_jsh06")
@@ -241,6 +242,7 @@ theme_override_font_sizes/font_size = 150
 text = "Night 1"
 
 [node name="HeyPeter" type="Sprite2D" parent="ColorRect3/Night" unique_id=1572215728]
+visible = false
 position = Vector2(389.37405, 79.461685)
 rotation = -1.5707964
 scale = Vector2(0.19301559, 0.7631643)

@@ -91,6 +91,7 @@ func _obtain_drink(drink: Array) -> float:
 		$Area3D/CollisionShape3D.disabled = true
 		await get_tree().create_timer(1).timeout
 		_leaving()
+	PlayerStats._change_money(PlayerStats.money +5 * ranking)
 	return ranking	# always between 0 and 5
 
 func _want_drink() -> Array:

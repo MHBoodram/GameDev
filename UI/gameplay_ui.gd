@@ -200,6 +200,20 @@ func _night_title_popup()-> void:
 	$AnimationPlayer.play("Night_Animation")
 	pass
 
+func _change_money(new_value: float) -> void:
+	var old_value = float($"Right Container/Money/Label".text)
+	if(new_value < old_value):
+		$"Right Container/Money/CPUParticles2D".color = Color(1.0, 0.0, 0.0, 1.0)
+	else:
+		$"Right Container/Money/CPUParticles2D".color = Color(1.0, 1.0, 1.0, 1.0)
+	$"Right Container/Money/CPUParticles2D".emitting = true
+	$"Right Container/Money/Label".text = str(new_value)
+	await get_tree().create_timer(0.5).timeout
+	$"Right Container/Money/CPUParticles2D".emitting = false
+
+func _change_time(new_value:float) -> void:
+	$"Left Container/Timer".value = new_value
+	pass
 
 #OLD CODE
 #func _on_up_button_pressed() -> void:

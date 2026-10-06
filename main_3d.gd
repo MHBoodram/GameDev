@@ -12,27 +12,30 @@ func _ready() -> void:
 	if(GameState.gameplay_ui):
 		GameState.gameplay_ui._night_title_popup()
 
+func _process(delta: float) -> void:
+	GameState.gameplay_ui._change_time($Night_Time.time_left)
+
 func _check_upgrades() -> void:
 	pass
 
 func _check_unlocks_drinks() -> void:
 	for i in PlayerStats.unlocks["Drinks"]:
-		print(i)
-		var temp_scene_check = "res://Player/Drink/Liquids/" + str(i) +".tscn"
-		temp_scene_check = "res://Player/Drink/Liquids/Gin.tscn"
-		print(temp_scene_check)
+		var temp_scene_check = "res://Player/Drink/Liquids/liquid.tscn"
 		add_scene_once_drink(temp_scene_check, str(i))
 
 func add_scene_once_drink(path: String, node_name: String, parent: Node = self) -> Node:
 	var existing = parent.get_node_or_null(node_name)
 	if existing:
 		return existing
-
+	var resource_found = load("res://Player/Drink/Liquids/resource/"+ node_name +".tres")
 	var instance = load(path).instantiate()
 	existing = parent.get_node_or_null(node_name + "_marker")
+	if(!existing):
+		push_warning("Doesn't exist: " + node_name)
+		return
 	instance.name = node_name
 	parent.add_child(instance)
-	instance.setup(existing,$Coutner/Lower_counter)
+	instance.setup(existing,$Coutner/Lower_counter,resource_found)
 
 	return instance
 
@@ -45,8 +48,6 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_P or event.physical_keycode == KEY_P:
 			$DebugMenu.visible = !$DebugMenu.visible
-
-
 
 func _add_npc() -> void:
 	var free_seat = seats.find(null)

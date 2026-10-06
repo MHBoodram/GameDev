@@ -1,17 +1,18 @@
 extends Glasses
 class_name Drinks
 var pouring_into : Node3D
-@export var type_drink : String = "beer"
+@export var liquid_resource : Liquid
+
 var original_position : Marker3D
 
 #func ready() -> void:
-	#$Outside.material_overlay = $Outside.material_override.duplicate(true)
-	#$Outside.material_override = $Outside.material_overlay
-	#var material_overlay_x = $Outside.material_override
-	#var gradient_tex = material_overlay_x.get_shader_parameter("gradient_texture")
-	#gradient_tex.fill_to.x = 1
+	#
+	#pass
 
-func setup(og_position: Marker3D,Counter: Node3D) -> void:
+func setup(og_position: Marker3D,Counter: Node3D,_liquid: Liquid) -> void:
+	liquid_resource = _liquid
+	size = liquid_resource.liquid_size
+	texture = liquid_resource.sprite
 	original_position = og_position
 	counter_origin = Counter
 	global_position = og_position.global_position
@@ -51,7 +52,7 @@ func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
 				rotation_degrees.z = 80
 				if(pouring_into):
 					while(Input.get_action_strength("Left_click")):
-						pouring_into._pouring(type_drink, 0.25)
+						pouring_into._pouring(liquid_resource.id, 0.25)
 						await get_tree().create_timer(0.1).timeout
 			else:
 				await get_tree().create_timer(0.1).timeout
