@@ -1,4 +1,4 @@
-extends Sprite3D
+extends Area3D
 class_name Ingredients
 var is_balls_dragging : bool = false
 var mouse_offset: Vector2 = Vector2.ZERO
@@ -11,7 +11,7 @@ func _instiate(counter: Node3D):
 
 func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
-	look_at(camera.global_position)
+	
 	ready()
 
 func ready() -> void:

@@ -1,14 +1,5 @@
 [gd_scene format=3 uid="uid://bxfr7apwjdsp8"]
 
 [ext_resource type="PackedScene" uid="uid://ddi6comi7ic2c" path="res://Assets/3D/Lower_counter.glb" id="1_36s7s"]
-[ext_resource type="Shader" uid="uid://qothrby8gojn" path="res://Shader/per_object_pixel_shader.gdshader" id="2_prgrl"]
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ks4gr"]
-render_priority = 0
-shader = ExtResource("2_prgrl")
-shader_parameter/pixel_size = 4
 
 [node name="Lower_counter" unique_id=370557215 instance=ExtResource("1_36s7s")]
-
-[node name="Counter_001" parent="." index="0" unique_id=1147863063]
-material_overlay = SubResource("ShaderMaterial_ks4gr")

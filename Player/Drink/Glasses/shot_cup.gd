@@ -1,27 +1,27 @@
 extends Glasses
-
+@onready var highlight = get_node("Inside/highlight")
 var gradient: Gradient
 
 func ready() -> void:
-	var mat := $Outside.material_override.duplicate() as ShaderMaterial
+	var mat := $Inside/Outside.material_override.duplicate() as ShaderMaterial
 	var tex := GradientTexture2D.new()
 	tex.fill_from = Vector2(0, 0)
 	tex.fill_to = Vector2(1, 0)
-	tex.width = 256
+	tex.width = 270
 	tex.height = 4
 	gradient = Gradient.new()
 	gradient.interpolation_mode = Gradient.GRADIENT_INTERPOLATE_CONSTANT
 	tex.gradient = gradient
 	mat.set_shader_parameter("gradient_texture", tex)
 	_rebuild_gradient()
-	$Outside.material_override = mat
-	var material_overlay_x = $Outside.material_override
+	$Inside/Outside.material_override = mat
+	var material_overlay_x = $Inside/Outside.material_override
 	var gradient_tex = material_overlay_x.get_shader_parameter("gradient_texture")
 	gradient_tex.fill_to.x = 1
-	$highlight.modulate = Color(1.5, 1.5, 0.0, 5.0)   # brighter than normal
+	highlight.modulate = Color(1.5, 1.5, 0.0, 5.0)   # brighter than normal
 
 func _on_hover(hovered: bool):
-	$highlight.visible = hovered
+	highlight.visible = hovered
 
 func _visuals_change(liquids_num: float, liquid_name: String, new: bool) -> void:
 	_rebuild_gradient()

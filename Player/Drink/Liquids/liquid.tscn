@@ -13,16 +13,11 @@ size = 0.5
 sections = 2
 section_length = 0.02
 
-[node name="Liquids" type="Sprite3D" unique_id=1574004840]
+[node name="Liquids" type="Area3D" unique_id=280743464]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
-flip_h = true
-texture_filter = 0
-texture = ExtResource("1_46qyp")
 script = ExtResource("2_mic12")
 
-[node name="Interact" type="Area3D" parent="." unique_id=1520610536]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Interact" unique_id=1051334637]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1051334637]
 shape = SubResource("CapsuleShape3D_s74th")
 
 [node name="CPUParticles3D" type="CPUParticles3D" parent="." unique_id=462436255]
@@ -35,8 +30,11 @@ mesh = SubResource("RibbonTrailMesh_46qyp")
 spread = 0.0
 gravity = Vector3(0, 0, -9.8)
 
-[connection signal="area_entered" from="Interact" to="." method="_on_interact_area_entered"]
-[connection signal="area_exited" from="Interact" to="." method="_on_interact_area_exited"]
-[connection signal="input_event" from="Interact" to="." method="_on_area_3d_input_event"]
-[connection signal="mouse_entered" from="Interact" to="." method="_on_interact_mouse_entered"]
-[connection signal="mouse_exited" from="Interact" to="." method="_on_interact_mouse_exited"]
+[node name="Inside" type="Sprite3D" parent="." unique_id=645485084]
+texture = ExtResource("1_46qyp")
+
+[connection signal="area_entered" from="." to="." method="_on_interact_area_entered"]
+[connection signal="area_exited" from="." to="." method="_on_interact_area_exited"]
+[connection signal="input_event" from="." to="." method="_on_area_3d_input_event"]
+[connection signal="mouse_entered" from="." to="." method="_on_interact_mouse_entered"]
+[connection signal="mouse_exited" from="." to="." method="_on_interact_mouse_exited"]

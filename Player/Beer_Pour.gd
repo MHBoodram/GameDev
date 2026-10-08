@@ -18,7 +18,7 @@ func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: V
 				#if(x.is_in_group("glass")):
 					#glass_array.append(x)
 			if(in_pour_zone):
-				in_pour_zone.get_parent()._pouring("beer", 0.25)
+				in_pour_zone._pouring("beer", 0.25)
 			#for glasses in glass_array:
 				#glasses.get_parent()._pouring("beer", 0.05)
 			await get_tree().create_timer(0.1).timeout
