@@ -1,0 +1,165 @@
+[gd_scene format=3 uid="uid://dbopjf61c8b21"]
+
+[ext_resource type="PackedScene" uid="uid://ci6fovgg0i85" path="res://Map/bar1.tscn" id="1_2t0lq"]
+[ext_resource type="Script" uid="uid://cgrldus8tt4ky" path="res://UI/starting_screen.gd" id="1_aj1h6"]
+[ext_resource type="PackedScene" uid="uid://bdpvjjayusxo7" path="res://UI/StartMenu.tscn" id="3_pa3t7"]
+
+[sub_resource type="Animation" id="Animation_pa3t7"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Camera3D:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(-5.236375, 2.3210154, -2.8810441)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Camera3D:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, -1.5707964, 0)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Menu2:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0.30466104, -0.66305804, 0.09071362)]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Menu2:rotation")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(-0.22606447, -0.53873914, 0.13318154)]
+}
+
+[sub_resource type="Animation" id="Animation_8bcmw"]
+resource_name = "movement"
+length = 1.75
+step = 0.05
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Camera3D:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.25, 0.5, 0.75, 1, 1.25),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(-5.236375, 2.3210154, -2.8810441), Vector3(-3.933886, 2.3210154, -2.8810441), Vector3(-3.933886, 2.3210154, -0.9931526), Vector3(-3.107985, 2.3210154, -0.13361788), Vector3(-0.81809103, 2.3210154, -0.13361788), Vector3(-0.0754416, 2.448722, 0.802763)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Camera3D:rotation")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0.25, 0.5, 0.75, 1, 1.25, 1.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0, -2.258107, 0), Vector3(0, -1.706548, 0), Vector3(0, -0.92114985, 0), Vector3(0, -0.13575168, 0), Vector3(0, 0, 0), Vector3(-0.52359885, 0, 0)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Menu2:position")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 1.4, 1.5),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector3(0.30466104, -0.66305804, 0.09071362), Vector3(0.30466104, -0.66305804, 0.09071362), Vector3(0.30466104, 1.8909376, 0.09071362)]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Menu2:rotation")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 1.4, 1.5),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector3(-0.22606447, -0.53873914, 0.13318154), Vector3(-0.22606447, -0.53873914, 0.13318154), Vector3(-0.44783235, -0.58800274, 0.28103495)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_srbt1"]
+_data = {
+&"RESET": SubResource("Animation_pa3t7"),
+&"movement": SubResource("Animation_8bcmw")
+}
+
+[sub_resource type="BoxMesh" id="BoxMesh_aj1h6"]
+size = Vector3(0.8, 1, 0.01)
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_8bcmw"]
+viewport_path = NodePath("Menu2/Sprite3D/SubViewport")
+
+[node name="StartingScreen" type="Node3D" unique_id=1561659538]
+script = ExtResource("1_aj1h6")
+
+[node name="new_bar" parent="." unique_id=47131528 instance=ExtResource("1_2t0lq")]
+
+[node name="1" type="Marker3D" parent="." unique_id=730499107]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7377362, 1.7004226, -2.8810441)
+
+[node name="2" type="Marker3D" parent="." unique_id=859758755]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7674682, 1.7004226, -1.5212147)
+
+[node name="3" type="Marker3D" parent="." unique_id=2104150394]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.1358802, 1.7004226, 0.7595041)
+
+[node name="4" type="Marker3D" parent="." unique_id=473481928]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.19204712, 1.7004226, 0.8641937)
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=52734251]
+transform = Transform3D(-4.371139e-08, 0, -1.0000001, 0, 1.0000001, 0, 1, 0, -4.3711392e-08, -5.236375, 2.3210154, -2.8810441)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1157856546]
+libraries/ = SubResource("AnimationLibrary_srbt1")
+
+[node name="SpotLight3D" type="SpotLight3D" parent="." unique_id=241601536]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 3.5430827, 0)
+light_energy = 4.846
+
+[node name="Menu2" type="MeshInstance3D" parent="." unique_id=365639541]
+transform = Transform3D(0.86602527, 7.4505797e-09, -0.5, 0.12940952, 0.9659257, 0.22414388, 0.4829629, -0.258819, 0.8365163, 0.30466104, -0.66305804, 0.09071362)
+mesh = SubResource("BoxMesh_aj1h6")
+
+[node name="Menu3" type="MeshInstance3D" parent="Menu2" unique_id=765720054]
+transform = Transform3D(0.49999994, 0, 0.8660253, 0, 1, 0, -0.8660253, 0, 0.49999994, -0.5943959, 0, 0.34317464)
+mesh = SubResource("BoxMesh_aj1h6")
+
+[node name="Sprite3D" type="Sprite3D" parent="Menu2" unique_id=1058990724]
+transform = Transform3D(0.096816756, -7.450581e-09, -1.4901161e-08, 1.1175871e-08, 0.16903959, 2.2351742e-08, -1.4901161e-08, 0, 0.19634642, 0.00856483, -0.009889603, 0.014834881)
+texture = SubResource("ViewportTexture_8bcmw")
+
+[node name="SubViewport" type="SubViewport" parent="Menu2/Sprite3D" unique_id=715603536]
+size = Vector2i(800, 600)
+
+[node name="StartMenu" parent="Menu2/Sprite3D/SubViewport" unique_id=1809742072 instance=ExtResource("3_pa3t7")]

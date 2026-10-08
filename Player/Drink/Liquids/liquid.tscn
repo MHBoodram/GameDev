@@ -31,6 +31,7 @@ spread = 0.0
 gravity = Vector3(0, 0, -9.8)
 
 [node name="Inside" type="Sprite3D" parent="." unique_id=645485084]
+flip_h = true
 texture = ExtResource("1_46qyp")
 
 [connection signal="area_entered" from="." to="." method="_on_interact_area_entered"]

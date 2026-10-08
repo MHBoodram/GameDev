@@ -216,6 +216,8 @@ response_template = NodePath("ResponseExample")
 
 [node name="ResponseExample" type="Button" parent="Balloon/ResponsesMenu" unique_id=914537232]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("2_b4bgf")
+theme_override_font_sizes/font_size = 30
 text = "Response example"
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=1116280512]
@@ -223,3 +225,5 @@ unique_name_in_owner = true
 
 [connection signal="gui_input" from="Balloon" to="." method="_on_balloon_gui_input"]
 [connection signal="response_selected" from="Balloon/ResponsesMenu" to="." method="_on_responses_menu_response_selected"]
+[connection signal="mouse_entered" from="Balloon/ResponsesMenu/ResponseExample" to="." method="_on_response_example_mouse_entered"]
+[connection signal="mouse_exited" from="Balloon/ResponsesMenu/ResponseExample" to="." method="_on_response_example_mouse_exited"]

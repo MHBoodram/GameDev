@@ -144,8 +144,8 @@ func _add_recipt() -> void:
 	#
 func _on_area_Obtain_drink_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
-		_obtain_drink(area.get_parent()._return_drink())
-		area.get_parent()._dranked()
+		_obtain_drink(area._return_drink())
+		area._dranked()
 
 func _item_print() -> String:
 	var total = ""
@@ -159,10 +159,8 @@ func _item_print() -> String:
 func _on_patience_timer_timeout() -> void:
 	_leaving()
 
-
 func _on_area_3d_mouse_entered() -> void:
 	GameState.player._update_hand("interact")
-
 
 func _on_area_3d_mouse_exited() -> void:
 	GameState.player._update_hand("idle")

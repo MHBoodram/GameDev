@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://ilqlfi7mgoyf" path="res://Player/Dynamic_camera.gd" id="2_tok1r"]
 [ext_resource type="PackedScene" uid="uid://byw6bbpmaen6w" path="res://UI/Gameplay_UI.tscn" id="3_tok1r"]
 [ext_resource type="Texture2D" uid="uid://6sfbebk1yfeh" path="res://Assets/UI/Hand-Sheet.png" id="4_ddoul"]
+[ext_resource type="Texture2D" uid="uid://cmy1e1mvuqoli" path="res://Assets/UI/circle_progress.png" id="5_8g4oa"]
 
 [sub_resource type="Animation" id="Animation_ddoul"]
 length = 0.001
@@ -107,3 +108,8 @@ hframes = 9
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="GameplayUi/Hand" unique_id=136180300]
 libraries/ = SubResource("AnimationLibrary_s1rgi")
+
+[node name="Sprite2D" type="Sprite2D" parent="GameplayUi/Hand" unique_id=990034085]
+modulate = Color(1, 0, 1, 1)
+scale = Vector2(0.08, 0.08)
+texture = ExtResource("5_8g4oa")

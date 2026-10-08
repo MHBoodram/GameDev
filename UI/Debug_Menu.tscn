@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://d2hkkq6yjgkuc" path="res://UI/debug_menu.gd" id="1_4urve"]
 
 [node name="DebugMenu" type="CanvasLayer" unique_id=249711118]
+layer = 100
 script = ExtResource("1_4urve")
 
 [node name="TextureRect" type="ColorRect" parent="." unique_id=271145910]
