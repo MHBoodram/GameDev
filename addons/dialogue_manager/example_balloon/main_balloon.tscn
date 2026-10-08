@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://byq786nbgm0nn"]
 
 [ext_resource type="Script" uid="uid://cjk75qbdawysi" path="res://addons/dialogue_manager/example_balloon/main_balloon.gd" id="1_ss615"]
+[ext_resource type="FontFile" uid="uid://cq83j1cam8lw" path="res://Assets/Font/Merchant Copy.ttf" id="2_b4bgf"]
 [ext_resource type="PackedScene" uid="uid://ckvgyvclnwggo" path="res://addons/dialogue_manager/dialogue_label.tscn" id="2_jtr30"]
 [ext_resource type="Script" uid="uid://bb52rsfwhkxbn" path="res://addons/dialogue_manager/dialogue_responses_menu.gd" id="3_b4bgf"]
 
@@ -162,6 +163,8 @@ modulate = Color(1, 1, 1, 0.501961)
 layout_mode = 2
 mouse_filter = 1
 theme_override_colors/default_color = Color(0, 0, 0, 1)
+theme_override_fonts/normal_font = ExtResource("2_b4bgf")
+theme_override_font_sizes/normal_font_size = 25
 bbcode_enabled = true
 text = "Character"
 fit_content = true
@@ -173,6 +176,8 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/default_color = Color(0, 0, 0, 1)
+theme_override_fonts/normal_font = ExtResource("2_b4bgf")
+theme_override_font_sizes/normal_font_size = 35
 text = "Dialogue..."
 horizontal_alignment = 1
 

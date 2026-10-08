@@ -16,7 +16,6 @@ func night_popup():
 	if(GameState.gameplay_ui):
 		GameState.gameplay_ui._night_title_popup()
 		start_night()
-		
 
 func start_night() -> void:
 	$Night_Time.start()
