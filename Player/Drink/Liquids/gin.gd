@@ -3,7 +3,7 @@ class_name Drinks
 var pouring_into : Node3D
 @export var liquid_resource : Liquid
 
-@export var hold_lift : float = 0.3
+@export var hold_lift : float = 0.01
 var original_position : Marker3D
 var _depth_now : float = 0.0
 var _return_tween : Tween
