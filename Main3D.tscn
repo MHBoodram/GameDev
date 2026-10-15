@@ -184,8 +184,8 @@ texture = ExtResource("9_n776p")
 
 [node name="Player" parent="." unique_id=1043279115 node_paths=PackedStringArray("counter") instance=ExtResource("3_c30fp")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2993567, 0, 0)
-counter = NodePath("../Coutner")
 spawn_y = 1.8
+counter = NodePath("../Coutner")
 
 [node name="DebugMenu" parent="." unique_id=249711118 instance=ExtResource("10_wk5cn")]
 visible = false

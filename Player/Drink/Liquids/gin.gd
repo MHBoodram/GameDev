@@ -38,7 +38,7 @@ func _process(delta: float) -> void:
 	look_at(camera.global_position)
 
 	# check what glass to target
-#	_set_pour_target(_glass_under_cursor())
+	_set_pour_target(_glass_under_cursor())
 
 func _glass_under_cursor() -> Node3D:
 	var mouse_pos := get_viewport().get_mouse_position()
@@ -49,7 +49,10 @@ func _glass_under_cursor() -> Node3D:
 	query.collide_with_areas = true
 	query.collide_with_bodies = false
 
-	var excluded : Array[RID] = [$Interact.get_rid()]
+	var excluded : Array[RID] = []
+	var interact_node = get_node_or_null("Interact")
+	if interact_node and interact_node.has_method("get_rid"):
+		excluded.append(interact_node.get_rid())
 	var space := get_world_3d().direct_space_state
 
 	for i in 8:
@@ -57,12 +60,18 @@ func _glass_under_cursor() -> Node3D:
 		var hit := space.intersect_ray(query)
 		if hit.is_empty():
 			return null
+			
 		var collider : Node = hit["collider"]
+		
 		if collider.is_in_group("glass"): #Glass scenes put the "glass" group on a child area3d, falls back to the node itself if the group is on the root
 			var glass : Node = collider if collider is Glasses else collider.get_parent()
 			if glass.has_method("_on_hover"):
 				return glass as Node3D
-		excluded.append(hit["rid"])
+		if "rid" in hit:
+			excluded.append(hit["rid"])
+		else:
+			break
+		#excluded.append(hit["rid"])
 	return null
 
 func _set_pour_target(glass: Node3D) -> void:
