@@ -73,6 +73,7 @@ func moving_around(right : bool) -> void:
 
 func mouse_screen(looking: String) -> void:
 	if(!down):
+		GameState.player._update_hand("interact")
 		match looking:
 			"left":
 				#print(camera_movement_rotation)
@@ -98,18 +99,12 @@ func mouse_screen(looking: String) -> void:
 				else:
 					camera.rotation_degrees.y = camera_movement_rotation
 				return
-			#"down":
-				#if(!down):
-					#var new_position = camera.rotation_degrees.x - camera_movement_rotation
-					#new_position = clamp(new_position, -camera_movement_rotation - 16.3, camera_movement_rotation + 16.3)	
-					#var tween = get_tree().create_tween()
-					#tween.set_trans(Tween.TRANS_SINE)
-					#tween.set_ease(Tween.EASE_OUT)
-					#tween.tween_property(camera,"rotation_degrees:x", new_position,0.15)
-				#return;
+			"down":
+				GameState.player._update_hand("interact")
+
 			
 			_:
-			
+				GameState.player._update_hand("idle")
 				var tween = get_tree().create_tween()
 				tween.set_trans(Tween.TRANS_SINE)
 				tween.set_ease(Tween.EASE_OUT)
@@ -117,6 +112,7 @@ func mouse_screen(looking: String) -> void:
 				#tween.tween_property(camera,"rotation_degrees:x", -55.3,0.15)
 				return;
 	else:
+		GameState.player._update_hand("interact")
 		match looking:
 			"up":
 				up_down_checks = true
@@ -144,6 +140,7 @@ func mouse_screen(looking: String) -> void:
 				up_down_checks = false
 				return;
 			_:
+				GameState.player._update_hand("idle")
 				up_down_checks = false
 
 			#tween.tween_property(camera,"rotation_degrees:x", -16.3,0.15)
@@ -184,6 +181,7 @@ func _in_down_minigame() -> void:
 	$Up_button.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 func _on_bottom_button_mouse_entered() -> void:
+	GameState.player._update_hand("interact")
 	mouse_screen("down")
 
 func _on_up_button_mouse_entered() -> void:
@@ -196,9 +194,19 @@ func _night_title_popup()-> void:
 		$ColorRect3/Night/HeyPeter.show()
 	else:
 		$ColorRect3/Night/HeyPeter.hide()
-		
+	$ColorRect3/Night.text = "Night 1"
 	$AnimationPlayer.play("Night_Animation")
-	pass
+
+func _night_title_finish()->void:
+	var hey_peter = randi_range(1,500)
+	print(hey_peter)
+	if(hey_peter == 67):
+		$ColorRect3/Night/HeyPeter.show()
+	else:
+		$ColorRect3/Night/HeyPeter.hide()
+	$ColorRect3/Night.text = "Finish"
+	$AnimationPlayer.play("Night_Animation")
+
 
 func _change_money(new_value: float) -> void:
 	var old_value = float($"Right Container/Money/Label".text)

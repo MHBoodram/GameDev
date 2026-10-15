@@ -14,7 +14,7 @@ var speaking_title : String = "start"
 @onready var patient_2d = get_node("Sprite3D/SubViewport/Patience")
 var recipt_marker : Marker3D
 var recipt_clicked : bool = true
-
+var unique_talk : bool = false
 
 func _ready() -> void:
 	patience_timer.wait_time = npc_resource.patience_time
@@ -31,10 +31,15 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	patient_2d._change_curent(patience_timer.time_left)
 
-func _institate(npc_source : NPC,seat: int,rec_marker: Marker3D) -> void:
+func _institate(npc_source : NPC,seat: int,rec_marker: Marker3D, patience: float = 90,starting_dialogue: String = "start") -> void:
 	npc_resource = npc_source
 	seat_num = seat
 	recipt_marker = rec_marker
+	if(patience != 0):
+		patience_timer.wait_time = patience
+	speaking_title = starting_dialogue
+	if(starting_dialogue != "start"):
+		unique_talk = true
 	_ready()
 
 func _moving_to(to: Marker3D) -> void:
@@ -90,12 +95,24 @@ func _obtain_drink(drink: Array) -> float:
 	if(drink_list.size() <= 0):
 		$Area3D/CollisionShape3D.disabled = true
 		await get_tree().create_timer(1).timeout
-		_leaving()
+		if(!unique_talk):
+			_leaving()
+		else:
+			$Area3D/CollisionShape3D.disabled = false
+			patience_timer.wait_time = 100
+			patience_timer.stop()
+			if(ranking >= 2):
+				speaking_title = "introduction_mid_good"
+			elif(ranking >= 1):
+				speaking_title = "introduction_mid_mid"
+			else:
+				speaking_title = "introduction_mid_bad"
+				
 	PlayerStats._change_money(PlayerStats.money +5 * ranking)
 	return ranking	# always between 0 and 5
 
 func _want_drink() -> Array:
-	var drink_list_want = ["beer"]
+	var drink_list_want = ["beer","gin","vodka"]
 	var liquid_num = randi_range(80,100)
 	var drink_name = drink_list_want.pick_random()
 	var total = [[drink_name,liquid_num]]
@@ -127,8 +144,8 @@ func _add_recipt() -> void:
 	#
 func _on_area_Obtain_drink_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
-		_obtain_drink(area.get_parent()._return_drink())
-		area.get_parent()._dranked()
+		_obtain_drink(area._return_drink())
+		area._dranked()
 
 func _item_print() -> String:
 	var total = ""
@@ -141,3 +158,9 @@ func _item_print() -> String:
 
 func _on_patience_timer_timeout() -> void:
 	_leaving()
+
+func _on_area_3d_mouse_entered() -> void:
+	GameState.player._update_hand("interact")
+
+func _on_area_3d_mouse_exited() -> void:
+	GameState.player._update_hand("idle")

@@ -30,7 +30,7 @@ func _process(delta: float) -> void:
 			is_balls_dragging = false
 			if(put_on):
 				ordered = false
-				get_parent()._give_drink(self,put_on.get_parent(),seat_num)
+				get_parent()._give_drink(self,put_on,seat_num)
 	elif(ordered):
 		var tween = get_tree().create_tween()
 		tween.set_trans(Tween.TRANS_SINE)
@@ -57,10 +57,20 @@ func _on_recipt_area_input_event(camera: Node, event: InputEvent, event_position
 func _on_recipt_area_area_entered(area: Area3D) -> void:
 	if is_balls_dragging && area.is_in_group("glass") && put_on == null:
 		put_on = area
-		area.get_parent()._on_hover(true)
+		area._on_hover(true)
 		
 
 func _on_recipt_area_area_exited(area: Area3D) -> void:
 	if is_balls_dragging && put_on == area:
 		put_on = null
 		area.get_parent()._on_hover(false)
+
+
+func _on_recipt_area_mouse_entered() -> void:
+	if(!is_balls_dragging):
+		GameState.player._update_hand("interact")
+
+
+func _on_recipt_area_mouse_exited() -> void:
+	if(!is_balls_dragging):
+		GameState.player._update_hand("idle")

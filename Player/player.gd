@@ -2,6 +2,7 @@ extends Node3D
 @onready var shot_glass = preload("res://Player/Drink/Glasses/shot_cup.tscn")
 @onready var beer_glass = preload("res://Player/Drink/Glasses/beer_cup.tscn")
 @onready var gameplay_ui = get_node("GameplayUi")
+@onready var hand_sprite = get_node("GameplayUi/Hand")
 @export var counter : Node3D
 #@onready var counter = get_node("Coutner/Lower_counter")
 var summoning : bool = false
@@ -23,6 +24,36 @@ var cup_offsets := {
 	"shot_glass": Vector3(0, 0, 0),
 	"beer_glass": Vector3(0, 0, 0),
 }
+
+func _ready():
+	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
+	_update_hand("idle")
+
+func _process(delta: float) -> void:
+	if($GameplayUi/Hand/AnimationPlayer.current_animation == "hold"):
+		return
+	$GameplayUi/Hand.global_position = get_viewport().get_mouse_position()
+
+func _force_cursor_image(move_to: Vector3) -> void:
+	$GameplayUi/Hand.global_position = $Camera3D.unproject_position(move_to)
+
+func _force_mouse(move_to: Vector3) -> void:
+	get_viewport().warp_mouse($Camera3D.unproject_position(move_to))
+
+func _update_hand(change: String) -> void:
+	match change:
+		"interact":
+			if(!$GameplayUi/Hand/AnimationPlayer.current_animation == "interact"):
+				$GameplayUi/Hand/AnimationPlayer.play("interact")
+			return
+		"holding":
+			if(!$GameplayUi/Hand/AnimationPlayer.current_animation == "hold"):
+				$GameplayUi/Hand/AnimationPlayer.play("hold")
+			return
+		_:
+			if(!$GameplayUi/Hand/AnimationPlayer.current_animation == "idle"):
+				$GameplayUi/Hand/AnimationPlayer.play("idle")
+			return
 
 func get_mouse_world_position(camera: Camera3D, plane_y: float) -> Vector3:
 	var mouse_pos = get_viewport().get_mouse_position()
@@ -50,6 +81,8 @@ func _input(event: InputEvent) -> void:
 			gameplay_ui._out_down_minigame()
 			_out_of_game()
 
+
+
 func _spawn_cup(scene: PackedScene, cup_name: String) -> void:
 	var pos := get_mouse_world_position($Camera3D, spawn_y)
 	var min_x : float = counter.global_position.x + counter_min_x
@@ -76,10 +109,13 @@ func _perfect_pour(drink : Drinks, glass : Glasses) -> void: #minigame Section
 	glass._in_game()
 	tween.tween_property(drink,"global_position",$Camera3D/drink_mark.global_position,0.5)
 	tween.tween_property(glass,"global_position",$Camera3D/glass_mark.global_position,0.5)
+	tween.tween_property(glass,"rotation_degrees:y",0,0.5)
+
 	await tween.finished
 	await get_tree().process_frame
 	drink.look_at($Camera3D.global_position)
-	glass.look_at($Camera3D.global_position)
+	#glass.look_at($Camera3D.global_position)
+
 
 func _out_of_game() -> void:
 	in_game = false
@@ -109,4 +145,4 @@ func _on_beer_glass_button_input_event(camera: Node, event: InputEvent, event_po
 
 func _on_trash_area_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
-		area.get_parent()._delete()
+		area._delete()

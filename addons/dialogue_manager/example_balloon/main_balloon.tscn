@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://byq786nbgm0nn"]
 
 [ext_resource type="Script" uid="uid://cjk75qbdawysi" path="res://addons/dialogue_manager/example_balloon/main_balloon.gd" id="1_ss615"]
+[ext_resource type="FontFile" uid="uid://cq83j1cam8lw" path="res://Assets/Font/Merchant Copy.ttf" id="2_b4bgf"]
 [ext_resource type="PackedScene" uid="uid://ckvgyvclnwggo" path="res://addons/dialogue_manager/dialogue_label.tscn" id="2_jtr30"]
 [ext_resource type="Script" uid="uid://bb52rsfwhkxbn" path="res://addons/dialogue_manager/dialogue_responses_menu.gd" id="3_b4bgf"]
 
@@ -114,7 +115,7 @@ _data = {
 }
 
 [node name="Main_Ballon" type="CanvasLayer" unique_id=1434168376]
-layer = 100
+layer = 5
 script = ExtResource("1_ss615")
 
 [node name="Balloon" type="Control" parent="." unique_id=359403728]
@@ -162,6 +163,8 @@ modulate = Color(1, 1, 1, 0.501961)
 layout_mode = 2
 mouse_filter = 1
 theme_override_colors/default_color = Color(0, 0, 0, 1)
+theme_override_fonts/normal_font = ExtResource("2_b4bgf")
+theme_override_font_sizes/normal_font_size = 25
 bbcode_enabled = true
 text = "Character"
 fit_content = true
@@ -173,6 +176,8 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/default_color = Color(0, 0, 0, 1)
+theme_override_fonts/normal_font = ExtResource("2_b4bgf")
+theme_override_font_sizes/normal_font_size = 35
 text = "Dialogue..."
 horizontal_alignment = 1
 
@@ -211,6 +216,8 @@ response_template = NodePath("ResponseExample")
 
 [node name="ResponseExample" type="Button" parent="Balloon/ResponsesMenu" unique_id=914537232]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("2_b4bgf")
+theme_override_font_sizes/font_size = 30
 text = "Response example"
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=1116280512]
@@ -218,3 +225,5 @@ unique_name_in_owner = true
 
 [connection signal="gui_input" from="Balloon" to="." method="_on_balloon_gui_input"]
 [connection signal="response_selected" from="Balloon/ResponsesMenu" to="." method="_on_responses_menu_response_selected"]
+[connection signal="mouse_entered" from="Balloon/ResponsesMenu/ResponseExample" to="." method="_on_response_example_mouse_entered"]
+[connection signal="mouse_exited" from="Balloon/ResponsesMenu/ResponseExample" to="." method="_on_response_example_mouse_exited"]

@@ -4,6 +4,10 @@ var camera : Camera3D
 func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
 
+func _process(delta: float) -> void:
+	if(visible):
+		$TextureRect/VBoxContainer/HBoxContainer/Fps.text = "FPS: " + str(Engine.get_frames_per_second())
+
 func _on_add_npc_pressed() -> void:
 	GameState.main_node._add_npc()
 

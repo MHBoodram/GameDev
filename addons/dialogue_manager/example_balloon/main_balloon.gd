@@ -227,3 +227,13 @@ func _on_responses_menu_response_selected(response: DialogueResponse) -> void:
 
 
 #endregion
+
+
+func _on_response_example_mouse_entered() -> void:
+	if(GameState.player):
+		GameState.player._update_hand("interact")
+
+
+func _on_response_example_mouse_exited() -> void:
+	if(GameState.player):
+		GameState.player._update_hand("idle")
