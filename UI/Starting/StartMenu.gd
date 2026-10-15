@@ -11,7 +11,6 @@ func _ready() -> void:
 	play_button.pressed.connect(_on_play_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
 	play_button.grab_focus()
-
 	if OS.has_feature("web"): #this is lowk only if this is on the web, shoudln't be much of an issue with us
 		quit_button.hide()
 
@@ -20,6 +19,10 @@ func _on_play_pressed() -> void:
 	GameState.seat2_order = []
 	GameState.seat3_order = []
 	get_tree().change_scene_to_file(GAME_SCENE)
+
+func _setting() -> void:
+	
+	pass
 
 
 func _on_quit_pressed() -> void:

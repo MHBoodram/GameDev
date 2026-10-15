@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://byw6bbpmaen6w"]
 
-[ext_resource type="Script" uid="uid://btnyohqechm3m" path="res://UI/gameplay_ui.gd" id="1_twi4a"]
+[ext_resource type="Script" uid="uid://btnyohqechm3m" path="res://UI/Gameplay_ui/gameplay_ui.gd" id="1_twi4a"]
 [ext_resource type="Shader" uid="uid://buyonhl3ws40j" path="res://Shader/3dfish.gdshader" id="2_p43d3"]
 [ext_resource type="Texture2D" uid="uid://xk8p6bfsbe0w" path="res://Assets/UI/Coin.png" id="3_ea1ie"]
 [ext_resource type="Texture2D" uid="uid://d36ww05lajjsl" path="res://Assets/UI/circle_progress_outline.png" id="3_xl5tu"]

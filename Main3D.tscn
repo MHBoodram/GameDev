@@ -12,7 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://b5l0yoj3yjcmf" path="res://Assets/Items/inside_shot_glass.png" id="7_ris41"]
 [ext_resource type="Texture2D" uid="uid://4sg263uyig2d" path="res://Assets/Items/outside_shot_glass.png" id="7_wk5cn"]
 [ext_resource type="Texture2D" uid="uid://bxv0tx0mkbbhx" path="res://Assets/UI/peter.png" id="9_n776p"]
-[ext_resource type="PackedScene" uid="uid://cm05k37ejgq5p" path="res://UI/Debug_Menu.tscn" id="10_wk5cn"]
+[ext_resource type="PackedScene" uid="uid://cm05k37ejgq5p" path="res://UI/Gameplay_ui/Debug_Menu.tscn" id="10_wk5cn"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_v88eg"]
 radius = 0.23796713

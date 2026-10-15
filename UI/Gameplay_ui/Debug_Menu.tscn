@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cm05k37ejgq5p"]
 
-[ext_resource type="Script" uid="uid://d2hkkq6yjgkuc" path="res://UI/debug_menu.gd" id="1_4urve"]
+[ext_resource type="Script" uid="uid://d2hkkq6yjgkuc" path="res://UI/Gameplay_ui/debug_menu.gd" id="1_4urve"]
 
 [node name="DebugMenu" type="CanvasLayer" unique_id=249711118]
 layer = 100

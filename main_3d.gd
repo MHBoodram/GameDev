@@ -1,5 +1,5 @@
 extends Node3D
-const PAUSE_MENU = preload("res://UI/PauseMenu.tscn")
+const PAUSE_MENU = preload("res://UI/Gameplay_ui/PauseMenu.tscn")
 const BASE_NPC = preload("res://NPC/base npc.tscn")
 var seats: Array[Base_NPC] = [null, null, null]
 @onready var player = get_node("Player")

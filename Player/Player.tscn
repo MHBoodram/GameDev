@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c0vc11sy5fwva" path="res://Player/player.gd" id="1_q3lat"]
 [ext_resource type="Script" uid="uid://ilqlfi7mgoyf" path="res://Player/Dynamic_camera.gd" id="2_tok1r"]
-[ext_resource type="PackedScene" uid="uid://byw6bbpmaen6w" path="res://UI/Gameplay_UI.tscn" id="3_tok1r"]
+[ext_resource type="PackedScene" uid="uid://byw6bbpmaen6w" path="res://UI/Gameplay_ui/Gameplay_UI.tscn" id="3_tok1r"]
 [ext_resource type="Texture2D" uid="uid://6sfbebk1yfeh" path="res://Assets/UI/Hand-Sheet.png" id="4_ddoul"]
 [ext_resource type="Texture2D" uid="uid://cmy1e1mvuqoli" path="res://Assets/UI/circle_progress.png" id="5_8g4oa"]
 

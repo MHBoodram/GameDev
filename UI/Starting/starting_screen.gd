@@ -1,7 +1,7 @@
 extends Node3D
 
 func _ready() -> void:
-	$AnimationPlayer.speed_scale = 0.5
+	$AnimationPlayer.speed_scale = 0.4
 	$AnimationPlayer.play("movement")
 	$Menu_animation.play("menu_close")
 

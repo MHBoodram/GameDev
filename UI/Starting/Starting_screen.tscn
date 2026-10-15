@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://dbopjf61c8b21"]
 
 [ext_resource type="PackedScene" uid="uid://ci6fovgg0i85" path="res://Map/bar1.tscn" id="1_2t0lq"]
-[ext_resource type="Script" uid="uid://cgrldus8tt4ky" path="res://UI/starting_screen.gd" id="1_aj1h6"]
-[ext_resource type="PackedScene" uid="uid://bdpvjjayusxo7" path="res://UI/StartMenu.tscn" id="3_pa3t7"]
+[ext_resource type="Script" uid="uid://cgrldus8tt4ky" path="res://UI/Starting/starting_screen.gd" id="1_aj1h6"]
+[ext_resource type="PackedScene" uid="uid://bdpvjjayusxo7" path="res://UI/Starting/StartMenu.tscn" id="3_pa3t7"]
 [ext_resource type="Texture2D" uid="uid://cmfpp3ot4ndl3" path="res://Assets/UI/Logo.png" id="4_8bcmw"]
 
 [sub_resource type="Animation" id="Animation_pa3t7"]
@@ -264,7 +264,7 @@ transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 3
 light_energy = 4.846
 
 [node name="Menu2" type="MeshInstance3D" parent="." unique_id=365639541]
-transform = Transform3D(0.8660253, 7.4505784e-09, -0.5, 0.12940954, 0.9659255, 0.22414388, 0.48296294, -0.25881895, 0.8365163, 0.30466104, -0.66305804, 0.09071362)
+transform = Transform3D(0.99999994, 0, 0, 0, 0.8660251, 0.5000001, 0, -0.49999997, 0.8660253, -0.07046601, 2.0696006, 0.16765034)
 mesh = SubResource("BoxMesh_aj1h6")
 
 [node name="Menu3" type="MeshInstance3D" parent="Menu2" unique_id=765720054]

@@ -1,0 +1,120 @@
+[gd_scene format=3 uid="uid://bdpvjjayusxo7"]
+
+[ext_resource type="FontFile" uid="uid://cq83j1cam8lw" path="res://Assets/Font/Merchant Copy.ttf" id="1_35j0k"]
+[ext_resource type="Script" uid="uid://cdw65vses6vur" path="res://UI/Starting/StartMenu.gd" id="1_start"]
+[ext_resource type="Texture2D" uid="uid://b1g27nful45ro" path="res://UI/Game_Title_Asset.png" id="2_logo"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gnao3"]
+bg_color = Color(0.5569488, 0.5569549, 0.55695194, 1)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+shadow_size = 11
+anti_aliasing_size = 0.01
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rf0c6"]
+bg_color = Color(0.96474224, 0.96474224, 0.9647421, 1)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+shadow_size = 11
+anti_aliasing_size = 0.01
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bo5hi"]
+bg_color = Color(0, 0, 0, 1)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+shadow_size = 11
+anti_aliasing_size = 0.01
+
+[sub_resource type="Theme" id="Theme_8gori"]
+Button/colors/font_color = Color(0, 0, 0, 1)
+Button/colors/font_hover_color = Color(0.45694035, 0.8566054, 0.86007994, 1)
+Button/colors/font_outline_color = Color(1, 1, 1, 1)
+Button/colors/font_pressed_color = Color(0.12955844, 0.12955847, 0.12955844, 1)
+Button/constants/outline_size = 5
+Button/font_sizes/font_size = 100
+Button/fonts/font = ExtResource("1_35j0k")
+Button/styles/hover = SubResource("StyleBoxFlat_gnao3")
+Button/styles/normal = SubResource("StyleBoxFlat_rf0c6")
+Button/styles/pressed = SubResource("StyleBoxFlat_bo5hi")
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_logo"]
+atlas = ExtResource("2_logo")
+region = Rect2(23, 33, 463, 289)
+
+[node name="StartMenu" type="Control" unique_id=1809742072]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_8gori")
+script = ExtResource("1_start")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1959663630]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=894323069]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer" unique_id=302025385]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Logo" type="TextureRect" parent="CenterContainer/VBox" unique_id=450784215]
+texture_filter = 1
+custom_minimum_size = Vector2(695, 434)
+layout_mode = 2
+texture = SubResource("AtlasTexture_logo")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PlayButton" type="Button" parent="CenterContainer/VBox" unique_id=71465580]
+custom_minimum_size = Vector2(240, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Play"
+
+[node name="PlayButton2" type="Button" parent="CenterContainer/VBox" unique_id=1516208611]
+custom_minimum_size = Vector2(240, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Setting
+"
+
+[node name="QuitButton" type="Button" parent="CenterContainer/VBox" unique_id=504631371]
+custom_minimum_size = Vector2(240, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Quit"
