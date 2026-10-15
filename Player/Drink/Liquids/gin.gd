@@ -3,10 +3,14 @@ class_name Drinks
 var pouring_into : Node3D
 @export var liquid_resource : Liquid
 
+@export var hold_lift : float = 0.3
 var original_position : Marker3D
+var _depth_now : float = 0.0
+var _return_tween : Tween
+
 
 #func ready() -> void:
-	#
+	#rotation_degrees = Vector3.ZERO
 	#pass
 
 func setup(og_position: Marker3D,Counter: Node3D,_liquid: Liquid) -> void:
@@ -18,25 +22,77 @@ func setup(og_position: Marker3D,Counter: Node3D,_liquid: Liquid) -> void:
 	global_position = og_position.global_position
 	rotation_degrees = Vector3.ZERO
 
-func _process(_delta: float) -> void:
-	if is_balls_dragging:
-		var mouse_pos = get_viewport().get_mouse_position()
-		var new_projection = camera.project_position(mouse_pos, drag_z_depth)
-		new_projection.x = clamp(new_projection.x, -1.2 + counter_origin.global_position.x,1.4+ counter_origin.global_position.x)
-		new_projection.z = clamp(new_projection.z, counter_origin.global_position.z - 0.4,counter_origin.global_position.z + 0.4)
-		if(new_projection.z < 0.28):
-			new_projection.y = base_y_position + 0.2
+func _process(delta: float) -> void:
+	if not is_balls_dragging:
+		return
+	if not Input.is_action_pressed("Left_click"):
+		is_balls_dragging = false
+		if pouring_into:
+			_pouring_game()
 		else:
-			new_projection.y = base_y_position
-		global_position = new_projection
-		if(Input.is_action_just_released("Left_click")):
-			is_balls_dragging = false
-			if(!pouring_into):
-				_return_original()
-			else:
-				_pouring_game()
-		else:
-			look_at(camera.global_position)
+			_return_original()
+		return
+	var mouse_pos := get_viewport().get_mouse_position()
+	_depth_now = lerpf(_depth_now, drag_z_depth - hold_lift, 1.0 - exp(-12 * delta))
+	global_position = camera.project_position(mouse_pos,_depth_now)
+	look_at(camera.global_position)
+
+	# check what glass to target
+#	_set_pour_target(_glass_under_cursor())
+
+func _glass_under_cursor() -> Node3D:
+	var mouse_pos := get_viewport().get_mouse_position()
+	var from := camera.project_ray_origin(mouse_pos)
+	var to := from + camera.project_ray_normal(mouse_pos) * 30.0
+
+	var query := PhysicsRayQueryParameters3D.create(from,to)
+	query.collide_with_areas = true
+	query.collide_with_bodies = false
+
+	var excluded : Array[RID] = [$Interact.get_rid()]
+	var space := get_world_3d().direct_space_state
+
+	for i in 8:
+		query.exclude = excluded
+		var hit := space.intersect_ray(query)
+		if hit.is_empty():
+			return null
+		var collider : Node = hit["collider"]
+		if collider.is_in_group("glass"): #Glass scenes put the "glass" group on a child area3d, falls back to the node itself if the group is on the root
+			var glass : Node = collider if collider is Glasses else collider.get_parent()
+			if glass.has_method("_on_hover"):
+				return glass as Node3D
+		excluded.append(hit["rid"])
+	return null
+
+func _set_pour_target(glass: Node3D) -> void:
+	if glass == pouring_into:
+		return
+	if pouring_into and is_instance_valid(pouring_into):
+		pouring_into._on_hover(false)
+	pouring_into = glass
+	if pouring_into:
+		pouring_into._on_hover(true)
+
+#func _process(_delta: float) -> void:
+	#if is_balls_dragging:
+		#var mouse_pos = get_viewport().get_mouse_position()
+		#var new_projection = camera.project_position(mouse_pos, drag_z_depth)
+		#new_projection.x = clamp(new_projection.x, -1.2 + counter_origin.global_position.x,1.4+ counter_origin.global_position.x)
+		#new_projection.z = clamp(new_projection.z, counter_origin.global_position.z - 0.4,counter_origin.global_position.z + 0.4)
+		#if(new_projection.z < 0.28):
+			#new_projection.y = base_y_position + 0.2
+		#else:
+			#new_projection.y = base_y_position
+		#global_position = new_projection
+		#if(Input.is_action_just_released("Left_click")):
+			#is_balls_dragging = false
+			#if(!pouring_into):
+				#_return_original()
+			#else:
+				#_pouring_game()
+		#else:
+			#look_at(camera.global_position)
 
 @warning_ignore("shadowed_variable", "unused_parameter", "shadowed_variable_base_class")
 func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
@@ -85,13 +141,13 @@ func _pouring_game() -> void:
 	$Interact/CollisionShape3D.disabled = false
 	is_balls_dragging = false
 
-func _on_interact_area_entered(area: Area3D) -> void:
-	if(area.is_in_group("glass") && is_balls_dragging && pouring_into == null):
-		pouring_into = area.get_parent()
-		area.get_parent()._on_hover(true)
+#func _on_interact_area_entered(area: Area3D) -> void:
+	#if(area.is_in_group("glass") && is_balls_dragging && pouring_into == null):
+		#pouring_into = area.get_parent()
+		#area.get_parent()._on_hover(true)
 
-func _on_interact_area_exited(area: Area3D) -> void:
-	if(area.is_in_group("glass") && is_balls_dragging):
-		if(area.get_parent() == pouring_into):
-			pouring_into = null
-			area.get_parent()._on_hover(false)
+#func _on_interact_area_exited(area: Area3D) -> void:
+	#if(area.is_in_group("glass") && is_balls_dragging):
+		#if(area.get_parent() == pouring_into):
+			#pouring_into = null
+			#area.get_parent()._on_hover(false)
