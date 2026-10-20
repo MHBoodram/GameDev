@@ -13,7 +13,14 @@ func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
 	$FishEye.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	GameState.gameplay_ui = self
-	#print(camera.global_position.y)
+
+# Update quota value in hud
+func _update_quota(quota_value: float) -> void:
+	$"Mid Container/Money/Label".text = "Quota:\n" + str(int(quota_value))
+
+# Updates night counter display text
+func _update_night_display(night_number: int) -> void:
+	$ColorRect3/Night.text = "Night " + str(night_number)
 
 func bendover() -> void:
 	if(down):
@@ -194,7 +201,7 @@ func _night_title_popup()-> void:
 		$ColorRect3/Night/HeyPeter.show()
 	else:
 		$ColorRect3/Night/HeyPeter.hide()
-	$ColorRect3/Night.text = "Night 1"
+	$ColorRect3/Night.text = "Night " + str(GameState.night)
 	$AnimationPlayer.play("Night_Animation")
 
 func _night_title_finish()->void:
