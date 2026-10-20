@@ -1,7 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://c7e1o70yhke0k"]
+[gd_scene format=3 uid="uid://c7e1o70yhke0k"]
 
 [ext_resource type="FontFile" uid="uid://cq83j1cam8lw" path="res://Assets/Font/Merchant Copy.ttf" id="1_anvix"]
-[ext_resource type="Script" uid="uid://b5xqyvx63m14c" path="res://UI/After_night/after_night_menu.gd" id="2_script"]
+[ext_resource type="Script" uid="uid://b00cd4ec0krhk" path="res://UI/After_night/after_night_menu.gd" id="2_script"]
 
 [sub_resource type="Theme" id="Theme_1i4lr"]
 Label/colors/font_color = Color(1, 1, 1, 1)
@@ -60,7 +60,7 @@ theme_override_constants/separation = 12
 [node name="TopSpeciesLabel" type="Label" parent="TextureRect/VBoxContainer" unique_id=1849201948]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
-text = "Top Species: Human"
+text = "Top species: Human"
 horizontal_alignment = 1
 
 [node name="InfoLabel" type="Label" parent="TextureRect/VBoxContainer" unique_id=2094182910]
@@ -73,30 +73,29 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
 theme_override_font_sizes/font_size = 24
-text = ""
 horizontal_alignment = 1
 
 [node name="PayQuotaButton" type="Button" parent="TextureRect/VBoxContainer" unique_id=892301948]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-text = "Pay Quota"
+text = "Pay quota"
 
 [node name="BuyIngredientButton" type="Button" parent="TextureRect/VBoxContainer" unique_id=1948192031]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-text = "Buy Ingredient ($50)"
+text = "Buy ingredient ($50)"
 
 [node name="BuyMarketingButton" type="Button" parent="TextureRect/VBoxContainer" unique_id=293847192]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-text = "Buy Marketing ($50)"
+text = "Buy marketing ($50)"
 
 [node name="RestartButton" type="Button" parent="TextureRect/VBoxContainer" unique_id=948271029]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-text = "Restart Night (3 left)"
+text = "Restart night (3 left)"
 
 [node name="NextNightButton" type="Button" parent="TextureRect/VBoxContainer" unique_id=481928301]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-text = "Start Next Night"
+text = "Next night"

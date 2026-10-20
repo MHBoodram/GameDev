@@ -8,9 +8,20 @@ func _process(delta: float) -> void:
 	if(visible):
 		$TextureRect/VBoxContainer/HBoxContainer/Fps.text = "FPS: " + str(Engine.get_frames_per_second())
 
-func _on_serve_all_pressed() -> void:
-	if GameState.main_node and GameState.main_node.has_method("_serve_all_customers"):
-		GameState.main_node._serve_all_customers()
+func _on_serve_good_pressed() -> void:
+	if GameState.main_node and GameState.main_node.has_method("_serve_all_customers_scored"):
+		GameState.main_node._serve_all_customers_scored("good")
+
+func _on_serve_bad_pressed() -> void:
+	if GameState.main_node and GameState.main_node.has_method("_serve_all_customers_scored"):
+		GameState.main_node._serve_all_customers_scored("bad")
+
+func _on_add_rep_pressed() -> void:
+	PlayerStats.add_overall_reputation(10.0)
+
+func _on_end_night_pressed() -> void:
+	if GameState.main_node and GameState.main_node.has_method("end_night_early"):
+		GameState.main_node.end_night_early()
 
 func _on_add_npc_pressed() -> void:
 	GameState.main_node._add_npc()

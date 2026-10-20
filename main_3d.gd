@@ -180,20 +180,49 @@ func _is_debug_menu_blocked() -> bool:
 		return true
 	return false
 
-func _serve_all_customers() -> void:
+func _clear_receipt_for_seat(seat_number: int) -> void:
+	var recipt_node = get_node_or_null("ReciptPaper" + str(seat_number))
+	if recipt_node:
+		recipt_node.ordered = false
+		recipt_node.global_position = $HiddenRecipt.global_position
+
+func _serve_seat(seat_index: int, drink_data: Array) -> void:
+	var npc: Base_NPC = seats[seat_index]
+	if npc == null:
+		return
+	_clear_receipt_for_seat(seat_index + 1)
+	npc._obtain_drink(drink_data)
+	if npc.unique_talk:
+		npc._leaving()
+
+func _serve_all_customers_scored(score_type: String = "good") -> void:
 	for seat_index in seats.size():
 		var npc: Base_NPC = seats[seat_index]
 		if npc == null:
 			continue
-		var recipt_node = get_node_or_null("ReciptPaper" + str(seat_index + 1))
-		if recipt_node:
-			recipt_node.ordered = false
-			recipt_node.global_position = $HiddenRecipt.global_position
 		while npc.drink_list.size() > 0:
-			var requested_order: Array = npc.drink_list[0].duplicate(true)
-			npc._obtain_drink(requested_order)
-		if npc.unique_talk:
+			var drink_data: Array = []
+			if score_type == "good":
+				var target_item = npc.drink_list[0][0]
+				drink_data = [[target_item[0], target_item[1]]]
+			else:
+				drink_data = [["garbage_water", 0], ["spoiled_milk", 0], ["wrong_spirit", 0]]
+			_serve_seat(seat_index, drink_data)
+
+func _serve_all_customers() -> void:
+	_serve_all_customers_scored("good")
+
+func end_night_early() -> void:
+	$Night_Time.stop()
+	is_spawning_allowed = false
+	GameState.night_paused = false
+	GameState.special_state = false
+	for seat_index in seats.size():
+		var npc: Base_NPC = seats[seat_index]
+		if npc:
+			_clear_receipt_for_seat(seat_index + 1)
 			npc._leaving()
+	_check_night_concluded()
 
 func _set_shit(specific_id: String, patience: float = 90) -> void:
 	var free_seat = seats.find(null)
