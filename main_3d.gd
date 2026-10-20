@@ -5,12 +5,30 @@ var seats: Array[Base_NPC] = [null, null, null]
 @onready var player = get_node("Player")
 var frame_count = 0
 
+#Environement
+@onready var world_environment: WorldEnvironment = get_node("WorldEnvironment")
+@onready var sun: DirectionalLight3D = get_node("WorldEnvironment/Sun")
+@onready var night_timer: Timer = get_node("Night_Time")
+
+var initial_sun_transform: Transform3D
+var initial_sun_energy: float = 1.5
+var initial_hdri_energy: float = 0.5
+var initial_fog_albedo: Color = Color(0.9843137, 0.7411765, 0.0, 1.0)
+var sky_material: PanoramaSkyMaterial
+
+@export var dusk_start_seconds: float = 0.0
+@export var dusk_end_seconds: float = 40.0
+@export var night_hdri_energy: float = 0.025
+@export var night_sun_pitch_degrees: float = 45.0
+@export var night_fog_albedo: Color = Color(0.04, 0.06, 0.12, 1.0)
+
 func _ready() -> void:
 	add_child(PAUSE_MENU.instantiate())
 	GameState.player = $Player
 	GameState.main_node = self
 	_check_unlocks_drinks()
 	_night_select()
+	_setup_environment_day_night()
 
 func night_popup():
 	if(GameState.gameplay_ui):
@@ -23,10 +41,42 @@ func start_night() -> void:
 	await get_tree().create_timer(3).timeout
 	_add_npc()
 	
+func _setup_environment_day_night() -> void:
+	initial_sun_transform = sun.transform
+	initial_sun_energy = sun.light_energy
+	if world_environment and world_environment.environment:
+		world_environment.environment = world_environment.environment.duplicate()
+		initial_fog_albedo = world_environment.environment.volumetric_fog_albedo
+		if world_environment.environment.sky:
+			world_environment.environment.sky = world_environment.environment.sky.duplicate()
+			var mat = world_environment.environment.sky.sky_material
+			if mat is PanoramaSkyMaterial:
+				sky_material = mat.duplicate()
+				world_environment.environment.sky.sky_material = sky_material
+				initial_hdri_energy = sky_material.energy_multiplier
+
+func _update_day_night_cycle() -> void:
+	if night_timer.is_stopped():
+		return
+	# Transition around one minute mark
+	var elapsed_seconds: float = night_timer.wait_time - night_timer.time_left
+	var raw_progress: float = (elapsed_seconds - dusk_start_seconds) / (dusk_end_seconds - dusk_start_seconds)
+	var transition_weight: float = clampf(raw_progress, 0.0, 1.0)
+	var smooth_weight: float = smoothstep(0.0, 1.0, transition_weight)
+	# Rotate sun down
+	var pitch_offset: Basis = Basis(Vector3.RIGHT, deg_to_rad(night_sun_pitch_degrees * smooth_weight))
+	sun.transform.basis = initial_sun_transform.basis * pitch_offset
+	sun.light_energy = lerpf(initial_sun_energy, 0.0, smooth_weight)
+	sun.visible = sun.light_energy > 0.001
+	if sky_material:
+		sky_material.energy_multiplier = lerpf(initial_hdri_energy, night_hdri_energy, smooth_weight)
+	if world_environment and world_environment.environment:
+		world_environment.environment.volumetric_fog_albedo = initial_fog_albedo.lerp(night_fog_albedo, smooth_weight)
 
 @warning_ignore("unused_parameter")
 func _process(delta: float) -> void:
 	GameState.gameplay_ui._change_time($Night_Time.time_left)
+	_update_day_night_cycle()
 	frame_count += 1
 
 	if frame_count >= 75 && !GameState.special_state:
