@@ -9,35 +9,29 @@ script = ExtResource("1_ck6hi")
 [node name="SpotLight3D" type="SpotLight3D" parent="." unique_id=1267194052]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 3.5863514, 0)
 light_color = Color(1, 0.80784315, 0.2509804, 1)
-light_energy = 2.5
 light_volumetric_fog_energy = 2.0
 
 [node name="SpotLight3D2" type="SpotLight3D" parent="." unique_id=1679971590]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 3, 3.586, 0)
 light_color = Color(1, 0.80784315, 0.2509804, 1)
-light_energy = 2.5
 
 [node name="SpotLight3D3" type="SpotLight3D" parent="." unique_id=1899202723]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 6, 3.586, 0)
 light_color = Color(1, 0.80784315, 0.2509804, 1)
-light_energy = 2.5
 
 [node name="SpotLight3D4" type="SpotLight3D" parent="." unique_id=1503085795]
 transform = Transform3D(1, 0, 0, 0, -0.7708469, 0.6370204, 0, -0.6370204, -0.7708469, -1.7492222, 3.5863514, -5.842403)
 light_color = Color(1, 0.80784315, 0.2509804, 1)
-light_energy = 2.5
 light_volumetric_fog_energy = 2.0
 
 [node name="SpotLight3D5" type="SpotLight3D" parent="." unique_id=1753912366]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 6, 3.586, -3.181)
 light_color = Color(1, 0.80784315, 0.2509804, 1)
-light_energy = 2.5
 light_volumetric_fog_energy = 2.0
 
 [node name="SpotLight3D6" type="SpotLight3D" parent="." unique_id=1830510307]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 3, 3.586, -3.181)
 light_color = Color(1, 0.80784315, 0.2509804, 1)
-light_energy = 2.5
 light_volumetric_fog_energy = 2.0
 
 [node name="bar" parent="." unique_id=352991384 instance=ExtResource("1_qvavo")]

@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://4sg263uyig2d" path="res://Assets/Items/outside_shot_glass.png" id="7_wk5cn"]
 [ext_resource type="Texture2D" uid="uid://bxv0tx0mkbbhx" path="res://Assets/UI/peter.png" id="9_n776p"]
 [ext_resource type="PackedScene" uid="uid://cm05k37ejgq5p" path="res://UI/Gameplay_ui/Debug_Menu.tscn" id="10_wk5cn"]
+[ext_resource type="Texture2D" uid="uid://xnqyp4q8b5va" path="res://Assets/3D_textures/toposcope_sunset_2k.hdr" id="14_pka58"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_v88eg"]
 radius = 0.23796713
@@ -30,6 +31,22 @@ section_length = 0.02
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_2tkpp"]
 size = Vector3(1.0180664, 0.15594482, 0.647583)
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_2tkpp"]
+panorama = ExtResource("14_pka58")
+energy_multiplier = 0.5
+
+[sub_resource type="Sky" id="Sky_e1j77"]
+sky_material = SubResource("PanoramaSkyMaterial_2tkpp")
+
+[sub_resource type="Environment" id="Environment_nmhfw"]
+background_mode = 2
+sky = SubResource("Sky_e1j77")
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.045
+volumetric_fog_albedo = Color(0.9843137, 0.7411765, 0, 1)
+volumetric_fog_length = 32.0
+volumetric_fog_ambient_inject = 0.1
 
 [node name="Main3d" type="Node3D" unique_id=692509091]
 script = ExtResource("1_8iyjh")
@@ -193,6 +210,16 @@ visible = false
 
 [node name="Night_Time" type="Timer" parent="." unique_id=1785817623]
 wait_time = 300.0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1277346395]
+environment = SubResource("Environment_nmhfw")
+
+[node name="Sun" type="DirectionalLight3D" parent="WorldEnvironment" unique_id=982263699]
+transform = Transform3D(-0.95751554, -0.16707794, 0.23505107, -0.08849062, 0.94597405, 0.3119334, -0.2744694, 0.27788123, -0.9205698, 6.6585455, 3.4872513, -7.5352235)
+light_color = Color(0.9999997, 0.72599864, 0.20498002, 1)
+light_energy = 1.5
+light_volumetric_fog_energy = 3.0
+shadow_enabled = true
 
 [connection signal="input_event" from="Coutner/BeerGlass Button" to="Player" method="_on_beer_glass_button_input_event"]
 [connection signal="input_event" from="Coutner/ShotGlass Button" to="Player" method="_on_shot_glass_button_input_event"]
