@@ -189,6 +189,18 @@ func _setup_liquid_shader() -> void:
 		liquid_gradient.interpolation_mode = Gradient.GRADIENT_INTERPOLATE_CONSTANT
 		gradient_texture.gradient = liquid_gradient
 		liquid_shader_mat.set_shader_parameter("gradient_texture", gradient_texture)
+		liquid_shader_mat.set_shader_parameter("pixel_resolution", pixel_resolution)
+		liquid_shader_mat.set_shader_parameter("surface_highlight_color", surface_highlight_color)
+		liquid_shader_mat.set_shader_parameter("secondary_highlight_color", secondary_highlight_color)
+		liquid_shader_mat.set_shader_parameter("surface_highlight_thickness", surface_highlight_pixels)
+		liquid_shader_mat.set_shader_parameter("bottom_darkening", bottom_darkening)
+		liquid_shader_mat.set_shader_parameter("liquid_transparency", liquid_transparency)
+		liquid_shader_mat.set_shader_parameter("caustic_beam_strength", caustic_beam_strength)
+		liquid_shader_mat.set_shader_parameter("sparkle_density", sparkle_density)
+		liquid_shader_mat.set_shader_parameter("glass_reflection_strength", glass_reflection_strength)
+		liquid_shader_mat.set_shader_parameter("meniscus_curve", meniscus_curve)
+		liquid_shader_mat.set_shader_parameter("inner_margin_top", inner_margin_top)
+		liquid_shader_mat.set_shader_parameter("inner_margin_bottom", inner_margin_bottom)
 		_rebuild_liquid_gradient()
 
 func _update_shader_parameters() -> void:
@@ -201,18 +213,6 @@ func _update_shader_parameters() -> void:
 	liquid_shader_mat.set_shader_parameter("slosh_vertical_offset", slosh_vertical_offset)
 	liquid_shader_mat.set_shader_parameter("wave_phase", wave_phase)
 	liquid_shader_mat.set_shader_parameter("wave_amplitude", wave_amplitude)
-	liquid_shader_mat.set_shader_parameter("pixel_resolution", pixel_resolution)
-	liquid_shader_mat.set_shader_parameter("surface_highlight_color", surface_highlight_color)
-	liquid_shader_mat.set_shader_parameter("secondary_highlight_color", secondary_highlight_color)
-	liquid_shader_mat.set_shader_parameter("surface_highlight_thickness", surface_highlight_pixels)
-	liquid_shader_mat.set_shader_parameter("bottom_darkening", bottom_darkening)
-	liquid_shader_mat.set_shader_parameter("liquid_transparency", liquid_transparency)
-	liquid_shader_mat.set_shader_parameter("caustic_beam_strength", caustic_beam_strength)
-	liquid_shader_mat.set_shader_parameter("sparkle_density", sparkle_density)
-	liquid_shader_mat.set_shader_parameter("glass_reflection_strength", glass_reflection_strength)
-	liquid_shader_mat.set_shader_parameter("meniscus_curve", meniscus_curve)
-	liquid_shader_mat.set_shader_parameter("inner_margin_top", inner_margin_top)
-	liquid_shader_mat.set_shader_parameter("inner_margin_bottom", inner_margin_bottom)
 
 func _rebuild_liquid_gradient() -> void:
 	total_liquids = 0.0

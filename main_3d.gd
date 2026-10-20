@@ -33,9 +33,10 @@ func _ready() -> void:
 	_check_unlocks_drinks()
 	_setup_environment_day_night()
 	night_timer.timeout.connect(_on_night_time_timeout)
+	for i in range(1, 4):
+		_clear_receipt_for_seat(i)
 	_setup_shift()
 
-# Setup night timer and show initial quota and night count
 func _setup_shift() -> void:
 	is_spawning_allowed = true
 	if GameState.gameplay_ui:
@@ -47,7 +48,6 @@ func night_popup() -> void:
 	if(GameState.gameplay_ui):
 		GameState.gameplay_ui._night_title_popup()
 
-# Starts night timer and initial customer setup
 func start_night() -> void:
 	$Night_Time.wait_time = GameState.night_duration
 	_night_select()
@@ -140,7 +140,6 @@ func _on_night_time_timeout() -> void:
 	print("[shift_timer_ended]: 0.0")
 	_check_night_concluded()
 
-# Transitions to intermission menu if timer expired and all seats are cleared
 func _check_night_concluded() -> void:
 	if not is_spawning_allowed and seats.count(null) == seats.size() and GameState.can_end_night and not GameState.night_paused:
 		get_tree().change_scene_to_file("res://UI/After_night/after_night_menu.tscn")
@@ -361,4 +360,3 @@ func _give_drink(recipt: Node3D, drink:Glasses, seat: int) -> void:
 	tween.tween_property(recipt,"global_position",seat_marker.global_position,0.5)
 	tween.tween_property(drink,"global_position",seat_marker.global_position,0.5)
 	tween.tween_property(recipt,"global_position",$HiddenRecipt.global_position,0.5)
-	

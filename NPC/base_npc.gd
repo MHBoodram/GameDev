@@ -31,6 +31,9 @@ func _ready() -> void:
 	patience_timer.wait_time = max_patience
 	patient_2d._change_max_progress(max_patience)
 	patient_2d._setup(max_patience, npc_resource.race)
+	var viewport = get_node_or_null("Sprite3D/SubViewport") as SubViewport
+	if viewport:
+		viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
 	camera = get_viewport().get_camera_3d()
 	self.texture = npc_resource.sprite_sheet
 	hframes = npc_resource.hframe
@@ -244,4 +247,3 @@ func _on_area_3d_mouse_entered() -> void:
 # Changes cursor to idle on unhover
 func _on_area_3d_mouse_exited() -> void:
 	GameState.player._update_hand("idle")
-	

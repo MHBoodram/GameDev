@@ -17,6 +17,7 @@ const MAX_TILT_PITCH : float = 2.0
 var is_transitioning : bool = false
 var is_moving : bool = false
 var default_camera_local_pos : Vector3 = Vector3.ZERO
+var camera_tween : Tween = null
 
 func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
@@ -72,31 +73,33 @@ func bendover() -> void:
 		_look_behind()
 	down = !down
 
-# Tweens camera to back view
 func _look_behind() -> void:
-	var tween = get_tree().create_tween().set_parallel(true)
-	tween.set_trans(Tween.TRANS_SINE)
-	tween.set_ease(Tween.EASE_OUT)
+	if camera_tween and camera_tween.is_valid():
+		camera_tween.kill()
+	camera_tween = get_tree().create_tween().set_parallel(true)
+	camera_tween.set_trans(Tween.TRANS_SINE)
+	camera_tween.set_ease(Tween.EASE_OUT)
 	var back_position = Vector3(3.28, 2.75, 0.85)
-	tween.tween_property(self, "base_camera_rotation", Vector3(-21.0, 180.0, 0.0), 0.5)
-	tween.tween_property(camera, "global_position", back_position, 0.5)
-	tween.chain().tween_callback(func():
+	camera_tween.tween_property(self, "base_camera_rotation", Vector3(-21.0, 180.0, 0.0), 0.5)
+	camera_tween.tween_property(camera, "global_position", back_position, 0.5)
+	camera_tween.chain().tween_callback(func():
 		$Left_Button.disabled = true
 		$Right_Button.disabled = true
 		$Bottom_button.disabled = true
 		$Up_button.disabled = false
 		is_transitioning = false
 	)
-	
-# Tweens camera back to front view
+
 func _look_forward() -> void:
 	up_down_checks = false
-	var tween = get_tree().create_tween().set_parallel(true)
-	tween.set_trans(Tween.TRANS_SINE)
-	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_property(self, "base_camera_rotation", Vector3(-16.3, 0.0, 0.0), 0.5)
-	tween.tween_property(camera, "position", default_camera_local_pos, 0.5)
-	tween.chain().tween_callback(func():
+	if camera_tween and camera_tween.is_valid():
+		camera_tween.kill()
+	camera_tween = get_tree().create_tween().set_parallel(true)
+	camera_tween.set_trans(Tween.TRANS_SINE)
+	camera_tween.set_ease(Tween.EASE_OUT)
+	camera_tween.tween_property(self, "base_camera_rotation", Vector3(-16.3, 0.0, 0.0), 0.5)
+	camera_tween.tween_property(camera, "position", default_camera_local_pos, 0.5)
+	camera_tween.chain().tween_callback(func():
 		$Left_Button.disabled = false
 		$Right_Button.disabled = false
 		$Bottom_button.disabled = false
