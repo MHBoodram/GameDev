@@ -42,6 +42,7 @@ func _institate(npc_source : NPC,seat: int,rec_marker: Marker3D, patience: float
 		unique_talk = true
 	_ready()
 
+# Move customer sprite to seat
 func _moving_to(to: Marker3D) -> void:
 	var tween = get_tree().create_tween()
 	tween.set_trans(Tween.TRANS_SINE)
@@ -58,29 +59,36 @@ func _tween_bounce() -> void:
 	await get_tree().create_timer(0.1).timeout
 	_tween_bounce()
 
+# Opens dialogue on click on customer
 @warning_ignore("shadowed_variable", "unused_parameter")
 func _on_interaction_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if(event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and abs(camera.global_position.x - global_position.x) < 2):
-		#print("Camera Global_position - self: " + str(camera.global_position - global_position))
 		if(dialogue_resource):
 			DialogueManager.show_dialogue_balloon_scene(custom_balloon,dialogue_resource,speaking_title,[self])
 
-const NAME_POINTS := 2.0	# max from matching ingredients
-const AMOUNT_POINTS := 3.0	# max from matching amounts
-const MAX_DIFF := 15.0	# difference at which amount points hit 0
+const NAME_POINTS := 2.0
+const AMOUNT_POINTS := 3.0
+const MAX_DIFF := 15.0
+const SATISFACTORY_THRESHOLD := 0.6
 
+func _set_reputation(is_satisfactory: bool, drink_score: float) -> void:
+	var race_name: String = npc_resource.race if npc_resource else "Human"
+	if is_satisfactory:
+		PlayerStats.add_overall_reputation(1.0)
+		PlayerStats.modify_species_reputation(race_name, 1.0)
+	else:
+		var penalty: float = (1.0 - drink_score) * 2.0
+		PlayerStats.modify_species_reputation(race_name, -penalty)
+
+# Gets drink score then gives payment and reputation
 func _obtain_drink(drink: Array) -> float:
 	var want = drink_list.pop_front()
 	var ranking :float = 0.0
 	print(want)
 	var per_item : float = 1.0 / want.size()
-	#print(want)
-	#print(drink)
 	for check in want:
 		var check_name = check[0]
 		var check_liquid_number = check[1]
-		#print(check_name)
-		#print(check_liquid_number)
 		for have in drink:
 			if check_name != have[0]:
 				continue
@@ -88,9 +96,15 @@ func _obtain_drink(drink: Array) -> float:
 			var difference = abs(check_liquid_number - have[1])
 			var closeness = 1.0 - clamp(difference / MAX_DIFF, 0.0, 1.0)
 
-			ranking += NAME_POINTS * per_item	# right ingredient
-			ranking += AMOUNT_POINTS * closeness * per_item	# right amount
+			ranking += NAME_POINTS * per_item
+			ranking += AMOUNT_POINTS * closeness * per_item
 			break
+
+	var normalized_drink_score: float = clampf(ranking / 5.0, 0.0, 1.0)
+	print("[drink_score]: ", normalized_drink_score)
+	var is_satisfactory: bool = normalized_drink_score >= SATISFACTORY_THRESHOLD
+	_apply_reputation(is_satisfactory, normalized_drink_score)
+
 	print(ranking)
 	if(drink_list.size() <= 0):
 		$Area3D/CollisionShape3D.disabled = true
@@ -109,8 +123,9 @@ func _obtain_drink(drink: Array) -> float:
 				speaking_title = "introduction_mid_bad"
 				
 	PlayerStats._change_money(PlayerStats.money +5 * ranking)
-	return ranking	# always between 0 and 5
+	return ranking
 
+# Generates random drink and adds it to order queue
 func _want_drink() -> Array:
 	var drink_list_want = ["beer","gin","vodka"]
 	var liquid_num = randi_range(80,100)
@@ -120,9 +135,11 @@ func _want_drink() -> Array:
 	print(drink_list)
 	return total
 
+# Returns identifier of first requested drink in order queue
 func _get_drink() -> String:
 	return drink_list[0][0]
 
+# Tweens customer to exit and frees seat
 func _leaving() -> void:
 	var tween = get_tree().create_tween()
 	tween.set_trans(Tween.TRANS_SINE)
@@ -135,18 +152,14 @@ func _leaving() -> void:
 
 func _add_recipt() -> void:
 	GameState.main_node._add_recipt(seat_num,str(_item_print()))
-	#recipt.global_position = camera.global_position
-	#$ReciptPaper/Base_viewport/SubViewport/Recipt._label_change(_item_print())
-	#var tween = get_tree().create_tween()
-	#tween.set_trans(Tween.TRANS_SINE)
-	#tween.set_ease(Tween.EASE_OUT)
-	#tween.tween_property(recipt,"global_position", recipt_marker.global_position,1.5)
-	#
+
+# Gets drink from overlapping glass area and triggers empty glass state
 func _on_area_Obtain_drink_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
 		_obtain_drink(area._return_drink())
 		area._dranked()
 
+# Formats current drink order list into text
 func _item_print() -> String:
 	var total = ""
 	for x in drink_list:
@@ -156,11 +169,14 @@ func _item_print() -> String:
 		total += "\n"
 	return total
 
+# Customer leaves when patience timer expires
 func _on_patience_timer_timeout() -> void:
 	_leaving()
 
+# Changes cursor to interact on hover
 func _on_area_3d_mouse_entered() -> void:
 	GameState.player._update_hand("interact")
 
+# Changes cursor to idle on unhover
 func _on_area_3d_mouse_exited() -> void:
 	GameState.player._update_hand("idle")
