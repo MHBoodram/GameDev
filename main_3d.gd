@@ -6,6 +6,7 @@ var seats: Array[Base_NPC] = [null, null, null]
 var frame_count = 0
 var is_dialogue_open: bool = false
 var is_spawning_allowed: bool = true
+var spawn_timer_acc: float = 0.0
 
 @onready var world_environment: WorldEnvironment = get_node("WorldEnvironment")
 @onready var sun: DirectionalLight3D = get_node("WorldEnvironment/Sun")
@@ -125,13 +126,14 @@ func _update_day_night_cycle() -> void:
 func _process(delta: float) -> void:
 	GameState.gameplay_ui._change_time($Night_Time.time_left)
 	_update_day_night_cycle()
-	frame_count += 1
 
-	if frame_count >= 75 && !GameState.special_state && is_spawning_allowed && !GameState.night_paused:
-		var random_number = randi_range(1,50)
-		if(19 == random_number):
+	if !GameState.special_state && is_spawning_allowed && !GameState.night_paused:
+		var current_rate: float = PlayerStats.get_spawn_rate()
+		var spawn_interval: float = maxf(4.0, 16.0 / current_rate)
+		spawn_timer_acc += delta
+		if spawn_timer_acc >= spawn_interval:
+			spawn_timer_acc = 0.0
 			_add_npc()
-		frame_count = 0 
 
 func _on_night_time_timeout() -> void:
 	is_spawning_allowed = false
@@ -281,16 +283,27 @@ func _add_npc() -> void:
 		print("Full")
 		return
 
-	var npc = BASE_NPC.instantiate()
-	var paths = ["res://NPC/Resources/scott.tres", "res://NPC/Resources/slime.tres"]
+	var human_weight: float = PlayerStats.get_species_spawn_weight("Human")
+	var slime_weight: float = PlayerStats.get_species_spawn_weight("Slime")
+	var total_weight: float = human_weight + slime_weight
+	var roll: float = randf_range(0.0, total_weight)
 
+	var chosen_species: String = "Human"
+	var path: String = "res://NPC/Resources/scott.tres"
+	if roll <= slime_weight:
+		chosen_species = "Slime"
+		path = "res://NPC/Resources/slime.tres"
+
+	print("[customer_spawned]: ", chosen_species)
+
+	var npc = BASE_NPC.instantiate()
 	add_child(npc)
 	npc.global_position = $Spawn.global_position
 	seats[free_seat] = npc
 	npc.name = "seat%d_npc" % (free_seat + 1)
 	npc._moving_to(get_node("Seat%d" % (free_seat + 1)))
 	var marker_grab = get_node("Recipt" + str(free_seat +1))
-	npc._institate(load(paths.pick_random()),free_seat+1,marker_grab)
+	npc._institate(load(path),free_seat+1,marker_grab)
 	var order = npc._want_drink()
 	match free_seat:
 		0: GameState.seat1_order = order
@@ -349,3 +362,4 @@ func _give_drink(recipt: Node3D, drink:Glasses, seat: int) -> void:
 	tween.tween_property(recipt,"global_position",seat_marker.global_position,0.5)
 	tween.tween_property(drink,"global_position",seat_marker.global_position,0.5)
 	tween.tween_property(recipt,"global_position",$HiddenRecipt.global_position,0.5)
+	

@@ -141,6 +141,11 @@ func _obtain_drink(drink: Array) -> float:
 	var drink_cost: float = BASE_DRINK_PRICE
 	var tip: float = (PlayerStats.overall_reputation + group_rep) * customer_satisfaction
 	var payment: float = drink_cost + tip
+
+	if race_name.to_upper() == "SLIME":
+		payment += drink_cost
+		print("[slime_refund_payment]: ", payment)
+
 	print("[drink_cost]: ", drink_cost)
 	print("[tip]: ", tip)
 	print("[payment]: ", payment)
@@ -167,16 +172,25 @@ func _obtain_drink(drink: Array) -> float:
 # Generates random drink and adds it to order queue
 func _want_drink() -> Array:
 	var drink_list_want = ["beer","gin","vodka"]
-	var liquid_num = randi_range(80,100)
-	var drink_name = drink_list_want.pick_random()
-	var total = [[drink_name,liquid_num]]
-	drink_list.push_front(total)
+	var race_key: String = npc_resource.race.to_upper() if npc_resource else "HUMAN"
+	var drink_count: int = 1
+	if race_key == "SLIME":
+		drink_count = randi_range(1, 2)
+
+	var total: Array = []
+	for i in range(drink_count):
+		var liquid_num = randi_range(80,100)
+		var drink_name = drink_list_want.pick_random()
+		var order_item = [drink_name, liquid_num]
+		total.append(order_item)
+		drink_list.push_front([order_item])
+
 	print(drink_list)
 	return total
 
 # Returns identifier of first requested drink in order queue
 func _get_drink() -> String:
-	return drink_list[0][0]
+	return drink_list[0][0][0] if drink_list.size() > 0 and drink_list[0].size() > 0 else ""
 
 # Tweens customer to exit and frees seat
 func _leaving() -> void:
@@ -226,3 +240,4 @@ func _on_area_3d_mouse_entered() -> void:
 # Changes cursor to idle on unhover
 func _on_area_3d_mouse_exited() -> void:
 	GameState.player._update_hand("idle")
+	

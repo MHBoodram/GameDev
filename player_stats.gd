@@ -17,8 +17,16 @@ var night_species_delta : Dictionary = {
 	"Tiny" : 0.0,
 }
 
-var upgrades : Dictionary = {
-	
+var upgrades : Dictionary = {}
+
+var overall_marketing : float = 1.0
+var species_marketing : Dictionary = {
+	"Human": 1.0,
+	"Slime": 1.0,
+}
+var species_banners : Dictionary = {
+	"Human": false,
+	"Slime": false,
 }
 
 var unlocks : Dictionary = {
@@ -75,3 +83,22 @@ func get_highest_gaining_species() -> String:
 func reset_night_reputation_gains() -> void:
 	for species_key: String in night_species_delta.keys():
 		night_species_delta[species_key] = 0.0
+
+func get_spawn_rate() -> float:
+	var rate: float = 1.0 * overall_marketing
+	print("[spawn_rate]: ", rate)
+	return rate
+
+func get_species_spawn_weight(species: String) -> float:
+	var key: String = _find_species_key(species)
+	var base_weight: float = 10.0
+	match key:
+		"Slime":
+			base_weight = 2.0
+		_:
+			base_weight = 10.0
+	var marketing_multiplier: float = species_marketing.get(key, 1.0)
+	var banner_multiplier: float = 2.0 if species_banners.get(key, false) else 1.0
+	var final_weight: float = base_weight * marketing_multiplier * banner_multiplier
+	print("[species_weight]: ", key, " = ", final_weight)
+	return final_weight
