@@ -4,8 +4,8 @@ const BASE_NPC = preload("res://NPC/base npc.tscn")
 var seats: Array[Base_NPC] = [null, null, null]
 @onready var player = get_node("Player")
 var frame_count = 0
+var is_dialogue_open: bool = false
 
-#Environement
 @onready var world_environment: WorldEnvironment = get_node("WorldEnvironment")
 @onready var sun: DirectionalLight3D = get_node("WorldEnvironment/Sun")
 @onready var night_timer: Timer = get_node("Night_Time")
@@ -26,11 +26,13 @@ func _ready() -> void:
 	add_child(PAUSE_MENU.instantiate())
 	GameState.player = $Player
 	GameState.main_node = self
+	DialogueManager.dialogue_started.connect(func(_resource): is_dialogue_open = true)
+	DialogueManager.dialogue_ended.connect(func(_resource): is_dialogue_open = false)
 	_check_unlocks_drinks()
 	_night_select()
 	_setup_environment_day_night()
 
-func night_popup():
+func night_popup() -> void:
 	if(GameState.gameplay_ui):
 		GameState.gameplay_ui._night_title_popup()
 		start_night()
@@ -40,7 +42,7 @@ func start_night() -> void:
 	GameState.special_state = false
 	await get_tree().create_timer(3).timeout
 	_add_npc()
-	
+
 func _setup_environment_day_night() -> void:
 	initial_sun_transform = sun.transform
 	initial_sun_energy = sun.light_energy
@@ -58,12 +60,10 @@ func _setup_environment_day_night() -> void:
 func _update_day_night_cycle() -> void:
 	if night_timer.is_stopped():
 		return
-	# Transition around one minute mark
 	var elapsed_seconds: float = night_timer.wait_time - night_timer.time_left
 	var raw_progress: float = (elapsed_seconds - dusk_start_seconds) / (dusk_end_seconds - dusk_start_seconds)
 	var transition_weight: float = clampf(raw_progress, 0.0, 1.0)
 	var smooth_weight: float = smoothstep(0.0, 1.0, transition_weight)
-	# Rotate sun down
 	var pitch_offset: Basis = Basis(Vector3.RIGHT, deg_to_rad(night_sun_pitch_degrees * smooth_weight))
 	sun.transform.basis = initial_sun_transform.basis * pitch_offset
 	sun.light_energy = lerpf(initial_sun_energy, 0.0, smooth_weight)
@@ -99,6 +99,32 @@ func _night_select() -> void:
 		1:
 			_set_shit("shark",180)
 			GameState.special_state = true
+
+func _is_debug_menu_blocked() -> bool:
+	if get_tree().paused:
+		return true
+	if is_dialogue_open:
+		return true
+	var main_balloon = get_tree().root.find_child("Main_Ballon", true, false)
+	if main_balloon and main_balloon.visible:
+		return true
+	var example_balloon = get_tree().root.find_child("ExampleBalloon", true, false)
+	if example_balloon and example_balloon.visible:
+		return true
+	return false
+
+func _serve_all_customers() -> void:
+	for seat_index in seats.size():
+		var npc: Base_NPC = seats[seat_index]
+		if npc == null:
+			continue
+		var recipt_node = get_node_or_null("ReciptPaper" + str(seat_index + 1))
+		if recipt_node:
+			recipt_node.ordered = false
+			recipt_node.global_position = $HiddenRecipt.global_position
+		while npc.drink_list.size() > 0:
+			var requested_order: Array = npc.drink_list[0].duplicate(true)
+			npc._obtain_drink(requested_order)
 
 func _set_shit(specific_id: String, patience: float = 90) -> void:
 	var free_seat = seats.find(null)
@@ -142,11 +168,12 @@ func _print_reading_dialogue() -> void:
 	print("Printing dialgoue or something")
 
 func _input(event: InputEvent) -> void:
-	#if(Input.is_action_just_pressed("ui_accept")):
-		#get_tree().quit()
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_P or event.physical_keycode == KEY_P:
-			$DebugMenu.visible = !$DebugMenu.visible
+		if event.keycode == KEY_QUOTELEFT or event.physical_keycode == KEY_QUOTELEFT or event.keycode == KEY_ASCIITILDE:
+			if $DebugMenu.visible:
+				$DebugMenu.visible = false
+			elif not _is_debug_menu_blocked():
+				$DebugMenu.visible = true
 
 func _add_npc() -> void:
 	var free_seat = seats.find(null)
@@ -170,7 +197,7 @@ func _add_npc() -> void:
 		1: GameState.seat2_order = order
 		2: GameState.seat3_order = order
 
-func get_seat_drink(seat: int) -> String:  # seat is 1-3
+func get_seat_drink(seat: int) -> String:
 	var npc = seats[seat - 1]
 	return npc._get_drink() if npc else ""
 

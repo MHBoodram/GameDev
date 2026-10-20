@@ -22,4 +22,6 @@ var unlocks : Dictionary = {
 }
 
 func _change_money(new_value: float) -> void:
-	GameState.gameplay_ui._change_money(new_value)
+	money = new_value
+	if GameState.gameplay_ui:
+		GameState.gameplay_ui._change_money(new_value)

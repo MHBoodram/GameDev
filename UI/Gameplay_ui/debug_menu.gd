@@ -8,8 +8,15 @@ func _process(delta: float) -> void:
 	if(visible):
 		$TextureRect/VBoxContainer/HBoxContainer/Fps.text = "FPS: " + str(Engine.get_frames_per_second())
 
+func _on_serve_all_pressed() -> void:
+	if GameState.main_node and GameState.main_node.has_method("_serve_all_customers"):
+		GameState.main_node._serve_all_customers()
+
 func _on_add_npc_pressed() -> void:
 	GameState.main_node._add_npc()
+
+func _on_add_money_pressed() -> void:
+	PlayerStats._change_money(PlayerStats.money + 1000.0)
 
 func _on_remove_npc_pressed() -> void:
 	for i in GameState.main_node.seats.size():

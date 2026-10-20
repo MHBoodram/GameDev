@@ -30,9 +30,17 @@ theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
 theme_override_constants/outline_size = 5
 text = "FPS:"
 
+[node name="Serve_All" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=981240182]
+layout_mode = 2
+text = "Serve All Customers"
+
 [node name="Add_NPC" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1510861576]
 layout_mode = 2
-text = "Random Add NPC"
+text = "Spawn Random Customer"
+
+[node name="Add_Money" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1948123910]
+layout_mode = 2
+text = "Add 1000 Money"
 
 [node name="Remove_NPC" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=546257271]
 layout_mode = 2
@@ -42,6 +50,8 @@ text = "Order Remove NPC"
 layout_mode = 2
 text = "Camera Shake"
 
+[connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/Serve_All" to="." method="_on_serve_all_pressed"]
 [connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/Add_NPC" to="." method="_on_add_npc_pressed"]
+[connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/Add_Money" to="." method="_on_add_money_pressed"]
 [connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/Remove_NPC" to="." method="_on_remove_npc_pressed"]
 [connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/Camera Shake" to="." method="_on_camera_shake_pressed"]
