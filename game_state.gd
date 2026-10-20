@@ -15,6 +15,8 @@ var player : Node3D
 var main_node : Node3D
 var gameplay_ui : CanvasLayer
 var special_state : bool = true
+var night_paused : bool = false
+var can_end_night : bool = true
 
 func get_night_quota(night_number: int) -> float:
 	current_quota = BASE_QUOTA * float(night_number * night_number)
@@ -40,6 +42,22 @@ func advance_night() -> void:
 	reset_night_restarts()
 	get_night_quota(night)
 	print("[current_night]: ", night)
+
+func pause_night() -> void:
+	night_paused = true
+	if main_node and main_node.has_method("pause_night"):
+		main_node.pause_night()
+	print("[night_paused]: true")
+
+func resume_night() -> void:
+	night_paused = false
+	if main_node and main_node.has_method("resume_night"):
+		main_node.resume_night()
+	print("[night_paused]: false")
+
+func hold_night_end(hold: bool = true) -> void:
+	can_end_night = !hold
+	print("[can_end_night]: ", can_end_night)
 
 # Placeholder method for adding receipts
 func _add_recipit(seat: int):

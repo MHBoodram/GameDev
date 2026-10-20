@@ -185,7 +185,7 @@ func _leaving() -> void:
 	tween.set_ease(Tween.EASE_OUT)
 	tween.tween_property(self,"global_position:x", -7,1.5)
 
-	await $VisibleOnScreenNotifier3D.screen_exited
+	await tween.finished
 	get_parent()._remove(seat_num)
 	queue_free()
 

@@ -28,7 +28,7 @@ func _ready() -> void:
 	GameState.player = $Player
 	GameState.main_node = self
 	DialogueManager.dialogue_started.connect(func(_resource): is_dialogue_open = true)
-	DialogueManager.dialogue_ended.connect(func(_resource): is_dialogue_open = false)
+	DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
 	_check_unlocks_drinks()
 	_setup_environment_day_night()
 	night_timer.timeout.connect(_on_night_time_timeout)
@@ -37,27 +37,59 @@ func _ready() -> void:
 # Setup night timer and show initial quota and night count
 func _setup_shift() -> void:
 	is_spawning_allowed = true
-	var active_quota: float = GameState.get_night_quota(GameState.night)
 	if GameState.gameplay_ui:
-		GameState.gameplay_ui._update_quota(active_quota)
-		GameState.gameplay_ui._update_night_display(GameState.night)
-	night_popup()
+		GameState.gameplay_ui.set_shift_hud_visible(false)
+	start_night()
 
 # Night title banner popup on hud
 func night_popup() -> void:
 	if(GameState.gameplay_ui):
 		GameState.gameplay_ui._night_title_popup()
-		start_night()
 
 # Starts night timer and initial customer setup
 func start_night() -> void:
 	$Night_Time.wait_time = GameState.night_duration
-	$Night_Time.start()
-	GameState.special_state = false
 	_night_select()
-	await get_tree().create_timer(3).timeout
-	if is_spawning_allowed and not GameState.special_state:
-		_add_npc()
+	if not GameState.special_state and not GameState.night_paused:
+		start_night_shift()
+
+func start_night_shift() -> void:
+	GameState.night_paused = false
+	GameState.special_state = false
+	is_spawning_allowed = true
+	var active_quota: float = GameState.get_night_quota(GameState.night)
+	if GameState.gameplay_ui:
+		GameState.gameplay_ui.set_shift_hud_visible(true)
+		GameState.gameplay_ui._update_quota(active_quota)
+		GameState.gameplay_ui._update_night_display(GameState.night)
+		GameState.gameplay_ui._night_title_popup()
+	if $Night_Time.is_stopped():
+		$Night_Time.start()
+	else:
+		$Night_Time.paused = false
+	print("[shift_started]: ", GameState.night)
+
+func pause_night() -> void:
+	GameState.night_paused = true
+	if night_timer and not night_timer.is_stopped():
+		night_timer.paused = true
+	for npc in seats:
+		if npc and is_instance_valid(npc) and npc.patience_timer:
+			npc.patience_timer.paused = true
+
+func resume_night() -> void:
+	GameState.night_paused = false
+	if night_timer:
+		if night_timer.is_stopped() and is_spawning_allowed:
+			night_timer.start()
+		else:
+			night_timer.paused = false
+	for npc in seats:
+		if npc and is_instance_valid(npc) and npc.patience_timer:
+			npc.patience_timer.paused = false
+
+func hold_night_end(hold: bool = true) -> void:
+	GameState.hold_night_end(hold)
 
 func _setup_environment_day_night() -> void:
 	initial_sun_transform = sun.transform
@@ -74,7 +106,7 @@ func _setup_environment_day_night() -> void:
 				initial_hdri_energy = sky_material.energy_multiplier
 
 func _update_day_night_cycle() -> void:
-	if night_timer.is_stopped():
+	if night_timer.is_stopped() or night_timer.paused:
 		return
 	var elapsed_seconds: float = night_timer.wait_time - night_timer.time_left
 	var raw_progress: float = (elapsed_seconds - dusk_start_seconds) / (dusk_end_seconds - dusk_start_seconds)
@@ -95,7 +127,7 @@ func _process(delta: float) -> void:
 	_update_day_night_cycle()
 	frame_count += 1
 
-	if frame_count >= 75 && !GameState.special_state && is_spawning_allowed:
+	if frame_count >= 75 && !GameState.special_state && is_spawning_allowed && !GameState.night_paused:
 		var random_number = randi_range(1,50)
 		if(19 == random_number):
 			_add_npc()
@@ -108,7 +140,7 @@ func _on_night_time_timeout() -> void:
 
 # Transitions to intermission menu if timer expired and all seats are cleared
 func _check_night_concluded() -> void:
-	if not is_spawning_allowed and seats.count(null) == seats.size():
+	if not is_spawning_allowed and seats.count(null) == seats.size() and GameState.can_end_night and not GameState.night_paused:
 		get_tree().change_scene_to_file("res://UI/After_night/after_night_menu.tscn")
 
 func _check_upgrades() -> void:
@@ -124,6 +156,16 @@ func _night_select() -> void:
 		1:
 			_set_shit("shark",180)
 			GameState.special_state = true
+			pause_night()
+
+func _on_dialogue_ended(_resource) -> void:
+	is_dialogue_open = false
+	if GameState.special_state:
+		for seat_idx in seats.size():
+			var npc = seats[seat_idx]
+			if npc and is_instance_valid(npc) and npc.unique_talk and npc.drink_list.size() <= 0:
+				npc._leaving()
+				break
 
 func _is_debug_menu_blocked() -> bool:
 	if get_tree().paused:
@@ -150,6 +192,8 @@ func _serve_all_customers() -> void:
 		while npc.drink_list.size() > 0:
 			var requested_order: Array = npc.drink_list[0].duplicate(true)
 			npc._obtain_drink(requested_order)
+		if npc.unique_talk:
+			npc._leaving()
 
 func _set_shit(specific_id: String, patience: float = 90) -> void:
 	var free_seat = seats.find(null)
@@ -201,7 +245,7 @@ func _input(event: InputEvent) -> void:
 				$DebugMenu.visible = true
 
 func _add_npc() -> void:
-	if not is_spawning_allowed:
+	if not is_spawning_allowed or GameState.night_paused:
 		return
 	var free_seat = seats.find(null)
 	if free_seat == -1:
@@ -244,7 +288,15 @@ func _remove_npc(seat: int) -> void:
 	npc._leaving()
 
 func _remove(seat: int) -> void:
-	seats[seat -1] = null
+	seats[seat - 1] = null
+	if GameState.special_state:
+		var has_special: bool = false
+		for npc in seats:
+			if npc and is_instance_valid(npc) and npc.unique_talk:
+				has_special = true
+				break
+		if not has_special:
+			start_night_shift()
 	_check_night_concluded()
 
 func _add_recipt(seat: int,change_words: String) -> void:

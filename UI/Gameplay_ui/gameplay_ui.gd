@@ -13,6 +13,11 @@ func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
 	$FishEye.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	GameState.gameplay_ui = self
+	set_shift_hud_visible(false)
+
+func set_shift_hud_visible(is_visible: bool) -> void:
+	$"Left Container".visible = is_visible
+	$"Mid Container".visible = is_visible
 
 # Update quota value in hud
 func _update_quota(quota_value: float) -> void:
