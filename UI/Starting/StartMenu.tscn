@@ -46,6 +46,29 @@ corner_radius_bottom_left = 5
 shadow_size = 11
 anti_aliasing_size = 0.01
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b2fhn"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(1, 1, 1, 0.75)
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+expand_margin_left = 2.0
+expand_margin_top = 2.0
+expand_margin_right = 2.0
+expand_margin_bottom = 2.0
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_m6os6"]
+
 [sub_resource type="Theme" id="Theme_8gori"]
 Button/colors/font_color = Color(0, 0, 0, 1)
 Button/colors/font_hover_color = Color(0.45694035, 0.8566054, 0.86007994, 1)
@@ -57,6 +80,18 @@ Button/fonts/font = ExtResource("1_35j0k")
 Button/styles/hover = SubResource("StyleBoxFlat_gnao3")
 Button/styles/normal = SubResource("StyleBoxFlat_rf0c6")
 Button/styles/pressed = SubResource("StyleBoxFlat_bo5hi")
+Label/colors/font_color = Color(0, 0, 0, 1)
+Label/colors/font_outline_color = Color(1, 1, 1, 1)
+Label/colors/font_shadow_color = Color(0, 0, 0, 0)
+Label/constants/line_spacing = 3
+Label/constants/outline_size = 0
+Label/constants/shadow_offset_x = 1
+Label/constants/shadow_offset_y = 1
+Label/constants/shadow_outline_size = 1
+Label/font_sizes/font_size = 16
+Label/fonts/font = ExtResource("1_35j0k")
+Label/styles/focus = SubResource("StyleBoxFlat_b2fhn")
+Label/styles/normal = SubResource("StyleBoxEmpty_m6os6")
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_logo"]
 atlas = ExtResource("2_logo")
@@ -79,6 +114,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+color = Color(0.99999994, 0.8914112, 0.7336545, 1)
 
 [node name="CenterContainer" type="CenterContainer" parent="." unique_id=894323069]
 layout_mode = 1
@@ -100,13 +136,13 @@ texture = SubResource("AtlasTexture_logo")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="PlayButton" type="Button" parent="CenterContainer/VBox" unique_id=71465580]
+[node name="PlayButton" type="Button" parent="CenterContainer/VBox" unique_id=937122296]
 custom_minimum_size = Vector2(240, 48)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Play"
 
-[node name="PlayButton2" type="Button" parent="CenterContainer/VBox" unique_id=1516208611]
+[node name="SettingButton" type="Button" parent="CenterContainer/VBox" unique_id=1516208611]
 custom_minimum_size = Vector2(240, 48)
 layout_mode = 2
 size_flags_horizontal = 4

@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://byxvojpl8qte4"]
+
+[ext_resource type="Script" uid="uid://c5iq6peg8su3b" path="res://UI/transition.gd" id="1_5k7as"]
+
+[sub_resource type="Gradient" id="Gradient_lpiu8"]
+interpolation_mode = 1
+offsets = PackedFloat32Array(0, 0.009433962)
+colors = PackedColorArray(0.52026963, 5.715527e-07, 2.8878452e-07, 1, 0.8117647, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_aq7cd"]
+gradient = SubResource("Gradient_lpiu8")
+fill_from = Vector2(0.5, 0)
+fill_to = Vector2(0.5, 1)
+
+[node name="Transition" type="CanvasLayer" unique_id=120335560]
+layer = 100
+script = ExtResource("1_5k7as")
+
+[node name="ColorRect" type="TextureRect" parent="." unique_id=2026109894]
+top_level = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -16.0
+offset_bottom = 23.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_aq7cd")
