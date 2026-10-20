@@ -1,0 +1,19 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://voxdm60jx3qv"]
+
+[ext_resource type="Texture2D" uid="uid://ccl2w00pxtdof" path="res://Assets/3D/bar_Planks037A_1K-PNG_Color.png" id="1_4mjwo"]
+[ext_resource type="Texture2D" uid="uid://dmctgams4xinm" path="res://Assets/3D/bar_Planks037A_1K-PNG_Metalness.png-Planks037A_1K-PNG_Roughness.png" id="2_qn8p8"]
+[ext_resource type="Texture2D" uid="uid://dq0i1lkhng1c2" path="res://Assets/3D/bar_Planks037A_1K-PNG_NormalGL.png" id="3_h1wc6"]
+
+[resource]
+resource_name = "wood"
+cull_mode = 2
+albedo_texture = ExtResource("1_4mjwo")
+metallic = 1.0
+metallic_texture = ExtResource("2_qn8p8")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_qn8p8")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("3_h1wc6")
+uv1_scale = Vector3(1.5, 1.5, 1)
+uv1_offset = Vector3(-1.5, 1.0000001, 0)

@@ -1,0 +1,20 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://wg88bxn17s6q"]
+
+[ext_resource type="Texture2D" uid="uid://cep5b28grvdau" path="res://Assets/3D/bar_Windows_baseColor.png" id="1_wi2pf"]
+[ext_resource type="Texture2D" uid="uid://broddqkmckeqb" path="res://Assets/3D/bar_Windows_metallicRoughness.png" id="2_brrp3"]
+[ext_resource type="Texture2D" uid="uid://bocjlkebqi6r2" path="res://Assets/3D/bar_Windows_normal.png" id="3_o24md"]
+
+[resource]
+resource_name = "Windows"
+transparency = 4
+cull_mode = 2
+albedo_texture = ExtResource("1_wi2pf")
+metallic = 1.0
+metallic_texture = ExtResource("2_brrp3")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_brrp3")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("3_o24md")
+ao_enabled = true
+ao_texture = ExtResource("2_brrp3")

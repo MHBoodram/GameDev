@@ -1,0 +1,5 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://daey33ua6xl56"]
+
+[resource]
+resource_name = "Volumetric Lighting"
+cull_mode = 2

@@ -1,0 +1,20 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dxhydsfgbf1wu"]
+
+[ext_resource type="Texture2D" uid="uid://ccl2w00pxtdof" path="res://Assets/3D/bar_Planks037A_1K-PNG_Color.png" id="1_8fogf"]
+[ext_resource type="Texture2D" uid="uid://dmctgams4xinm" path="res://Assets/3D/bar_Planks037A_1K-PNG_Metalness.png-Planks037A_1K-PNG_Roughness.png" id="2_outif"]
+[ext_resource type="Texture2D" uid="uid://dq0i1lkhng1c2" path="res://Assets/3D/bar_Planks037A_1K-PNG_NormalGL.png" id="3_nk206"]
+
+[resource]
+resource_name = "Wall Wood.010"
+cull_mode = 2
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("1_8fogf")
+metallic = 1.0
+metallic_texture = ExtResource("2_outif")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_outif")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("3_nk206")
+uv1_scale = Vector3(1.5, 1.5, 1)
+uv1_offset = Vector3(-1.5, 1.0000001, 0)

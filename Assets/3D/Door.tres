@@ -1,0 +1,18 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://cfklwe8bjnocc"]
+
+[ext_resource type="Texture2D" uid="uid://bbmnl3qd21byp" path="res://Assets/3D/bar_Planks025A_1K-PNG_Color.png" id="1_jhhpq"]
+[ext_resource type="Texture2D" uid="uid://bl8f3dupr2q20" path="res://Assets/3D/bar_Planks025A_1K-PNG_Metalness-Planks025A_1K-PNG_Roughness.png" id="2_7w8qq"]
+[ext_resource type="Texture2D" uid="uid://bc4e50eomsl64" path="res://Assets/3D/bar_Planks025A_1K-PNG_NormalGL.png" id="3_n5upj"]
+
+[resource]
+resource_name = "Door"
+cull_mode = 2
+albedo_texture = ExtResource("1_jhhpq")
+metallic = 1.0
+metallic_texture = ExtResource("2_7w8qq")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_7w8qq")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("3_n5upj")
+uv1_offset = Vector3(-1, 1, 0)
