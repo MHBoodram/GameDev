@@ -9,11 +9,34 @@ var camera : Camera3D
 var down : bool = false
 var up_down_checks : bool = false
 
+var base_camera_rotation : Vector3 = Vector3(-16.3, 0.0, 0.0)
+var current_tilt_yaw : float = 0.0
+var current_tilt_pitch : float = 0.0
+const MAX_TILT_YAW : float = 3.0
+const MAX_TILT_PITCH : float = 2.0
+
 func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
 	$FishEye.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	GameState.gameplay_ui = self
 	set_shift_hud_visible(false)
+
+func _process(delta: float) -> void:
+	if not camera:
+		return
+	var viewport_rect = get_viewport().get_visible_rect()
+	var center = viewport_rect.size * 0.5
+	if center.x <= 0.0 or center.y <= 0.0:
+		return
+	var mouse_pos = get_viewport().get_mouse_position()
+	var norm_x = clampf((mouse_pos.x - center.x) / center.x, -1.0, 1.0)
+	var norm_y = clampf((mouse_pos.y - center.y) / center.y, -1.0, 1.0)
+	var target_tilt_yaw = -norm_x * MAX_TILT_YAW
+	var target_tilt_pitch = -norm_y * MAX_TILT_PITCH
+	current_tilt_yaw = lerpf(current_tilt_yaw, target_tilt_yaw, 1.0 - exp(-10.0 * delta))
+	current_tilt_pitch = lerpf(current_tilt_pitch, target_tilt_pitch, 1.0 - exp(-10.0 * delta))
+	camera.rotation_degrees.x = base_camera_rotation.x + current_tilt_pitch
+	camera.rotation_degrees.y = base_camera_rotation.y + current_tilt_yaw
 
 func set_shift_hud_visible(is_visible: bool) -> void:
 	$"Left Container".visible = is_visible
@@ -34,22 +57,19 @@ func bendover() -> void:
 		$Up_button.disabled = false
 		_look_forward()
 	else:
-		$Left_Button.disabled = true
-		$Right_Button.disabled = true
-		$Up_button.disabled = false
+		$Left_Button.disabled = false
+		$Right_Button.disabled = false
+		$Up_button.disabled = true
 		_look_behind()
 	down = !down
 
 func _look_behind() -> void:
-	var marker_counter = get_tree().get_nodes_in_group("counter_mark")
 	var tween = get_tree().create_tween().set_parallel(true)
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
-	var marker_position = marker_counter[0].global_position
-	marker_position.y = camera.global_position.y
-	tween.tween_property(camera,"rotation_degrees:y",180,0.5)
-	tween.tween_property(camera,"global_position",marker_position,0.5)
-	tween.tween_property(camera,"rotation_degrees:x",-55.3,0.15 )
+	var back_position = Vector3(3.28, 2.75, 0.85)
+	tween.tween_property(self, "base_camera_rotation", Vector3(-21.0, 180.0, 0.0), 0.5)
+	tween.tween_property(camera, "global_position", back_position, 0.5)
 	
 func _look_forward() -> void:
 	up_down_checks = false
@@ -58,9 +78,8 @@ func _look_forward() -> void:
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
 	var new_position = Vector3(match_position_counter[current_position],camera.global_position.y,1.5)
-	tween.tween_property(camera,"rotation_degrees:y",0,0.5)
-	tween.tween_property(camera,"global_position",new_position,0.5)
-	tween.tween_property(camera,"rotation_degrees:x", -16.3,0.15)
+	tween.tween_property(self, "base_camera_rotation", Vector3(-16.3, 0.0, 0.0), 0.5)
+	tween.tween_property(camera, "global_position", new_position, 0.5)
 
 func moving_around(right : bool) -> void:
 	if(right):
@@ -84,89 +103,16 @@ func moving_around(right : bool) -> void:
 
 
 func mouse_screen(looking: String) -> void:
-	if(!down):
+	if(looking == "down"):
 		GameState.player._update_hand("interact")
-		match looking:
-			"left":
-				#print(camera_movement_rotation)
-				var new_position = camera.rotation_degrees.y + camera_movement_rotation
-				new_position = clamp(new_position, -camera_movement_rotation, camera_movement_rotation)
-				if(new_position > -camera_movement_rotation):
-					var tween = get_tree().create_tween()
-					tween.set_trans(Tween.TRANS_SINE)
-					tween.set_ease(Tween.EASE_OUT)
-					tween.tween_property(camera,"rotation_degrees:y", new_position,0.15)
-				else:
-					camera.rotation_degrees.y = -camera_movement_rotation
-				return;
-				
-			"right":
-				var new_position = camera.rotation_degrees.y - camera_movement_rotation
-				new_position = clamp(new_position, -camera_movement_rotation, camera_movement_rotation)
-				if(new_position < camera_movement_rotation):
-					var tween = get_tree().create_tween()
-					tween.set_trans(Tween.TRANS_SINE)
-					tween.set_ease(Tween.EASE_OUT)
-					tween.tween_property(camera,"rotation_degrees:y", new_position,0.15)
-				else:
-					camera.rotation_degrees.y = camera_movement_rotation
-				return
-			"down":
-				GameState.player._update_hand("interact")
-
-			
-			_:
-				GameState.player._update_hand("idle")
-				var tween = get_tree().create_tween()
-				tween.set_trans(Tween.TRANS_SINE)
-				tween.set_ease(Tween.EASE_OUT)
-				tween.tween_property(camera,"rotation_degrees:y", 0,0.15)
-				#tween.tween_property(camera,"rotation_degrees:x", -55.3,0.15)
-				return;
 	else:
-		GameState.player._update_hand("interact")
-		match looking:
-			"up":
-				up_down_checks = true
-				while(up_down_checks):
-					var new_rotation = camera.rotation_degrees.x + 5
-					new_rotation = clamp(new_rotation, -camera_movement_rotation -45, camera_movement_rotation)
-					var tween = get_tree().create_tween()
-					tween.set_trans(Tween.TRANS_SINE)
-					tween.set_ease(Tween.EASE_OUT)
-					tween.tween_property(camera,"rotation_degrees:x", new_rotation,0.15)
-					await get_tree().process_frame
-				up_down_checks = false
-				return;
-			"down":
-				up_down_checks = true
-				while(up_down_checks):
-					#print("something Check")
-					var new_position = camera.rotation_degrees.x - 5
-					new_position = clamp(new_position, -camera_movement_rotation - 45, camera_movement_rotation + 16.3)	
-					var tween = get_tree().create_tween()
-					tween.set_trans(Tween.TRANS_SINE)
-					tween.set_ease(Tween.EASE_OUT)
-					tween.tween_property(camera,"rotation_degrees:x", new_position,0.15)
-					await get_tree().process_frame
-				up_down_checks = false
-				return;
-			_:
-				GameState.player._update_hand("idle")
-				up_down_checks = false
-
-			#tween.tween_property(camera,"rotation_degrees:x", -16.3,0.15)
-			#else:
-			#tween.tween_property(camera,"rotation_degrees:x",-55.3,0.15 )
-		
+		GameState.player._update_hand("idle")
 
 func _on_left_button_mouse_entered() -> void:
-	mouse_side = true
-	mouse_screen("left")
+	pass
 
 func _on_right_button_mouse_entered() -> void:
-	mouse_side = false
-	mouse_screen("right")
+	pass
 
 func _on_mouse_exited() -> void:
 	mouse_screen("none")
@@ -194,10 +140,9 @@ func _in_down_minigame() -> void:
 
 func _on_bottom_button_mouse_entered() -> void:
 	GameState.player._update_hand("interact")
-	mouse_screen("down")
 
 func _on_up_button_mouse_entered() -> void:
-	mouse_screen("up")
+	pass
 
 func _night_title_popup()-> void:
 	var hey_peter = randi_range(1,500)
