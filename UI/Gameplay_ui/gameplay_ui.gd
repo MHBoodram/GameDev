@@ -14,9 +14,16 @@ var current_tilt_yaw : float = 0.0
 var current_tilt_pitch : float = 0.0
 const MAX_TILT_YAW : float = 3.0
 const MAX_TILT_PITCH : float = 2.0
+var is_transitioning : bool = false
+var is_moving : bool = false
+var default_camera_local_pos : Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
+	if camera:
+		default_camera_local_pos = camera.position
+	if player and match_position_counter.has(current_position):
+		player.position.x = match_position_counter[current_position]
 	$FishEye.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	GameState.gameplay_ui = self
 	set_shift_hud_visible(false)
@@ -50,19 +57,22 @@ func _update_quota(quota_value: float) -> void:
 func _update_night_display(night_number: int) -> void:
 	$ColorRect3/Night.text = "Night " + str(night_number)
 
+# Toggles camera between forward and behind views
 func bendover() -> void:
+	if is_transitioning or is_moving:
+		return
+	is_transitioning = true
+	$Left_Button.disabled = true
+	$Right_Button.disabled = true
+	$Bottom_button.disabled = true
+	$Up_button.disabled = true
 	if(down):
-		$Left_Button.disabled = false
-		$Right_Button.disabled = false
-		$Up_button.disabled = false
 		_look_forward()
 	else:
-		$Left_Button.disabled = false
-		$Right_Button.disabled = false
-		$Up_button.disabled = true
 		_look_behind()
 	down = !down
 
+# Tweens camera to back view
 func _look_behind() -> void:
 	var tween = get_tree().create_tween().set_parallel(true)
 	tween.set_trans(Tween.TRANS_SINE)
@@ -70,35 +80,54 @@ func _look_behind() -> void:
 	var back_position = Vector3(3.28, 2.75, 0.85)
 	tween.tween_property(self, "base_camera_rotation", Vector3(-21.0, 180.0, 0.0), 0.5)
 	tween.tween_property(camera, "global_position", back_position, 0.5)
+	tween.chain().tween_callback(func():
+		$Left_Button.disabled = true
+		$Right_Button.disabled = true
+		$Bottom_button.disabled = true
+		$Up_button.disabled = false
+		is_transitioning = false
+	)
 	
+# Tweens camera back to front view
 func _look_forward() -> void:
 	up_down_checks = false
-
 	var tween = get_tree().create_tween().set_parallel(true)
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
-	var new_position = Vector3(match_position_counter[current_position],camera.global_position.y,1.5)
 	tween.tween_property(self, "base_camera_rotation", Vector3(-16.3, 0.0, 0.0), 0.5)
-	tween.tween_property(camera, "global_position", new_position, 0.5)
+	tween.tween_property(camera, "position", default_camera_local_pos, 0.5)
+	tween.chain().tween_callback(func():
+		$Left_Button.disabled = false
+		$Right_Button.disabled = false
+		$Bottom_button.disabled = false
+		$Up_button.disabled = true
+		is_transitioning = false
+	)
 
+# Shifts player between bar stools
 func moving_around(right : bool) -> void:
+	if down or is_transitioning or is_moving:
+		return
 	if(right):
 		if(current_position > 1):
 			current_position -= 1
 			var new_position = match_position_counter[current_position]
+			is_moving = true
 			var tween = get_tree().create_tween()
 			tween.set_trans(Tween.TRANS_SINE)
 			tween.set_ease(Tween.EASE_OUT)
 			tween.tween_property(player,"position:x",new_position,0.15)
-			
+			tween.finished.connect(func(): is_moving = false)
 	else:
 		if(current_position < 3):
 			current_position += 1
 			var new_position = match_position_counter[current_position]
+			is_moving = true
 			var tween = get_tree().create_tween()
 			tween.set_trans(Tween.TRANS_SINE)
 			tween.set_ease(Tween.EASE_OUT)
 			tween.tween_property(player,"position:x",new_position,0.15)
+			tween.finished.connect(func(): is_moving = false)
 #what anti anaing: sample rate under
 
 
@@ -180,9 +209,10 @@ func _change_time(new_value:float) -> void:
 	$"Left Container/Timer".value = new_value
 	pass
 
-#OLD CODE
-#func _on_up_button_pressed() -> void:
-	#bendover()
+# Returns from back view to front view
+func _on_up_button_pressed() -> void:
+	if down:
+		bendover()
 
 
 #func _camera_down_tween() -> void:
