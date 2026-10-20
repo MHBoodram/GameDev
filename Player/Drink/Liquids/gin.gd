@@ -4,6 +4,7 @@ var pouring_into : Node3D
 @export var liquid_resource : Liquid
 
 var original_position : Marker3D
+var is_pouring : bool = false
 
 func ready() -> void:
 	rotation_degrees = Vector3.ZERO
@@ -43,7 +44,6 @@ func _process(_delta: float) -> void:
 @warning_ignore("shadowed_variable", "unused_parameter", "shadowed_variable_base_class")
 func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		
 		if !in_game:
 			if event.pressed:
 				GameState.player._update_hand("holding")
@@ -53,18 +53,24 @@ func _on_area_3d_input_event(camera, event, position, normal, shape_idx):
 				drag_z_depth = to_object.dot(forward)
 		else:
 			if event.pressed:
+				if is_pouring:
+					return
+				is_pouring = true
 				GameState.player._update_hand("holding")
 				rotation_degrees.z = 80
 				if(pouring_into):
 					$CPUParticles3D.emitting = true
-					while(Input.get_action_strength("Left_click")):
-						pouring_into._pouring(liquid_resource.id, 0.25)
+					while(Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.get_action_strength("Left_click") > 0.0):
+						if is_instance_valid(pouring_into):
+							pouring_into._pouring(liquid_resource.id, 0.25)
 						await get_tree().create_timer(0.1).timeout
 				$CPUParticles3D.emitting = false
-			else:
-				GameState.player._update_hand("idle")
-				await get_tree().create_timer(0.1).timeout
 				rotation_degrees.z = 0
+				GameState.player._update_hand("idle")
+				is_pouring = false
+				await get_tree().create_timer(0.2).timeout
+				if in_game and GameState.player:
+					GameState.player._out_of_game()
 
 func _look_at_sprite(looking_at: Vector3) -> void:
 	$Inside.look_at(looking_at)
@@ -85,7 +91,6 @@ func _out_of_game():
 	in_game = false
 	_return_original()
 	pouring_into = null
-
 
 func _pouring_game() -> void:
 	pouring_into.in_game = true
@@ -108,11 +113,9 @@ func _on_interact_area_exited(area: Area3D) -> void:
 			pouring_into = null
 			area._on_hover(false)
 
-
 func _on_interact_mouse_entered() -> void:
 	if(!is_balls_dragging):
 		GameState.player._update_hand("interact")
-
 
 func _on_interact_mouse_exited() -> void:
 	if(!is_balls_dragging):

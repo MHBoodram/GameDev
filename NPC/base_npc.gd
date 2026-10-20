@@ -18,6 +18,7 @@ var unique_talk : bool = false
 
 var customer_satisfaction : float = 1.0
 var max_patience : float = 90.0
+
 const SATISFACTORY_THRESHOLD := 0.6
 const MAX_DIFF := 15.0
 const FLAT_PENALTY_WRONG_INGREDIENT := 0.3
@@ -43,6 +44,10 @@ func _process(delta: float) -> void:
 	if patience_timer.time_left < (max_patience * 0.25) and max_patience > 0.0:
 		var drain_rate: float = (1.0 - (patience_timer.time_left / (max_patience * 0.25))) * 0.05 * delta
 		customer_satisfaction = maxf(0.0, customer_satisfaction - drain_rate)
+
+func talk() -> void:
+	if dialogue_resource:
+		DialogueManager.show_dialogue_balloon_scene(custom_balloon, dialogue_resource, speaking_title, [self])
 
 # Another initailization function
 func _institate(npc_source : NPC,seat: int,rec_marker: Marker3D, patience: float = 90,starting_dialogue: String = "start") -> void:
@@ -78,8 +83,7 @@ func _tween_bounce() -> void:
 @warning_ignore("shadowed_variable", "unused_parameter")
 func _on_interaction_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if(event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and abs(camera.global_position.x - global_position.x) < 2):
-		if(dialogue_resource):
-			DialogueManager.show_dialogue_balloon_scene(custom_balloon,dialogue_resource,speaking_title,[self])
+		talk()
 
 # Changes overall reputation and species reputation based on drink score
 func _set_reputation(is_satisfactory: bool, drink_score: float) -> void:

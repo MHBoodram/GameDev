@@ -65,6 +65,36 @@ func get_mouse_world_position(camera: Camera3D, plane_y: float) -> Vector3:
 		return hit
 	return global_position
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_W or event.physical_keycode == KEY_W or event.keycode == KEY_UP or event.keycode == KEY_S or event.physical_keycode == KEY_S or event.keycode == KEY_DOWN:
+			if gameplay_ui and gameplay_ui.has_method("bendover"):
+				gameplay_ui.bendover()
+		elif event.keycode == KEY_A or event.physical_keycode == KEY_A or event.keycode == KEY_LEFT:
+			if gameplay_ui and not gameplay_ui.down and gameplay_ui.has_method("moving_around"):
+				gameplay_ui.moving_around(false)
+		elif event.keycode == KEY_D or event.physical_keycode == KEY_D or event.keycode == KEY_RIGHT:
+			if gameplay_ui and not gameplay_ui.down and gameplay_ui.has_method("moving_around"):
+				gameplay_ui.moving_around(true)
+		elif event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE:
+			_handle_dialogue_input()
+		elif event.keycode == KEY_QUOTELEFT or event.physical_keycode == KEY_QUOTELEFT or event.keycode == KEY_ASCIITILDE:
+			if GameState.main_node and GameState.main_node.has_method("toggle_debug_menu"):
+				GameState.main_node.toggle_debug_menu()
+
+func _handle_dialogue_input() -> void:
+	if GameState.is_dialogue_open:
+		return
+	if gameplay_ui and gameplay_ui.down:
+		return
+	if not GameState.main_node:
+		return
+	var seat_idx: int = 3 - gameplay_ui.current_position
+	if seat_idx >= 0 and seat_idx < GameState.main_node.seats.size():
+		var npc = GameState.main_node.seats[seat_idx]
+		if npc and is_instance_valid(npc) and npc.has_method("talk"):
+			npc.talk()
+
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed \
 			and event.button_index == MOUSE_BUTTON_LEFT and summoning:
@@ -78,10 +108,7 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.is_pressed() and event.button_index == MOUSE_BUTTON_RIGHT:
 		summoning = false
 		if(in_game):
-			gameplay_ui._out_down_minigame()
 			_out_of_game()
-
-
 
 func _spawn_cup(scene: PackedScene, cup_name: String) -> void:
 	var pos := get_mouse_world_position($Camera3D, spawn_y)
@@ -116,17 +143,25 @@ func _perfect_pour(drink : Drinks, glass : Glasses) -> void: #minigame Section
 	drink.look_at($Camera3D.global_position)
 	#glass.look_at($Camera3D.global_position)
 
-
 func _out_of_game() -> void:
 	in_game = false
 	var drink = in_game_drinks["Drink"]["Node"]
 	var glass = in_game_drinks["Glass"]["Node"]
 	var tween = get_tree().create_tween().set_parallel(true)
-	tween.tween_property(drink,"global_position",in_game_drinks["Drink"]["position"],0.5)
-	tween.tween_property(glass,"global_position",in_game_drinks["Glass"]["position"],0.5)
+	if is_instance_valid(drink):
+		if "original_position" in drink and drink.original_position:
+			tween.tween_property(drink, "global_position", drink.original_position.global_position, 0.5)
+		else:
+			tween.tween_property(drink, "global_position", in_game_drinks["Drink"]["position"], 0.5)
+	if is_instance_valid(glass):
+		tween.tween_property(glass, "global_position", in_game_drinks["Glass"]["position"], 0.5)
 	await tween.finished
-	drink._out_of_game()
-	glass._out_of_game()
+	if is_instance_valid(drink):
+		drink._out_of_game()
+	if is_instance_valid(glass):
+		glass._out_of_game()
+	if gameplay_ui and gameplay_ui.has_method("_out_down_minigame"):
+		gameplay_ui._out_down_minigame()
 
 @warning_ignore("unused_parameter")
 func _on_shot_glass_button_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:

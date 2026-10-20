@@ -28,7 +28,7 @@ func _ready() -> void:
 	add_child(PAUSE_MENU.instantiate())
 	GameState.player = $Player
 	GameState.main_node = self
-	DialogueManager.dialogue_started.connect(func(_resource): is_dialogue_open = true)
+	DialogueManager.dialogue_started.connect(func(_resource): is_dialogue_open = true; GameState.is_dialogue_open = true)
 	DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
 	_check_unlocks_drinks()
 	_setup_environment_day_night()
@@ -162,6 +162,7 @@ func _night_select() -> void:
 
 func _on_dialogue_ended(_resource) -> void:
 	is_dialogue_open = false
+	GameState.is_dialogue_open = false
 	if GameState.special_state:
 		for seat_idx in seats.size():
 			var npc = seats[seat_idx]
@@ -181,6 +182,12 @@ func _is_debug_menu_blocked() -> bool:
 	if example_balloon and example_balloon.visible:
 		return true
 	return false
+
+func toggle_debug_menu() -> void:
+	if $DebugMenu.visible:
+		$DebugMenu.visible = false
+	elif not _is_debug_menu_blocked():
+		$DebugMenu.visible = true
 
 func _clear_receipt_for_seat(seat_number: int) -> void:
 	var recipt_node = get_node_or_null("ReciptPaper" + str(seat_number))
@@ -266,14 +273,6 @@ func add_scene_once_drink(path: String, node_name: String, parent: Node = self) 
 
 func _print_reading_dialogue() -> void:
 	print("Printing dialgoue or something")
-
-func _input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_QUOTELEFT or event.physical_keycode == KEY_QUOTELEFT or event.keycode == KEY_ASCIITILDE:
-			if $DebugMenu.visible:
-				$DebugMenu.visible = false
-			elif not _is_debug_menu_blocked():
-				$DebugMenu.visible = true
 
 func _add_npc() -> void:
 	if not is_spawning_allowed or GameState.night_paused:
