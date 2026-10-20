@@ -32,6 +32,7 @@ var unlocks : Dictionary = {
 
 func _change_money(new_value: float) -> void:
 	money = new_value
+	print("[money]: ", money)
 	if GameState.gameplay_ui:
 		GameState.gameplay_ui._change_money(new_value)
 
@@ -45,6 +46,10 @@ func add_overall_reputation(amount: float) -> void:
 	if amount > 0.0:
 		overall_reputation += amount
 	print("[overall_reputation]: ", overall_reputation)
+
+func get_species_reputation(species: String) -> float:
+	var key: String = _find_species_key(species)
+	return reputation_species[key]
 
 func change_species_reputation(species: String, delta: float) -> void:
 	var key: String = _find_species_key(species)
