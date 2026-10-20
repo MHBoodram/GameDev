@@ -30,7 +30,14 @@ sections = 2
 section_length = 0.02
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_2tkpp"]
-size = Vector3(1.0180664, 0.15594482, 0.647583)
+size = Vector3(0.45, 0.25, 0.45)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_trash_red"]
+albedo_color = Color(0.9, 0.15, 0.15, 0.85)
+
+[sub_resource type="BoxMesh" id="BoxMesh_trash_square"]
+material = SubResource("StandardMaterial3D_trash_red")
+size = Vector3(0.45, 0.015, 0.45)
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_2tkpp"]
 panorama = ExtResource("14_pka58")
@@ -167,12 +174,16 @@ amount = 6
 mesh = SubResource("RibbonTrailMesh_pka58")
 spread = 0.0
 
-[node name="Trash" type="Area3D" parent="Coutner" unique_id=1858386361]
+[node name="Trash" type="Area3D" parent="Coutner" unique_id=1858386361 groups=["trash"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9724557, 0, -1.3709536)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/Trash" unique_id=1252558082]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2280426, 1.0538671, 1.4114742)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2280426, 1.06, 1.4114742)
 shape = SubResource("BoxShape3D_2tkpp")
+
+[node name="TrashIndicator" type="MeshInstance3D" parent="Coutner/Trash" unique_id=198421098]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2280426, 1.06, 1.4114742)
+mesh = SubResource("BoxMesh_trash_square")
 
 [node name="Marker3D" type="Marker3D" parent="Coutner" unique_id=1047419930]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.88968897, 1.4529363, 0.24294817)

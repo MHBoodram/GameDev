@@ -6,8 +6,8 @@ class_name Glasses
 @export var sprite : Sprite3D
 var total_liquids : float = 0
 var current_position = 0
-var base_y_position = 1.6
 var in_game: bool = false
+var is_being_served: bool = false
 const LIQUID_COLOR = {
 	"gin" : Color(0.0, 0.953, 0.0, 1.0),
 	"beer" : Color(0.98, 0.322, 0.051, 1.0),
@@ -41,6 +41,10 @@ const LIQUID_COLOR = {
 @export var inner_margin_top : float = 0.12
 @export var inner_margin_bottom : float = 0.88
 
+var push_velocity : Vector3 = Vector3.ZERO
+const PUSH_FRICTION : float = 14.0
+const INTERACTION_SEPARATION_DISTANCE : float = 0.14
+
 var liquid_shader_mat : ShaderMaterial
 var gradient_texture : GradientTexture2D
 var liquid_gradient : Gradient
@@ -55,81 +59,74 @@ var wave_amplitude : float = 0.0
 @onready var highlight = get_node_or_null("Inside/highlight")
 
 func ready() -> void:
-	_look_at_sprite(camera.global_position)
+	rotation = Vector3.ZERO
 	_last_global_pos = global_position
 	_setup_liquid_shader()
 	if highlight:
 		highlight.modulate = Color(1.5, 1.5, 0.0, 5.0)
+	if camera:
+		_look_at_sprite(camera.global_position)
 
 func _delete():
 	queue_free()
 
-@export var dead_zone := 50.0      # pixels of mismatch allowed before correcting
-@export var full_pull := 150.0     # pixels past the dead zone where the hand is fully on the glass
+@export var dead_zone := 50.0
+@export var full_pull := 150.0
 
-@export var max_hand_distance := 20.0   # max pixels the cursor can be from the glass
+@export var max_hand_distance := 20.0
 
 func _update_hand_position(delta: float) -> void:
-	var mouse := get_viewport().get_mouse_position()
-	var glass_screen := camera.unproject_position(global_position)
-
-	# Hard clamp: the cursor can't get farther than this from the glass
-	var offset := mouse - glass_screen
-	if offset.length() > max_hand_distance:
-		mouse = glass_screen + offset.limit_length(max_hand_distance)
-		get_viewport().warp_mouse(mouse)   # also pull the real mouse back (remove this line to only clamp the hand)
-
-	var gap := mouse.x - glass_screen.x
-	var excess := maxf(absf(gap) - dead_zone, 0.0)
-	var pull := clampf(excess / full_pull, 0.0, 1.0)
-
-	var goal := mouse.lerp(glass_screen, pull)
+	if not camera or not GameState.player:
+		return
+	var mouse: Vector2 = get_viewport().get_mouse_position()
+	var glass_screen: Vector2 = camera.unproject_position(global_position)
+	var gap: float = mouse.x - glass_screen.x
+	var excess: float = maxf(absf(gap) - dead_zone, 0.0)
+	var pull: float = clampf(excess / full_pull, 0.0, 1.0)
+	var goal: Vector2 = mouse.lerp(glass_screen, pull)
 	var hand = GameState.player.hand_sprite
-	hand.global_position = hand.global_position.lerp(goal, 1.0 - exp(-30.0 * delta))
-
-func _get_drag_point(mouse_pos: Vector2, plane_y: float) -> Variant:
-	var from := camera.project_ray_origin(mouse_pos)
-	var dir := camera.project_ray_normal(mouse_pos)
-	return Plane(Vector3.UP, plane_y).intersects_ray(from, dir)   # null if no hit
-
-func _clamp_to_counter(p: Vector3) -> Vector3:
-	p.x = clamp(p.x, counter_origin.global_position.x - 1.2, counter_origin.global_position.x + 1.4)
-	p.z = clamp(p.z, counter_origin.global_position.z - 0.4, counter_origin.global_position.z + 0.4)
-	return p
+	if hand:
+		hand.global_position = hand.global_position.lerp(goal, 1.0 - exp(-30.0 * delta))
 
 func _process(_delta: float) -> void:
+	super._process(_delta)
 	_update_liquid_physics(_delta)
 	_update_shader_parameters()
+	if is_being_served:
+		return
+	_apply_collision_push(_delta)
+	if is_balls_dragging:
+		_update_hand_position(_delta)
+	elif counter_origin:
+		global_position = _clamp_to_counter(global_position)
 
+func _apply_collision_push(delta: float) -> void:
 	if not is_balls_dragging:
-		return
+		for area in get_overlapping_areas():
+			if area != self and area is Glasses:
+				var diff: Vector3 = global_position - area.global_position
+				diff.y = 0.0
+				var dist: float = diff.length()
+				if dist < 0.001:
+					diff = Vector3(randf_range(-1.0, 1.0), 0.0, randf_range(-1.0, 1.0))
+					dist = 0.001
+				var overlap: float = INTERACTION_SEPARATION_DISTANCE - dist
+				if overlap > 0.0:
+					push_velocity += diff.normalized() * (overlap * 6.0 * delta)
 
-	var mouse_pos := get_viewport().get_mouse_position()
-	#GameState.player._force_cursor_image(global_position)
-	# First pass: resting height
-	var hit = _get_drag_point(mouse_pos, base_y_position)
-	if hit == null:
-		return
-	var p := _clamp_to_counter(hit)
-
-	# Near the front of the counter the object is lifted, so re-project onto the lifted plane
-	if p.z < 0.28:
-		hit = _get_drag_point(mouse_pos, base_y_position + 0.2)
-		if hit != null:
-			p = _clamp_to_counter(hit)
-			p.y = base_y_position + 0.2
-
-	global_position = p
-	_look_at_sprite(camera.global_position)
-
-	if Input.is_action_just_released("Left_click"):
-		GameState.player._update_hand("idle")
-		is_balls_dragging = false
-	_update_hand_position(_delta)
+		if push_velocity.length_squared() > 0.0001:
+			global_position += push_velocity * delta
+			if counter_origin:
+				global_position = _clamp_to_counter(global_position)
+			push_velocity = push_velocity.lerp(Vector3.ZERO, 1.0 - exp(-PUSH_FRICTION * delta))
+			if camera:
+				_look_at_sprite(camera.global_position)
 
 func _look_at_sprite(looking_at: Vector3) -> void:
-	if(looking_at && sprite):
-		sprite.look_at(looking_at)
+	if looking_at and sprite:
+		var target_flat: Vector3 = looking_at
+		target_flat.y = sprite.global_position.y
+		sprite.look_at(target_flat, Vector3.UP)
 
 func _update_liquid_physics(delta: float) -> void:
 	if delta <= 0.0:
@@ -273,14 +270,11 @@ func _pouring(id : String, liquids_num : float) -> void:
 	wave_amplitude = minf(wave_amplitude + 0.035, 0.07)
 
 func _pushing_glass(other_glass : Area3D) -> void:
-	var push_dir = (global_position - other_glass.global_position)
-	push_dir.y = 0
+	var push_dir: Vector3 = global_position - other_glass.global_position
+	push_dir.y = 0.0
 	if push_dir.length() < 0.001:
-		push_dir = Vector3(1, 0, 0)
-	push_dir = push_dir.normalized()
-	var push_strength = 0.03
-	global_position += push_dir * push_strength
-	_look_at_sprite(camera.global_position)
+		push_dir = Vector3(1.0, 0.0, 0.0)
+	push_velocity += push_dir.normalized() * 0.1
 
 func _in_game():
 	in_game = true
@@ -294,8 +288,7 @@ func _visuals_change(liquids_num: float,liquid_name: String,new: bool) -> void:
 	_rebuild_liquid_gradient()
 
 func _on_hover(hovered: bool) -> void:
-	if highlight:
-		highlight.visible = hovered
+	set_highlight(hovered)
 
 func _dranked() -> void:
 	queue_free()
@@ -307,12 +300,11 @@ func _on_area_3d_area_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
 		_pushing_glass(area)
 
-func _on_area_3d_mouse_entered() -> void:
-	if(!is_balls_dragging):
-		GameState.player._update_hand("interact")
-	_on_hover(true)
+func can_interact_with(target: Ingredients) -> bool:
+	if target and target.is_in_group("trash"):
+		return true
+	return false
 
-func _on_area_3d_mouse_exited() -> void:
-	if(!is_balls_dragging):
-		GameState.player._update_hand("idle")
-	_on_hover(false)
+func execute_interaction(target: Ingredients) -> void:
+	if target and target.is_in_group("trash"):
+		_delete()
