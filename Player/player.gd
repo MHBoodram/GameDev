@@ -29,8 +29,8 @@ func _ready():
 	_update_hand("idle")
 
 func _process(delta: float) -> void:
-	if($GameplayUi/Hand/AnimationPlayer.current_animation == "hold"):
-		return
+	#if($GameplayUi/Hand/AnimationPlayer.current_animation == "hold"):
+		#return
 	$GameplayUi/Hand.global_position = get_viewport().get_mouse_position()
 
 func _force_cursor_image(move_to: Vector3) -> void:

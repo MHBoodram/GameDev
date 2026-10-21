@@ -212,7 +212,6 @@ environment = SubResource("Environment_ris41")
 
 [node name="Sun" type="DirectionalLight3D" parent="WorldEnvironment" unique_id=982263699]
 transform = Transform3D(-0.95751554, -0.16707794, 0.23505107, -0.08849062, 0.94597405, 0.3119334, -0.2744694, 0.27788123, -0.9205698, 6.6585455, 3.4872513, -7.5352235)
-visible = false
 light_color = Color(0.9999997, 0.72599864, 0.20498002, 1)
 light_energy = 1.5
 light_volumetric_fog_energy = 3.0
