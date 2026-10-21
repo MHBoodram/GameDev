@@ -361,4 +361,3 @@ func _give_drink(recipt: Node3D, drink:Glasses, seat: int) -> void:
 	tween.tween_property(recipt,"global_position",seat_marker.global_position,0.5)
 	tween.tween_property(drink,"global_position",seat_marker.global_position,0.5)
 	tween.tween_property(recipt,"global_position",$HiddenRecipt.global_position,0.5)
-	

@@ -9,6 +9,23 @@
 render_priority = 0
 shader = ExtResource("3_pq6lo")
 shader_parameter/texture_albedo = ExtResource("5_pq6lo")
+shader_parameter/fill_amount = 0.0
+shader_parameter/slosh_angle = 0.0
+shader_parameter/slosh_vertical_offset = 0.0
+shader_parameter/wave_phase = 0.0
+shader_parameter/wave_amplitude = 0.0
+shader_parameter/pixel_resolution = 48.0
+shader_parameter/surface_highlight_color = Color(1.4, 1.4, 1.5, 1)
+shader_parameter/secondary_highlight_color = Color(0.9, 0.4, 0.95, 0.85)
+shader_parameter/surface_highlight_thickness = 1.2
+shader_parameter/bottom_darkening = 0.45
+shader_parameter/liquid_transparency = 0.9
+shader_parameter/inner_margin_top = 0.12
+shader_parameter/inner_margin_bottom = 0.88
+shader_parameter/caustic_beam_strength = 0.35
+shader_parameter/sparkle_density = 0.7
+shader_parameter/glass_reflection_strength = 0.28
+shader_parameter/meniscus_curve = 0.03
 shader_parameter/gradient_offset = 0.0
 shader_parameter/flip_gradient = false
 
@@ -31,7 +48,7 @@ texture_filter = 0
 texture = ExtResource("1_isq7m")
 
 [node name="Outside" type="Sprite3D" parent="Inside" unique_id=1532157949]
-transform = Transform3D(1, 0, 0, 0, 0.9997809, -0.020942425, 0, 0.020942425, 0.9997809, -0.032, 0, 0)
+transform = Transform3D(0.99999994, 0, 0, 0, 0.9997808, -0.020942423, 0, 0.020942423, 0.9997808, -0.0047513805, 0, 0)
 material_override = SubResource("ShaderMaterial_l3v6c")
 shaded = true
 alpha_cut = 2
