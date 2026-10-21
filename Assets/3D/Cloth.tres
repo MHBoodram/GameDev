@@ -1,0 +1,18 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://ch2nqkty87knn"]
+
+[ext_resource type="Texture2D" uid="uid://c50ml3obr7kh" path="res://Assets/3D/bar_Fabric032_1K-PNG_Color.png" id="1_t5a4q"]
+[ext_resource type="Texture2D" uid="uid://com6ctfqovlj6" path="res://Assets/3D/bar_Fabric032_1K-PNG_Roughness.png" id="2_hwcsq"]
+[ext_resource type="Texture2D" uid="uid://lx2tcfp8dkxw" path="res://Assets/3D/bar_Fabric032_1K-PNG_NormalGL.png" id="3_elt5q"]
+
+[resource]
+resource_name = "Cloth"
+cull_mode = 2
+albedo_texture = ExtResource("1_t5a4q")
+metallic_texture = ExtResource("2_hwcsq")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_hwcsq")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("3_elt5q")
+uv1_scale = Vector3(2, 2, 1)
+uv1_offset = Vector3(0, -1, 0)

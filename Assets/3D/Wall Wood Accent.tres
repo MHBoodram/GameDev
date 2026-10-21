@@ -1,0 +1,18 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://b5s8v6uk8tlhi"]
+
+[ext_resource type="Texture2D" uid="uid://bcl53qy746n5u" path="res://Assets/3D/bar_Wood009_1K-PNG_Color.png" id="1_h6w6c"]
+[ext_resource type="Texture2D" uid="uid://cg0rt6vwktmea" path="res://Assets/3D/bar_Wood009_1K-PNG_Roughness.png" id="2_y4hfu"]
+[ext_resource type="Texture2D" uid="uid://c0k55sap7koo8" path="res://Assets/3D/bar_Wood009_1K-PNG_NormalGL.png" id="3_pijov"]
+
+[resource]
+resource_name = "Wall Wood Accent"
+cull_mode = 2
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("1_h6w6c")
+metallic_texture = ExtResource("2_y4hfu")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_y4hfu")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("3_pijov")
+uv1_offset = Vector3(-1, 1, 0)

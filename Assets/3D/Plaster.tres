@@ -1,0 +1,19 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://cr3ypcxa4qxr8"]
+
+[ext_resource type="Texture2D" uid="uid://ddlo4p2p3hg1b" path="res://Assets/3D/bar_Plaster001_1K-PNG_Color.png" id="1_xs4au"]
+[ext_resource type="Texture2D" uid="uid://dextdb2ld6qfi" path="res://Assets/3D/bar_Plaster001_1K-PNG_Roughness.png" id="2_vvljt"]
+[ext_resource type="Texture2D" uid="uid://bt2c3dwfrqcl4" path="res://Assets/3D/bar_Plaster001_1K-PNG_NormalGL.png" id="3_jjd08"]
+
+[resource]
+resource_name = "Plaster"
+cull_mode = 2
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("1_xs4au")
+metallic_texture = ExtResource("2_vvljt")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_vvljt")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("3_jjd08")
+uv1_scale = Vector3(2, 2, 1)
+uv1_offset = Vector3(0, -1, 0)

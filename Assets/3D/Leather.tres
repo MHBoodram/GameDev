@@ -1,0 +1,18 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dp0iwa20su545"]
+
+[ext_resource type="Texture2D" uid="uid://c2au0cge7dqgy" path="res://Assets/3D/bar_Leather037_1K-PNG_Color.png" id="1_3at7s"]
+[ext_resource type="Texture2D" uid="uid://c75shyhiu6yo3" path="res://Assets/3D/bar_Leather037_1K-PNG_Roughness.png" id="2_8j1j5"]
+[ext_resource type="Texture2D" uid="uid://bd4p6hrsf40jj" path="res://Assets/3D/bar_Leather037_1K-PNG_NormalGL.png" id="3_bu8ew"]
+
+[resource]
+resource_name = "Leather"
+cull_mode = 2
+albedo_texture = ExtResource("1_3at7s")
+metallic_texture = ExtResource("2_8j1j5")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_8j1j5")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("3_bu8ew")
+uv1_scale = Vector3(10, 10, 1)
+uv1_offset = Vector3(0, -9, 0)

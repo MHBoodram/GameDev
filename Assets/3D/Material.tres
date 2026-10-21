@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://ncljy6xbe114"]
+
+[ext_resource type="Texture2D" uid="uid://dka5ugskivehr" path="res://Assets/3D/bar_wood.png" id="1_mlajp"]
+
+[resource]
+resource_name = "Material"
+cull_mode = 2
+albedo_texture = ExtResource("1_mlajp")
+roughness = 0.5

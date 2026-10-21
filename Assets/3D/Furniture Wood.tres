@@ -1,0 +1,18 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://ck07ocbm1etbb"]
+
+[ext_resource type="Texture2D" uid="uid://1mb5036ebxdq" path="res://Assets/3D/bar_Wood049_1K-PNG_Color.png" id="1_j8ypp"]
+[ext_resource type="Texture2D" uid="uid://dj26youst4as0" path="res://Assets/3D/bar_Wood049_1K-PNG_Roughness.png" id="2_st27f"]
+[ext_resource type="Texture2D" uid="uid://ccgfeena0pbmh" path="res://Assets/3D/bar_Wood049_1K-PNG_NormalGL.png" id="3_qrvyr"]
+
+[resource]
+resource_name = "Furniture Wood"
+cull_mode = 2
+albedo_texture = ExtResource("1_j8ypp")
+metallic_texture = ExtResource("2_st27f")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_st27f")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("3_qrvyr")
+uv1_scale = Vector3(2, 2, 1)
+uv1_offset = Vector3(0, -1, 0)

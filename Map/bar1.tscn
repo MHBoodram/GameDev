@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://ci6fovgg0i85"]
 
-[ext_resource type="PackedScene" uid="uid://b4bo32owx0ri7" path="res://Assets/3D/new_bar.glb" id="1_sh2qq"]
+[ext_resource type="PackedScene" uid="uid://dcns2u2wox6od" path="res://Assets/3D/bar.glb" id="1_sh2qq"]
 [ext_resource type="Shader" uid="uid://qothrby8gojn" path="res://Shader/per_object_pixel_shader.gdshader" id="2_5snmu"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_byjj7"]

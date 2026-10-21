@@ -349,9 +349,11 @@ _data = {
 script = ExtResource("1_aj1h6")
 
 [node name="new_bar" parent="." unique_id=47131528 instance=ExtResource("1_2t0lq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.17, 0)
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=52734251]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -5.236375, 2.3210154, -2.8810441)
+current = true
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1157856546]
 libraries/ = SubResource("AnimationLibrary_srbt1")
@@ -393,7 +395,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 2.9802322e-08, 0, -2.9802322e-08, 1, 0, 0
 shape = SubResource("BoxShape3D_pa3t7")
 
 [node name="Quit" type="Area3D" parent="Menu2/Menu3" unique_id=435797648]
-transform = Transform3D(0.99999964, 5.812801e-09, 4.078676e-08, 5.470248e-08, 0.7569201, 2.9802322e-08, -2.845e-08, 8.940697e-08, 0.86093533, 0, -0.3966961, -0.048223376)
+transform = Transform3D(0.9999996, 5.8128005e-09, 4.078676e-08, 5.470248e-08, 0.7569201, 2.9802322e-08, -2.845e-08, 8.940697e-08, 0.86093533, 0, -0.43019736, -0.06738925)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Menu2/Menu3/Quit" unique_id=723427114]
 transform = Transform3D(1, 0, 0, 0, 1, 2.9802322e-08, 0, -2.9802322e-08, 1, 0, 0.0059970617, -0.11183119)

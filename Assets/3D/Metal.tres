@@ -1,0 +1,19 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://c1cwged7l0uv"]
+
+[ext_resource type="Texture2D" uid="uid://dt07kod60mfa2" path="res://Assets/3D/bar_Metal046A_1K-PNG_Color.png" id="1_qtrl8"]
+[ext_resource type="Texture2D" uid="uid://crie56t224x8w" path="res://Assets/3D/bar_Metal046A_1K-PNG_Metalness-Metal046A_1K-PNG_Roughness.png" id="2_kqrkt"]
+[ext_resource type="Texture2D" uid="uid://cqtlgdkb1xmsv" path="res://Assets/3D/bar_Metal046A_1K-PNG_NormalGL.png" id="3_52b20"]
+
+[resource]
+resource_name = "Metal"
+cull_mode = 2
+albedo_texture = ExtResource("1_qtrl8")
+metallic = 1.0
+metallic_texture = ExtResource("2_kqrkt")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_kqrkt")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("3_52b20")
+uv1_scale = Vector3(2, 2, 1)
+uv1_offset = Vector3(0, -1, 0)

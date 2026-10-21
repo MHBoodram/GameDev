@@ -1,0 +1,19 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dpkie1x8xte7m"]
+
+[ext_resource type="Texture2D" uid="uid://df11hl4ksn2mi" path="res://Assets/3D/bar_Rope001_1K-PNG_Color.png" id="1_lhoyx"]
+[ext_resource type="Texture2D" uid="uid://co2vu6olpa62q" path="res://Assets/3D/bar_Rope001_1K-PNG_Metalness-Rope001_1K-PNG_Roughness.png" id="2_rfat2"]
+[ext_resource type="Texture2D" uid="uid://crfo2qyoyxomc" path="res://Assets/3D/bar_Rope001_1K-PNG_NormalGL.png" id="3_bwh8l"]
+
+[resource]
+resource_name = "Rope"
+cull_mode = 2
+albedo_texture = ExtResource("1_lhoyx")
+metallic = 1.0
+metallic_texture = ExtResource("2_rfat2")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_rfat2")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("3_bwh8l")
+uv1_scale = Vector3(16, 16, 1)
+uv1_offset = Vector3(0, -15, 0)

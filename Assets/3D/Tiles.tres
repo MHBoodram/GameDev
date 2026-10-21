@@ -1,0 +1,20 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dov41ierlqmwb"]
+
+[ext_resource type="Texture2D" uid="uid://bbwdbflmofyxu" path="res://Assets/3D/bar_RoofingTiles012B_1K-PNG_Color-RoofingTiles012B_1K-PNG_Opacity.png" id="1_d3kuu"]
+[ext_resource type="Texture2D" uid="uid://g27o2dbotqcr" path="res://Assets/3D/bar_RoofingTiles012B_1K-PNG_Roughness.png" id="2_s8hxl"]
+[ext_resource type="Texture2D" uid="uid://ckpjmutf57lav" path="res://Assets/3D/bar_RoofingTiles012B_1K-PNG_NormalGL.png" id="3_t0bmq"]
+
+[resource]
+resource_name = "Tiles"
+transparency = 4
+cull_mode = 2
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("1_d3kuu")
+metallic_texture = ExtResource("2_s8hxl")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_s8hxl")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("3_t0bmq")
+uv1_scale = Vector3(3, 3, 1)
+uv1_offset = Vector3(0, -2, 0)
