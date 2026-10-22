@@ -78,11 +78,11 @@ interpolation_mode = 2
 offsets = PackedFloat32Array(0, 0.527027, 1)
 colors = PackedColorArray(0.6360149, 0.3001767, 9.62615e-08, 1, 0.92941177, 0.4509804, 0, 1, 1, 1, 1, 1)
 
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_qacnc"]
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_x505p"]
 gradient = SubResource("Gradient_jiptt")
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_8hy2n"]
-texture = SubResource("GradientTexture2D_qacnc")
+texture = SubResource("GradientTexture2D_x505p")
 texture_margin_right = 1.0
 expand_margin_top = 6.0
 expand_margin_bottom = 6.0
@@ -149,6 +149,9 @@ theme = SubResource("Theme_vvki5")
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer" unique_id=1717091295]
 layout_mode = 2
 theme_override_constants/separation = 10
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/VBoxContainer" unique_id=706828015]
+layout_mode = 2
 
 [node name="Title" type="ColorRect" parent="CenterContainer/VBoxContainer" unique_id=1624604257]
 custom_minimum_size = Vector2(75, 62)
@@ -218,22 +221,21 @@ theme_override_styles/slider = SubResource("StyleBoxFlat_jiptt")
 theme_override_styles/grabber_area = SubResource("StyleBoxTexture_8hy2n")
 theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_8hy2n")
 min_value = -24.0
-max_value = 0.0
-value = -24.0
+max_value = 24.0
 
-[node name="Sound_effect" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Audio_Container" unique_id=495278573]
+[node name="UI" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Audio_Container" unique_id=495278573]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Audio_Container/Sound_effect" unique_id=486948423]
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Audio_Container/UI" unique_id=486948423]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
 theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("1_jiptt")
 theme_override_font_sizes/font_size = 30
-text = "Sound Effect"
+text = "UI          "
 
-[node name="Sound_effect_slider" type="HSlider" parent="CenterContainer/VBoxContainer/Audio_Container/Sound_effect" unique_id=1942127309]
+[node name="UI_slider" type="HSlider" parent="CenterContainer/VBoxContainer/Audio_Container/UI" unique_id=1942127309]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/center_grabber = 1
@@ -243,7 +245,32 @@ theme_override_styles/slider = SubResource("StyleBoxFlat_jiptt")
 theme_override_styles/grabber_area = SubResource("StyleBoxTexture_8hy2n")
 theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_8hy2n")
 min_value = -24.0
-max_value = 0.0
+max_value = 24.0
+
+[node name="SFX" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Audio_Container" unique_id=1210301951]
+visible = false
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Audio_Container/SFX" unique_id=144430740]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 30
+text = "SFX         "
+
+[node name="SFX_slider" type="HSlider" parent="CenterContainer/VBoxContainer/Audio_Container/SFX" unique_id=34580196]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/center_grabber = 1
+theme_override_icons/grabber = ExtResource("2_8hy2n")
+theme_override_icons/grabber_highlight = ExtResource("3_8hy2n")
+theme_override_styles/slider = SubResource("StyleBoxFlat_jiptt")
+theme_override_styles/grabber_area = SubResource("StyleBoxTexture_8hy2n")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_8hy2n")
+min_value = -24.0
+max_value = 24.0
 
 [node name="Music" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Audio_Container" unique_id=1719718920]
 layout_mode = 2
@@ -267,7 +294,13 @@ theme_override_styles/slider = SubResource("StyleBoxFlat_jiptt")
 theme_override_styles/grabber_area = SubResource("StyleBoxTexture_8hy2n")
 theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_8hy2n")
 min_value = -24.0
-max_value = 0.0
+max_value = 24.0
+
+[node name="Audio_reset" type="Button" parent="CenterContainer/VBoxContainer/Audio_Container" unique_id=1035674778]
+layout_mode = 2
+theme_override_font_sizes/font_size = 35
+text = "Reset to Default"
+autowrap_mode = 2
 
 [node name="Video" type="VBoxContainer" parent="CenterContainer/VBoxContainer" unique_id=732675533]
 layout_mode = 2
@@ -300,7 +333,6 @@ theme_override_font_sizes/font_size = 30
 text = "Full Screen"
 
 [node name="Controls" type="VBoxContainer" parent="CenterContainer/VBoxContainer" unique_id=656008568]
-visible = false
 layout_mode = 2
 theme_override_constants/separation = 7
 
@@ -325,10 +357,91 @@ theme_override_font_sizes/font_size = 60
 text = "Controls"
 horizontal_alignment = 1
 
-[node name="CheckButton" type="CheckButton" parent="CenterContainer/VBoxContainer/Controls" unique_id=1291314740]
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls" unique_id=2121742187]
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "Controls"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/VBoxContainer/Controls" unique_id=201704516]
+layout_mode = 2
+
+[node name="Up" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer" unique_id=1848254874]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Up" unique_id=153414800]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/shadow_offset_y = 10
+theme_override_constants/outline_size = 6
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 60
+text = "Up"
+horizontal_alignment = 1
+
+[node name="change_up" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Up" unique_id=1476786696]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_font_sizes/font_size = 50
+text = "w"
+
+[node name="Down" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer" unique_id=1515831805]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Down" unique_id=925046376]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/shadow_offset_y = 10
+theme_override_constants/outline_size = 6
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 60
+text = "Down"
+horizontal_alignment = 1
+
+[node name="change_down" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Down" unique_id=1462468400]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_font_sizes/font_size = 50
+text = "s"
+
+[node name="Left" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer" unique_id=1280800168]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Left" unique_id=1824583741]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/shadow_offset_y = 10
+theme_override_constants/outline_size = 6
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 60
+text = "Left"
+horizontal_alignment = 1
+
+[node name="change_left" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Left" unique_id=687718415]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_font_sizes/font_size = 50
+text = "a"
+
+[node name="Right" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer" unique_id=1594521604]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Right" unique_id=807248610]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/shadow_offset_y = 10
+theme_override_constants/outline_size = 6
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 60
+text = "Right"
+horizontal_alignment = 1
+
+[node name="change_right" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Right" unique_id=1763667781]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_font_sizes/font_size = 50
+text = "d"
 
 [node name="SaveQuit" type="Button" parent="CenterContainer/VBoxContainer" unique_id=167641846]
 layout_mode = 2
@@ -341,15 +454,20 @@ libraries/ = SubResource("AnimationLibrary_vvki5")
 [connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Audio_Container/Master/Master_slider" to="." method="_on_master_slider_mouse_entered"]
 [connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Audio_Container/Master/Master_slider" to="." method="_on_master_slider_mouse_exited"]
 [connection signal="value_changed" from="CenterContainer/VBoxContainer/Audio_Container/Master/Master_slider" to="." method="_on_master_slider_value_changed"]
-[connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Audio_Container/Sound_effect/Sound_effect_slider" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Audio_Container/Sound_effect/Sound_effect_slider" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="value_changed" from="CenterContainer/VBoxContainer/Audio_Container/Sound_effect/Sound_effect_slider" to="." method="_on_sound_effect_slider_value_changed"]
+[connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Audio_Container/UI/UI_slider" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Audio_Container/UI/UI_slider" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="value_changed" from="CenterContainer/VBoxContainer/Audio_Container/UI/UI_slider" to="." method="_on_sound_effect_slider_value_changed"]
 [connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Audio_Container/Music/Music_slider" to="." method="_on_master_slider_mouse_entered"]
 [connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Audio_Container/Music/Music_slider" to="." method="_on_master_slider_mouse_exited"]
 [connection signal="value_changed" from="CenterContainer/VBoxContainer/Audio_Container/Music/Music_slider" to="." method="_on_music_slider_value_changed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/Audio_Container/Audio_reset" to="." method="_on_audio_reset_pressed"]
 [connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Video/Full_Screen" to="." method="_on_master_slider_mouse_entered"]
 [connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Video/Full_Screen" to="." method="_on_master_slider_mouse_exited"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/Video/Full_Screen" to="." method="_on_full_screen_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Up/change_up" to="." method="_on_change_up_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Down/change_down" to="." method="_on_change_down_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Left/change_left" to="." method="_on_change_left_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Right/change_right" to="." method="_on_change_right_pressed"]
 [connection signal="mouse_entered" from="CenterContainer/VBoxContainer/SaveQuit" to="." method="_on_master_slider_mouse_entered"]
 [connection signal="mouse_exited" from="CenterContainer/VBoxContainer/SaveQuit" to="." method="_on_master_slider_mouse_exited"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/SaveQuit" to="." method="_on_save_quit_pressed"]

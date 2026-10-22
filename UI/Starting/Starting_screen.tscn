@@ -154,7 +154,7 @@ size = Vector3(0.8, 1, 0.01)
 viewport_path = NodePath("Menu2/Menu3/Viewport/SubViewport")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_pa3t7"]
-size = Vector3(0.3076172, 0.13574219, 0.096191406)
+size = Vector3(0.30725098, 0.099121094, 0.096191406)
 
 [sub_resource type="Animation" id="Animation_srbt1"]
 length = 0.001
@@ -371,7 +371,7 @@ transform = Transform3D(0.99999994, 0, 0, 0, 0.97872853, 0, 0, 0, 0.9877188, 0, 
 mesh = SubResource("BoxMesh_aj1h6")
 
 [node name="Viewport" type="Sprite3D" parent="Menu2/Menu3" unique_id=1058990724]
-transform = Transform3D(0.09918739, -2.7597655e-09, -4.4349818e-08, 2.0489091e-08, 0.12305248, 5.2154064e-08, -1.8626448e-08, 0, 0.16271041, 0.011362612, 0.0055925846, 0.013635516)
+transform = Transform3D(0.099187374, -2.759765e-09, -4.434981e-08, 2.0489091e-08, 0.12305248, 6.7055225e-08, -1.8626448e-08, 0, 0.16271041, -0.0018947348, -5.4836273e-05, 0.010404468)
 texture = SubResource("ViewportTexture_u82x5")
 
 [node name="SubViewport" type="SubViewport" parent="Menu2/Menu3/Viewport" unique_id=715603536]
@@ -384,21 +384,21 @@ size = Vector2i(800, 820)
 transform = Transform3D(0.99999976, 5.812793e-09, 4.0786745e-08, 5.353887e-08, 0.7408189, 5.9604645e-08, -2.81006e-08, 2.9802322e-08, 0.85036194, 7.450581e-09, -0.14846492, 0.09947252)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Menu2/Menu3/Play" unique_id=523206532]
-transform = Transform3D(1, 0, 0, 0, 1, 2.9802322e-08, 0, -2.9802322e-08, 1, 0, 0.0059970617, -0.11183119)
+transform = Transform3D(0.99999726, -8.1712415e-14, -1.6342483e-13, -2.5224267e-13, 1, 0, -2.4513724e-13, -5.9604645e-08, 1.0000004, -0.00018310547, 0.0059969425, -0.11183131)
 shape = SubResource("BoxShape3D_pa3t7")
 
 [node name="Setting" type="Area3D" parent="Menu2/Menu3" unique_id=899825972]
 transform = Transform3D(0.99999976, 5.812802e-09, 4.078676e-08, 5.353887e-08, 0.7408191, 5.9604645e-08, -2.81006e-08, 5.9604645e-08, 0.850362, 0, -0.2612095, 0.025720239)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Menu2/Menu3/Setting" unique_id=347249505]
-transform = Transform3D(1, 0, 0, 0, 1, 2.9802322e-08, 0, -2.9802322e-08, 1, 0, 0.0059970617, -0.11183119)
+transform = Transform3D(0.9999981, 2.4868996e-14, 1.7763568e-15, 1.0658141e-13, 0.99999344, -8.940697e-07, 1.9184654e-13, 3.2782555e-07, 0.9999933, 7.450581e-09, -0.046957016, -0.12909746)
 shape = SubResource("BoxShape3D_pa3t7")
 
 [node name="Quit" type="Area3D" parent="Menu2/Menu3" unique_id=435797648]
 transform = Transform3D(0.9999996, 5.8128005e-09, 4.078676e-08, 5.470248e-08, 0.7569201, 2.9802322e-08, -2.845e-08, 8.940697e-08, 0.86093533, 0, -0.43019736, -0.06738925)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Menu2/Menu3/Quit" unique_id=723427114]
-transform = Transform3D(1, 0, 0, 0, 1, 2.9802322e-08, 0, -2.9802322e-08, 1, 0, 0.0059970617, -0.11183119)
+transform = Transform3D(1, -8.881784e-16, -3.5527137e-15, -3.5527137e-15, 1, 0, 0, 0, 1, 0, -0.026440382, -0.12814653)
 shape = SubResource("BoxShape3D_pa3t7")
 
 [node name="Menu_animation" type="AnimationPlayer" parent="." unique_id=798948586]

@@ -2,9 +2,10 @@ extends CanvasLayer
 
 const START_MENU_SCENE := "res://UI/Starting/Starting_screen.tscn"
 
-@onready var resume_button: Button = $CenterContainer/VBox/ResumeButton
-@onready var menu_button: Button = $CenterContainer/VBox/MainMenuButton
-@onready var quit_button: Button = $CenterContainer/VBox/QuitButton
+@onready var resume_button: Button = $Border/Dim/CenterContainer/VBox2/ResumeButton
+@onready var setting_button: Button = $Border/Dim/CenterContainer/VBox2/SettingButton
+@onready var menu_button: Button = $Border/Dim/CenterContainer/VBox2/MainMenuButton
+@onready var quit_button: Button = $Border/Dim/CenterContainer/VBox2/QuitButton
 
 func _ready() -> void:
 	#DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
@@ -22,8 +23,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		UIAudio.play_pause()
 		if get_tree().paused:
+			$AnimationPlayer.play_backwards("open_up_pause")
 			resume()
 		else:
+			$AnimationPlayer.play("open_up_pause")
+			
 			pause()
 		get_viewport().set_input_as_handled()
 
