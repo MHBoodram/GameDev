@@ -14,6 +14,10 @@ func _setting_dictionary_start() -> void:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	else:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	$CenterContainer/VBoxContainer/Controls/VBoxContainer/Right/Right.text = SettingState._key_to_string("Right")
+	$CenterContainer/VBoxContainer/Controls/VBoxContainer/Left/Left.text = SettingState._key_to_string("Left")
+	$CenterContainer/VBoxContainer/Controls/VBoxContainer/Down/Down.text = SettingState._key_to_string("Down")
+	$CenterContainer/VBoxContainer/Controls/VBoxContainer/Up/Up.text = SettingState._key_to_string("Up")
 
 func _moving(move : bool = true) -> void:
 	if(move):
@@ -71,35 +75,41 @@ func _input(event):
 		return
 
 	if event is InputEventKey and event.pressed:
-	# Escape cancels
+		var node_search = get_node("CenterContainer/VBoxContainer/Controls/VBoxContainer/" + action_to_rebind + "/" + action_to_rebind)
+		var previous_text = node_search.text
 		if event.physical_keycode == KEY_ESCAPE:
 			waiting_keybind = false
-			$Label.text = "Cancelled"
+			node_search.text = previous_text
 			return
-
-		rebind_action(action_to_rebind, event)
+		
+		SettingState.rebind_action(action_to_rebind, event)
+		node_search.text = event.as_text()
 		waiting_keybind = false
 		get_viewport().set_input_as_handled()
 
-func rebind_action(action: String, new_key: Key):
-	InputMap.action_erase_events(action)
-	var ev = InputEventKey.new()
-	ev.physical_keycode = new_key
-	InputMap.action_add_event(action, ev)
-
 func _on_change_up_pressed() -> void:
+	$CenterContainer/VBoxContainer/Controls/VBoxContainer/Up/Label.text = "awaiting"
 	action_to_rebind = "Up"
 	waiting_keybind = true
 
 func _on_change_down_pressed() -> void:
+	$CenterContainer/VBoxContainer/Controls/VBoxContainer/Down/Label.text = "awaiting"
 	action_to_rebind = "Down"
 	waiting_keybind = true
 
 func _on_change_left_pressed() -> void:
+	$CenterContainer/VBoxContainer/Controls/VBoxContainer/Left/Label.text = "awaiting"
 	action_to_rebind = "Left"
 	waiting_keybind = true
 
-
 func _on_change_right_pressed() -> void:
+	$CenterContainer/VBoxContainer/Controls/VBoxContainer/Right/Label.text = "awaiting" 
 	action_to_rebind = "Right"
 	waiting_keybind = true
+
+func _on_control_reset_pressed() -> void:
+	$CenterContainer/VBoxContainer/Controls/VBoxContainer/Right/Right.text = "D"
+	$CenterContainer/VBoxContainer/Controls/VBoxContainer/Left/Left.text = "A"
+	$CenterContainer/VBoxContainer/Controls/VBoxContainer/Down/Down.text = "S"
+	$CenterContainer/VBoxContainer/Controls/VBoxContainer/Up/Up.text = "W"
+	SettingState._reset_to_default_controls()

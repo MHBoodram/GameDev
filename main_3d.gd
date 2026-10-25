@@ -143,7 +143,7 @@ func _on_night_time_timeout() -> void:
 # Transitions to intermission menu if timer expired and all seats are cleared
 func _check_night_concluded() -> void:
 	if not is_spawning_allowed and seats.count(null) == seats.size() and GameState.can_end_night and not GameState.night_paused:
-		get_tree().change_scene_to_file("res://UI/After_night/after_night_menu.tscn")
+		Transition._changing_scene("res://UI/After_night/after_night_menu.tscn")
 
 func _check_upgrades() -> void:
 	pass

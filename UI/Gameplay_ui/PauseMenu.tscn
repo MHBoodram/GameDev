@@ -60,25 +60,255 @@ tracks/1/keys = {
 "update": 0,
 "values": [Vector2(1, 1)]
 }
-
-[sub_resource type="Animation" id="Animation_5lsp1"]
-resource_name = "open_settings"
-step = 0.05
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Border:scale")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Border:visible")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Inside_paper:visible")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Inside_paper:scale")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
 "values": [Vector2(1, 1)]
 }
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Inside_paper/Left_color:visible")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/6/type = "value"
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/path = NodePath("Inside_paper/Left_color:scale")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(1, 1)]
+}
+tracks/7/type = "value"
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/path = NodePath("Inside_paper/Left_color:position")
+tracks/7/interp = 1
+tracks/7/loop_wrap = true
+tracks/7/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(597, 0)]
+}
+tracks/8/type = "value"
+tracks/8/imported = false
+tracks/8/enabled = true
+tracks/8/path = NodePath("Inside_paper/Right_Color:visible")
+tracks/8/interp = 1
+tracks/8/loop_wrap = true
+tracks/8/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+tracks/9/type = "value"
+tracks/9/imported = false
+tracks/9/enabled = true
+tracks/9/path = NodePath("Inside_paper/Save_Quit_Setting:scale")
+tracks/9/interp = 1
+tracks/9/loop_wrap = true
+tracks/9/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(1, 1)]
+}
+tracks/10/type = "value"
+tracks/10/imported = false
+tracks/10/enabled = true
+tracks/10/path = NodePath("Inside_paper/Save_Quit_Setting:position")
+tracks/10/interp = 1
+tracks/10/loop_wrap = true
+tracks/10/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(384.5, 602)]
+}
+
+[sub_resource type="Animation" id="Animation_5lsp1"]
+resource_name = "open_settings"
+length = 0.7
+step = 0.05
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Border:scale")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0.15, 0.4),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(0, 1)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Border:visible")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.35, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 1,
+"values": [true, true, false]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Inside_paper:visible")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.15, 0.2),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 1,
+"values": [false, false, true]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Border:position")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.15),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(331, 18), Vector2(646.00006, 18)]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Inside_paper:scale")
+tracks/4/interp = 2
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0.25),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(1, 1)]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Inside_paper/Left_color:visible")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0.4),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/6/type = "value"
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/path = NodePath("Inside_paper/Left_color:scale")
+tracks/6/interp = 2
+tracks/6/loop_wrap = true
+tracks/6/keys = {
+"times": PackedFloat32Array(0.4, 0.7),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(0, 1), Vector2(1, 1)]
+}
+tracks/7/type = "value"
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/path = NodePath("Inside_paper/Left_color:position")
+tracks/7/interp = 2
+tracks/7/loop_wrap = true
+tracks/7/keys = {
+"times": PackedFloat32Array(0.35, 0.4, 0.42, 0.45000002, 0.7),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(601, 0), Vector2(597, 0), Vector2(596.00006, 0), Vector2(558, 0), Vector2(1, 0)]
+}
+tracks/8/type = "value"
+tracks/8/imported = false
+tracks/8/enabled = true
+tracks/8/path = NodePath("Inside_paper/Right_Color:visible")
+tracks/8/interp = 1
+tracks/8/loop_wrap = true
+tracks/8/keys = {
+"times": PackedFloat32Array(0, 0.15, 0.7),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 1,
+"values": [false, true, true]
+}
+tracks/9/type = "value"
+tracks/9/imported = false
+tracks/9/enabled = true
+tracks/9/path = NodePath("Inside_paper/Save_Quit_Setting:scale")
+tracks/9/interp = 2
+tracks/9/loop_wrap = true
+tracks/9/keys = {
+"times": PackedFloat32Array(0.5, 0.7),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(0.5, 1), Vector2(1, 1)]
+}
+tracks/10/type = "value"
+tracks/10/imported = false
+tracks/10/enabled = true
+tracks/10/path = NodePath("Inside_paper/Save_Quit_Setting:position")
+tracks/10/interp = 2
+tracks/10/loop_wrap = true
+tracks/10/keys = {
+"times": PackedFloat32Array(0.35, 0.7),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(622, 602), Vector2(384.5, 602)]
+}
 
 [sub_resource type="Animation" id="Animation_o3fl8"]
 resource_name = "open_up_pause"
+length = 0.5
 step = 0.05
 tracks/0/type = "value"
 tracks/0/imported = false
@@ -90,7 +320,7 @@ tracks/0/keys = {
 "times": PackedFloat32Array(0, 0.35, 0.45),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 0,
-"values": [Vector2(930, 741), Vector2(615, 258), Vector2(331, 18)]
+"values": [Vector2(331, 749), Vector2(331, 258), Vector2(331, 18)]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_5lsp1"]
@@ -114,18 +344,344 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(1, 1, 1, 0.09411765)
 
-[node name="Border" type="ColorRect" parent="." unique_id=469519247]
+[node name="Inside_paper" type="ColorRect" parent="." unique_id=266261478]
 visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 18.0
+offset_right = -12.0
+offset_bottom = -22.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_71dvj")
+color = Color(1, 0.8901961, 0.73333335, 0)
+
+[node name="Divder" type="ColorRect" parent="Inside_paper" unique_id=1098463047]
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -18.0
+offset_right = 19.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.9529412, 0.65882355, 0, 1)
+
+[node name="Left_color" type="ColorRect" parent="Inside_paper" unique_id=552548662]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 597.0
+offset_right = -42.00122
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 0.8901961, 0.73333335, 1)
+
+[node name="Left_Page" type="VBoxContainer" parent="Inside_paper/Left_color" unique_id=2136895224]
+layout_mode = 1
+offset_left = 6.0
+offset_right = 505.0
+offset_bottom = 562.0
+theme_override_constants/separation = 16
+
+[node name="Video_Label" type="Label" parent="Inside_paper/Left_color/Left_Page" unique_id=722944258]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 20
+theme_override_font_sizes/font_size = 150
+text = "Video"
+horizontal_alignment = 1
+
+[node name="Video" type="VBoxContainer" parent="Inside_paper/Left_color/Left_Page" unique_id=141873692]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Full_Screen" type="CheckButton" parent="Inside_paper/Left_color/Left_Page/Video" unique_id=46790681]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Full Screen"
+
+[node name="Audio_Label" type="Label" parent="Inside_paper/Left_color/Left_Page" unique_id=235630147]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 20
+theme_override_font_sizes/font_size = 150
+text = "Audio"
+horizontal_alignment = 1
+
+[node name="Audio_Container" type="VBoxContainer" parent="Inside_paper/Left_color/Left_Page" unique_id=1340278807]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Master" type="HBoxContainer" parent="Inside_paper/Left_color/Left_Page/Audio_Container" unique_id=1433580233]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Inside_paper/Left_color/Left_Page/Audio_Container/Master" unique_id=1327331504]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_8o6ow")
+theme_override_font_sizes/font_size = 30
+text = "Master      "
+
+[node name="Master_slider" type="HSlider" parent="Inside_paper/Left_color/Left_Page/Audio_Container/Master" unique_id=1877489898]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/center_grabber = 1
+theme_override_icons/grabber = ExtResource("4_ojdcy")
+theme_override_icons/grabber_highlight = ExtResource("5_fk3ay")
+theme_override_styles/slider = SubResource("StyleBoxFlat_q1278")
+theme_override_styles/grabber_area = SubResource("StyleBoxTexture_814pr")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_814pr")
+min_value = -24.0
+max_value = 24.0
+
+[node name="UI" type="HBoxContainer" parent="Inside_paper/Left_color/Left_Page/Audio_Container" unique_id=1124514302]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Inside_paper/Left_color/Left_Page/Audio_Container/UI" unique_id=715792613]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_8o6ow")
+theme_override_font_sizes/font_size = 30
+text = "UI          "
+
+[node name="UI_slider" type="HSlider" parent="Inside_paper/Left_color/Left_Page/Audio_Container/UI" unique_id=199137189]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/center_grabber = 1
+theme_override_icons/grabber = ExtResource("4_ojdcy")
+theme_override_icons/grabber_highlight = ExtResource("5_fk3ay")
+theme_override_styles/slider = SubResource("StyleBoxFlat_q1278")
+theme_override_styles/grabber_area = SubResource("StyleBoxTexture_814pr")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_814pr")
+min_value = -24.0
+max_value = 24.0
+
+[node name="SFX" type="HBoxContainer" parent="Inside_paper/Left_color/Left_Page/Audio_Container" unique_id=1587461402]
+visible = false
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Inside_paper/Left_color/Left_Page/Audio_Container/SFX" unique_id=361319398]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_8o6ow")
+theme_override_font_sizes/font_size = 30
+text = "SFX         "
+
+[node name="SFX_slider" type="HSlider" parent="Inside_paper/Left_color/Left_Page/Audio_Container/SFX" unique_id=116862716]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/center_grabber = 1
+theme_override_icons/grabber = ExtResource("4_ojdcy")
+theme_override_icons/grabber_highlight = ExtResource("5_fk3ay")
+theme_override_styles/slider = SubResource("StyleBoxFlat_q1278")
+theme_override_styles/grabber_area = SubResource("StyleBoxTexture_814pr")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_814pr")
+min_value = -24.0
+max_value = 24.0
+
+[node name="Music" type="HBoxContainer" parent="Inside_paper/Left_color/Left_Page/Audio_Container" unique_id=1548700279]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Inside_paper/Left_color/Left_Page/Audio_Container/Music" unique_id=2002894559]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("3_8o6ow")
+theme_override_font_sizes/font_size = 30
+text = "Music       "
+
+[node name="Music_slider" type="HSlider" parent="Inside_paper/Left_color/Left_Page/Audio_Container/Music" unique_id=1783862253]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/center_grabber = 1
+theme_override_icons/grabber = ExtResource("4_ojdcy")
+theme_override_icons/grabber_highlight = ExtResource("5_fk3ay")
+theme_override_styles/slider = SubResource("StyleBoxFlat_q1278")
+theme_override_styles/grabber_area = SubResource("StyleBoxTexture_814pr")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_814pr")
+min_value = -24.0
+max_value = 24.0
+
+[node name="Audio_reset" type="Button" parent="Inside_paper/Left_color/Left_Page/Audio_Container" unique_id=1496962428]
+layout_mode = 2
+theme_override_font_sizes/font_size = 35
+text = "Reset to Default"
+autowrap_mode = 2
+
+[node name="Right_Color" type="ColorRect" parent="Inside_paper" unique_id=775327976]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 639.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 0.8901961, 0.73333335, 1)
+
+[node name="Right_Page" type="VBoxContainer" parent="Inside_paper/Right_Color" unique_id=2039156386]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -509.0
+offset_right = -10.0
+offset_bottom = 562.0
+grow_horizontal = 0
+theme_override_constants/separation = 16
+
+[node name="Control_Label" type="Label" parent="Inside_paper/Right_Color/Right_Page" unique_id=1809275779]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 20
+theme_override_font_sizes/font_size = 150
+text = "Controls"
+horizontal_alignment = 1
+
+[node name="Controls" type="VBoxContainer" parent="Inside_paper/Right_Color/Right_Page" unique_id=1788923169]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Controls" type="VBoxContainer" parent="Inside_paper/Right_Color/Right_Page/Controls" unique_id=1832132407]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Inside_paper/Right_Color/Right_Page/Controls/Controls" unique_id=509760885]
+layout_mode = 2
+
+[node name="Up" type="HBoxContainer" parent="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer" unique_id=1572202789]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Up" unique_id=1987183357]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/shadow_offset_y = 10
+theme_override_constants/outline_size = 6
+theme_override_fonts/font = ExtResource("3_8o6ow")
+theme_override_font_sizes/font_size = 60
+text = "Up"
+horizontal_alignment = 1
+
+[node name="Up" type="Button" parent="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Up" unique_id=328492835]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_font_sizes/font_size = 50
+text = "w"
+
+[node name="Down" type="HBoxContainer" parent="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer" unique_id=2014603552]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Down" unique_id=1133944009]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/shadow_offset_y = 10
+theme_override_constants/outline_size = 6
+theme_override_fonts/font = ExtResource("3_8o6ow")
+theme_override_font_sizes/font_size = 60
+text = "Down"
+horizontal_alignment = 1
+
+[node name="Down" type="Button" parent="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Down" unique_id=258694507]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_font_sizes/font_size = 50
+text = "s"
+
+[node name="Left" type="HBoxContainer" parent="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer" unique_id=778486124]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Left" unique_id=1159545630]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/shadow_offset_y = 10
+theme_override_constants/outline_size = 6
+theme_override_fonts/font = ExtResource("3_8o6ow")
+theme_override_font_sizes/font_size = 60
+text = "Left"
+horizontal_alignment = 1
+
+[node name="Left" type="Button" parent="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Left" unique_id=805596616]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_font_sizes/font_size = 50
+text = "a"
+
+[node name="Right" type="HBoxContainer" parent="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer" unique_id=1339660678]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Right" unique_id=954356889]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/shadow_offset_y = 10
+theme_override_constants/outline_size = 6
+theme_override_fonts/font = ExtResource("3_8o6ow")
+theme_override_font_sizes/font_size = 60
+text = "Right"
+horizontal_alignment = 1
+
+[node name="Right" type="Button" parent="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Right" unique_id=2011648934]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_font_sizes/font_size = 50
+text = "d"
+
+[node name="Control_reset" type="Button" parent="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer" unique_id=790685813]
+layout_mode = 2
+theme_override_font_sizes/font_size = 35
+text = "Reset to Default"
+autowrap_mode = 2
+
+[node name="Save_Quit_Setting" type="Button" parent="Inside_paper" unique_id=638607980]
+custom_minimum_size = Vector2(240, 48)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -235.5
+offset_top = -78.0
+offset_right = 235.50122
+grow_horizontal = 2
+grow_vertical = 0
+size_flags_horizontal = 4
+text = "Save And Quit"
+
+[node name="Border" type="ColorRect" parent="." unique_id=469519247]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 331.0
 offset_top = 18.0
-offset_right = -317.99994
-offset_bottom = -22.0
+offset_right = -317.99774
+offset_bottom = -21.999512
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.95438164, 0.65986764, 0, 1)
+
+[node name="ColorRect" type="ColorRect" parent="Border" unique_id=1199760933]
+layout_mode = 0
+offset_left = 21.0
+offset_top = -7.0
+offset_right = 640.0
+offset_bottom = 686.0
+color = Color(0, 0, 0, 1)
 
 [node name="Dim" type="ColorRect" parent="Border" unique_id=1593926772]
 layout_mode = 1
@@ -187,230 +743,16 @@ size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 92
 text = "Exit to Desktop"
 
-[node name="Inside_paper" type="ColorRect" parent="." unique_id=266261478]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 28.0
-offset_top = 18.0
-offset_right = -12.0
-offset_bottom = -22.0
-grow_horizontal = 2
-grow_vertical = 2
-theme = ExtResource("2_71dvj")
-color = Color(1, 0.8901961, 0.73333335, 1)
-
-[node name="Left_Page" type="VBoxContainer" parent="Inside_paper" unique_id=2136895224]
-layout_mode = 1
-offset_right = 499.0
-offset_bottom = 562.0
-theme_override_constants/separation = 16
-
-[node name="Video_Label" type="Label" parent="Inside_paper/Left_Page" unique_id=722944258]
-layout_mode = 2
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 20
-theme_override_font_sizes/font_size = 150
-text = "Video"
-horizontal_alignment = 1
-
-[node name="Video" type="VBoxContainer" parent="Inside_paper/Left_Page" unique_id=141873692]
-layout_mode = 2
-theme_override_constants/separation = 7
-
-[node name="Full_Screen" type="CheckButton" parent="Inside_paper/Left_Page/Video" unique_id=46790681]
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "Full Screen"
-
-[node name="Control_Label" type="Label" parent="Inside_paper/Left_Page" unique_id=660331294]
-layout_mode = 2
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 20
-theme_override_font_sizes/font_size = 150
-text = "Controls"
-horizontal_alignment = 1
-
-[node name="Controls" type="VBoxContainer" parent="Inside_paper/Left_Page" unique_id=234711563]
-layout_mode = 2
-theme_override_constants/separation = 7
-
-[node name="CheckButton" type="CheckButton" parent="Inside_paper/Left_Page/Controls" unique_id=829365603]
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "Controls"
-
-[node name="ResumeButton" type="Button" parent="Inside_paper" unique_id=638607980]
-custom_minimum_size = Vector2(240, 48)
-layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -120.0
-offset_top = -78.0
-offset_right = 120.0
-grow_horizontal = 2
-grow_vertical = 0
-size_flags_horizontal = 4
-text = "Save And Quit"
-
-[node name="Right_Page" type="VBoxContainer" parent="Inside_paper" unique_id=2039156386]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -499.0
-offset_bottom = 562.0
-grow_horizontal = 0
-theme_override_constants/separation = 16
-
-[node name="Video_Label2" type="Label" parent="Inside_paper/Right_Page" unique_id=48205737]
-layout_mode = 2
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 20
-theme_override_font_sizes/font_size = 150
-text = "Audio"
-horizontal_alignment = 1
-
-[node name="Audio_Container" type="VBoxContainer" parent="Inside_paper/Right_Page" unique_id=1732732925]
-layout_mode = 2
-theme_override_constants/separation = 7
-
-[node name="Master" type="HBoxContainer" parent="Inside_paper/Right_Page/Audio_Container" unique_id=1901791121]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="Inside_paper/Right_Page/Audio_Container/Master" unique_id=1379434831]
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 4
-theme_override_fonts/font = ExtResource("3_8o6ow")
-theme_override_font_sizes/font_size = 30
-text = "Master      "
-
-[node name="Master_slider" type="HSlider" parent="Inside_paper/Right_Page/Audio_Container/Master" unique_id=868313909]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/center_grabber = 1
-theme_override_icons/grabber = ExtResource("4_ojdcy")
-theme_override_icons/grabber_highlight = ExtResource("5_fk3ay")
-theme_override_styles/slider = SubResource("StyleBoxFlat_q1278")
-theme_override_styles/grabber_area = SubResource("StyleBoxTexture_814pr")
-theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_814pr")
-min_value = -24.0
-max_value = 24.0
-
-[node name="UI" type="HBoxContainer" parent="Inside_paper/Right_Page/Audio_Container" unique_id=295711053]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="Inside_paper/Right_Page/Audio_Container/UI" unique_id=1270339277]
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 4
-theme_override_fonts/font = ExtResource("3_8o6ow")
-theme_override_font_sizes/font_size = 30
-text = "UI          "
-
-[node name="UI_slider" type="HSlider" parent="Inside_paper/Right_Page/Audio_Container/UI" unique_id=1122653266]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/center_grabber = 1
-theme_override_icons/grabber = ExtResource("4_ojdcy")
-theme_override_icons/grabber_highlight = ExtResource("5_fk3ay")
-theme_override_styles/slider = SubResource("StyleBoxFlat_q1278")
-theme_override_styles/grabber_area = SubResource("StyleBoxTexture_814pr")
-theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_814pr")
-min_value = -24.0
-max_value = 24.0
-
-[node name="SFX" type="HBoxContainer" parent="Inside_paper/Right_Page/Audio_Container" unique_id=561972556]
-visible = false
-layout_mode = 2
-
-[node name="Label" type="Label" parent="Inside_paper/Right_Page/Audio_Container/SFX" unique_id=1178920396]
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 4
-theme_override_fonts/font = ExtResource("3_8o6ow")
-theme_override_font_sizes/font_size = 30
-text = "SFX         "
-
-[node name="SFX_slider" type="HSlider" parent="Inside_paper/Right_Page/Audio_Container/SFX" unique_id=1027632646]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/center_grabber = 1
-theme_override_icons/grabber = ExtResource("4_ojdcy")
-theme_override_icons/grabber_highlight = ExtResource("5_fk3ay")
-theme_override_styles/slider = SubResource("StyleBoxFlat_q1278")
-theme_override_styles/grabber_area = SubResource("StyleBoxTexture_814pr")
-theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_814pr")
-min_value = -24.0
-max_value = 24.0
-
-[node name="Music" type="HBoxContainer" parent="Inside_paper/Right_Page/Audio_Container" unique_id=1463086684]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="Inside_paper/Right_Page/Audio_Container/Music" unique_id=1187338613]
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 4
-theme_override_fonts/font = ExtResource("3_8o6ow")
-theme_override_font_sizes/font_size = 30
-text = "Music       "
-
-[node name="Music_slider" type="HSlider" parent="Inside_paper/Right_Page/Audio_Container/Music" unique_id=399093750]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/center_grabber = 1
-theme_override_icons/grabber = ExtResource("4_ojdcy")
-theme_override_icons/grabber_highlight = ExtResource("5_fk3ay")
-theme_override_styles/slider = SubResource("StyleBoxFlat_q1278")
-theme_override_styles/grabber_area = SubResource("StyleBoxTexture_814pr")
-theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_814pr")
-min_value = -24.0
-max_value = 24.0
-
-[node name="Audio_reset" type="Button" parent="Inside_paper/Right_Page/Audio_Container" unique_id=1405942309]
-layout_mode = 2
-theme_override_font_sizes/font_size = 35
-text = "Reset to Default"
-autowrap_mode = 2
-
-[node name="Controls" type="VBoxContainer" parent="Inside_paper/Right_Page" unique_id=753358266]
-visible = false
-layout_mode = 2
-theme_override_constants/separation = 7
-
-[node name="ColorRect" type="ColorRect" parent="Inside_paper/Right_Page/Controls" unique_id=1575322667]
-custom_minimum_size = Vector2(2.12, 40)
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="Label" type="Label" parent="Inside_paper/Right_Page/Controls/ColorRect" unique_id=1046935663]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/shadow_offset_y = 10
-theme_override_constants/outline_size = 6
-theme_override_fonts/font = ExtResource("3_8o6ow")
-theme_override_font_sizes/font_size = 60
-text = "Controls"
-horizontal_alignment = 1
-
-[node name="CheckButton" type="CheckButton" parent="Inside_paper/Right_Page/Controls" unique_id=1243412428]
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "Controls"
-
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1600441125]
 libraries/ = SubResource("AnimationLibrary_5lsp1")
+
+[connection signal="pressed" from="Inside_paper/Left_color/Left_Page/Video/Full_Screen" to="." method="_on_full_screen_pressed"]
+[connection signal="value_changed" from="Inside_paper/Left_color/Left_Page/Audio_Container/Master/Master_slider" to="." method="_on_master_slider_value_changed"]
+[connection signal="value_changed" from="Inside_paper/Left_color/Left_Page/Audio_Container/UI/UI_slider" to="." method="_on_ui_slider_value_changed"]
+[connection signal="value_changed" from="Inside_paper/Left_color/Left_Page/Audio_Container/Music/Music_slider" to="." method="_on_music_slider_value_changed"]
+[connection signal="pressed" from="Inside_paper/Left_color/Left_Page/Audio_Container/Audio_reset" to="." method="_on_audio_reset_pressed"]
+[connection signal="pressed" from="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Up/Up" to="." method="_on_up_pressed"]
+[connection signal="pressed" from="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Down/Down" to="." method="_on_down_pressed"]
+[connection signal="pressed" from="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Left/Left" to="." method="_on_left_pressed"]
+[connection signal="pressed" from="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Right/Right" to="." method="_on_right_pressed"]
+[connection signal="pressed" from="Inside_paper/Save_Quit_Setting" to="." method="_on_save_quit_setting_pressed"]

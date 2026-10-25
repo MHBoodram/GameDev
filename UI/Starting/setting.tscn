@@ -357,9 +357,6 @@ theme_override_font_sizes/font_size = 60
 text = "Controls"
 horizontal_alignment = 1
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls" unique_id=2121742187]
-layout_mode = 2
-
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/VBoxContainer/Controls" unique_id=201704516]
 layout_mode = 2
 
@@ -377,7 +374,7 @@ theme_override_font_sizes/font_size = 60
 text = "Up"
 horizontal_alignment = 1
 
-[node name="change_up" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Up" unique_id=1476786696]
+[node name="Up" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Up" unique_id=1476786696]
 layout_mode = 2
 size_flags_horizontal = 10
 theme_override_font_sizes/font_size = 50
@@ -397,7 +394,7 @@ theme_override_font_sizes/font_size = 60
 text = "Down"
 horizontal_alignment = 1
 
-[node name="change_down" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Down" unique_id=1462468400]
+[node name="Down" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Down" unique_id=1462468400]
 layout_mode = 2
 size_flags_horizontal = 10
 theme_override_font_sizes/font_size = 50
@@ -417,7 +414,7 @@ theme_override_font_sizes/font_size = 60
 text = "Left"
 horizontal_alignment = 1
 
-[node name="change_left" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Left" unique_id=687718415]
+[node name="Left" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Left" unique_id=687718415]
 layout_mode = 2
 size_flags_horizontal = 10
 theme_override_font_sizes/font_size = 50
@@ -437,11 +434,17 @@ theme_override_font_sizes/font_size = 60
 text = "Right"
 horizontal_alignment = 1
 
-[node name="change_right" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Right" unique_id=1763667781]
+[node name="Right" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Right" unique_id=1763667781]
 layout_mode = 2
 size_flags_horizontal = 10
 theme_override_font_sizes/font_size = 50
 text = "d"
+
+[node name="Control_reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer" unique_id=1370199940]
+layout_mode = 2
+theme_override_font_sizes/font_size = 35
+text = "Reset to Default"
+autowrap_mode = 2
 
 [node name="SaveQuit" type="Button" parent="CenterContainer/VBoxContainer" unique_id=167641846]
 layout_mode = 2
@@ -464,10 +467,11 @@ libraries/ = SubResource("AnimationLibrary_vvki5")
 [connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Video/Full_Screen" to="." method="_on_master_slider_mouse_entered"]
 [connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Video/Full_Screen" to="." method="_on_master_slider_mouse_exited"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/Video/Full_Screen" to="." method="_on_full_screen_pressed"]
-[connection signal="pressed" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Up/change_up" to="." method="_on_change_up_pressed"]
-[connection signal="pressed" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Down/change_down" to="." method="_on_change_down_pressed"]
-[connection signal="pressed" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Left/change_left" to="." method="_on_change_left_pressed"]
-[connection signal="pressed" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Right/change_right" to="." method="_on_change_right_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Up/Up" to="." method="_on_change_up_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Down/Down" to="." method="_on_change_down_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Left/Left" to="." method="_on_change_left_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Right/Right" to="." method="_on_change_right_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Control_reset" to="." method="_on_control_reset_pressed"]
 [connection signal="mouse_entered" from="CenterContainer/VBoxContainer/SaveQuit" to="." method="_on_master_slider_mouse_entered"]
 [connection signal="mouse_exited" from="CenterContainer/VBoxContainer/SaveQuit" to="." method="_on_master_slider_mouse_exited"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/SaveQuit" to="." method="_on_save_quit_pressed"]

@@ -1,13 +1,7 @@
 [gd_scene format=3 uid="uid://c7e1o70yhke0k"]
 
-[ext_resource type="FontFile" uid="uid://cq83j1cam8lw" path="res://Assets/Font/Merchant Copy.ttf" id="1_anvix"]
+[ext_resource type="Theme" uid="uid://cuun0xaf82n4o" path="res://Assets/Menu_Themes/Main.tres" id="1_1i4lr"]
 [ext_resource type="Script" uid="uid://b00cd4ec0krhk" path="res://UI/After_night/after_night_menu.gd" id="2_script"]
-
-[sub_resource type="Theme" id="Theme_1i4lr"]
-Label/colors/font_color = Color(1, 1, 1, 1)
-Label/colors/font_outline_color = Color(0, 0, 0, 1)
-Label/constants/outline_size = 6
-Label/fonts/font = ExtResource("1_anvix")
 
 [node name="AfterNightMenu" type="Control" unique_id=69194250]
 layout_mode = 3
@@ -16,7 +10,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = SubResource("Theme_1i4lr")
+theme = ExtResource("1_1i4lr")
 script = ExtResource("2_script")
 
 [node name="TextureRect" type="ColorRect" parent="." unique_id=1574170902]
@@ -26,7 +20,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.12, 0.12, 0.12, 1)
+color = Color(1, 0.8901961, 0.73333335, 1)
 
 [node name="Title" type="Label" parent="TextureRect" unique_id=325522279]
 layout_mode = 1
