@@ -5,6 +5,7 @@
 [ext_resource type="FontFile" uid="uid://cq83j1cam8lw" path="res://Assets/Font/Merchant Copy.ttf" id="3_8o6ow"]
 [ext_resource type="Texture2D" uid="uid://b44jk20tj2uhc" path="res://Assets/UI/slider_start.png" id="4_ojdcy"]
 [ext_resource type="Texture2D" uid="uid://bgorgi1bb54q7" path="res://Assets/UI/volume_slider.png" id="5_fk3ay"]
+[ext_resource type="PackedScene" uid="uid://b40r1f7bd864j" path="res://UI/Hand.tscn" id="6_ojdcy"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q1278"]
 bg_color = Color(0, 0, 0, 1)
@@ -742,6 +743,10 @@ layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 92
 text = "Exit to Desktop"
+
+[node name="Hand" parent="." unique_id=2062940456 instance=ExtResource("6_ojdcy")]
+layer = 101
+visible = false
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1600441125]
 libraries/ = SubResource("AnimationLibrary_5lsp1")

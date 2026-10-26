@@ -1,5 +1,6 @@
 extends Node
 
+var previous_money : float
 var money : float = 500
 var overall_reputation : float = 0.0
 var reputation_species : Dictionary = {

@@ -2,6 +2,19 @@
 
 [ext_resource type="Theme" uid="uid://cuun0xaf82n4o" path="res://Assets/Menu_Themes/Main.tres" id="1_1i4lr"]
 [ext_resource type="Script" uid="uid://b00cd4ec0krhk" path="res://UI/After_night/after_night_menu.gd" id="2_script"]
+[ext_resource type="Texture2D" uid="uid://dgn2ru7dmg8bk" path="res://Assets/NPC/UI/Logos-Sheet.png" id="3_vn6yi"]
+[ext_resource type="PackedScene" uid="uid://b40r1f7bd864j" path="res://UI/Hand.tscn" id="4_jsgtq"]
+[ext_resource type="Shader" uid="uid://dl4t8ic2isl2f" path="res://Shader/Fish.gdshader" id="5_bjp5u"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ge20u"]
+shader = ExtResource("5_bjp5u")
+shader_parameter/strength = 0.5000002612500003
+shader_parameter/focus = Vector2(0.5, 0.5)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_d7kba"]
+shader = ExtResource("5_bjp5u")
+shader_parameter/strength = 1.0
+shader_parameter/focus = Vector2(0.5, 0.5)
 
 [node name="AfterNightMenu" type="Control" unique_id=69194250]
 layout_mode = 3
@@ -12,8 +25,10 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("1_1i4lr")
 script = ExtResource("2_script")
+metadata/_edit_vertical_guides_ = [1281.0]
 
 [node name="TextureRect" type="ColorRect" parent="." unique_id=1574170902]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -23,6 +38,7 @@ grow_vertical = 2
 color = Color(1, 0.8901961, 0.73333335, 1)
 
 [node name="Title" type="Label" parent="TextureRect" unique_id=325522279]
+visible = false
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -37,6 +53,7 @@ text = "Shift Summary"
 horizontal_alignment = 1
 
 [node name="VBoxContainer" type="VBoxContainer" parent="TextureRect" unique_id=1498302112]
+visible = false
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -93,3 +110,129 @@ text = "Restart night (3 left)"
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 text = "Next night"
+
+[node name="BackGround" type="ColorRect" parent="." unique_id=362633353]
+layout_mode = 0
+offset_left = -770.0
+offset_top = -505.0
+offset_right = 2017.0
+offset_bottom = 1071.0
+color = Color(1, 0.8901961, 0.73333335, 1)
+
+[node name="Recipt" type="ColorRect" parent="." unique_id=211373774]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = 400.0
+offset_top = 4.0
+offset_right = 849.0
+offset_bottom = -5.4174194
+grow_vertical = 2
+theme = ExtResource("1_1i4lr")
+color = Color(0, 0, 0, 1)
+
+[node name="Recipt" type="ColorRect" parent="Recipt" unique_id=1196076897]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = 443.0
+offset_bottom = -6.8065186
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Recipt/Recipt" unique_id=330207839]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_1i4lr")
+theme_override_constants/separation = 15
+
+[node name="Title" type="Label" parent="Recipt/Recipt/VBoxContainer" unique_id=1625296088]
+layout_mode = 2
+theme_override_font_sizes/font_size = 75
+text = "Night Summary"
+horizontal_alignment = 1
+
+[node name="Top_species" type="HBoxContainer" parent="Recipt/Recipt/VBoxContainer" unique_id=1428160827]
+layout_mode = 2
+
+[node name="Top_Species" type="Label" parent="Recipt/Recipt/VBoxContainer/Top_species" unique_id=668691955]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 60
+text = "Top Species:"
+horizontal_alignment = 1
+
+[node name="Top_species_sprite" type="Sprite2D" parent="Recipt/Recipt/VBoxContainer/Top_species" unique_id=489150621]
+texture_filter = 3
+position = Vector2(298, 24)
+texture = ExtResource("3_vn6yi")
+hframes = 12
+frame = 7
+
+[node name="Label" type="Label" parent="Recipt/Recipt/VBoxContainer/Top_species" unique_id=1567775641]
+layout_mode = 2
+theme_override_font_sizes/font_size = 60
+
+[node name="Earning" type="HBoxContainer" parent="Recipt/Recipt/VBoxContainer" unique_id=132817310]
+layout_mode = 2
+
+[node name="Earning" type="Label" parent="Recipt/Recipt/VBoxContainer/Earning" unique_id=1918690979]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42352942, 0.9098039, 0, 1)
+theme_override_font_sizes/font_size = 60
+text = "Earning: "
+horizontal_alignment = 1
+
+[node name="Number" type="Label" parent="Recipt/Recipt/VBoxContainer/Earning" unique_id=1908434857]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42352942, 0.9098039, 0, 1)
+theme_override_font_sizes/font_size = 60
+text = "#"
+horizontal_alignment = 1
+
+[node name="Quota" type="HBoxContainer" parent="Recipt/Recipt/VBoxContainer" unique_id=627586182]
+layout_mode = 2
+
+[node name="Quota" type="Label" parent="Recipt/Recipt/VBoxContainer/Quota" unique_id=1400098842]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78431374, 0, 0, 1)
+theme_override_font_sizes/font_size = 60
+text = "Quota:"
+horizontal_alignment = 1
+
+[node name="Number" type="Label" parent="Recipt/Recipt/VBoxContainer/Quota" unique_id=1146929424]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78431374, 0, 0, 1)
+theme_override_font_sizes/font_size = 60
+text = "#"
+horizontal_alignment = 1
+
+[node name="Profits" type="Label" parent="Recipt/Recipt/VBoxContainer" unique_id=52133118]
+layout_mode = 2
+theme_override_font_sizes/font_size = 60
+text = "-Total Profits-"
+horizontal_alignment = 1
+
+[node name="Profit_number" type="Label" parent="Recipt/Recipt/VBoxContainer" unique_id=1851033859]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42352942, 0.9098039, 0, 1)
+theme_override_font_sizes/font_size = 75
+text = "#"
+horizontal_alignment = 1
+
+[node name="Hand" parent="Recipt/Recipt/VBoxContainer" unique_id=2062940456 instance=ExtResource("4_jsgtq")]
+
+[node name="Shader" type="ColorRect" parent="." unique_id=911948366]
+material = SubResource("ShaderMaterial_ge20u")
+layout_mode = 0
+offset_right = 1279.0
+offset_bottom = 716.0
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1219240426]
+material = SubResource("ShaderMaterial_d7kba")
+position = Vector2(641, 360)

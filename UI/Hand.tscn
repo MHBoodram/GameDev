@@ -1,0 +1,67 @@
+[gd_scene format=3 uid="uid://b40r1f7bd864j"]
+
+[ext_resource type="Script" uid="uid://kqh4kab47e41" path="res://UI/hand.gd" id="1_e2ip6"]
+[ext_resource type="Texture2D" uid="uid://6sfbebk1yfeh" path="res://Assets/UI/Hand-Sheet.png" id="2_2y3iu"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j1ytw"]
+atlas = ExtResource("2_2y3iu")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_82sru"]
+atlas = ExtResource("2_2y3iu")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_i7402"]
+atlas = ExtResource("2_2y3iu")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e4git"]
+atlas = ExtResource("2_2y3iu")
+region = Rect2(384, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jn8jf"]
+atlas = ExtResource("2_2y3iu")
+region = Rect2(448, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_587ly"]
+atlas = ExtResource("2_2y3iu")
+region = Rect2(512, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_6dkmd"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j1ytw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_82sru")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_i7402")
+}],
+"loop": true,
+"name": &"Idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e4git")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jn8jf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_587ly")
+}],
+"loop": true,
+"name": &"Interact",
+"speed": 5.0
+}]
+
+[node name="Hand" type="CanvasLayer" unique_id=2062940456]
+script = ExtResource("1_e2ip6")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=15560822]
+top_level = true
+sprite_frames = SubResource("SpriteFrames_6dkmd")
+animation = &"Interact"

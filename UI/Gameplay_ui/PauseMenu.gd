@@ -54,10 +54,12 @@ func _unhandled_input(event: InputEvent) -> void:
 func pause() -> void:
 	get_tree().paused = true
 	show()
+	$Hand.show()
 	resume_button.grab_focus()
 
 func resume() -> void:
 	get_tree().paused = false
+	$Hand.hide()
 	hide()
 
 func settings() -> void:

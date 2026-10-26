@@ -33,6 +33,7 @@ func _ready() -> void:
 	_check_unlocks_drinks()
 	_setup_environment_day_night()
 	night_timer.timeout.connect(_on_night_time_timeout)
+	PlayerStats.previous_money = PlayerStats.money
 	_setup_shift()
 
 # Setup night timer and show initial quota and night count

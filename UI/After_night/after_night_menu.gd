@@ -9,6 +9,11 @@ extends Control
 @onready var restart_button: Button = $TextureRect/VBoxContainer/RestartButton
 @onready var next_night_button: Button = $TextureRect/VBoxContainer/NextNightButton
 
+@onready var top_species_sprite: Sprite2D = $Recipt/Recipt/VBoxContainer/Top_species/Top_species_sprite
+@onready var earning_number: Label = $Recipt/Recipt/VBoxContainer/Earning/Number
+@onready var quota_number: Label = $Recipt/Recipt/VBoxContainer/Quota/Number
+@onready var proft_number: Label = $Recipt/Recipt/VBoxContainer/Profit_number
+
 var quota_paid: bool = false
 var ingredient_bought: bool = false
 var marketing_bought: bool = false
@@ -23,6 +28,61 @@ func _ready() -> void:
 	restart_button.pressed.connect(_on_restart_pressed)
 	next_night_button.pressed.connect(_on_next_night_pressed)
 	_refresh_display()
+	_display_recipt()
+
+func _display_recipt() -> void:
+	_top_speicies_check()
+	await _display_container($Recipt/Recipt/VBoxContainer/Top_species)
+	await _display_container($Recipt/Recipt/VBoxContainer/Earning)
+	await _display_number(earning_number,(PlayerStats.money))
+	await _display_container($Recipt/Recipt/VBoxContainer/Quota)
+	await _display_number(quota_number,(GameState.get_night_quota(GameState.night)))
+	await get_tree().create_timer(0.5).timeout
+	await _display_container($Recipt/Recipt/VBoxContainer/Profits)
+	await _display_container($Recipt/Recipt/VBoxContainer/Profit_number)
+	if(PlayerStats.money - GameState.get_night_quota(GameState.night) < 0):
+		proft_number.add_theme_color_override("font_color",Color(1.0, 0.0, 0.0, 1.0))
+	else:
+		proft_number.add_theme_color_override("font_color",Color(0.424, 0.91, 0.0, 1.0))
+	await _display_number(proft_number,(PlayerStats.money - GameState.get_night_quota(GameState.night)),PlayerStats.money)
+
+func _display_container(container: Control) -> void:
+	container.show()
+	await get_tree().process_frame          
+	container.pivot_offset = container.size / 2       
+	container.scale = Vector2(2.0, 2.0)        
+	container.rotation_degrees = 0.0
+	var tween := create_tween().set_parallel(true)
+	tween.tween_property(container, "scale", Vector2.ONE, 1.0)
+	#tween.tween_property(container, "rotation_degrees", 360.0, 1.0)
+	tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func _display_number(label: Label, to: float,from: float = 0) -> void:
+	label.show()
+	var tween := create_tween()
+	var duration = to/150
+	print(duration)
+	tween.tween_method(
+		func(value): label.text = str(int(value)),
+		float(from), float(to), duration
+	)
+	await tween.finished
+	#while not Input.is_action_just_pressed("Left_click"):
+		#await get_tree().process_frame
+
+func _top_speicies_check() -> void:
+	var temp_type = PlayerStats.get_highest_gaining_species().to_lower()
+	match temp_type:
+		"human":
+			top_species_sprite.frame = 10
+		"slime":
+			top_species_sprite.frame = 7
+		"vampire":
+			top_species_sprite.frame = 9
+		"fish":
+			top_species_sprite.frame = 8
+		"tiny":
+			top_species_sprite.frame = 11
 
 func _refresh_display() -> void:
 	var top_species: String = PlayerStats.get_highest_gaining_species()
@@ -33,6 +93,8 @@ func _refresh_display() -> void:
 	pay_quota_button.disabled = quota_paid
 	restart_button.text = "Restart Night (" + str(GameState.restarts_left) + " left)"
 	restart_button.disabled = GameState.restarts_left <= 0
+
+
 
 # Deducts quota from balance
 func _on_pay_quota_pressed() -> void:
@@ -80,6 +142,8 @@ func _on_restart_pressed() -> void:
 		get_tree().change_scene_to_file("res://Main3D.tscn")
 	else:
 		status_label.text = "No restarts remaining"
+
+
 
 # Cehck quota and mandatory purchases before proceeding to next night
 func _on_next_night_pressed() -> void:
