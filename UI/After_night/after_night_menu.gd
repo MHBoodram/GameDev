@@ -1,5 +1,7 @@
 extends Control
 
+@onready var item_scene = preload("res://UI/After_night/ItemButton.tscn")
+
 @onready var info_label: Label = $TextureRect/VBoxContainer/InfoLabel
 @onready var status_label: Label = $TextureRect/VBoxContainer/StatusLabel
 @onready var top_species_label: Label = $TextureRect/VBoxContainer/TopSpeciesLabel
@@ -13,7 +15,20 @@ extends Control
 @onready var earning_number: Label = $Recipt/Recipt/VBoxContainer/Earning/Number
 @onready var quota_number: Label = $Recipt/Recipt/VBoxContainer/Quota/Number
 @onready var proft_number: Label = $Recipt/Recipt/VBoxContainer/Profit_number
+@onready var marketing_container: GridContainer = $Marketing/Marketing/VBoxContainer/HBoxContainer/Marketing/GridContainer
+@onready var ingredient_container: GridContainer = $Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient/GridContainer
 
+
+var shopping_cart: Dictionary = {
+	"Marketing":
+		{
+			
+		},
+	"Ingredients":
+		{
+			
+		}
+}
 var quota_paid: bool = false
 var ingredient_bought: bool = false
 var marketing_bought: bool = false
@@ -48,6 +63,29 @@ func _display_recipt() -> void:
 	await get_tree().create_timer(1).timeout
 	if(PlayerStats.money - GameState.get_night_quota(GameState.night) < 0):
 		$Animation.play("failed_night")
+	else:
+		pass
+
+func _add_or_remove_from_shopping_cart(node: Button):
+	var node_type = node._get_type()
+	var node_name = node._get_name()
+	if(shopping_cart[node_type].has(node_name)):
+		shopping_cart[node_type].erase(node_name)
+		return
+	else:
+		shopping_cart[node_type][node_name] = node
+
+func _populate_grid_container(type: String, container: GridContainer):
+	while(container.get_children()):
+		container.remove_child(container.get_child(0))
+
+	for item in PlayerStats.upgrades[type]:
+		var target_container = container
+		if item != "index":
+			var item_slot = item_scene.instantiate()
+			item_slot.setup(item, type,self,true)
+			item_slot.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_FILL
+			target_container.add_child(item_slot)
 
 func _display_container(container: Control) -> void:
 	container.show()

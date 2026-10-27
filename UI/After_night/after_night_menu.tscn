@@ -283,9 +283,9 @@ color = Color(1, 0.8901961, 0.73333335, 1)
 layout_mode = 1
 anchors_preset = 9
 anchor_bottom = 1.0
-offset_left = -500.0
+offset_left = 400.0
 offset_top = 4.0
-offset_right = -51.0
+offset_right = 849.0
 offset_bottom = -5.4174194
 grow_vertical = 2
 theme = ExtResource("1_1i4lr")
@@ -412,25 +412,25 @@ text = "Reset Night"
 layout_mode = 1
 anchors_preset = 9
 anchor_bottom = 1.0
-offset_left = 400.0
+offset_left = 1284.0
 offset_top = 4.0
-offset_right = 849.0
-offset_bottom = -5.4174194
+offset_right = 2547.0
+offset_bottom = -6.0
 grow_vertical = 2
 theme = ExtResource("1_1i4lr")
 color = Color(0, 0, 0, 1)
 
-[node name="Recipt" type="ColorRect" parent="Marketing" unique_id=835966214]
+[node name="Marketing" type="ColorRect" parent="Marketing" unique_id=835966214]
 layout_mode = 1
 anchors_preset = 9
 anchor_bottom = 1.0
-offset_left = 6.0
+offset_left = 8.0
 offset_top = 6.0
-offset_right = 443.0
+offset_right = 1254.0
 offset_bottom = -6.8065186
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Marketing/Recipt" unique_id=339930369]
+[node name="VBoxContainer" type="VBoxContainer" parent="Marketing/Marketing" unique_id=339930369]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -440,20 +440,64 @@ grow_vertical = 2
 theme = ExtResource("1_1i4lr")
 theme_override_constants/separation = 15
 
-[node name="Title" type="Label" parent="Marketing/Recipt/VBoxContainer" unique_id=1286547891]
+[node name="HBoxContainer" type="HBoxContainer" parent="Marketing/Marketing/VBoxContainer" unique_id=751173496]
 layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Marketing" type="VBoxContainer" parent="Marketing/Marketing/VBoxContainer/HBoxContainer" unique_id=526724308]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Title" type="Label" parent="Marketing/Marketing/VBoxContainer/HBoxContainer/Marketing" unique_id=1286547891]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
 theme_override_font_sizes/font_size = 75
 text = "Marketing"
 horizontal_alignment = 1
 
-[node name="TabContainer" type="TabContainer" parent="Marketing/Recipt/VBoxContainer" unique_id=40121969]
+[node name="GridContainer" type="GridContainer" parent="Marketing/Marketing/VBoxContainer/HBoxContainer/Marketing" unique_id=1988878771]
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="Ingredient" type="VBoxContainer" parent="Marketing/Marketing/VBoxContainer/HBoxContainer" unique_id=928868035]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Title" type="Label" parent="Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient" unique_id=1448945141]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_font_sizes/font_size = 75
+text = "Ingredient"
+horizontal_alignment = 1
+
+[node name="GridContainer" type="GridContainer" parent="Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient" unique_id=942202741]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Last" type="HBoxContainer" parent="Marketing/Marketing/VBoxContainer" unique_id=728995817]
+layout_mode = 2
+
+[node name="Total_cost" type="Label" parent="Marketing/Marketing/VBoxContainer/Last" unique_id=1684222620]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_font_sizes/font_size = 75
+text = "Total Cost = # + #"
+horizontal_alignment = 1
+
+[node name="Button" type="Button" parent="Marketing/Marketing/VBoxContainer/Last" unique_id=2094565650]
+layout_mode = 2
+size_flags_horizontal = 10
+size_flags_vertical = 4
+text = "Next Night"
 
 [node name="Hand" parent="." unique_id=2062940456 instance=ExtResource("4_jsgtq")]
 layer = 101
 
 [node name="Fish Shader" type="ColorRect" parent="." unique_id=911948366]
+visible = false
 material = SubResource("ShaderMaterial_ge20u")
 layout_mode = 0
 offset_right = 1279.0
@@ -469,6 +513,7 @@ root_node = NodePath("../Recipt/Recipt/Reset")
 libraries/ = SubResource("AnimationLibrary_ff8nh")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1219731096]
+visible = false
 position = Vector2(1132.3961, 618.55)
 rotation = 1.5707964
 scale = Vector2(3.079687, 4.4498796)

@@ -2,21 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dw85f2nirodu7"
-path.s3tc="res://.godot/imported/Beer2.png-3909b45465fddff00ac84a4c4fa8256a.s3tc.ctex"
+uid="uid://ba3q8kv63ng2r"
+path="res://.godot/imported/rum.png-af20df7c56e487c4afb1459498979fca.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
+"vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Items/Drinks/Beer2.png"
-dest_files=["res://.godot/imported/Beer2.png-3909b45465fddff00ac84a4c4fa8256a.s3tc.ctex"]
+source_file="res://Assets/Items/Drinks/rum.png"
+dest_files=["res://.godot/imported/rum.png-af20df7c56e487c4afb1459498979fca.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -24,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
@@ -38,4 +37,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=0
+detect_3d/compress_to=1

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cb4623lf3phka"
-path="res://.godot/imported/Beer3.png-ba152368106849eecff5c8f73dafe351.ctex"
+uid="uid://cpm7unos6bujh"
+path="res://.godot/imported/tequila.png-0b0f34db275a6f0d54e76d675e4d4a4c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Items/Drinks/Beer3.png"
-dest_files=["res://.godot/imported/Beer3.png-ba152368106849eecff5c8f73dafe351.ctex"]
+source_file="res://Assets/Items/Drinks/tequila.png"
+dest_files=["res://.godot/imported/tequila.png-0b0f34db275a6f0d54e76d675e4d4a4c.ctex"]
 
 [params]
 

@@ -177,16 +177,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.88968897, 1.4529363, 0.2429
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13251233, 2, 0.6376586)
 visible = false
 
-[node name="Gin_marker" type="Marker3D" parent="." unique_id=495649145]
+[node name="gin_marker" type="Marker3D" parent="." unique_id=495649145]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7157001, 2.3371668, 2.6627347)
 
-[node name="Spirit_marker" type="Marker3D" parent="." unique_id=580399797]
+[node name="spirit_marker" type="Marker3D" parent="." unique_id=580399797]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1607304, 2.3367472, 2.6630564)
 
-[node name="Rum_marker" type="Marker3D" parent="." unique_id=1427671851]
+[node name="rum_marker" type="Marker3D" parent="." unique_id=1427671851]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7157001, 2.8390405, 2.6627347)
 
-[node name="Vodka_marker" type="Marker3D" parent="." unique_id=868453499]
+[node name="vodka_marker" type="Marker3D" parent="." unique_id=868453499]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.161, 2.839, 2.663)
 
 [node name="HiddenRecipt" type="Marker3D" parent="." unique_id=1336744346]

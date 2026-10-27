@@ -18,7 +18,20 @@ var night_species_delta : Dictionary = {
 	"Tiny" : 0.0,
 }
 
-var upgrades : Dictionary = {}
+var upgrades : Dictionary = {
+	"Drinks":
+		{
+			
+		},
+	"Ingredients":
+		{
+			
+		},
+	"Tools":
+		{
+			
+		}
+}
 
 var overall_marketing : float = 1.0
 var species_marketing : Dictionary = {
@@ -32,10 +45,17 @@ var species_banners : Dictionary = {
 
 var unlocks : Dictionary = {
 	"Drinks" :{
-		"Gin" : true,
-		"Rum" : true,
-		"Vodka" : true,
-		"Spirit" : true
+		"gin" : true,
+		"rum" : false,
+		"vodka" : false,
+		"spirit" : false
+	},
+	"Ingredients":{
+		"Blood" : false,
+	},
+	"Tools":{
+		"Knife" : false,
+		"Fishing_Rod" : false
 	}
 }
 
@@ -103,3 +123,6 @@ func get_species_spawn_weight(species: String) -> float:
 	var final_weight: float = base_weight * marketing_multiplier * banner_multiplier
 	print("[species_weight]: ", key, " = ", final_weight)
 	return final_weight
+
+func _check_upgrades() -> void:
+	pass 

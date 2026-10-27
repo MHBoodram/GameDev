@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="Liquid" format=3 uid="uid://cdbg50wgnwwgv"]
 
 [ext_resource type="Script" uid="uid://ouggsev6087j" path="res://Player/Drink/Liquids/Liquid_resource.gd" id="1_6h665"]
-[ext_resource type="Texture2D" uid="uid://dw85f2nirodu7" path="res://Assets/Items/Drinks/Beer2.png" id="2_qiyje"]
+[ext_resource type="Texture2D" uid="uid://bqfkwfepnejxy" path="res://Assets/Items/Drinks/gin.png" id="2_qiyje"]
 
 [resource]
 script = ExtResource("1_6h665")
