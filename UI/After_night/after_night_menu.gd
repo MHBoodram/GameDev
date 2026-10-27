@@ -45,6 +45,9 @@ func _display_recipt() -> void:
 	else:
 		proft_number.add_theme_color_override("font_color",Color(0.424, 0.91, 0.0, 1.0))
 	await _display_number(proft_number,(PlayerStats.money - GameState.get_night_quota(GameState.night)),PlayerStats.money)
+	await get_tree().create_timer(1).timeout
+	if(PlayerStats.money - GameState.get_night_quota(GameState.night) < 0):
+		$Animation.play("failed_night")
 
 func _display_container(container: Control) -> void:
 	container.show()
@@ -60,7 +63,7 @@ func _display_container(container: Control) -> void:
 func _display_number(label: Label, to: float,from: float = 0) -> void:
 	label.show()
 	var tween := create_tween()
-	var duration = to/150
+	var duration = min(to/150,3)
 	print(duration)
 	tween.tween_method(
 		func(value): label.text = str(int(value)),

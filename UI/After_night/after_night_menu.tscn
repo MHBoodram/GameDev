@@ -3,8 +3,10 @@
 [ext_resource type="Theme" uid="uid://cuun0xaf82n4o" path="res://Assets/Menu_Themes/Main.tres" id="1_1i4lr"]
 [ext_resource type="Script" uid="uid://b00cd4ec0krhk" path="res://UI/After_night/after_night_menu.gd" id="2_script"]
 [ext_resource type="Texture2D" uid="uid://dgn2ru7dmg8bk" path="res://Assets/NPC/UI/Logos-Sheet.png" id="3_vn6yi"]
+[ext_resource type="Texture2D" uid="uid://c2sg54njeh5td" path="res://Assets/UI/broken.png" id="4_ge20u"]
 [ext_resource type="PackedScene" uid="uid://b40r1f7bd864j" path="res://UI/Hand.tscn" id="4_jsgtq"]
 [ext_resource type="Shader" uid="uid://dl4t8ic2isl2f" path="res://Shader/Fish.gdshader" id="5_bjp5u"]
+[ext_resource type="Texture2D" uid="uid://bvmk2u2138085" path="res://Assets/UI/Green_Arrow.png" id="7_d7kba"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ge20u"]
 shader = ExtResource("5_bjp5u")
@@ -15,6 +17,164 @@ shader_parameter/focus = Vector2(0.5, 0.5)
 shader = ExtResource("5_bjp5u")
 shader_parameter/strength = 1.0
 shader_parameter/focus = Vector2(0.5, 0.5)
+
+[sub_resource type="Animation" id="Animation_ge20u"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:visible")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("../Cracked:visible")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath(".:size")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(437, 78)]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath(".:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(-245, 505.00003)]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath(".:rotation")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [-0.5235988]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(2.275257, 2.275257)]
+}
+
+[sub_resource type="Animation" id="Animation_d7kba"]
+resource_name = "failed_night"
+length = 0.5
+step = 0.05
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:visible")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.033333335),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [false, true]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("../Cracked:visible")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.45),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [false, true]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath(".:size")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0.45),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(437, 78)]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath(".:position")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0.05, 0.45),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(873, -141.00002), Vector2(-245, 505.00003)]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath(".:rotation")
+tracks/4/interp = 2
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0.45),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [-0.5235988]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath(".:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0.20000002, 0.45),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(4.1936135, 4.1936135), Vector2(2.275257, 2.275257)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_ff8nh"]
+_data = {
+&"RESET": SubResource("Animation_ge20u"),
+&"failed_night": SubResource("Animation_d7kba")
+}
 
 [node name="AfterNightMenu" type="Control" unique_id=69194250]
 layout_mode = 3
@@ -123,9 +283,9 @@ color = Color(1, 0.8901961, 0.73333335, 1)
 layout_mode = 1
 anchors_preset = 9
 anchor_bottom = 1.0
-offset_left = 400.0
+offset_left = -500.0
 offset_top = 4.0
-offset_right = 849.0
+offset_right = -51.0
 offset_bottom = -5.4174194
 grow_vertical = 2
 theme = ExtResource("1_1i4lr")
@@ -214,25 +374,104 @@ horizontal_alignment = 1
 
 [node name="Profits" type="Label" parent="Recipt/Recipt/VBoxContainer" unique_id=52133118]
 layout_mode = 2
+size_flags_vertical = 10
 theme_override_font_sizes/font_size = 60
 text = "-Total Profits-"
 horizontal_alignment = 1
 
 [node name="Profit_number" type="Label" parent="Recipt/Recipt/VBoxContainer" unique_id=1851033859]
 layout_mode = 2
+size_flags_vertical = 8
 theme_override_colors/font_color = Color(0.42352942, 0.9098039, 0, 1)
 theme_override_font_sizes/font_size = 75
 text = "#"
 horizontal_alignment = 1
 
-[node name="Hand" parent="Recipt/Recipt/VBoxContainer" unique_id=2062940456 instance=ExtResource("4_jsgtq")]
+[node name="Cracked" type="TextureRect" parent="Recipt/Recipt" unique_id=1708411994]
+visible = false
+layout_mode = 0
+offset_left = -285.0
+offset_top = -33.0
+offset_right = 714.0
+offset_bottom = 675.0
+texture = ExtResource("4_ge20u")
 
-[node name="Shader" type="ColorRect" parent="." unique_id=911948366]
+[node name="Reset" type="Button" parent="Recipt/Recipt" unique_id=1444173121]
+visible = false
+modulate = Color(1, 0, 0, 1)
+layout_mode = 0
+offset_left = -245.0
+offset_top = 505.00003
+offset_right = 192.0
+offset_bottom = 583.0
+rotation = -0.5235988
+scale = Vector2(2.275257, 2.275257)
+text = "Reset Night"
+
+[node name="Marketing" type="ColorRect" parent="." unique_id=585883403]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = 400.0
+offset_top = 4.0
+offset_right = 849.0
+offset_bottom = -5.4174194
+grow_vertical = 2
+theme = ExtResource("1_1i4lr")
+color = Color(0, 0, 0, 1)
+
+[node name="Recipt" type="ColorRect" parent="Marketing" unique_id=835966214]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = 443.0
+offset_bottom = -6.8065186
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Marketing/Recipt" unique_id=339930369]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_1i4lr")
+theme_override_constants/separation = 15
+
+[node name="Title" type="Label" parent="Marketing/Recipt/VBoxContainer" unique_id=1286547891]
+layout_mode = 2
+theme_override_font_sizes/font_size = 75
+text = "Marketing"
+horizontal_alignment = 1
+
+[node name="TabContainer" type="TabContainer" parent="Marketing/Recipt/VBoxContainer" unique_id=40121969]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Hand" parent="." unique_id=2062940456 instance=ExtResource("4_jsgtq")]
+layer = 101
+
+[node name="Fish Shader" type="ColorRect" parent="." unique_id=911948366]
 material = SubResource("ShaderMaterial_ge20u")
 layout_mode = 0
 offset_right = 1279.0
 offset_bottom = 716.0
+mouse_filter = 2
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1219240426]
 material = SubResource("ShaderMaterial_d7kba")
 position = Vector2(641, 360)
+
+[node name="Animation" type="AnimationPlayer" parent="." unique_id=2107149081]
+root_node = NodePath("../Recipt/Recipt/Reset")
+libraries/ = SubResource("AnimationLibrary_ff8nh")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1219731096]
+position = Vector2(1132.3961, 618.55)
+rotation = 1.5707964
+scale = Vector2(3.079687, 4.4498796)
+texture = ExtResource("7_d7kba")
+
+[connection signal="pressed" from="Recipt/Recipt/Reset" to="." method="_on_restart_pressed"]
