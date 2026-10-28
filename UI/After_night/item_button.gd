@@ -21,21 +21,21 @@ func setup(text: String, type_: String,own: Control,equip: bool):
 		$AspectRatioContainer/TextureRect.texture =load("res://assets/Weapons/Menu/Attachments/"+text+"_badge.png")
 
 func _ready() -> void:
-	$SelectionRect.hide()
+	#$SelectionRect.hide()
 	$EquippedPanel.hide()
 
 func _on_resized() -> void:
 	custom_minimum_size.y = get_rect().size.x
 
-func _on_selection_rect_focus_entered() -> void:
-	$SelectionRect.show()
-
-func _on_selection_rect_focus_exited() -> void:
-	$SelectionRect.hide()
+#func _on_selection_rect_focus_entered() -> void:
+	#$SelectionRect.show()
+#
+#func _on_selection_rect_focus_exited() -> void:
+	#$SelectionRect.hide()
 
 func _on_pressed() -> void:
-	#if(parent_node)
-	pass
+	if(parent_node):
+		parent_node._add_or_remove_from_shopping_cart(self)
 
 func _equip():
 	$EquippedPanel.show()

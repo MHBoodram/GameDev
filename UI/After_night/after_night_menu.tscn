@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://c2sg54njeh5td" path="res://Assets/UI/broken.png" id="4_ge20u"]
 [ext_resource type="PackedScene" uid="uid://b40r1f7bd864j" path="res://UI/Hand.tscn" id="4_jsgtq"]
 [ext_resource type="Shader" uid="uid://dl4t8ic2isl2f" path="res://Shader/Fish.gdshader" id="5_bjp5u"]
+[ext_resource type="PackedScene" uid="uid://d2b3cies7m75f" path="res://UI/After_night/ItemButton.tscn" id="5_ff8nh"]
 [ext_resource type="Texture2D" uid="uid://bvmk2u2138085" path="res://Assets/UI/Green_Arrow.png" id="7_d7kba"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ge20u"]
@@ -412,22 +413,22 @@ text = "Reset Night"
 layout_mode = 1
 anchors_preset = 9
 anchor_bottom = 1.0
-offset_left = 1284.0
+offset_left = 1298.0
 offset_top = 4.0
-offset_right = 2547.0
+offset_right = 2561.0
 offset_bottom = -6.0
 grow_vertical = 2
 theme = ExtResource("1_1i4lr")
-color = Color(0, 0, 0, 1)
+color = Color(0, 0, 0, 0)
 
 [node name="Marketing" type="ColorRect" parent="Marketing" unique_id=835966214]
 layout_mode = 1
 anchors_preset = 9
 anchor_bottom = 1.0
-offset_left = 8.0
-offset_top = 6.0
-offset_right = 1254.0
-offset_bottom = -6.8065186
+offset_left = 201.0
+offset_top = 120.0
+offset_right = 1085.0
+offset_bottom = -152.0
 grow_vertical = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Marketing/Marketing" unique_id=339930369]
@@ -445,6 +446,7 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="Marketing" type="VBoxContainer" parent="Marketing/Marketing/VBoxContainer/HBoxContainer" unique_id=526724308]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -459,6 +461,7 @@ horizontal_alignment = 1
 [node name="GridContainer" type="GridContainer" parent="Marketing/Marketing/VBoxContainer/HBoxContainer/Marketing" unique_id=1988878771]
 layout_mode = 2
 size_flags_vertical = 3
+columns = 3
 
 [node name="Ingredient" type="VBoxContainer" parent="Marketing/Marketing/VBoxContainer/HBoxContainer" unique_id=928868035]
 layout_mode = 2
@@ -475,8 +478,25 @@ horizontal_alignment = 1
 [node name="GridContainer" type="GridContainer" parent="Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient" unique_id=942202741]
 layout_mode = 2
 size_flags_vertical = 3
+columns = 3
+
+[node name="ItemButton" parent="Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient/GridContainer" unique_id=1656221561 instance=ExtResource("5_ff8nh")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ItemButton2" parent="Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient/GridContainer" unique_id=1242910347 instance=ExtResource("5_ff8nh")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ItemButton3" parent="Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient/GridContainer" unique_id=189566337 instance=ExtResource("5_ff8nh")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 
 [node name="Last" type="HBoxContainer" parent="Marketing/Marketing/VBoxContainer" unique_id=728995817]
+visible = false
 layout_mode = 2
 
 [node name="Total_cost" type="Label" parent="Marketing/Marketing/VBoxContainer/Last" unique_id=1684222620]
@@ -518,5 +538,28 @@ position = Vector2(1132.3961, 618.55)
 rotation = 1.5707964
 scale = Vector2(3.079687, 4.4498796)
 texture = ExtResource("7_d7kba")
+
+[node name="Stats" type="Button" parent="." unique_id=1793099772]
+visible = false
+layout_mode = 1
+offset_right = 143.0
+offset_bottom = 61.0
+theme_override_font_sizes/font_size = 75
+text = "Stats"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1615383889]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -165.5
+offset_right = 165.5
+offset_bottom = 40.0
+grow_horizontal = 2
+
+[node name="Label" type="Label" parent="HBoxContainer" unique_id=260283838]
+layout_mode = 2
+theme_override_font_sizes/font_size = 55
+text = "Pick one of the 3"
 
 [connection signal="pressed" from="Recipt/Recipt/Reset" to="." method="_on_restart_pressed"]

@@ -63,9 +63,27 @@ func _display_recipt() -> void:
 	await get_tree().create_timer(1).timeout
 	if(PlayerStats.money - GameState.get_night_quota(GameState.night) < 0):
 		$Animation.play("failed_night")
+		return
 	else:
-		pass
+		await get_tree().create_timer(1).timeout
+		_move_to_out($Recipt,false)
+		_move_to_in($Marketing,true)
+	
 
+func _move_to_in(node: ColorRect,big: bool = false):
+	var tween = get_tree().create_tween()
+	if(big):
+		tween.tween_property(node,"global_position",Vector2(11.0,4),1)
+	else:
+		tween.tween_property(node,"global_position",Vector2(400.0,4),1)
+	
+func _move_to_out(node: ColorRect,big: bool = false):
+	var tween = get_tree().create_tween()
+	if(big):
+		tween.tween_property(node,"global_position",Vector2(-1309.0,4),1)
+	else:
+		tween.tween_property(node,"global_position",Vector2(-906,4),1)
+		
 func _add_or_remove_from_shopping_cart(node: Button):
 	var node_type = node._get_type()
 	var node_name = node._get_name()
@@ -78,7 +96,6 @@ func _add_or_remove_from_shopping_cart(node: Button):
 func _populate_grid_container(type: String, container: GridContainer):
 	while(container.get_children()):
 		container.remove_child(container.get_child(0))
-
 	for item in PlayerStats.upgrades[type]:
 		var target_container = container
 		if item != "index":
