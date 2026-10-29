@@ -760,4 +760,5 @@ libraries/ = SubResource("AnimationLibrary_5lsp1")
 [connection signal="pressed" from="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Down/Down" to="." method="_on_down_pressed"]
 [connection signal="pressed" from="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Left/Left" to="." method="_on_left_pressed"]
 [connection signal="pressed" from="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Right/Right" to="." method="_on_right_pressed"]
+[connection signal="pressed" from="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Control_reset" to="." method="_on_control_reset_pressed"]
 [connection signal="pressed" from="Inside_paper/Save_Quit_Setting" to="." method="_on_save_quit_setting_pressed"]
