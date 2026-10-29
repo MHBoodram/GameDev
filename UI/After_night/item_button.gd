@@ -3,12 +3,12 @@ extends Button
 var type : String = "Weapon"
 var id : String  = "NA"
 var parent_node : Control
-var not_just_item : bool = false
+var pick_3 : bool = false
 
-func setup(text: String, type_: String,own: Control,equip: bool):
+func setup(text: String, type_: String,own: Control,yes_3: bool):
 	parent_node = own
 	type = type_
-	not_just_item = equip
+	pick_3 = yes_3
 	id = text
 	$Label.text = text
 	if(type != "Attachments"):
@@ -34,8 +34,10 @@ func _on_resized() -> void:
 	#$SelectionRect.hide()
 
 func _on_pressed() -> void:
-	if(parent_node):
+	if(parent_node && !pick_3):
 		parent_node._add_or_remove_from_shopping_cart(self)
+	elif(parent_node && pick_3):
+		parent_node._go_next(self)
 
 func _equip():
 	$EquippedPanel.show()

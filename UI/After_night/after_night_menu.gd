@@ -93,6 +93,26 @@ func _add_or_remove_from_shopping_cart(node: Button):
 	else:
 		shopping_cart[node_type][node_name] = node
 
+func _go_next(node: Button):
+	var node_type = node._get_type()
+	var node_name = node._get_name()
+	if(shopping_cart[node_type].has(node_name)):
+		shopping_cart[node_type].erase(node_name)
+		return
+	else:
+		shopping_cart[node_type][node_name] = node
+
+func _populate_grid_container_pick_3(type: String, container: GridContainer):
+	while(container.get_children()):
+		container.remove_child(container.get_child(0))
+	for item in PlayerStats.upgrades[type]:
+		var target_container = container
+		if item != "index":
+			var item_slot = item_scene.instantiate()
+			item_slot.setup(item, type,self,true)
+			item_slot.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_FILL
+			target_container.add_child(item_slot)
+
 func _populate_grid_container(type: String, container: GridContainer):
 	while(container.get_children()):
 		container.remove_child(container.get_child(0))
