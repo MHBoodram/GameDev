@@ -48,7 +48,9 @@ var unlocks : Dictionary = {
 		"gin" : true,
 		"rum" : false,
 		"vodka" : false,
-		"spirit" : false
+		"spirit" : false,
+		"tequila" : false,
+		"whiskey" : false,
 	},
 	"Ingredients":{
 		"Blood" : false,

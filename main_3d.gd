@@ -151,6 +151,8 @@ func _check_upgrades() -> void:
 
 func _check_unlocks_drinks() -> void:
 	for i in PlayerStats.unlocks["Drinks"]:
+		if(!PlayerStats.unlocks["Drinks"][i]):
+			return
 		var temp_scene_check = "res://Player/Drink/Liquids/liquid.tscn"
 		add_scene_once_drink(temp_scene_check, str(i))
 

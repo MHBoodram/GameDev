@@ -446,7 +446,6 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="Marketing" type="VBoxContainer" parent="Marketing/Marketing/VBoxContainer/HBoxContainer" unique_id=526724308]
-visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -464,6 +463,7 @@ size_flags_vertical = 3
 columns = 3
 
 [node name="Ingredient" type="VBoxContainer" parent="Marketing/Marketing/VBoxContainer/HBoxContainer" unique_id=928868035]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -496,7 +496,6 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="Last" type="HBoxContainer" parent="Marketing/Marketing/VBoxContainer" unique_id=728995817]
-visible = false
 layout_mode = 2
 
 [node name="Total_cost" type="Label" parent="Marketing/Marketing/VBoxContainer/Last" unique_id=1684222620]
@@ -507,7 +506,7 @@ theme_override_font_sizes/font_size = 75
 text = "Total Cost = # + #"
 horizontal_alignment = 1
 
-[node name="Button" type="Button" parent="Marketing/Marketing/VBoxContainer/Last" unique_id=2094565650]
+[node name="next_night" type="Button" parent="Marketing/Marketing/VBoxContainer/Last" unique_id=2094565650]
 layout_mode = 2
 size_flags_horizontal = 10
 size_flags_vertical = 4
@@ -548,6 +547,7 @@ theme_override_font_sizes/font_size = 75
 text = "Stats"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1615383889]
+visible = false
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -563,3 +563,4 @@ theme_override_font_sizes/font_size = 55
 text = "Pick one of the 3"
 
 [connection signal="pressed" from="Recipt/Recipt/Reset" to="." method="_on_restart_pressed"]
+[connection signal="pressed" from="Marketing/Marketing/VBoxContainer/Last/next_night" to="." method="_on_next_night_pressed"]

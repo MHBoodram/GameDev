@@ -68,6 +68,7 @@ func _display_recipt() -> void:
 		await get_tree().create_timer(1).timeout
 		_move_to_out($Recipt,false)
 		_move_to_in($Marketing,true)
+		_populate_grid_container_pick_3("Marketing",$Marketing/Marketing/VBoxContainer/HBoxContainer/Marketing/GridContainer)
 	
 
 func _move_to_in(node: ColorRect,big: bool = false):
@@ -91,7 +92,8 @@ func _add_or_remove_from_shopping_cart(node: Button):
 		shopping_cart[node_type].erase(node_name)
 		return
 	else:
-		shopping_cart[node_type][node_name] = node
+		var temp_dic = {"name" : node_name,"cost" : 50}
+		shopping_cart[node_type][node_name] = temp_dic
 
 func _go_next(node: Button):
 	var node_type = node._get_type()
@@ -100,18 +102,53 @@ func _go_next(node: Button):
 		shopping_cart[node_type].erase(node_name)
 		return
 	else:
-		shopping_cart[node_type][node_name] = node
-
+		var temp_dic = {"name" : node_name,"cost" : 0}
+		shopping_cart[node_type][node_name] = temp_dic
+	if(node_type.to_lower() == "marketing"):
+		$Marketing/Marketing/VBoxContainer/HBoxContainer/Marketing.hide()
+		_populate_grid_container_pick_3("Ingredient",$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient/GridContainer)
+		$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient.show()
+	else:
+		$Marketing/Marketing/VBoxContainer/HBoxContainer/Marketing.show()
+		$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient.show()
+		_populate_grid_container("Marketing",$Marketing/Marketing/VBoxContainer/HBoxContainer/Marketing/GridContainer)
+		_populate_grid_container("Ingredient",$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient)
+		
 func _populate_grid_container_pick_3(type: String, container: GridContainer):
 	while(container.get_children()):
 		container.remove_child(container.get_child(0))
-	for item in PlayerStats.upgrades[type]:
+	var temp_array = []
+	if(type == "Ingrediants"):
+		temp_array = _produce_unlocks_pick_3_ingrediants()
+	else:
+		temp_array = _produce_unlocks_marketing()
+	for item in temp_array:
 		var target_container = container
 		if item != "index":
 			var item_slot = item_scene.instantiate()
 			item_slot.setup(item, type,self,true)
 			item_slot.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_FILL
 			target_container.add_child(item_slot)
+
+func _produce_unlocks_pick_3_ingrediants() -> Array:
+	var temp_array = []
+	for x in PlayerStats.unlocks["Drinks"]:
+		if(!PlayerStats.unlocks["Drinks"][x]):
+			temp_array.push_back(x)
+		for y in PlayerStats.unlocks["Ingredients"]:
+			if(!PlayerStats.unlocks["Ingredients"][x]):
+				temp_array.push_back(x)
+		if(temp_array.size() >= 3):
+			break
+	return temp_array
+
+func _produce_unlocks_marketing() -> Array:
+	var temp_array = ["human"]
+	if(PlayerStats.unlocks["Tools"]["Knife"]):
+		temp_array.push_back("vampire")
+	if(PlayerStats.unlocks["Tools"]["Fishing_Rod"]):
+		temp_array.push_back("fish")
+	return temp_array
 
 func _populate_grid_container(type: String, container: GridContainer):
 	while(container.get_children()):
@@ -225,19 +262,19 @@ func _on_restart_pressed() -> void:
 
 # Cehck quota and mandatory purchases before proceeding to next night
 func _on_next_night_pressed() -> void:
-	var target_quota: float = GameState.get_night_quota(GameState.night)
-	if not quota_paid:
-		if PlayerStats.money < target_quota:
-			status_label.text = "BANKRUPT! Bar goes out of business"
-			next_night_button.disabled = true
-			return
-		else:
-			status_label.text = "Pay the quota first"
-			return
-
-	if not ingredient_bought or not marketing_bought:
-		status_label.text = "Mandatory purchases required: 1 ingredient and 1 marketing"
-		return
+	#var target_quota: float = GameState.get_night_quota(GameState.night)
+	#if not quota_paid:
+		#if PlayerStats.money < target_quota:
+			#status_label.text = "BANKRUPT! Bar goes out of business"
+			#next_night_button.disabled = true
+			#return
+		#else:
+			#status_label.text = "Pay the quota first"
+			#return
+#
+	#if not ingredient_bought or not marketing_bought:
+		#status_label.text = "Mandatory purchases required: 1 ingredient and 1 marketing"
+		#return
 
 	if GameState.night >= GameState.max_nights:
 		status_label.text = "VICTORY! You survived all 7 nights"
@@ -246,4 +283,4 @@ func _on_next_night_pressed() -> void:
 
 	GameState.advance_night()
 	PlayerStats.reset_night_reputation_gains()
-	get_tree().change_scene_to_file("res://Main3D.tscn")
+	Transition._changing_scene("res://Main3D.tscn")

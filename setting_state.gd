@@ -105,4 +105,7 @@ func rebind_action(action: String, new_key):
 
 func _reset_to_default_controls():
 	for key in setting_dic["Control"]:
-		setting_dic["Control"][key] = DEFAULT_SETTING["Control"][key]
+		if(DEFAULT_SETTING["Control"].has(key)):
+			setting_dic["Control"][key] = DEFAULT_SETTING["Control"][key]
+		else:
+			setting_dic["Control"].erase(key)
