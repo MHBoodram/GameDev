@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ju8c8dxu4w4o"
-path="res://.godot/imported/vampire.png-4690f639631694df55b43200e90ff015.ctex"
+uid="uid://dx3o6bv006gcn"
+path="res://.godot/imported/tiny.png-cc1ec43a6dfd58c70f299998bd8114f7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/NPC/Vampires/vampire.png"
-dest_files=["res://.godot/imported/vampire.png-4690f639631694df55b43200e90ff015.ctex"]
+source_file="res://Assets/NPC/UI/tiny.png"
+dest_files=["res://.godot/imported/tiny.png-cc1ec43a6dfd58c70f299998bd8114f7.ctex"]
 
 [params]
 

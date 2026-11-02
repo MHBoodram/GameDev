@@ -15,7 +15,7 @@ var speaking_title : String = "start"
 var recipt_marker : Marker3D
 var recipt_clicked : bool = true
 var unique_talk : bool = false
-
+var emo: String = "netural"
 var customer_satisfaction : float = 1.0
 var max_patience : float = 90.0
 
@@ -47,6 +47,7 @@ func _process(delta: float) -> void:
 
 func talk() -> void:
 	if dialogue_resource:
+		GameState.character_talking = self
 		DialogueManager.show_dialogue_balloon_scene(custom_balloon, dialogue_resource, speaking_title, [self])
 
 # Another initailization function
@@ -244,4 +245,25 @@ func _on_area_3d_mouse_entered() -> void:
 # Changes cursor to idle on unhover
 func _on_area_3d_mouse_exited() -> void:
 	GameState.player._update_hand("idle")
-	
+
+func _talking(open_mouth: bool = false):
+	var frame_check = 0
+	match emo:
+		"netural":
+			frame_check = 0
+		"happy":
+			frame_check = 2
+		#"sad":
+			#frame_check = 0
+		"mad":
+			frame_check = 4
+		_:
+			push_warning("CAN'T FIND EMOTION")
+			frame_check = 0
+	if(open_mouth):
+		frame_check += 1
+	var total_frames = hframes * vframes
+	if(frame_check > total_frames):
+		frame_check = 0
+		push_warning("TOO FAR")
+	frame = frame_check

@@ -26,14 +26,23 @@ func _make_player(stream: AudioStream) -> AudioStreamPlayer:
 	add_child(player)
 	return player
 
-func _change_bus_volume(n_bus: String,value : float):
-	
-	var bus_index := AudioServer.get_bus_index(n_bus)
-	AudioServer.set_bus_volume_db(bus_index,value)
-	if(value <= -24):
-		AudioServer.set_bus_mute(bus_index,true)
+func _change_bus_volume(n_bus: String,value : float): #Not working currently
+	if AudioServer.get_bus_index(bus_name) != -1:
+		var bus_index := AudioServer.get_bus_index(n_bus)
+		AudioServer.set_bus_volume_db(bus_index,value)
+		if(value <= -24):
+			AudioServer.set_bus_mute(bus_index,true)
+		else:
+			AudioServer.set_bus_mute(bus_index,false)
+			
 	else:
-		AudioServer.set_bus_mute(bus_index,false)
+		push_warning("UIAudio: bus '%s' not found, falling back to Master." % bus_name)
+		
+	
+	#if(value <= -24):
+		#AudioServer.set_bus_mute(bus_index,true)
+	#else:
+		#AudioServer.set_bus_mute(bus_index,false)
 
 func play_click() -> void:
 	_play(_click_player)

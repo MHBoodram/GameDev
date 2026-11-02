@@ -1,5 +1,6 @@
 extends Node
 
+var previous_money : float
 var money : float = 500
 var overall_reputation : float = 0.0
 var reputation_species : Dictionary = {
@@ -17,25 +18,57 @@ var night_species_delta : Dictionary = {
 	"Tiny" : 0.0,
 }
 
-var upgrades : Dictionary = {}
+var upgrades : Dictionary = {
+	"Drinks":
+		{
+			
+		},
+	"Ingredients":
+		{
+			
+		},
+	"Tools":
+		{
+			
+		},
+	"Marketing":
+		{
+			
+		}
+}
 
 var overall_marketing : float = 1.0
+
 var species_marketing : Dictionary = {
 	"Human": 1.0,
 	"Slime": 1.0,
+	"Fish": 0,
+	"Tiny": 0,
+	"Vampire": 0
 }
 var species_banners : Dictionary = {
 	"Human": false,
 	"Slime": false,
+	"Fish": false,
+	"Tiny": false,
+	"Vampire": false
 }
 
 var unlocks : Dictionary = {
 	"Drinks" :{
-		"Gin" : true,
-		"Rum" : true,
-		"Vodka" : true,
-		"Spirit" : true
-	}
+		"gin" : true,
+		"rum" : false,
+		"vodka" : false,
+		"spirit" : false,
+		"tequila" : false,
+		"whiskey" : false,
+	},
+	"Ingredients":{
+		"Blood" : false,
+		#"Slime" : false,
+		"Fishing_Rod" : false,
+		"Mag" : false
+	},
 }
 
 func _change_money(new_value: float) -> void:
@@ -102,3 +135,6 @@ func get_species_spawn_weight(species: String) -> float:
 	var final_weight: float = base_weight * marketing_multiplier * banner_multiplier
 	print("[species_weight]: ", key, " = ", final_weight)
 	return final_weight
+
+func _check_upgrades() -> void:
+	pass 

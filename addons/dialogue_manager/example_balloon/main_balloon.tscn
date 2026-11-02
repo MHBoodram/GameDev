@@ -180,6 +180,7 @@ theme_override_fonts/normal_font = ExtResource("2_b4bgf")
 theme_override_font_sizes/normal_font_size = 35
 text = "Dialogue..."
 horizontal_alignment = 1
+seconds_per_step = 0.05
 
 [node name="Control" type="Control" parent="Balloon/MarginContainer/PanelContainer/MarginContainer/HBoxContainer" unique_id=1162966119]
 custom_minimum_size = Vector2(20, 10)
@@ -224,6 +225,8 @@ text = "Response example"
 unique_name_in_owner = true
 
 [connection signal="gui_input" from="Balloon" to="." method="_on_balloon_gui_input"]
+[connection signal="finished_typing" from="Balloon/MarginContainer/PanelContainer/MarginContainer/HBoxContainer/VBoxContainer/DialogueLabel" to="." method="_on_dialogue_label_finished_typing"]
+[connection signal="spoke" from="Balloon/MarginContainer/PanelContainer/MarginContainer/HBoxContainer/VBoxContainer/DialogueLabel" to="." method="_on_dialogue_label_spoke"]
 [connection signal="response_selected" from="Balloon/ResponsesMenu" to="." method="_on_responses_menu_response_selected"]
 [connection signal="mouse_entered" from="Balloon/ResponsesMenu/ResponseExample" to="." method="_on_response_example_mouse_entered"]
 [connection signal="mouse_exited" from="Balloon/ResponsesMenu/ResponseExample" to="." method="_on_response_example_mouse_exited"]

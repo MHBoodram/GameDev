@@ -33,6 +33,7 @@ func _ready() -> void:
 	_check_unlocks_drinks()
 	_setup_environment_day_night()
 	night_timer.timeout.connect(_on_night_time_timeout)
+	PlayerStats.previous_money = PlayerStats.money
 	_setup_shift()
 
 # Setup night timer and show initial quota and night count
@@ -143,15 +144,17 @@ func _on_night_time_timeout() -> void:
 # Transitions to intermission menu if timer expired and all seats are cleared
 func _check_night_concluded() -> void:
 	if not is_spawning_allowed and seats.count(null) == seats.size() and GameState.can_end_night and not GameState.night_paused:
-		get_tree().change_scene_to_file("res://UI/After_night/after_night_menu.tscn")
+		Transition._changing_scene("res://UI/After_night/after_night_menu.tscn")
 
 func _check_upgrades() -> void:
 	pass
 
 func _check_unlocks_drinks() -> void:
+	#print(PlayerStats.unlocks)
 	for i in PlayerStats.unlocks["Drinks"]:
-		var temp_scene_check = "res://Player/Drink/Liquids/liquid.tscn"
-		add_scene_once_drink(temp_scene_check, str(i))
+		if(PlayerStats.unlocks["Drinks"][i]):
+			var temp_scene_check = "res://Player/Drink/Liquids/liquid.tscn"
+			add_scene_once_drink(temp_scene_check, str(i))
 
 func _night_select() -> void:
 	match GameState.night:
@@ -268,7 +271,6 @@ func add_scene_once_drink(path: String, node_name: String, parent: Node = self) 
 	instance.name = node_name
 	parent.add_child(instance)
 	instance.setup(existing,$Coutner/Lower_counter,resource_found)
-
 	return instance
 
 func _print_reading_dialogue() -> void:

@@ -1,5 +1,7 @@
 extends Control
 
+@onready var item_scene = preload("res://UI/After_night/ItemButton.tscn")
+
 @onready var info_label: Label = $TextureRect/VBoxContainer/InfoLabel
 @onready var status_label: Label = $TextureRect/VBoxContainer/StatusLabel
 @onready var top_species_label: Label = $TextureRect/VBoxContainer/TopSpeciesLabel
@@ -9,6 +11,28 @@ extends Control
 @onready var restart_button: Button = $TextureRect/VBoxContainer/RestartButton
 @onready var next_night_button: Button = $TextureRect/VBoxContainer/NextNightButton
 
+@onready var top_species_sprite: Sprite2D = $Recipt/Recipt/VBoxContainer/Top_species/Top_species_sprite
+@onready var earning_number: Label = $Recipt/Recipt/VBoxContainer/Earning/Number
+@onready var quota_number: Label = $Recipt/Recipt/VBoxContainer/Quota/Number
+@onready var proft_number: Label = $Recipt/Recipt/VBoxContainer/Profit_number
+@onready var marketing_container: GridContainer = $Marketing/Marketing/VBoxContainer/HBoxContainer/Marketing/GridContainer
+@onready var ingredient_container: GridContainer = $Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient/GridContainer
+
+
+var shopping_cart: Dictionary = {
+	"Drinks":
+		{
+			
+		},
+	"Marketing":
+		{
+			
+		},
+	"Ingredients":
+		{
+			
+		}
+}
 var quota_paid: bool = false
 var ingredient_bought: bool = false
 var marketing_bought: bool = false
@@ -23,6 +47,183 @@ func _ready() -> void:
 	restart_button.pressed.connect(_on_restart_pressed)
 	next_night_button.pressed.connect(_on_next_night_pressed)
 	_refresh_display()
+	_display_recipt()
+
+func _display_recipt() -> void:
+	_top_speicies_check()
+	await _display_container($Recipt/Recipt/VBoxContainer/Top_species)
+	await _display_container($Recipt/Recipt/VBoxContainer/Earning)
+	await _display_number(earning_number,(PlayerStats.money))
+	await _display_container($Recipt/Recipt/VBoxContainer/Quota)
+	await _display_number(quota_number,(GameState.get_night_quota(GameState.night)))
+	await get_tree().create_timer(0.5).timeout
+	await _display_container($Recipt/Recipt/VBoxContainer/Profits)
+	await _display_container($Recipt/Recipt/VBoxContainer/Profit_number)
+	if(PlayerStats.money - GameState.get_night_quota(GameState.night) < 0):
+		proft_number.add_theme_color_override("font_color",Color(1.0, 0.0, 0.0, 1.0))
+	else:
+		proft_number.add_theme_color_override("font_color",Color(0.424, 0.91, 0.0, 1.0))
+	await _display_number(proft_number,(PlayerStats.money - GameState.get_night_quota(GameState.night)),PlayerStats.money)
+	await get_tree().create_timer(1).timeout
+	if(PlayerStats.money - GameState.get_night_quota(GameState.night) < 0):
+		$Animation.play("failed_night")
+		return
+	else:
+		PlayerStats.money = (PlayerStats.money - GameState.get_night_quota(GameState.night))
+		await get_tree().create_timer(1).timeout
+		_move_to_out($Recipt,false)
+		_move_to_in($Marketing,true)
+		_populate_grid_container_pick_3("Drinks",$Marketing/Marketing/VBoxContainer/HBoxContainer/Drinks/GridContainer)
+	
+
+func _move_to_in(node: ColorRect,big: bool = false):
+	var tween = get_tree().create_tween()
+	if(big):
+		tween.tween_property(node,"global_position",Vector2(11.0,4),1)
+	else:
+		tween.tween_property(node,"global_position",Vector2(400.0,4),1)
+	
+func _move_to_out(node: ColorRect,big: bool = false):
+	var tween = get_tree().create_tween()
+	if(big):
+		tween.tween_property(node,"global_position",Vector2(-1309.0,4),1)
+	else:
+		tween.tween_property(node,"global_position",Vector2(-906,4),1)
+		
+func _add_or_remove_from_shopping_cart(node: Button):
+	var node_type = node._get_type()
+	var node_name = node._get_name()
+	if(shopping_cart[node_type].has(node_name)):
+		shopping_cart[node_type].erase(node_name)
+		return
+	else:
+		var temp_dic = {"name" : node_name,"cost" : 50}
+		shopping_cart[node_type][node_name] = temp_dic
+
+func _go_next(node: Button):
+	var node_type = node._get_type()
+	var node_name = node._get_name()
+	if(shopping_cart[node_type].has(node_name)):
+		shopping_cart[node_type].erase(node_name)
+		return
+	else:
+		var temp_dic = {"name" : node_name,"cost" : 0}
+		shopping_cart[node_type][node_name] = temp_dic
+	if(node_type.to_lower() == "marketing"):
+		$Marketing/Marketing/VBoxContainer/HBoxContainer/Marketing.hide()
+		_populate_grid_container_pick_3("Ingredients",$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient/GridContainer)
+		$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient.show()
+	elif(node_type.to_lower() == "drinks"):
+		$Marketing/Marketing/VBoxContainer/HBoxContainer/Drinks.hide()
+		_populate_grid_container_pick_3("Ingredients",$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient/GridContainer)
+		$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient.show()
+	else:
+		$Marketing/Marketing/VBoxContainer/HBoxContainer/Marketing.show()
+		$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient.show()
+		$Marketing/Marketing/VBoxContainer/Last.show()
+		_populate_grid_container("Marketing",$Marketing/Marketing/VBoxContainer/HBoxContainer/Marketing/GridContainer)
+		_populate_grid_container("Ingredients",$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient/GridContainer)
+
+func _populate_grid_container_pick_3(type: String, container: GridContainer):
+	while(container.get_children()):
+		container.remove_child(container.get_child(0))
+	var temp_array = []
+	print(type)
+	if(type == "Ingredients"):
+		temp_array = _produce_unlocks_pick_3_ingrediants()
+	elif(type == "Marketing"):
+		temp_array = _produce_unlocks_marketing()
+	elif(type == "Drinks"):
+		temp_array = _produce_unlocks_drinks()
+	print(temp_array)
+	for item in temp_array:
+		var target_container = container
+		if item != "index":
+			var item_slot = item_scene.instantiate()
+			item_slot.setup(item, type,self,true)
+			item_slot.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_FILL
+			target_container.add_child(item_slot)
+
+func _produce_unlocks_drinks() -> Array:
+	var temp_array = []
+	#for x in PlayerStats.unlocks["Drinks"]:
+		#if(!PlayerStats.unlocks["Drinks"][x]):
+			#temp_array.push_back(x)
+	for x in PlayerStats.unlocks["Drinks"]:
+		if(!PlayerStats.unlocks["Drinks"][x]):
+			temp_array.push_back(x)
+		if(temp_array.size() >= 3):
+			break
+	return temp_array
+
+func _produce_unlocks_pick_3_ingrediants() -> Array:
+	var temp_array = []
+	#for x in PlayerStats.unlocks["Drinks"]:
+		#if(!PlayerStats.unlocks["Drinks"][x]):
+			#temp_array.push_back(x)
+	for x in PlayerStats.unlocks["Ingredients"]:
+		if(!PlayerStats.unlocks["Ingredients"][x]):
+			temp_array.push_back(x)
+		if(temp_array.size() >= 3):
+			break
+	return temp_array
+
+func _produce_unlocks_marketing() -> Array:
+	var temp_array = ["human"]
+	if(PlayerStats.unlocks["Ingredients"]["Blood"]):
+		temp_array.push_back("vampire")
+	if(PlayerStats.unlocks["Ingredients"]["Fishing_Rod"]):
+		temp_array.push_back("fish")
+	return temp_array
+
+func _populate_grid_container(type: String, container: GridContainer):
+	while(container.get_children()):
+		container.remove_child(container.get_child(0))
+	for item in PlayerStats.upgrades[type]:
+		var target_container = container
+		if item != "index":
+			var item_slot = item_scene.instantiate()
+			item_slot.setup(item, type,self,true)
+			item_slot.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_FILL
+			target_container.add_child(item_slot)
+
+func _display_container(container: Control) -> void:
+	container.show()
+	await get_tree().process_frame          
+	container.pivot_offset = container.size / 2       
+	container.scale = Vector2(2.0, 2.0)        
+	container.rotation_degrees = 0.0
+	var tween := create_tween().set_parallel(true)
+	tween.tween_property(container, "scale", Vector2.ONE, 1.0)
+	#tween.tween_property(container, "rotation_degrees", 360.0, 1.0)
+	tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func _display_number(label: Label, to: float,from: float = 0) -> void:
+	label.show()
+	var tween := create_tween()
+	var duration = min(to/150,3)
+	print(duration)
+	tween.tween_method(
+		func(value): label.text = str(int(value)),
+		float(from), float(to), duration
+	)
+	await tween.finished
+	#while not Input.is_action_just_pressed("Left_click"):
+		#await get_tree().process_frame
+
+func _top_speicies_check() -> void:
+	var temp_type = PlayerStats.get_highest_gaining_species().to_lower()
+	match temp_type:
+		"human":
+			top_species_sprite.frame = 10
+		"slime":
+			top_species_sprite.frame = 7
+		"vampire":
+			top_species_sprite.frame = 9
+		"fish":
+			top_species_sprite.frame = 8
+		"tiny":
+			top_species_sprite.frame = 11
 
 func _refresh_display() -> void:
 	var top_species: String = PlayerStats.get_highest_gaining_species()
@@ -33,6 +234,8 @@ func _refresh_display() -> void:
 	pay_quota_button.disabled = quota_paid
 	restart_button.text = "Restart Night (" + str(GameState.restarts_left) + " left)"
 	restart_button.disabled = GameState.restarts_left <= 0
+
+
 
 # Deducts quota from balance
 func _on_pay_quota_pressed() -> void:
@@ -81,22 +284,35 @@ func _on_restart_pressed() -> void:
 	else:
 		status_label.text = "No restarts remaining"
 
+
+
 # Cehck quota and mandatory purchases before proceeding to next night
 func _on_next_night_pressed() -> void:
-	var target_quota: float = GameState.get_night_quota(GameState.night)
-	if not quota_paid:
-		if PlayerStats.money < target_quota:
-			status_label.text = "BANKRUPT! Bar goes out of business"
-			next_night_button.disabled = true
-			return
-		else:
-			status_label.text = "Pay the quota first"
-			return
-
-	if not ingredient_bought or not marketing_bought:
-		status_label.text = "Mandatory purchases required: 1 ingredient and 1 marketing"
-		return
-
+	#var target_quota: float = GameState.get_night_quota(GameState.night)
+	#if not quota_paid:
+		#if PlayerStats.money < target_quota:
+			#status_label.text = "BANKRUPT! Bar goes out of business"
+			#next_night_button.disabled = true
+			#return
+		#else:
+			#status_label.text = "Pay the quota first"
+			#return
+#
+	#if not ingredient_bought or not marketing_bought:
+		#status_label.text = "Mandatory purchases required: 1 ingredient and 1 marketing"
+		#return
+	print(shopping_cart)
+	for main_key in shopping_cart:
+		for sub_key in shopping_cart[main_key]:
+			match main_key:
+				"Marketing":
+					pass
+					#PlayerStats.species_marketing[]
+				_:
+					PlayerStats.unlocks[main_key][sub_key] = true
+					print("Main_key ",main_key)
+					print("Sub_key ",sub_key)
+	#print(PlayerStats.unlocks)
 	if GameState.night >= GameState.max_nights:
 		status_label.text = "VICTORY! You survived all 7 nights"
 		next_night_button.disabled = true
@@ -104,4 +320,4 @@ func _on_next_night_pressed() -> void:
 
 	GameState.advance_night()
 	PlayerStats.reset_night_reputation_gains()
-	get_tree().change_scene_to_file("res://Main3D.tscn")
+	Transition._changing_scene("res://Main3D.tscn")

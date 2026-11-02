@@ -29,8 +29,8 @@ func _ready():
 	_update_hand("idle")
 
 func _process(delta: float) -> void:
-	if($GameplayUi/Hand/AnimationPlayer.current_animation == "hold"):
-		return
+	#if($GameplayUi/Hand/AnimationPlayer.current_animation == "hold"):
+		#return
 	$GameplayUi/Hand.global_position = get_viewport().get_mouse_position()
 
 func _force_cursor_image(move_to: Vector3) -> void:
@@ -66,13 +66,13 @@ func get_mouse_world_position(camera: Camera3D, plane_y: float) -> Vector3:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_W or event.physical_keycode == KEY_W or event.keycode == KEY_UP or event.keycode == KEY_S or event.physical_keycode == KEY_S or event.keycode == KEY_DOWN:
+		if event.is_action_pressed("Up") or event.is_action_pressed("Down"):
 			if gameplay_ui and gameplay_ui.has_method("bendover"):
 				gameplay_ui.bendover()
-		elif event.keycode == KEY_A or event.physical_keycode == KEY_A or event.keycode == KEY_LEFT:
+		elif event.is_action_pressed("Left"):
 			if gameplay_ui and not gameplay_ui.down and gameplay_ui.has_method("moving_around"):
 				gameplay_ui.moving_around(false)
-		elif event.keycode == KEY_D or event.physical_keycode == KEY_D or event.keycode == KEY_RIGHT:
+		elif event.is_action_pressed("Right"):
 			if gameplay_ui and not gameplay_ui.down and gameplay_ui.has_method("moving_around"):
 				gameplay_ui.moving_around(true)
 		elif event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE:

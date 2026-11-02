@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dhwy3spw05iwl"
-path="res://.godot/imported/Beer1.png-b53ea0cbfb4db05e9c7a5c265b1edbeb.ctex"
+uid="uid://ju8c8dxu4w4o"
+path="res://.godot/imported/vampire.png-df99075dbb2e29e2fed5e13d5c99c817.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Items/Drinks/Beer1.png"
-dest_files=["res://.godot/imported/Beer1.png-b53ea0cbfb4db05e9c7a5c265b1edbeb.ctex"]
+source_file="res://Assets/NPC/Vampire/vampire.png"
+dest_files=["res://.godot/imported/vampire.png-df99075dbb2e29e2fed5e13d5c99c817.ctex"]
 
 [params]
 

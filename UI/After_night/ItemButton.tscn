@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://d2b3cies7m75f"]
+
+[ext_resource type="Script" uid="uid://tc486c40axux" path="res://UI/After_night/item_button.gd" id="1_fsn26"]
+[ext_resource type="Texture2D" uid="uid://bqfkwfepnejxy" path="res://Assets/Items/Drinks/gin.png" id="2_fsn26"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_awvil"]
+bg_color = Color(0.0431373, 0.623529, 1, 0.588235)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n3ax7"]
+bg_color = Color(0.417712, 0.743363, 1, 0.788235)
+
+[node name="ItemButton" type="Button" unique_id=1656221561]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/focus = SubResource("StyleBoxFlat_awvil")
+script = ExtResource("1_fsn26")
+
+[node name="EquippedPanel" type="Panel" parent="." unique_id=1878933373]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_n3ax7")
+
+[node name="AspectRatioContainer" type="AspectRatioContainer" parent="." unique_id=1498988772]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TextureRect" type="TextureRect" parent="AspectRatioContainer" unique_id=422921982]
+layout_mode = 2
+texture = ExtResource("2_fsn26")
+
+[node name="Label" type="Label" parent="." unique_id=1575918971]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="Label2" type="Label" parent="." unique_id=404298409]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
+[connection signal="pressed" from="." to="." method="_on_pressed"]
+[connection signal="resized" from="." to="." method="_on_resized"]

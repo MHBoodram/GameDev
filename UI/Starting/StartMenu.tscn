@@ -1,97 +1,8 @@
 [gd_scene format=3 uid="uid://bdpvjjayusxo7"]
 
-[ext_resource type="FontFile" uid="uid://cq83j1cam8lw" path="res://Assets/Font/Merchant Copy.ttf" id="1_35j0k"]
+[ext_resource type="Theme" uid="uid://cuun0xaf82n4o" path="res://Assets/Menu_Themes/Main.tres" id="1_b2fhn"]
 [ext_resource type="Script" uid="uid://cdw65vses6vur" path="res://UI/Starting/StartMenu.gd" id="1_start"]
 [ext_resource type="Texture2D" uid="uid://b1g27nful45ro" path="res://UI/Game_Title_Asset.png" id="2_logo"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gnao3"]
-bg_color = Color(0.5569488, 0.5569549, 0.55695194, 1)
-border_width_left = 5
-border_width_top = 5
-border_width_right = 5
-border_width_bottom = 5
-border_color = Color(0, 0, 0, 1)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
-shadow_size = 11
-anti_aliasing_size = 0.01
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rf0c6"]
-bg_color = Color(0.96474224, 0.96474224, 0.9647421, 1)
-border_width_left = 5
-border_width_top = 5
-border_width_right = 5
-border_width_bottom = 5
-border_color = Color(0, 0, 0, 1)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
-shadow_size = 11
-anti_aliasing_size = 0.01
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bo5hi"]
-bg_color = Color(0, 0, 0, 1)
-border_width_left = 5
-border_width_top = 5
-border_width_right = 5
-border_width_bottom = 5
-border_color = Color(0, 0, 0, 1)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
-shadow_size = 11
-anti_aliasing_size = 0.01
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b2fhn"]
-content_margin_left = 4.0
-content_margin_top = 4.0
-content_margin_right = 4.0
-content_margin_bottom = 4.0
-bg_color = Color(1, 1, 1, 0.75)
-draw_center = false
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-corner_detail = 5
-expand_margin_left = 2.0
-expand_margin_top = 2.0
-expand_margin_right = 2.0
-expand_margin_bottom = 2.0
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_m6os6"]
-
-[sub_resource type="Theme" id="Theme_8gori"]
-Button/colors/font_color = Color(0, 0, 0, 1)
-Button/colors/font_hover_color = Color(0.45694035, 0.8566054, 0.86007994, 1)
-Button/colors/font_outline_color = Color(1, 1, 1, 1)
-Button/colors/font_pressed_color = Color(0.12955844, 0.12955847, 0.12955844, 1)
-Button/constants/outline_size = 5
-Button/font_sizes/font_size = 100
-Button/fonts/font = ExtResource("1_35j0k")
-Button/styles/hover = SubResource("StyleBoxFlat_gnao3")
-Button/styles/normal = SubResource("StyleBoxFlat_rf0c6")
-Button/styles/pressed = SubResource("StyleBoxFlat_bo5hi")
-Label/colors/font_color = Color(0, 0, 0, 1)
-Label/colors/font_outline_color = Color(1, 1, 1, 1)
-Label/colors/font_shadow_color = Color(0, 0, 0, 0)
-Label/constants/line_spacing = 3
-Label/constants/outline_size = 0
-Label/constants/shadow_offset_x = 1
-Label/constants/shadow_offset_y = 1
-Label/constants/shadow_outline_size = 1
-Label/font_sizes/font_size = 16
-Label/fonts/font = ExtResource("1_35j0k")
-Label/styles/focus = SubResource("StyleBoxFlat_b2fhn")
-Label/styles/normal = SubResource("StyleBoxEmpty_m6os6")
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_logo"]
 atlas = ExtResource("2_logo")
@@ -104,7 +15,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = SubResource("Theme_8gori")
+theme = ExtResource("1_b2fhn")
 script = ExtResource("1_start")
 
 [node name="Background" type="ColorRect" parent="." unique_id=1959663630]

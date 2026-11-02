@@ -37,6 +37,10 @@ var locals: Dictionary = {}
 
 var _locale: String = TranslationServer.get_locale()
 
+## close mouth symbols
+
+var close_mouth_symbols: Array = [" ", ",","!",".","?"]
+
 ## The current line
 var dialogue_line: DialogueLine:
 	set(value):
@@ -237,3 +241,18 @@ func _on_response_example_mouse_entered() -> void:
 func _on_response_example_mouse_exited() -> void:
 	if(GameState.player):
 		GameState.player._update_hand("idle")
+
+
+func _on_dialogue_label_spoke(letter: String, letter_index: int, speed: float) -> void:
+	if(GameState.character_talking == null):
+		return
+	if(close_mouth_symbols.has(letter)):
+		GameState.character_talking._talking(false)
+	else:
+		GameState.character_talking._talking(true)
+
+
+func _on_dialogue_label_finished_typing() -> void:
+	if(GameState.character_talking == null):
+		return
+	GameState.character_talking._talking(false)
