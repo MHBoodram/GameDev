@@ -153,7 +153,7 @@ func _on_interact_mouse_exited() -> void:
 
 # targeting is now handeled by the base class (ray from under the cursor + set_highlight)
 # the bottles don't sit on the counter tho, MATT NOTE (pls pls pls play around with this to make sure it looks good and doesn't feel cheap or janky)
-func _on_interact_area_entered() -> void:
+func _on_interact_area_entered(area: Area3D) -> void:
 	pass
 
 #func _on_interact_area_exited(area: Area3D) -> void:
@@ -161,5 +161,5 @@ func _on_interact_area_entered() -> void:
 		#if area.has_method("_on_hover"):
 			#area._on_hover(false)
 		#pouring_into = null
-func _on_interact_area_exited() -> void:
+func _on_interact_area_exited(area: Area3D) -> void:
 	pass
