@@ -1,6 +1,5 @@
 [gd_scene format=3 uid="uid://bsmqqu2r7hfvt"]
 
-[ext_resource type="Script" path="res://UI/StartMenu.gd" id="1_start"]
 [ext_resource type="Texture2D" uid="uid://b1g27nful45ro" path="res://UI/Game_Title_Asset.png" id="2_logo"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_logo"]
@@ -14,7 +13,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_start")
 
 [node name="Background" type="ColorRect" parent="." unique_id=1959663630]
 layout_mode = 1
