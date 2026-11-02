@@ -536,7 +536,6 @@ text = "Next Night"
 layer = 101
 
 [node name="Fish Shader" type="ColorRect" parent="." unique_id=911948366]
-visible = false
 material = SubResource("ShaderMaterial_ge20u")
 layout_mode = 0
 offset_right = 1279.0

@@ -65,36 +65,36 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 1.48, -0.363)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1.48, -0.363)
 
 [node name="ReciptPaper1" parent="." unique_id=1049324574 node_paths=PackedStringArray("recipt_marker", "counter_origin") instance=ExtResource("3_n776p")]
-transform = Transform3D(1, 8.5078966e-10, 1.2166902e-08, 1.21668995e-08, -0.1391731, -0.9902681, 8.5079677e-10, 0.9902681, -0.1391731, 3.667755, 0.36866653, 3.4525545)
+transform = Transform3D(1, 8.5078966e-10, 1.2166902e-08, 1.21668995e-08, -0.1391731, -0.9902681, 8.5079677e-10, 0.9902681, -0.1391731, 2.5202577, 7.160312, 3.426609)
 recipt_marker = NodePath("../Recipt1")
 counter_origin = NodePath("../Coutner")
 
 [node name="ReciptPaper2" parent="." unique_id=2069618204 node_paths=PackedStringArray("recipt_marker", "counter_origin") instance=ExtResource("3_n776p")]
-transform = Transform3D(1, 8.5078966e-10, 1.2166902e-08, 1.21668995e-08, -0.1391731, -0.9902681, 8.5079677e-10, 0.9902681, -0.1391731, 3.667755, 0.36866653, 3.4525545)
+transform = Transform3D(1, 8.5078966e-10, 1.2166902e-08, 1.21668995e-08, -0.1391731, -0.9902681, 8.5079677e-10, 0.9902681, -0.1391731, 2.5202577, 7.160312, 3.426609)
 recipt_marker = NodePath("../Recipt2")
 seat_num = 2
 counter_origin = NodePath("../Coutner")
 
 [node name="ReciptPaper3" parent="." unique_id=969439179 node_paths=PackedStringArray("recipt_marker", "counter_origin") instance=ExtResource("3_n776p")]
-transform = Transform3D(1, 8.5078966e-10, 1.2166902e-08, 1.21668995e-08, -0.1391731, -0.9902681, 8.5079677e-10, 0.9902681, -0.1391731, 3.667755, 0.36866653, 3.4525545)
+transform = Transform3D(1, 8.5078966e-10, 1.2166902e-08, 1.21668995e-08, -0.1391731, -0.9902681, 8.5079677e-10, 0.9902681, -0.1391731, 2.5202577, 7.160312, 3.426609)
 recipt_marker = NodePath("../Recipt3")
 seat_num = 3
 counter_origin = NodePath("../Coutner")
 
 [node name="Recipt1" type="Marker3D" parent="." unique_id=1812126100]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.668, 2.3, 2.736)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5320065, 2.3, 2.736)
 
 [node name="Recipt2" type="Marker3D" parent="." unique_id=1028708705]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.388, 2.3, 2.736)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2520065, 2.3, 2.736)
 
 [node name="Recipt3" type="Marker3D" parent="." unique_id=781699835]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.108, 2.3, 2.736)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9720066, 2.3, 2.736)
 
 [node name="Spawn" type="Marker3D" parent="." unique_id=25745977]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.9415827, -0.8089119)
 
 [node name="Coutner" parent="." unique_id=183529817 instance=ExtResource("4_5ujjy")]
-transform = Transform3D(-1, 0, 1.509958e-07, 0, 1, 0, -1.509958e-07, 0, -1, 3.2777615, 0.4712156, 2.156)
+transform = Transform3D(-1, 0, 1.509958e-07, 0, 1, 0, -1.509958e-07, 0, -1, 3.2777615, 0.30839622, 2.156)
 
 [node name="BeerGlass Button" type="Area3D" parent="Coutner" unique_id=2100852152]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.98018, 1.053846, 0.099915504)
@@ -177,20 +177,20 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.88968897, 1.4529363, 0.2429
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13251233, 2, 0.6376586)
 visible = false
 
-[node name="Gin_marker" type="Marker3D" parent="." unique_id=495649145]
+[node name="gin_marker" type="Marker3D" parent="." unique_id=495649145]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7157001, 2.18, 2.6627347)
 
-[node name="Spirit_marker" type="Marker3D" parent="." unique_id=580399797]
+[node name="spirit_marker" type="Marker3D" parent="." unique_id=580399797]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1607304, 2.18, 2.6630564)
 
-[node name="Rum_marker" type="Marker3D" parent="." unique_id=1427671851]
+[node name="rum_marker" type="Marker3D" parent="." unique_id=1427671851]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7157001, 3.12, 2.6627347)
 
-[node name="Vodka_marker" type="Marker3D" parent="." unique_id=868453499]
+[node name="vodka_marker" type="Marker3D" parent="." unique_id=868453499]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.161, 3.12, 2.663)
 
 [node name="HiddenRecipt" type="Marker3D" parent="." unique_id=1336744346]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.081238, 0.5536709, 3.426609)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.081238, 7.160312, 3.426609)
 
 [node name="Sprite3D" type="Sprite3D" parent="HiddenRecipt" unique_id=1983726433]
 transform = Transform3D(0.05, 0, 0, 0, 0.05, 0, 0, 0, 0.05, 0.02605009, -0.11582613, -0.21608734)
