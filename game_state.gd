@@ -18,6 +18,8 @@ var special_state : bool = true
 var night_paused : bool = false
 var can_end_night : bool = true
 var is_dialogue_open : bool = false
+var character_talking : Base_NPC
+
 
 func get_night_quota(night_number: int) -> float:
 	current_quota = BASE_QUOTA * float(night_number * night_number)

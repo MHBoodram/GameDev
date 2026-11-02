@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dxsody7drolfc"]
 
-[ext_resource type="Texture2D" uid="uid://dgu74fnngkwuu" path="res://Assets/NPC/Human/Loan_Sheet.png" id="1_3bvdc"]
+[ext_resource type="Texture2D" uid="uid://thn28muwxvfu" path="res://Assets/NPC/Human/Scott-Sheet.png" id="1_3bvdc"]
 [ext_resource type="Script" uid="uid://cimbp8umcicc6" path="res://NPC/base_npc.gd" id="2_1d4du"]
 [ext_resource type="Resource" uid="uid://1snr5r01nxfy" path="res://NPC/Resources/scott.tres" id="3_ahtfh"]
 [ext_resource type="PackedScene" uid="uid://sxpelqgf14ku" path="res://NPC/2D Subports/Patience.tscn" id="4_3bvdc"]
@@ -52,11 +52,15 @@ tracks/0/keys = {
 "values": [0]
 }
 
+[sub_resource type="Animation" id="Animation_lmq4y"]
+resource_name = "netural_open"
+
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_fidbr"]
 _data = {
 &"1": SubResource("Animation_1d4du"),
 &"2": SubResource("Animation_p0oii"),
-&"RESET": SubResource("Animation_tjil0")
+&"RESET": SubResource("Animation_tjil0"),
+&"netural_open": SubResource("Animation_lmq4y")
 }
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_yqpab"]
@@ -74,7 +78,7 @@ shaded = true
 alpha_cut = 3
 texture_filter = 0
 texture = ExtResource("1_3bvdc")
-hframes = 3
+hframes = 10
 script = ExtResource("2_1d4du")
 npc_resource = ExtResource("3_ahtfh")
 
