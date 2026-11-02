@@ -357,6 +357,7 @@ text = "#"
 horizontal_alignment = 1
 
 [node name="Quota" type="HBoxContainer" parent="Recipt/Recipt/VBoxContainer" unique_id=627586182]
+visible = false
 layout_mode = 2
 
 [node name="Quota" type="Label" parent="Recipt/Recipt/VBoxContainer/Quota" unique_id=1400098842]
@@ -446,6 +447,7 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="Marketing" type="VBoxContainer" parent="Marketing/Marketing/VBoxContainer/HBoxContainer" unique_id=526724308]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -495,7 +497,25 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
+[node name="Drinks" type="VBoxContainer" parent="Marketing/Marketing/VBoxContainer/HBoxContainer" unique_id=1125985594]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Title" type="Label" parent="Marketing/Marketing/VBoxContainer/HBoxContainer/Drinks" unique_id=1365951079]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_font_sizes/font_size = 75
+text = "Drinks"
+horizontal_alignment = 1
+
+[node name="GridContainer" type="GridContainer" parent="Marketing/Marketing/VBoxContainer/HBoxContainer/Drinks" unique_id=1445830124]
+layout_mode = 2
+size_flags_vertical = 3
+columns = 3
+
 [node name="Last" type="HBoxContainer" parent="Marketing/Marketing/VBoxContainer" unique_id=728995817]
+visible = false
 layout_mode = 2
 
 [node name="Total_cost" type="Label" parent="Marketing/Marketing/VBoxContainer/Last" unique_id=1684222620]

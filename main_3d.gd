@@ -150,11 +150,11 @@ func _check_upgrades() -> void:
 	pass
 
 func _check_unlocks_drinks() -> void:
+	#print(PlayerStats.unlocks)
 	for i in PlayerStats.unlocks["Drinks"]:
-		if(!PlayerStats.unlocks["Drinks"][i]):
-			return
-		var temp_scene_check = "res://Player/Drink/Liquids/liquid.tscn"
-		add_scene_once_drink(temp_scene_check, str(i))
+		if(PlayerStats.unlocks["Drinks"][i]):
+			var temp_scene_check = "res://Player/Drink/Liquids/liquid.tscn"
+			add_scene_once_drink(temp_scene_check, str(i))
 
 func _night_select() -> void:
 	match GameState.night:

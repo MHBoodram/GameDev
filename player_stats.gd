@@ -30,17 +30,28 @@ var upgrades : Dictionary = {
 	"Tools":
 		{
 			
+		},
+	"Marketing":
+		{
+			
 		}
 }
 
 var overall_marketing : float = 1.0
+
 var species_marketing : Dictionary = {
 	"Human": 1.0,
 	"Slime": 1.0,
+	"Fish": 0,
+	"Tiny": 0,
+	"Vampire": 0
 }
 var species_banners : Dictionary = {
 	"Human": false,
 	"Slime": false,
+	"Fish": false,
+	"Tiny": false,
+	"Vampire": false
 }
 
 var unlocks : Dictionary = {
@@ -54,11 +65,10 @@ var unlocks : Dictionary = {
 	},
 	"Ingredients":{
 		"Blood" : false,
+		#"Slime" : false,
+		"Fishing_Rod" : false,
+		"Mag" : false
 	},
-	"Tools":{
-		"Knife" : false,
-		"Fishing_Rod" : false
-	}
 }
 
 func _change_money(new_value: float) -> void:

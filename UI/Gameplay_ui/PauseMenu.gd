@@ -8,7 +8,7 @@ const START_MENU_SCENE := "res://UI/Starting/Starting_screen.tscn"
 @onready var quit_button: Button = $Border/Dim/CenterContainer/VBox2/QuitButton
 var which_menu = "Resume"
 var action_to_rebind = "Up"
-var waiting_keybind = true
+var waiting_keybind = false
 
 func _ready() -> void:
 	#DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)

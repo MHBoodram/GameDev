@@ -11,14 +11,26 @@ func setup(text: String, type_: String,own: Control,yes_3: bool):
 	pick_3 = yes_3
 	id = text
 	$Label.text = text
-	if(type != "Attachments"):
-		var texture = load("res://Assets/Items/Drinks/" +text+".png")
-		if(texture != null):
-			$AspectRatioContainer/TextureRect.texture = texture
-		else:
-			$AspectRatioContainer/TextureRect.texture = null
-	else:
-		$AspectRatioContainer/TextureRect.texture =load("res://assets/Weapons/Menu/Attachments/"+text+"_badge.png")
+	print(type)
+	match type:
+		"Marketing":
+			var texture = load("res://Assets/NPC/UI/" + text + ".png")
+			if(texture != null):
+				$AspectRatioContainer/TextureRect.texture = texture
+			else:
+				$AspectRatioContainer/TextureRect.texture = null
+		"Ingredient":
+			var texture = load("res://Assets/Items/Ingreidents/" +text+ ".png")
+			if(texture != null):
+				$AspectRatioContainer/TextureRect.texture = texture
+			else:
+				$AspectRatioContainer/TextureRect.texture = null
+		"Drinks":
+			var texture = load("res://Assets/Items/Drinks/" +text+ ".png")
+			if(texture != null):
+				$AspectRatioContainer/TextureRect.texture = texture
+			else:
+				$AspectRatioContainer/TextureRect.texture = null
 
 func _ready() -> void:
 	#$SelectionRect.hide()

@@ -2,6 +2,7 @@ extends CanvasLayer
 @export var menu_parent : Node3D
 var waiting_keybind := false
 var action_to_rebind : String
+
 func _ready() -> void:
 	$AnimationPlayer.speed_scale = 0.4
 

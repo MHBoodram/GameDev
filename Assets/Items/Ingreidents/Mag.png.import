@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c3ndr7tlrv7b"
-path="res://.godot/imported/rapunzel_vampire.png-2266dd5f882fe1ced162caf03163bc89.ctex"
+uid="uid://c0t5ao6a6d6sv"
+path="res://.godot/imported/Mag.png-ff8379113b901db9d7339f54a5cb98bd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/NPC/Vampires/rapunzel_vampire.png"
-dest_files=["res://.godot/imported/rapunzel_vampire.png-2266dd5f882fe1ced162caf03163bc89.ctex"]
+source_file="res://Assets/Items/Ingreidents/Mag.png"
+dest_files=["res://.godot/imported/Mag.png-ff8379113b901db9d7339f54a5cb98bd.ctex"]
 
 [params]
 

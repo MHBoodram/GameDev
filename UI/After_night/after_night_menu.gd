@@ -20,6 +20,10 @@ extends Control
 
 
 var shopping_cart: Dictionary = {
+	"Drinks":
+		{
+			
+		},
 	"Marketing":
 		{
 			
@@ -65,10 +69,11 @@ func _display_recipt() -> void:
 		$Animation.play("failed_night")
 		return
 	else:
+		PlayerStats.money = (PlayerStats.money - GameState.get_night_quota(GameState.night))
 		await get_tree().create_timer(1).timeout
 		_move_to_out($Recipt,false)
 		_move_to_in($Marketing,true)
-		_populate_grid_container_pick_3("Marketing",$Marketing/Marketing/VBoxContainer/HBoxContainer/Marketing/GridContainer)
+		_populate_grid_container_pick_3("Drinks",$Marketing/Marketing/VBoxContainer/HBoxContainer/Drinks/GridContainer)
 	
 
 func _move_to_in(node: ColorRect,big: bool = false):
@@ -106,22 +111,31 @@ func _go_next(node: Button):
 		shopping_cart[node_type][node_name] = temp_dic
 	if(node_type.to_lower() == "marketing"):
 		$Marketing/Marketing/VBoxContainer/HBoxContainer/Marketing.hide()
-		_populate_grid_container_pick_3("Ingredient",$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient/GridContainer)
+		_populate_grid_container_pick_3("Ingredients",$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient/GridContainer)
+		$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient.show()
+	elif(node_type.to_lower() == "drinks"):
+		$Marketing/Marketing/VBoxContainer/HBoxContainer/Drinks.hide()
+		_populate_grid_container_pick_3("Ingredients",$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient/GridContainer)
 		$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient.show()
 	else:
 		$Marketing/Marketing/VBoxContainer/HBoxContainer/Marketing.show()
 		$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient.show()
+		$Marketing/Marketing/VBoxContainer/Last.show()
 		_populate_grid_container("Marketing",$Marketing/Marketing/VBoxContainer/HBoxContainer/Marketing/GridContainer)
-		_populate_grid_container("Ingredient",$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient)
-		
+		_populate_grid_container("Ingredients",$Marketing/Marketing/VBoxContainer/HBoxContainer/Ingredient/GridContainer)
+
 func _populate_grid_container_pick_3(type: String, container: GridContainer):
 	while(container.get_children()):
 		container.remove_child(container.get_child(0))
 	var temp_array = []
-	if(type == "Ingrediants"):
+	print(type)
+	if(type == "Ingredients"):
 		temp_array = _produce_unlocks_pick_3_ingrediants()
-	else:
+	elif(type == "Marketing"):
 		temp_array = _produce_unlocks_marketing()
+	elif(type == "Drinks"):
+		temp_array = _produce_unlocks_drinks()
+	print(temp_array)
 	for item in temp_array:
 		var target_container = container
 		if item != "index":
@@ -130,23 +144,35 @@ func _populate_grid_container_pick_3(type: String, container: GridContainer):
 			item_slot.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_FILL
 			target_container.add_child(item_slot)
 
-func _produce_unlocks_pick_3_ingrediants() -> Array:
+func _produce_unlocks_drinks() -> Array:
 	var temp_array = []
+	#for x in PlayerStats.unlocks["Drinks"]:
+		#if(!PlayerStats.unlocks["Drinks"][x]):
+			#temp_array.push_back(x)
 	for x in PlayerStats.unlocks["Drinks"]:
 		if(!PlayerStats.unlocks["Drinks"][x]):
 			temp_array.push_back(x)
-		for y in PlayerStats.unlocks["Ingredients"]:
-			if(!PlayerStats.unlocks["Ingredients"][x]):
-				temp_array.push_back(x)
+		if(temp_array.size() >= 3):
+			break
+	return temp_array
+
+func _produce_unlocks_pick_3_ingrediants() -> Array:
+	var temp_array = []
+	#for x in PlayerStats.unlocks["Drinks"]:
+		#if(!PlayerStats.unlocks["Drinks"][x]):
+			#temp_array.push_back(x)
+	for x in PlayerStats.unlocks["Ingredients"]:
+		if(!PlayerStats.unlocks["Ingredients"][x]):
+			temp_array.push_back(x)
 		if(temp_array.size() >= 3):
 			break
 	return temp_array
 
 func _produce_unlocks_marketing() -> Array:
 	var temp_array = ["human"]
-	if(PlayerStats.unlocks["Tools"]["Knife"]):
+	if(PlayerStats.unlocks["Ingredients"]["Blood"]):
 		temp_array.push_back("vampire")
-	if(PlayerStats.unlocks["Tools"]["Fishing_Rod"]):
+	if(PlayerStats.unlocks["Ingredients"]["Fishing_Rod"]):
 		temp_array.push_back("fish")
 	return temp_array
 
@@ -275,7 +301,18 @@ func _on_next_night_pressed() -> void:
 	#if not ingredient_bought or not marketing_bought:
 		#status_label.text = "Mandatory purchases required: 1 ingredient and 1 marketing"
 		#return
-
+	print(shopping_cart)
+	for main_key in shopping_cart:
+		for sub_key in shopping_cart[main_key]:
+			match main_key:
+				"Marketing":
+					pass
+					#PlayerStats.species_marketing[]
+				_:
+					PlayerStats.unlocks[main_key][sub_key] = true
+					print("Main_key ",main_key)
+					print("Sub_key ",sub_key)
+	#print(PlayerStats.unlocks)
 	if GameState.night >= GameState.max_nights:
 		status_label.text = "VICTORY! You survived all 7 nights"
 		next_night_button.disabled = true
