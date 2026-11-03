@@ -83,7 +83,7 @@ func _look_behind() -> void:
 	tween.chain().tween_callback(func():
 		$Left_Button.disabled = true
 		$Right_Button.disabled = true
-		$Bottom_button.disabled = true
+		$Bottom_button.disabled = false
 		$Up_button.disabled = false
 		is_transitioning = false
 	)
@@ -153,6 +153,13 @@ func _on_right_button_pressed() -> void:
 	moving_around(true)
 
 func _on_bottom_button_pressed() -> void:
+	if(GameState.player):
+		if(GameState.player.return_tool() == "knife"):
+			GameState.main_node._period_game()
+			_in_down_minigame()
+			return
+	if(down):
+		return
 	bendover()
 
 func _out_down_minigame() -> void:

@@ -334,8 +334,11 @@ func execute_interaction(target: Ingredients) -> void:
 		target.call("start_shake", self)
 
 func _remove_displaying_list() -> void:
-	var tween = get_tree().create_tween().parallel()
-	tween.tween_property(liquid_box,"modulate:a",0.0,1.0)
+	if(liquid_box):
+		var alpha: float = liquid_box.modulate.a
+		if(alpha != 0):
+			var tween = get_tree().create_tween().parallel()
+			tween.tween_property(liquid_box,"modulate:a",0.0,1.0)
 
 
 

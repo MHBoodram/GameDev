@@ -428,7 +428,7 @@ menu_parent = NodePath("../..")
 [node name="Hand" type="Sprite2D" parent="Node2D/Setting" unique_id=507638969]
 top_level = true
 texture = ExtResource("6_v0ngs")
-hframes = 9
+hframes = 11
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Node2D/Setting/Hand" unique_id=735893413]
 libraries/ = SubResource("AnimationLibrary_tclvf")

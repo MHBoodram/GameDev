@@ -8,6 +8,7 @@ var summoning : bool = false
 var icup_spawn : String = "shot_glass"
 var in_pour_zone : Area3D
 var in_game : bool = false
+var tool_in_hand : String = "hand"
 var in_game_drinks : Dictionary = \
 {
 	"Drink" : {"Node" : Node3D, "position" : Vector3.ZERO},
@@ -39,20 +40,35 @@ func _force_cursor_image(move_to: Vector3) -> void:
 func _force_mouse(move_to: Vector3) -> void:
 	get_viewport().warp_mouse($Camera3D.unproject_position(move_to))
 
+func _change_tool(change: String) -> void:
+	tool_in_hand = change
+	_update_hand("idle")
+
+func return_tool() -> String:
+	return tool_in_hand
+
 func _update_hand(change: String) -> void:
-	match change:
-		"interact":
-			if($GameplayUi/Hand/AnimationPlayer.current_animation != "interact"):
-				$GameplayUi/Hand/AnimationPlayer.play("interact")
-			return
-		"holding":
-			if($GameplayUi/Hand/AnimationPlayer.current_animation != "hold"):
-				$GameplayUi/Hand/AnimationPlayer.play("hold")
-			return
-		_:
-			if($GameplayUi/Hand/AnimationPlayer.current_animation != "idle"):
-				$GameplayUi/Hand/AnimationPlayer.play("idle")
-			return
+	match tool_in_hand:
+		"hand":
+			match change:
+				"interact":
+					if($GameplayUi/Hand/AnimationPlayer.current_animation != "interact"):
+						$GameplayUi/Hand/AnimationPlayer.play("interact")
+					return
+				"holding":
+					if($GameplayUi/Hand/AnimationPlayer.current_animation != "hold"):
+						$GameplayUi/Hand/AnimationPlayer.play("hold")
+					return
+				_:
+					if($GameplayUi/Hand/AnimationPlayer.current_animation != "idle"):
+						$GameplayUi/Hand/AnimationPlayer.play("idle")
+					return
+		"knife":
+			match change:
+				_:
+					if($GameplayUi/Hand/AnimationPlayer.current_animation != "knife_idle"):
+						$GameplayUi/Hand/AnimationPlayer.play("knife_idle")
+					return
 
 func get_mouse_world_position(camera: Camera3D, plane_y: float) -> Vector3:
 	var mouse_pos = get_viewport().get_mouse_position()
@@ -147,6 +163,8 @@ func _perfect_pour(drink : Drinks, glass : Glasses) -> void:
 	await tween.finished
 	await get_tree().process_frame
 	drink.look_at($Camera3D.global_position)
+
+
 
 func _out_of_game() -> void:
 	in_game = false

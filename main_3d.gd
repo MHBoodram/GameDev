@@ -23,6 +23,7 @@ var sky_material: PanoramaSkyMaterial
 @export var night_hdri_energy: float = 0.025
 @export var night_sun_pitch_degrees: float = 45.0
 @export var night_fog_albedo: Color = Color(0.04, 0.06, 0.12, 1.0)
+@onready var blood_game = preload("res://Player/Drink/Minigame/Blood/BloodMinigame.tscn")
 
 func _ready() -> void:
 	MusicPlayer.play_game()
@@ -156,7 +157,10 @@ func _check_unlocks_drinks() -> void:
 		if(PlayerStats.unlocks["Drinks"][i]):
 			var temp_scene_check = "res://Player/Drink/Liquids/liquid.tscn"
 			add_scene_once_drink(temp_scene_check, str(i))
-
+	if(PlayerStats.unlocks["Ingredients"]["Blood"]):
+		var temp_scene_check = "res://Player/Drink/Liquids/liquid.tscn"
+		add_scene_once_drink(temp_scene_check, str("blood"))
+	
 func _night_select() -> void:
 	match GameState.night:
 		1:
@@ -365,3 +369,13 @@ func _give_drink(recipt: Node3D, drink:Glasses, seat: int) -> void:
 	tween.tween_property(recipt,"global_position",seat_marker.global_position,0.5)
 	tween.tween_property(drink,"global_position",seat_marker.global_position,0.5)
 	tween.tween_property(recipt,"global_position",$HiddenRecipt.global_position,0.5)
+
+func _period_game() -> void:
+	var blood_scene = blood_game.instantiate()
+	add_child(blood_scene)
+	player.in_game = true
+
+func _add_blood(blood: float) -> void:
+	var blood_bottle = get_node_or_null("blood")
+	if(blood_bottle):
+		blood_bottle.current_liquid += blood

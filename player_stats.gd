@@ -64,7 +64,7 @@ var unlocks : Dictionary = {
 		"whiskey" : false,
 	},
 	"Ingredients":{
-		"Blood" : false,
+		"Blood" : true,
 		#"Slime" : false,
 		"Fishing_Rod" : false,
 		"Mag" : false

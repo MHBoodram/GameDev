@@ -7,7 +7,7 @@ var original_position : Marker3D
 var is_pouring : bool = false
 @export var size : float = 50.0
 var in_game : bool = false
-
+var current_liquid : float = size
 @export var hold_lift : float = 0.2
 @export var snap_to_glass : bool = true
 @export var snap_offset : Vector3 = Vector3(0, 0.5, 0)
@@ -86,6 +86,7 @@ func _on_area_3d_input_event(camera_node: Node, event: InputEvent, event_pos: Ve
 			while Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.get_action_strength("Left_click") > 0.0:
 				if is_instance_valid(pouring_into):
 					pouring_into._pouring(liquid_resource.id, 0.25)
+					current_liquid -= 0.25
 				await get_tree().create_timer(0.1).timeout
 		$CPUParticles3D.emitting = false
 		rotation_degrees.z = 0
