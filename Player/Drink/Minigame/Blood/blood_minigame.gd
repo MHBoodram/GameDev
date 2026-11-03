@@ -26,9 +26,33 @@ func _finish_game() -> void:
 	GameState.player.in_game = false
 	queue_free()
 
-func _return_blood(blood: float = 0) -> void:
+func _return_blood(blood: float = 0,node_position: Vector2 = Vector2.ZERO) -> void:
+	var particle = make_red_particles_2d()
+	particle.global_position = node_position
+	add_child(particle)
+	var tween = create_tween()
+	tween.tween_property(particle,"global_position",$Marker2D.global_position,2)
+	await tween.finished
+	particle.queue_free()
 	blood_cells_obtain += blood
 	$Label.text = "Total Blood: " + str(blood_cells_obtain)
+	
+func make_red_particles_2d() -> CPUParticles2D:
+	var p := CPUParticles2D.new()
+	
+	p.emitting = true
+	#p.scale = Vector2(5,5)
+	p.amount = 15
+	p.lifetime = 0.6
+	p.direction = Vector2(0, 0)
+	#p.spread = 8.0
+	#p.initial_velocity_min = 100.0
+	#p.initial_velocity_max = 150.0
+	#p.gravity = Vector2(0, 400)
+	p.scale_amount_min = 15.0
+	p.color = Color.RED
+	
+	return p
 
 func _spawn_blood_drops()-> void:
 	var padding := 50.0
