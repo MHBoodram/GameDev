@@ -132,7 +132,7 @@ func get_species_spawn_weight(species: String) -> float:
 		"Vampire":
 			base_weight = 2.0
 		_:
-			base_weight = 10.0
+			base_weight = 5.0
 	
 	var marketing_multiplier: float = species_marketing.get(key, 1.0)
 	var banner_multiplier: float = 2.0 if species_banners.get(key, false) else 1.0

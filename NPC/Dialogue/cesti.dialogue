@@ -21,7 +21,7 @@ do _give_payment()
 
 ~ Negative
 set emo = "mad"
-Cesti: I didn't live 1000 years to drink total rubbish
+Cesti: I didn't live 1000 years to drink total sludge
 do _give_payment()
 => END
 
@@ -31,5 +31,5 @@ do _give_payment()
 => END
 
 ~ TimeWarning1
-Cesti: Damn bartender, you making the spirits by hand or something? What's taking so long
+Cesti: I've been alive for millenia, I will not wait any longer for a good drink
 => END
