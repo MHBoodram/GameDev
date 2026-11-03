@@ -34,6 +34,7 @@ func _ready() -> void:
 	DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
 	_check_unlocks_drinks()
 	_setup_environment_day_night()
+	SettingState.apply_world_environment()
 	night_timer.timeout.connect(_on_night_time_timeout)
 	PlayerStats.previous_money = PlayerStats.money
 	_setup_shift()
@@ -100,6 +101,7 @@ func _setup_environment_day_night() -> void:
 	initial_sun_energy = sun.light_energy
 	if world_environment and world_environment.environment:
 		world_environment.environment = world_environment.environment.duplicate()
+		world_environment.set_meta("original_env", world_environment.environment)
 		initial_fog_albedo = world_environment.environment.volumetric_fog_albedo
 		if world_environment.environment.sky:
 			world_environment.environment.sky = world_environment.environment.sky.duplicate()

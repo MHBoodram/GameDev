@@ -406,6 +406,12 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "Full Screen"
 
+[node name="World_Environment" type="CheckButton" parent="Inside_paper/Left_color/Left_Page/Video" unique_id=46790682]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+button_pressed = true
+text = "World Environment"
+
 [node name="Audio_Label" type="Label" parent="Inside_paper/Left_color/Left_Page" unique_id=235630147]
 layout_mode = 2
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
@@ -752,6 +758,7 @@ visible = false
 libraries/ = SubResource("AnimationLibrary_5lsp1")
 
 [connection signal="pressed" from="Inside_paper/Left_color/Left_Page/Video/Full_Screen" to="." method="_on_full_screen_pressed"]
+[connection signal="pressed" from="Inside_paper/Left_color/Left_Page/Video/World_Environment" to="." method="_on_world_environment_pressed"]
 [connection signal="value_changed" from="Inside_paper/Left_color/Left_Page/Audio_Container/Master/Master_slider" to="." method="_on_master_slider_value_changed"]
 [connection signal="value_changed" from="Inside_paper/Left_color/Left_Page/Audio_Container/UI/UI_slider" to="." method="_on_ui_slider_value_changed"]
 [connection signal="value_changed" from="Inside_paper/Left_color/Left_Page/Audio_Container/Music/Music_slider" to="." method="_on_music_slider_value_changed"]

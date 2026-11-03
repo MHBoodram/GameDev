@@ -33,6 +33,7 @@ func _load_settings() -> void:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	else:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	$Inside_paper/Left_color/Left_Page/Video/World_Environment.button_pressed = SettingState.setting_dic["Video"].get("WorldEnvironment", true)
 	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Right/Right.text = SettingState._key_to_string("Right")
 	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Left/Left.text = SettingState._key_to_string("Left")
 	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Down/Down.text = SettingState._key_to_string("Down")
@@ -106,6 +107,9 @@ func _on_full_screen_pressed() -> void:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 	SettingState.setting_dic["Video"]["FullScreen"] = $Inside_paper/Left_color/Left_Page/Video/Full_Screen.button_pressed
 
+func _on_world_environment_pressed() -> void:
+	SettingState.setting_dic["Video"]["WorldEnvironment"] = $Inside_paper/Left_color/Left_Page/Video/World_Environment.button_pressed
+	SettingState.apply_world_environment()
 
 func _on_up_pressed() -> void:
 	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Up/Up.text = "awaiting"
@@ -164,3 +168,4 @@ func _on_control_reset_pressed() -> void:
 	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Down/Down.text = "S"
 	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Up/Up.text = "W"
 	SettingState._reset_to_default_controls()
+	

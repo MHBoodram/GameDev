@@ -332,6 +332,12 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "Full Screen"
 
+[node name="World_Environment" type="CheckButton" parent="CenterContainer/VBoxContainer/Video" unique_id=1565457150]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+button_pressed = true
+text = "World Environment"
+
 [node name="Controls" type="VBoxContainer" parent="CenterContainer/VBoxContainer" unique_id=656008568]
 layout_mode = 2
 theme_override_constants/separation = 7
@@ -467,6 +473,9 @@ libraries/ = SubResource("AnimationLibrary_vvki5")
 [connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Video/Full_Screen" to="." method="_on_master_slider_mouse_entered"]
 [connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Video/Full_Screen" to="." method="_on_master_slider_mouse_exited"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/Video/Full_Screen" to="." method="_on_full_screen_pressed"]
+[connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Video/World_Environment" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Video/World_Environment" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/Video/World_Environment" to="." method="_on_world_environment_pressed"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Up/Up" to="." method="_on_change_up_pressed"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Down/Down" to="." method="_on_change_down_pressed"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Left/Left" to="." method="_on_change_left_pressed"]
