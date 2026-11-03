@@ -215,7 +215,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_area_3d_mouse_entered() -> void:
 	if not is_balls_dragging:
 		current_hovered_target = self
-		if active_selected_item != null and active_selected_item != self:
+		if active_selected_item != null and active_selected_item != self :
 			if active_selected_item.can_interact_with(self):
 				set_highlight(true)
 		else:

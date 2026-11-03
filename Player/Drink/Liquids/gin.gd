@@ -136,7 +136,7 @@ func can_interact_with(target: Ingredients) -> bool:
 	return target is Glasses and not (target is Drinks)
 
 func execute_interaction(target: Ingredients) -> void:
-	if can_interact_with(target):
+	if can_interact_with(target) && target.is_in_group("glass"):
 		pouring_into = target
 		target.set_highlight(false)
 		_pouring_game()

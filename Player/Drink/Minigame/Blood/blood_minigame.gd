@@ -2,8 +2,8 @@ extends CanvasLayer
 @onready var blood_cells_scene = load("res://Player/Drink/Minigame/Blood/blood_cells.tscn")
 var blood_cells_obtain : float = 0
 var blood_cells_total = 0
-@onready var inside_glass = $Inside
-@onready var outside_glass = $Inside/Outside
+#@onready var inside_glass = $Inside
+#@onready var outside_glass = $Inside/Outside
 
 
 func _ready() -> void:
@@ -28,6 +28,7 @@ func _finish_game() -> void:
 
 func _return_blood(blood: float = 0) -> void:
 	blood_cells_obtain += blood
+	$Label.text = "Total Blood: " + str(blood_cells_obtain)
 
 func _spawn_blood_drops()-> void:
 	var padding := 50.0
