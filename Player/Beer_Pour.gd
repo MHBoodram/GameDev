@@ -12,7 +12,7 @@ func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: V
 		#var areas = $Coutner/PourArea.get_overlapping_areas()
 		keg_water_particle.emitting = true
 		while(Input.get_action_strength("Left_click")):
-			
+
 			#for x in areas:
 				#print(x.is_in_group("glass"))
 				#if(x.is_in_group("glass")):

@@ -303,8 +303,65 @@ func _on_area_3d_area_entered(area: Area3D) -> void:
 func can_interact_with(target: Ingredients) -> bool:
 	if target and target.is_in_group("trash"):
 		return true
+	if target and target.is_in_group("shaker"):
+		return can_be_shaken()
 	return false
 
 func execute_interaction(target: Ingredients) -> void:
 	if target and target.is_in_group("trash"):
 		_delete()
+	elif target and target.is_in_group("shaker") and can_be_shaken():
+		target.call("start_shake", self)
+
+
+# ------- below is the shaker minigame stuff --------
+
+var _mixed_signature : String = ""
+
+func get_unique_liquids_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for l in liquids:
+		var id: String = l[0]
+		if not ids.has(id):
+			ids.append(id)
+	return ids
+
+func _liquid_signature() -> String:
+	var parts: PackedStringArray = []
+	for l in liquids:
+		parts.append("%s:%.3f" % [l[0], float(l[1])])
+	return ",".join(parts)
+
+func can_be_shaken() -> bool:
+	return not in_game and not is_being_served and not is_mixed() and get_unique_liquids_ids().size() >= 2
+
+func is_mixed() -> bool:
+	return _mixed_signature != "" and _mixed_signature == _liquid_signature()
+
+func mark_mixed() -> void:
+	if get_unique_liquids_ids().size() < 2:
+		return
+	_mixed_signature = _liquid_signature()
+	_rebuild_liquid_gradient()
+
+func get_mixed_ingredients() -> Array[String]:
+	var result: Array[String] = []
+	if is_mixed():
+		result = get_unique_liquids_ids()
+	return result
+
+func _mixed_color() -> Color:
+	var total: float = 0.0
+	var r: float = 0.0
+	var g: float = 0.0
+	var b: float = 0.0
+	for l in liquids:
+		var amount: float = float(l[1])
+		var col: Color = LIQUID_COLOR.get(l[0], Color.WHITE)
+		r += col.r * amount
+		g += col.g * amount
+		b += col.b * amount
+		total += amount
+	if total <= 0.0:
+		return Color.WHITE
+	return Color(r/total, g/total, b/total, 1.0)

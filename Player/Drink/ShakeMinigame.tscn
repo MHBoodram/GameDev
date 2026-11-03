@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://dy56gs8tkqqw2"]
+
+[ext_resource type="Script" uid="uid://cqbc1yklw5a1h" path="res://Player/Drink/ShakerMinigame.gd" id="1_w14ts"]
+
+[node name="ShakeMinigame" type="CanvasLayer" unique_id=2090013469]
+layer = 50
+script = ExtResource("1_w14ts")
