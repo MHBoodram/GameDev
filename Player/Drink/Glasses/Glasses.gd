@@ -4,6 +4,7 @@ class_name Glasses
 @export var size : float = 1.0
 @export var area_body : CollisionShape3D
 @export var sprite : Sprite3D
+@export var drink_list_label : Label
 var total_liquids : float = 0
 var current_position = 0
 var in_game: bool = false
@@ -237,6 +238,11 @@ func _rebuild_liquid_gradient() -> void:
 		if amount <= 0.0:
 			continue
 		var col: Color = LIQUID_COLOR.get(liquid_id, Color.WHITE)
+		if(drink_list_label != null):
+			drink_list_label.material.set_shader_parameter("base_color", col)
+			drink_list_label.modulate.a = 1
+			drink_list_label.text = str(liquids)
+	
 		colors.append(col)
 		current_pos += amount / total_liquids
 		if i > 0 and current_pos < 1.0:
@@ -246,7 +252,7 @@ func _rebuild_liquid_gradient() -> void:
 		colors.append(colors[colors.size() - 1] if colors.size() > 0 else Color.WHITE)
 	while offsets.size() < colors.size():
 		offsets.append(1.0)
-
+	
 	liquid_gradient.offsets = offsets
 	liquid_gradient.colors = colors
 
@@ -283,6 +289,7 @@ func _in_game():
 func _out_of_game():
 	in_game = false
 	area_body.disabled = false
+	_remove_displaying_list()
 
 func _visuals_change(liquids_num: float,liquid_name: String,new: bool) -> void:
 	_rebuild_liquid_gradient()
@@ -308,3 +315,7 @@ func can_interact_with(target: Ingredients) -> bool:
 func execute_interaction(target: Ingredients) -> void:
 	if target and target.is_in_group("trash"):
 		_delete()
+
+func _remove_displaying_list() -> void:
+	var tween = get_tree().create_tween().parallel()
+	tween.tween_property(drink_list_label,"modulate:a",0.0,1.0)
