@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://4sg263uyig2d" path="res://Assets/Items/outside_shot_glass.png" id="7_wk5cn"]
 [ext_resource type="Texture2D" uid="uid://bxv0tx0mkbbhx" path="res://Assets/UI/peter.png" id="9_n776p"]
 [ext_resource type="PackedScene" uid="uid://cm05k37ejgq5p" path="res://UI/Gameplay_ui/Debug_Menu.tscn" id="10_wk5cn"]
+[ext_resource type="Texture2D" uid="uid://xnqyp4q8b5va" path="res://Assets/3D_textures/toposcope_sunset_2k.hdr" id="14_pka58"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_v88eg"]
 radius = 0.12624745
@@ -38,7 +39,17 @@ albedo_color = Color(0.9, 0.15, 0.15, 0.85)
 material = SubResource("StandardMaterial3D_trash_red")
 size = Vector3(0.45, 0.015, 0.45)
 
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_2tkpp"]
+panorama = ExtResource("14_pka58")
+
+[sub_resource type="Sky" id="Sky_pka58"]
+sky_material = SubResource("PanoramaSkyMaterial_2tkpp")
+
 [sub_resource type="Environment" id="Environment_ris41"]
+background_mode = 2
+background_energy_multiplier = 0.7
+sky = SubResource("Sky_pka58")
+sky_rotation = Vector3(0, -2.120575, 0)
 
 [node name="Main3d" type="Node3D" unique_id=692509091]
 script = ExtResource("1_8iyjh")

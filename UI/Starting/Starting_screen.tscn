@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://cmfpp3ot4ndl3" path="res://Assets/UI/Logo.png" id="4_8bcmw"]
 [ext_resource type="PackedScene" uid="uid://dmvyu064q12ba" path="res://UI/Starting/setting.tscn" id="5_vdsfn"]
 [ext_resource type="Texture2D" uid="uid://6sfbebk1yfeh" path="res://Assets/UI/Hand-Sheet.png" id="6_v0ngs"]
+[ext_resource type="Texture2D" uid="uid://xnqyp4q8b5va" path="res://Assets/3D_textures/toposcope_sunset_2k.hdr" id="7_tclvf"]
 
 [sub_resource type="Animation" id="Animation_pa3t7"]
 length = 0.001
@@ -345,6 +346,18 @@ _data = {
 &"interact": SubResource("Animation_vlldt")
 }
 
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_tclvf"]
+panorama = ExtResource("7_tclvf")
+
+[sub_resource type="Sky" id="Sky_pka58"]
+sky_material = SubResource("PanoramaSkyMaterial_tclvf")
+
+[sub_resource type="Environment" id="Environment_vom8s"]
+background_mode = 2
+background_energy_multiplier = 0.7
+sky = SubResource("Sky_pka58")
+sky_rotation = Vector3(0, -2.120575, 0)
+
 [node name="StartingScreen" type="Node3D" unique_id=1561659538]
 script = ExtResource("1_aj1h6")
 
@@ -432,6 +445,16 @@ hframes = 9
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Node2D/Setting/Hand" unique_id=735893413]
 libraries/ = SubResource("AnimationLibrary_tclvf")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1113147637]
+environment = SubResource("Environment_vom8s")
+
+[node name="Sun" type="DirectionalLight3D" parent="WorldEnvironment" unique_id=377753478]
+transform = Transform3D(-0.95751554, -0.16707794, 0.23505107, -0.08849062, 0.94597405, 0.3119334, -0.2744694, 0.27788123, -0.9205698, 6.6585455, 3.4872513, -7.5352235)
+light_color = Color(0.9999997, 0.72599864, 0.20498002, 1)
+light_energy = 1.5
+light_volumetric_fog_energy = 3.0
+shadow_enabled = true
 
 [connection signal="input_event" from="Menu2/Menu3/Play" to="." method="_on_area_3d_input_event"]
 [connection signal="mouse_entered" from="Menu2/Menu3/Play" to="." method="_on_play_mouse_entered"]
