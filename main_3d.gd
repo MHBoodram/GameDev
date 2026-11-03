@@ -25,6 +25,7 @@ var sky_material: PanoramaSkyMaterial
 @export var night_fog_albedo: Color = Color(0.04, 0.06, 0.12, 1.0)
 
 func _ready() -> void:
+	MusicPlayer.play_game()
 	add_child(PAUSE_MENU.instantiate())
 	GameState.player = $Player
 	GameState.main_node = self

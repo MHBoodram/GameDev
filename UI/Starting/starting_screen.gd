@@ -3,6 +3,7 @@ extends Node3D
 @onready var start_menu = get_node("Menu2/Menu3/Viewport/SubViewport/StartMenu")
 
 func _ready() -> void:
+	MusicPlayer.play_menu()
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 	await SettingState._loading_setting()
 	$Node2D/Setting._setting_dictionary_start()
@@ -39,7 +40,7 @@ func _moving_2d_to_3d():
 	$AnimationPlayer.play_backwards("move_setting")
 	$Node2D/Setting._moving(true)
 	await $AnimationPlayer.animation_finished
-	
+
 
 @warning_ignore("unused_parameter")
 func _on_area_3d_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
@@ -56,12 +57,12 @@ func _on_setting_mouse_entered() -> void:
 
 func _on_play_mouse_exited() -> void:
 	_update_hand("idle")
-	
+
 	start_menu._remove_hover("Play")
 
 func _on_setting_mouse_exited() -> void:
 	_update_hand("idle")
-	
+
 	start_menu._remove_hover("Setting")
 
 

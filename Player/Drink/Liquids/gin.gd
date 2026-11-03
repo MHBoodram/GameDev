@@ -15,6 +15,7 @@ var in_game : bool = false
 
 var _grab_depth : float = 0.0
 var _depth_now : float = 0.0
+var _smooth_pos : Vector3 = Vector3.ZERO
 var _return_tween : Tween
 
 func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
@@ -51,9 +52,12 @@ func _follow_cursor(delta: float) -> void:
 		var mouse_pos := get_viewport().get_mouse_position()
 		_depth_now = lerpf(_depth_now, _grab_depth - hold_lift, 1.0 - exp(-12.0 * delta))
 		target = camera.project_position(mouse_pos, _depth_now)
-	global_position = global_position.lerp(target,1.0 - exp(-follow_speed * delta))
+	_smooth_pos = _smooth_pos.lerp(target, 1.0 - exp(-follow_speed * delta))
+	global_position = _smooth_pos
+	#global_position = global_position.lerp(target,1.0 - exp(-follow_speed * delta))
 
 func _capture_grab_depth() -> void:
+	_smooth_pos = global_position
 	var cam := camera if camera else get_viewport().get_camera_3d()
 	if cam == null:
 		return
