@@ -26,7 +26,7 @@ const FONT_PATH := "res://Assets/Font/fs-a-pixel-away.otf"
 @export var screen_position : Vector2 = Vector2(0.78,0.5) # Bar position as a fraction of the screen
 @export var icon_texture : Texture2D # for shaker sprite
 @export var icon_size : Vector2 = Vector2(56,56)
-@export var pump_key : Key = KEY_SPACE
+@export var pump_key : Key = KEY_SPACE 
 
 var _fill : float = 0.0 # bar level that is drawn (0..1)
 var _target_fill : float = 0.0 # level that the bar is headed to
@@ -126,6 +126,18 @@ func _build_ui() -> void:
 	meter_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(meter_bg)
 
+	#meter_bg.clip_contents = true # added this so nothing happens outside of the bar
+	#_progress_fill = ColorRect.new()
+	#_progress_fill.color = Color(1.0, 0.82, 0.2, 1.0)
+	#_progress_fill.size = Vector2(meter_w, bar_size.y)
+	#_progress_fill.position = Vector2.ZERO
+	#_progress_fill.pivot_offset = Vector2(0.0, bar_size.y)
+	#_progress_fill.scale = Vector2(1.0,0.0)
+	#_progress_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	#meter_bg.add_child(_progress_fill)
+	
+	meter_bg.clip_contents = true
+
 	_progress_fill = ColorRect.new()
 	_progress_fill.color = Color(1.0, 0.82, 0.2, 1.0)
 	_progress_fill.size = Vector2(meter_w, 0.0)
@@ -191,7 +203,9 @@ func _process(delta: float) -> void:
 func _refresh(in_zone: bool) -> void:
 	_icon.position.y = _fill_to_y(_fill) - icon_size.y * 0.5
 	_icon.modulate = Color(0.7, 1.0, 0.7) if in_zone else Color.WHITE
-	_progress_fill.size.y = bar_size.y - _progress_fill.size.y
+	_progress_fill.size.y = bar_size.y * _progress
+	_progress_fill.position.y = bar_size.y - _progress_fill.size.y
+	
 	var text := "Tap SPACE to shake"
 	if time_limit > 0.0:
 		text += "	%ds" % ceili(maxf(time_limit - _elapsed, 0.0))
