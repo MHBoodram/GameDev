@@ -145,21 +145,18 @@ func _finish_drag_or_click() -> void:
 	if GameState.player:
 		GameState.player._update_hand("idle")
 
-	if _has_dragged:
-		var target: Ingredients = current_hovered_target
-		if not target:
-			target = get_interactable_under_mouse(get_viewport(), get_rid())
-		if target and can_interact_with(target):
-			current_hovered_target = null
-			target.set_highlight(false)
-			execute_interaction(target)
-		else:
-			if current_hovered_target:
-				current_hovered_target.set_highlight(false)
-				current_hovered_target = null
-			on_drop_failed()
+	var target: Ingredients = current_hovered_target
+	if not target:
+		target = get_interactable_under_mouse(get_viewport(), get_rid())
+	if target and can_interact_with(target):
+		current_hovered_target = null
+		target.set_highlight(false)
+		execute_interaction(target)
 	else:
-		_handle_click_selection()
+		if current_hovered_target:
+			current_hovered_target.set_highlight(false)
+			current_hovered_target = null
+		on_drop_failed()
 	_has_dragged = false
 
 func _get_drag_point(mouse_pos: Vector2, plane_y: float) -> Variant:
