@@ -19,7 +19,7 @@ func setup(text: String, type_: String,own: Control,yes_3: bool):
 				$AspectRatioContainer/TextureRect.texture = texture
 			else:
 				$AspectRatioContainer/TextureRect.texture = null
-		"Ingredient":
+		"Ingredients":
 			var texture = load("res://Assets/Items/Ingreidents/" +text+ ".png")
 			if(texture != null):
 				$AspectRatioContainer/TextureRect.texture = texture

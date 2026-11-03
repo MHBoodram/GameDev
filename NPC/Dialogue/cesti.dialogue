@@ -4,31 +4,32 @@ do _add_recipt()
 set speaking_title = "mid"
 => END
 ~ mid
-Scott: GET IT DONE
+Cesti: I am awaiting my drink sir
 => END
 ~ finish
-Scott: Finished
+Cesti: Finished
 => END
-#~ introduction
 
-#Scott: Yo must be one of those 'pop-ups' that they talk about being all the rage in the capital. Strange uniform, but I'm not up to what's trendy right now
-#- Yeah man, welcome to Interstate Paradise, uhm I'll make your first drink free if you tell me what's going on around here?
-#	Scott: Oh sweet, I mean there's not much to say if I'm being honest. Just another weekend 
-#- Hey kind of a weird question, but do you know where we are right now?
-#	Scott: Yeah man, is this a trick question? Or are you on shroomdrops right now... be honest
-#	Scott: Oh damn sorry to hear, yeah we're in Demsem right now... that should pretty much cover it?
-#	Oh ok yeah that checks out, thanks
-#=> END
+
 
 ~ Positive
-Scott: Solid stuff, Thanks man
+set emo = "happy"
+Cesti: Didn't know ambrosia was made here
+Cesti: I thank you for the service sir
+do _give_payment()
 => END
+
 ~ Negative
-Scott: Damn this taste like crap, I'm not tipping
+set emo = "mad"
+Cesti: I didn't live 1000 years to drink total rubbish
+do _give_payment()
 => END
-~ TimeWarning1
-Scott: Damn bartender, you making the spirits by hand or something? What's taking so long
-=> END
+
 ~ Mid
-Bartender, you got anything better in the back?
+Cesti: This isn't really to my like good sir
+do _give_payment()
+=> END
+
+~ TimeWarning1
+Cesti: Damn bartender, you making the spirits by hand or something? What's taking so long
 => END

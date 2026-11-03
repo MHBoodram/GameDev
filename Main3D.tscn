@@ -15,7 +15,7 @@
 [ext_resource type="PackedScene" uid="uid://cm05k37ejgq5p" path="res://UI/Gameplay_ui/Debug_Menu.tscn" id="10_wk5cn"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_v88eg"]
-radius = 0.23796713
+radius = 0.12624745
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_p0p6f"]
 size = Vector3(0.81274414, 0.7680054, 0.17028809)
@@ -178,10 +178,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13251233, 2, 0.6376586)
 visible = false
 
 [node name="gin_marker" type="Marker3D" parent="." unique_id=495649145]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7157001, 2.18, 2.6627347)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7157001, 2.3383586, 2.6627347)
 
 [node name="spirit_marker" type="Marker3D" parent="." unique_id=580399797]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1607304, 2.18, 2.6630564)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1607304, 2.3383586, 2.6630564)
 
 [node name="rum_marker" type="Marker3D" parent="." unique_id=1427671851]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7157001, 3.12, 2.6627347)
