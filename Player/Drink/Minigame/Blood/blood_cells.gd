@@ -15,5 +15,5 @@ func _on_pressed() -> void:
 	var blood_donation = maxf(0,5 - abs($Button.scale.x - 0.8)*2) #Screw the players
 	parent._check_all_finished()
 
-	parent._return_blood(blood_donation)
+	parent._return_blood(blood_donation,global_position)
 	queue_free()

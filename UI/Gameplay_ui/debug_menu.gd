@@ -37,3 +37,8 @@ func _on_remove_npc_pressed() -> void:
 
 func _on_camera_shake_pressed() -> void:
 	camera.add_shake(5)
+
+
+func _on_add_npc_specific_pressed() -> void:
+	var index = $TextureRect/VBoxContainer/HBoxContainer/HBoxContainer/OptionButton.selected
+	GameState.main_node._add_npc_specific($TextureRect/VBoxContainer/HBoxContainer/HBoxContainer/OptionButton.get_item_text(index))

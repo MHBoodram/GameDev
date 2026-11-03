@@ -308,6 +308,12 @@ func _on_next_night_pressed() -> void:
 				"Marketing":
 					pass
 					#PlayerStats.species_marketing[]
+				"Ingredients":
+					PlayerStats.unlocks[main_key][sub_key] = true
+					match sub_key:
+						"Blood":
+							PlayerStats.species_marketing["Vampire"] = 1.0
+	
 				_:
 					PlayerStats.unlocks[main_key][sub_key] = true
 					print("Main_key ",main_key)

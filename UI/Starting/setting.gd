@@ -10,11 +10,13 @@ func _setting_dictionary_start() -> void:
 	$CenterContainer/VBoxContainer/Audio_Container/Master/Master_slider.value = SettingState.setting_dic["Audio"]["Master_value"]
 	$CenterContainer/VBoxContainer/Audio_Container/UI/UI_slider.value = SettingState.setting_dic["Audio"]["UI_value"]
 	$CenterContainer/VBoxContainer/Audio_Container/Music/Music_slider.value = SettingState.setting_dic["Audio"]["Music_value"]
-	$CenterContainer/VBoxContainer/Video/Full_Screen.button_pressed = SettingState.setting_dic["Video"]["FullScreen"]
-	if $CenterContainer/VBoxContainer/Video/Full_Screen.button_pressed:
+	$CenterContainer/VBoxContainer/Video/HBoxContainer/Full_Screen.button_pressed = SettingState.setting_dic["Video"]["FullScreen"]
+	if $CenterContainer/VBoxContainer/Video/HBoxContainer/Full_Screen.button_pressed:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	else:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	$CenterContainer/VBoxContainer/Video/HBoxContainer/World_Environment.button_pressed = SettingState.setting_dic["Video"].get("WorldEnvironment", true)
+	SettingState.apply_world_environment()
 	$CenterContainer/VBoxContainer/Controls/VBoxContainer/Right/Right.text = SettingState._key_to_string("Right")
 	$CenterContainer/VBoxContainer/Controls/VBoxContainer/Left/Left.text = SettingState._key_to_string("Left")
 	$CenterContainer/VBoxContainer/Controls/VBoxContainer/Down/Down.text = SettingState._key_to_string("Down")
@@ -44,12 +46,15 @@ func _on_sound_effect_slider_value_changed(value: float) -> void:
 	SettingState.setting_dic["Audio"]["UI_value"] = value
 
 func _on_full_screen_pressed() -> void:
-	if $CenterContainer/VBoxContainer/Video/Full_Screen.button_pressed:
+	if $CenterContainer/VBoxContainer/Video/HBoxContainer/Full_Screen.button_pressed:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	else:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
-	SettingState.setting_dic["Video"]["FullScreen"] = $CenterContainer/VBoxContainer/Video/Full_Screen.button_pressed
+	SettingState.setting_dic["Video"]["FullScreen"] = $CenterContainer/VBoxContainer/Video/HBoxContainer/Full_Screen.button_pressed
 
+func _on_world_environment_pressed() -> void:
+	SettingState.setting_dic["Video"]["WorldEnvironment"] = $CenterContainer/VBoxContainer/Video/HBoxContainer/World_Environment.button_pressed
+	SettingState.apply_world_environment()
 
 func _on_master_slider_mouse_entered() -> void:
 	menu_parent._update_hand("interact")
@@ -114,3 +119,4 @@ func _on_control_reset_pressed() -> void:
 	$CenterContainer/VBoxContainer/Controls/VBoxContainer/Down/Down.text = "S"
 	$CenterContainer/VBoxContainer/Controls/VBoxContainer/Up/Up.text = "W"
 	SettingState._reset_to_default_controls()
+	

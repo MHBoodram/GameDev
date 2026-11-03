@@ -19,7 +19,7 @@ var initial_fog_albedo: Color = Color(0.9843137, 0.7411765, 0.0, 1.0)
 var sky_material: PanoramaSkyMaterial
 
 @export var dusk_start_seconds: float = 0.0
-@export var dusk_end_seconds: float = 40.0
+@export var dusk_end_seconds: float = 60.0
 @export var night_hdri_energy: float = 0.025
 @export var night_sun_pitch_degrees: float = 45.0
 @export var night_fog_albedo: Color = Color(0.04, 0.06, 0.12, 1.0)
@@ -34,6 +34,7 @@ func _ready() -> void:
 	DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
 	_check_unlocks_drinks()
 	_setup_environment_day_night()
+	SettingState.apply_world_environment()
 	night_timer.timeout.connect(_on_night_time_timeout)
 	PlayerStats.previous_money = PlayerStats.money
 	_setup_shift()
@@ -100,6 +101,7 @@ func _setup_environment_day_night() -> void:
 	initial_sun_energy = sun.light_energy
 	if world_environment and world_environment.environment:
 		world_environment.environment = world_environment.environment.duplicate()
+		world_environment.set_meta("original_env", world_environment.environment)
 		initial_fog_albedo = world_environment.environment.volumetric_fog_albedo
 		if world_environment.environment.sky:
 			world_environment.environment.sky = world_environment.environment.sky.duplicate()
@@ -165,6 +167,10 @@ func _night_select() -> void:
 	match GameState.night:
 		1:
 			_set_shit("shark",180)
+			GameState.special_state = true
+			pause_night()
+		2:
+			_set_shit("shark",180,"night_2_introduction")
 			GameState.special_state = true
 			pause_night()
 
@@ -241,7 +247,7 @@ func end_night_early() -> void:
 			npc._leaving()
 	_check_night_concluded()
 
-func _set_shit(specific_id: String, patience: float = 90) -> void:
+func _set_shit(specific_id: String, patience: float = 90, dialogue_line: String = "dialogue_line") -> void:
 	var free_seat = seats.find(null)
 	if free_seat == -1:
 		print("Full")
@@ -256,7 +262,7 @@ func _set_shit(specific_id: String, patience: float = 90) -> void:
 	npc.name = "seat%d_npc" % (free_seat + 1)
 	npc._moving_to(get_node("Seat%d" % (free_seat + 1)))
 	var marker_grab = get_node("Recipt" + str(free_seat +1))
-	npc._institate(load(path),free_seat+1,marker_grab,patience,"introduction_game")
+	npc._institate(load(path),free_seat+1,marker_grab,patience, dialogue_line)
 	var order = npc._want_drink()
 	match free_seat:
 		0: GameState.seat1_order = order
@@ -282,6 +288,40 @@ func add_scene_once_drink(path: String, node_name: String, parent: Node = self) 
 func _print_reading_dialogue() -> void:
 	print("Printing dialgoue or something")
 
+func _add_npc_specific(character: String) -> void:
+	if not is_spawning_allowed or GameState.night_paused:
+		return
+	var free_seat = seats.find(null)
+	if free_seat == -1:
+		print("Full")
+		return
+
+	var chosen_species: String = character
+	var path: String = "res://NPC/Resources/scott.tres"
+	match chosen_species:
+		"Slime":
+			path = "res://NPC/Resources/slime.tres"
+		"Vampire":
+			path = "res://NPC/Resources/cesti.tres"
+		_:
+			path = "res://NPC/Resources/scott.tres"
+	
+	print("[customer_spawned]: ", chosen_species)
+
+	var npc = BASE_NPC.instantiate()
+	add_child(npc)
+	npc.global_position = $Spawn.global_position
+	seats[free_seat] = npc
+	npc.name = "seat%d_npc" % (free_seat + 1)
+	npc._moving_to(get_node("Seat%d" % (free_seat + 1)))
+	var marker_grab = get_node("Recipt" + str(free_seat +1))
+	npc._institate(load(path),free_seat+1,marker_grab)
+	var order = npc._want_drink()
+	match free_seat:
+		0: GameState.seat1_order = order
+		1: GameState.seat2_order = order
+		2: GameState.seat3_order = order
+
 func _add_npc() -> void:
 	if not is_spawning_allowed or GameState.night_paused:
 		return
@@ -292,6 +332,7 @@ func _add_npc() -> void:
 
 	var human_weight: float = PlayerStats.get_species_spawn_weight("Human")
 	var slime_weight: float = PlayerStats.get_species_spawn_weight("Slime")
+	var vampire_weight: float = PlayerStats.get_species_spawn_weight("Vampire")
 	var total_weight: float = human_weight + slime_weight
 	var roll: float = randf_range(0.0, total_weight)
 
@@ -300,7 +341,9 @@ func _add_npc() -> void:
 	if roll <= slime_weight:
 		chosen_species = "Slime"
 		path = "res://NPC/Resources/slime.tres"
-
+	if roll <= vampire_weight:
+		chosen_species = "Vampire"
+		path = "res://NPC/Resources/cesti.tres"
 	print("[customer_spawned]: ", chosen_species)
 
 	var npc = BASE_NPC.instantiate()
