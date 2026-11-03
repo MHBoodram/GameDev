@@ -169,6 +169,10 @@ func _night_select() -> void:
 			_set_shit("shark",180)
 			GameState.special_state = true
 			pause_night()
+		2:
+			_set_shit("shark",180,"night_2_introduction")
+			GameState.special_state = true
+			pause_night()
 
 func _on_dialogue_ended(_resource) -> void:
 	is_dialogue_open = false
@@ -243,7 +247,7 @@ func end_night_early() -> void:
 			npc._leaving()
 	_check_night_concluded()
 
-func _set_shit(specific_id: String, patience: float = 90) -> void:
+func _set_shit(specific_id: String, patience: float = 90, dialogue_line: String = "dialogue_line") -> void:
 	var free_seat = seats.find(null)
 	if free_seat == -1:
 		print("Full")
@@ -258,7 +262,7 @@ func _set_shit(specific_id: String, patience: float = 90) -> void:
 	npc.name = "seat%d_npc" % (free_seat + 1)
 	npc._moving_to(get_node("Seat%d" % (free_seat + 1)))
 	var marker_grab = get_node("Recipt" + str(free_seat +1))
-	npc._institate(load(path),free_seat+1,marker_grab,patience,"introduction_game")
+	npc._institate(load(path),free_seat+1,marker_grab,patience, dialogue_line)
 	var order = npc._want_drink()
 	match free_seat:
 		0: GameState.seat1_order = order
@@ -283,6 +287,40 @@ func add_scene_once_drink(path: String, node_name: String, parent: Node = self) 
 
 func _print_reading_dialogue() -> void:
 	print("Printing dialgoue or something")
+
+func _add_npc_specific(character: String) -> void:
+	if not is_spawning_allowed or GameState.night_paused:
+		return
+	var free_seat = seats.find(null)
+	if free_seat == -1:
+		print("Full")
+		return
+
+	var chosen_species: String = character
+	var path: String = "res://NPC/Resources/scott.tres"
+	match chosen_species:
+		"Slime":
+			path = "res://NPC/Resources/slime.tres"
+		"Vampire":
+			path = "res://NPC/Resources/cesti.tres"
+		_:
+			path = "res://NPC/Resources/scott.tres"
+	
+	print("[customer_spawned]: ", chosen_species)
+
+	var npc = BASE_NPC.instantiate()
+	add_child(npc)
+	npc.global_position = $Spawn.global_position
+	seats[free_seat] = npc
+	npc.name = "seat%d_npc" % (free_seat + 1)
+	npc._moving_to(get_node("Seat%d" % (free_seat + 1)))
+	var marker_grab = get_node("Recipt" + str(free_seat +1))
+	npc._institate(load(path),free_seat+1,marker_grab)
+	var order = npc._want_drink()
+	match free_seat:
+		0: GameState.seat1_order = order
+		1: GameState.seat2_order = order
+		2: GameState.seat3_order = order
 
 func _add_npc() -> void:
 	if not is_spawning_allowed or GameState.night_paused:

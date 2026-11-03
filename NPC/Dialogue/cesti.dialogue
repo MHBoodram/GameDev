@@ -26,7 +26,7 @@ do _give_payment()
 => END
 
 ~ Mid
-Cesti: This isn't really to my like good sir
+Cesti: This will do good sir
 do _give_payment()
 => END
 

@@ -15,7 +15,26 @@ Shark: doesn't matter
 Shark: Just show me what you got
 do _add_recipt()
 set speaking_title = "introduction_mid_talk"
+=> END
 
+~ night_2_introduction
+Shark: Not bad for your first day
+Shark: Whoa new drinks in the back already
+set emo = "mad"
+Shark: Dude where getting that blood from?
+
+- It's from me
+	Shark: ...
+- Don't worry bout it
+	Shark: Dude don't stab me for it
+	Shark: We are good buddy aren't we
+- ...
+	Shark: I won't question it if it's making that dough
+set emo = "happy"
+Shark: Welp, gonna find out if it makes that money
+Shark: Give me a drink while you at it
+do _add_recipt()
+set speaking_title = "introduction_mid_talk"
 => END
 
 ~ introduction_mid_talk
