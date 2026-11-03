@@ -1,10 +1,12 @@
 extends Ingredients
 class_name Glasses
+@onready var tcmtd = preload("res://Player/Drink/Glasses/liquids_label.tscn") #They call me the drink
 @export var liquids : Array = []
 @export var size : float = 1.0
 @export var area_body : CollisionShape3D
 @export var sprite : Sprite3D
-@export var drink_list_label : Label
+@export var liquid_box : VBoxContainer
+var drink_list_label : Label
 var total_liquids : float = 0
 var current_position = 0
 var in_game: bool = false
@@ -238,11 +240,13 @@ func _rebuild_liquid_gradient() -> void:
 		if amount <= 0.0:
 			continue
 		var col: Color = LIQUID_COLOR.get(liquid_id, Color.WHITE)
+		
 		if(drink_list_label != null):
-			drink_list_label.material.set_shader_parameter("base_color", col)
-			drink_list_label.modulate.a = 1
-			drink_list_label.text = str(liquids)
-	
+			if(liquids.size()-1 == i):
+				drink_list_label.material.set_shader_parameter("base_color", col)
+			liquid_box.modulate.a = 1
+			drink_list_label.text = str(liquids[liquids.size()-1])
+
 		colors.append(col)
 		current_pos += amount / total_liquids
 		if i > 0 and current_pos < 1.0:
@@ -263,13 +267,22 @@ func _pouring(id : String, liquids_num : float) -> void:
 			top_drink[1] += liquids_num
 			_visuals_change(liquids_num,id,false)
 		else:
+			print("new drink")
+			var new_label = tcmtd.instantiate()
+			liquid_box.add_child(new_label)
+			drink_list_label = new_label
 			var temp_liquid = [id,liquids_num]
 			liquids.push_back(temp_liquid)
 			_visuals_change(liquids_num,id,true)
+			
 	else:
+		var new_label = tcmtd.instantiate()
+		liquid_box.add_child(new_label)
+		drink_list_label = new_label
 		var temp_liquid = [id,liquids_num]
 		liquids.push_back(temp_liquid)
 		_visuals_change(liquids_num,id,true)
+		
 
 	slosh_velocity += randf_range(-0.35, 0.35) * (1.0 - clampf(viscosity, 0.0, 1.0))
 	slosh_vertical_velocity += randf_range(-0.15, 0.05)
@@ -318,4 +331,4 @@ func execute_interaction(target: Ingredients) -> void:
 
 func _remove_displaying_list() -> void:
 	var tween = get_tree().create_tween().parallel()
-	tween.tween_property(drink_list_label,"modulate:a",0.0,1.0)
+	tween.tween_property(liquid_box,"modulate:a",0.0,1.0)
