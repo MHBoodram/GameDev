@@ -9,7 +9,7 @@ var progress : Array = []
 		#_got_to_scene()
 func _process(delta: float) -> void:
 	var status = ResourceLoader.load_threaded_get_status(scene_going,progress)
-	
+
 	match status:
 		ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 			print("Loading: ",progress[0] * 100,"%")

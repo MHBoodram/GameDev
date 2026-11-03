@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://ds02mw8u5ton8"
+path="res://.godot/imported/cesti.dialogue-75dc12175473ae5b14034b55b54a0cd3.tres"
+
+[deps]
+
+source_file="res://NPC/Dialogue/cesti.dialogue"
+dest_files=["res://.godot/imported/cesti.dialogue-75dc12175473ae5b14034b55b54a0cd3.tres"]
+
+[params]
+
+defaults=true

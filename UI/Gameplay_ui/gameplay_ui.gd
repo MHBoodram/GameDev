@@ -87,7 +87,7 @@ func _look_behind() -> void:
 		$Up_button.disabled = false
 		is_transitioning = false
 	)
-	
+
 # Tweens camera back to front view
 func _look_forward() -> void:
 	up_down_checks = false

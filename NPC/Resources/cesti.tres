@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="NPC" format=3 uid="uid://btqt4idhxy43i"]
+
+[ext_resource type="Resource" uid="uid://ds02mw8u5ton8" path="res://NPC/Dialogue/cesti.dialogue" id="1_4bx7r"]
+[ext_resource type="Script" uid="uid://cafgtw527fei4" path="res://NPC/npc_class.gd" id="1_ghmnt"]
+[ext_resource type="Texture2D" uid="uid://0joyjjj22f7l" path="res://Assets/NPC/Vampire/Cesti-Sheet.png" id="3_ybukc"]
+
+[resource]
+script = ExtResource("1_ghmnt")
+sprite_sheet = ExtResource("3_ybukc")
+race = "VAMPIRE"
+dialogue_resource = ExtResource("1_4bx7r")
+hframe = 8
+metadata/_custom_type_script = "uid://cafgtw527fei4"

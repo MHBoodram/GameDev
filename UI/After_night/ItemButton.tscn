@@ -44,6 +44,7 @@ texture = ExtResource("2_fsn26")
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 23.0
+text = "dfs"
 
 [node name="Label2" type="Label" parent="." unique_id=404298409]
 layout_mode = 0

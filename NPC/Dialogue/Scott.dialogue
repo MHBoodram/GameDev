@@ -21,14 +21,23 @@ Scott: Finished
 #=> END
 
 ~ Positive
+set emo = "happy"
 Scott: Solid stuff, Thanks man
+do _give_payment()
 => END
+
 ~ Negative
+set emo = "mad"
 Scott: Damn this taste like crap, I'm not tipping
+do _give_payment()
 => END
+
+~ Mid
+Scott: Bartender, you got anything better in the back?
+do _give_payment()
+=> END
+
 ~ TimeWarning1
 Scott: Damn bartender, you making the spirits by hand or something? What's taking so long
 => END
-~ Mid
-Bartender, you got anything better in the back?
-=> END
+

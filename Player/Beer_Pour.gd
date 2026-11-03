@@ -33,5 +33,6 @@ func _on_pour_area_area_entered(area: Area3D) -> void:
 
 func _on_pour_area_area_exited(area: Area3D) -> void:
 	if(area == in_pour_zone):
+		area._remove_displaying_list()
 		in_pour_zone = null
 		pour_zone.modulate = Color(1.0, 1.0, 1.0, 1.0)

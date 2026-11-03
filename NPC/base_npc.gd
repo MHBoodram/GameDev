@@ -18,7 +18,7 @@ var unique_talk : bool = false
 var emo: String = "netural"
 var customer_satisfaction : float = 1.0
 var max_patience : float = 90.0
-
+var payment_global : float
 const SATISFACTORY_THRESHOLD := 0.6
 const MAX_DIFF := 15.0
 const FLAT_PENALTY_WRONG_INGREDIENT := 0.3
@@ -154,12 +154,17 @@ func _obtain_drink(drink: Array) -> float:
 	print("[drink_cost]: ", drink_cost)
 	print("[tip]: ", tip)
 	print("[payment]: ", payment)
-
+	print("[drink score]: ",drink_score)
 	if(drink_list.size() <= 0):
-		$Area3D/CollisionShape3D.disabled = true
+		$Area3D/CollisionShape3D.disabled = false
 		await get_tree().create_timer(1).timeout
 		if(!unique_talk):
-			_leaving()
+			if(drink_score >= 0.75):
+				speaking_title = "Positive"
+			elif(drink_score >= 0.5):
+				speaking_title = "Mid"
+			else:
+				speaking_title = "Negative"
 		else:
 			$Area3D/CollisionShape3D.disabled = false
 			patience_timer.wait_time = 100
@@ -170,13 +175,22 @@ func _obtain_drink(drink: Array) -> float:
 				speaking_title = "introduction_mid_mid"
 			else:
 				speaking_title = "introduction_mid_bad"
-
-	PlayerStats._change_money(PlayerStats.money + payment)
+	payment_global += payment
 	return drink_score
+
+func _give_payment()-> void:
+	PlayerStats._change_money(PlayerStats.money + payment_global)
+	if(drink_list.size() <= 0):
+		$Area3D/CollisionShape3D.disabled = true
+	#_leaving()
 
 # Generates random drink and adds it to order queue
 func _want_drink() -> Array:
-	var drink_list_want = ["beer","gin","vodka"]
+	var drink_list_want = ["beer","gin"]
+	for drinks in PlayerStats["unlocks"]["Drinks"]:
+		if(PlayerStats["unlocks"]["Drinks"][drinks]):
+			drink_list_want.push_back(drinks)
+
 	var race_key: String = npc_resource.race.to_upper() if npc_resource else "HUMAN"
 	var drink_count: int = 1
 	if race_key == "SLIME":
@@ -263,7 +277,7 @@ func _talking(open_mouth: bool = false):
 	if(open_mouth):
 		frame_check += 1
 	var total_frames = hframes * vframes
-	if(frame_check > total_frames):
+	if(frame_check >= total_frames):
 		frame_check = 0
 		push_warning("TOO FAR")
 	frame = frame_check

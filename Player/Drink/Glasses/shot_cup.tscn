@@ -46,14 +46,15 @@ shader_parameter/flip_gradient = false
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_t6etq"]
 radius = 0.43603516
-height = 0.890625
+height = 1.1337891
 
-[node name="Shot_gun" type="Area3D" unique_id=1734660334 node_paths=PackedStringArray("area_body", "sprite") groups=["glass"]]
+[node name="Shot_gun" type="Area3D" unique_id=1734660334 node_paths=PackedStringArray("area_body", "sprite", "liquid_box") groups=["glass"]]
 transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0, 0)
 script = ExtResource("2_4egiw")
 size = 5.0
 area_body = NodePath("CollisionShape3D")
 sprite = NodePath("Inside")
+liquid_box = NodePath("CanvasLayer/VBoxContainer")
 
 [node name="Inside" type="Sprite3D" parent="." unique_id=2065563100]
 transform = Transform3D(1, 0, 0, 0, 1, -1.4901165e-07, 0, 1.4901165e-07, 1, 0, 0, 0)
@@ -81,8 +82,16 @@ texture_filter = 0
 texture = ExtResource("3_4egiw")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=763278799 groups=["glass"]]
-transform = Transform3D(1, 0, 0, 0, 0.99999964, -1.4901161e-07, 0, 1.4901161e-07, 0.99999964, 0, -0.036620982, -3.7252903e-08)
+transform = Transform3D(1, 0, 0, 0, 0.99999964, -1.4901161e-07, 0, 1.4901161e-07, 0.99999964, 0, -0.15820298, -5.5370037e-08)
 shape = SubResource("CapsuleShape3D_t6etq")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1974128493]
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer" unique_id=1597240744]
+offset_left = 1019.0
+offset_top = 285.0
+offset_right = 1265.0
+offset_bottom = 325.0
 
 [connection signal="area_entered" from="." to="." method="_on_area_3d_area_entered"]
 [connection signal="input_event" from="." to="." method="_on_area_3d_input_event"]

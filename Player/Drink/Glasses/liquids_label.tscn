@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://ch2o22k5mrp76"]
+
+[ext_resource type="Shader" uid="uid://c2uhcavgvfcrw" path="res://Shader/wavy.gdshader" id="1_g8iwa"]
+[ext_resource type="FontFile" uid="uid://cq83j1cam8lw" path="res://Assets/Font/Merchant Copy.ttf" id="2_4yk5p"]
+[ext_resource type="Script" uid="uid://crlrg48otxdtq" path="res://Player/Drink/Glasses/liquids_label.gd" id="3_4yk5p"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_dwiq7"]
+shader = ExtResource("1_g8iwa")
+shader_parameter/wave_strength = 0.00800000038
+shader_parameter/wave_speed = 1.2
+shader_parameter/outline_size = 2.5
+shader_parameter/shimmer_width = 0.15
+shader_parameter/glow_base = 0.35
+shader_parameter/outline_opacity = 0.9
+shader_parameter/base_color = Color(0.2, 0.6, 1, 1)
+shader_parameter/secondary_color = Color(0.5, 0.9, 1, 1)
+shader_parameter/gradient_amount = 0.3
+
+[node name="LiquidsLabel" type="Label" unique_id=1876342748]
+material = SubResource("ShaderMaterial_dwiq7")
+theme_override_fonts/font = ExtResource("2_4yk5p")
+theme_override_font_sizes/font_size = 30
+text = "THEY CALL ME THE DRINK"
+script = ExtResource("3_4yk5p")

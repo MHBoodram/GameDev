@@ -1,0 +1,35 @@
+~ start
+Cesti: [[Hi|I bid thee|Good evening bartender]], My Order is {{drink_list}}
+do _add_recipt()
+set speaking_title = "mid"
+=> END
+~ mid
+Cesti: I am awaiting my drink sir
+=> END
+~ finish
+Cesti: Finished
+=> END
+
+
+
+~ Positive
+set emo = "happy"
+Cesti: Didn't know ambrosia was made here
+Cesti: I thank you for the service sir
+do _give_payment()
+=> END
+
+~ Negative
+set emo = "mad"
+Cesti: I didn't live 1000 years to drink total rubbish
+do _give_payment()
+=> END
+
+~ Mid
+Cesti: This isn't really to my like good sir
+do _give_payment()
+=> END
+
+~ TimeWarning1
+Cesti: Damn bartender, you making the spirits by hand or something? What's taking so long
+=> END

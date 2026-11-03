@@ -15,9 +15,9 @@ const FONT_PATH := "res://Assets/Font/fs-a-pixel-away.otf"
 @export_range(0.01, 0.5, 0.01) var pump_amount : float = 0.10 # How much of the bar's gonna fill up per press
 @export_range(0.0,2.0, 0.01) var deflate_rate : float = 0.28 # How much the shaker bar's gonna drain per second
 @export_range(0.0,1.0,0.01) var goal_center : float = 0.5 # setting where the goal zone is gonna be centered 0 -> 1 is bottom -> top
-@export_range(0.05, 0.6, 0.01) var goal_size : float = 0.25 # setting the size of the goal zone as a fraction of the bar
+@export_range(0.05, 0.6, 0.01) var goal_size : float = 0.20 # setting the size of the goal zone as a fraction of the bar
 @export_range(0.5, 15.0, 0.1) var hold_time : float = 2.5 # Seconds the icon has to stay in teh goal zone to clear
-@export_range(0.0, 2.0, 0.05) var drain_multi : float = 0.5 # How fst progress drains outside the goal zone, relative to how fast it normally fills
+@export_range(0.0, 2.0, 0.05) var drain_multi : float = 0.5 # How fast progress drains outside the goal zone, relative to how fast it normally fills
 @export_range(0.0, 60.0, 0.5) var time_limit : float = 20.0 # Seconds before the attempt is a fail BTW 0 = no time limit
 @export_range(0.0, 1.0, 0.01) var start_fill : float = 0.2 # Where the bar is gonna start (from 0,1)
 
