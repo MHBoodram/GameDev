@@ -4,7 +4,8 @@ const DEFAULT_SETTING = {
 	"Video" :
 		{
 		"FullScreen" : false,
-		"Resolution" : false
+		"Resolution" : false,
+		"WorldEnvironment" : true
 		},
 	"Control" :
 		{
@@ -26,7 +27,8 @@ var setting_dic = {
 	"Video" :
 		{
 		"FullScreen" : false,
-		"Resolution" : false
+		"Resolution" : false,
+		"WorldEnvironment" : true
 		},
 	"Control" :
 		{
@@ -55,6 +57,7 @@ func _saving_setting():
 func _loading_setting():
 	if not FileAccess.file_exists(SAVE_PATH):
 		print("No save data found.")
+		apply_world_environment()
 		return
 	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
 	print(SAVE_PATH)
@@ -64,6 +67,9 @@ func _loading_setting():
 		for main_key in setting_dic:
 			if not loaded_data.has(main_key):
 				loaded_data[main_key] = DEFAULT_SETTING[main_key].duplicate(true)
+			for default_key in DEFAULT_SETTING[main_key]:
+				if not loaded_data[main_key].has(default_key):
+					loaded_data[main_key][default_key] = DEFAULT_SETTING[main_key][default_key]
 			for sub_key in loaded_data[main_key]:
 				var file_key = loaded_data[main_key][sub_key]
 				if(file_key):
@@ -77,8 +83,23 @@ func _loading_setting():
 							setting_dic[main_key][sub_key] = "_"
 						"Audio":
 							setting_dic[main_key][sub_key] = 0
-		#print("Setting_dic: " + str(setting_dic))
-		#print("loaded_data: " + str(loaded_data))
+		apply_world_environment()
+
+func apply_world_environment():
+	var enabled = setting_dic["Video"].get("WorldEnvironment", true)
+	var tree = get_tree()
+	if not tree or not tree.root:
+		return
+	var env_nodes = tree.root.find_children("*", "WorldEnvironment", true, false)
+	for env in env_nodes:
+		if not env.has_meta("original_env"):
+			if env.environment != null:
+				env.set_meta("original_env", env.environment)
+		if enabled:
+			if env.has_meta("original_env"):
+				env.environment = env.get_meta("original_env")
+		else:
+			env.environment = null
 
 func _key_to_string(control: String) -> String:
 	var value = SettingState.setting_dic["Control"][control]
@@ -109,3 +130,4 @@ func _reset_to_default_controls():
 			setting_dic["Control"][key] = DEFAULT_SETTING["Control"][key]
 		else:
 			setting_dic["Control"].erase(key)
+			
