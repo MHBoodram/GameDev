@@ -166,7 +166,7 @@ func _check_unlocks_drinks() -> void:
 func _night_select() -> void:
 	match GameState.night:
 		1:
-			_set_shit("shark",180)
+			_set_shit("shark",180,"introduction_game")
 			GameState.special_state = true
 			pause_night()
 		2:
@@ -247,7 +247,7 @@ func end_night_early() -> void:
 			npc._leaving()
 	_check_night_concluded()
 
-func _set_shit(specific_id: String, patience: float = 90, dialogue_line: String = "dialogue_line") -> void:
+func _set_shit(specific_id: String, patience: float = 90, dialogue_line: String = "start") -> void:
 	var free_seat = seats.find(null)
 	if free_seat == -1:
 		print("Full")

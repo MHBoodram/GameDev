@@ -28,12 +28,12 @@ do _give_payment()
 
 ~ Negative
 set emo = "mad"
-Scott: Damn this taste like crap, I'm not tipping
+Scott: Damn this taste like crap, I'm not definitely not tipping
 do _give_payment()
 => END
 
 ~ Mid
-Scott: Bartender, you got anything better in the back?
+Scott: I mean, it's aight but feels overpriced
 do _give_payment()
 => END
 
