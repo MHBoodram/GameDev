@@ -1,9 +1,6 @@
 [gd_scene format=3 uid="uid://ptx2ek23fpem"]
 
 [ext_resource type="Script" uid="uid://bccoqt1jiegjo" path="res://Player/Drink/Minigame/Blood/blood_minigame.gd" id="1_hsqqf"]
-[ext_resource type="Texture2D" uid="uid://1yul4dtngbg4" path="res://Assets/Items/beer.png" id="2_rlg7l"]
-[ext_resource type="Shader" uid="uid://b5kpwtrmoc3g5" path="res://Shader/shot_cup.gdshader" id="3_vg78n"]
-[ext_resource type="Texture2D" uid="uid://d1lg7pdai3jyu" path="res://Assets/Items/beer_outside.png" id="4_apvkm"]
 
 [sub_resource type="Animation" id="Animation_hsqqf"]
 length = 0.001
@@ -43,30 +40,6 @@ _data = {
 &"hurt": SubResource("Animation_fmsg0")
 }
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_7yj7u"]
-render_priority = 0
-shader = ExtResource("3_vg78n")
-shader_parameter/texture_albedo = ExtResource("4_apvkm")
-shader_parameter/fill_amount = 0.0
-shader_parameter/slosh_angle = 0.0
-shader_parameter/slosh_vertical_offset = 0.0
-shader_parameter/wave_phase = 0.0
-shader_parameter/wave_amplitude = 0.0
-shader_parameter/pixel_resolution = 48.0
-shader_parameter/surface_highlight_color = Color(1.499905, 0, 0, 1)
-shader_parameter/secondary_highlight_color = Color(0.9, 0.4, 0.95, 0.85)
-shader_parameter/surface_highlight_thickness = 1.2
-shader_parameter/bottom_darkening = 0.45
-shader_parameter/liquid_transparency = 0.9
-shader_parameter/inner_margin_top = 0.12
-shader_parameter/inner_margin_bottom = 0.88
-shader_parameter/caustic_beam_strength = 0.35
-shader_parameter/sparkle_density = 0.7
-shader_parameter/glass_reflection_strength = 0.28
-shader_parameter/meniscus_curve = 0.03
-shader_parameter/gradient_offset = 0.0
-shader_parameter/flip_gradient = false
-
 [node name="BloodMinigame" type="CanvasLayer" unique_id=1782682726]
 script = ExtResource("1_hsqqf")
 
@@ -81,11 +54,3 @@ color = Color(1, 0.3019608, 0.3019608, 0.6392157)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=198753739]
 libraries/ = SubResource("AnimationLibrary_3juvt")
-
-[node name="Inside" type="Sprite2D" parent="." unique_id=934654359]
-position = Vector2(1233, 356)
-texture = ExtResource("2_rlg7l")
-
-[node name="Outside" type="Sprite2D" parent="Inside" unique_id=715491923]
-material = SubResource("ShaderMaterial_7yj7u")
-texture = ExtResource("2_rlg7l")
