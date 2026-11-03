@@ -208,7 +208,7 @@ func _change_money(new_value: float) -> void:
 	else:
 		$"Right Container/Money/CPUParticles2D".color = Color(1.0, 1.0, 1.0, 1.0)
 	$"Right Container/Money/CPUParticles2D".emitting = true
-	$"Right Container/Money/Label".text = str(new_value)
+	$"Right Container/Money/Label".text = str(int(new_value))
 	await get_tree().create_timer(0.5).timeout
 	$"Right Container/Money/CPUParticles2D".emitting = false
 

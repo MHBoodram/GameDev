@@ -56,11 +56,13 @@ color = Color(1, 0.3019608, 0.3019608, 0.6392157)
 libraries/ = SubResource("AnimationLibrary_3juvt")
 
 [node name="Label" type="Label" parent="." unique_id=771920295]
-offset_left = 1132.0
+offset_left = 1103.0
 offset_top = 169.0
-offset_right = 1224.0
+offset_right = 1195.0
 offset_bottom = 192.0
 text = "Total Blood:"
 
 [node name="Marker2D" type="Marker2D" parent="." unique_id=985589755]
 position = Vector2(1233, 177)
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=913556583]

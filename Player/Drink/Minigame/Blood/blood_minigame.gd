@@ -55,7 +55,7 @@ func make_red_particles_2d() -> CPUParticles2D:
 	return p
 
 func _spawn_blood_drops()-> void:
-	var padding := 50.0
+	var padding := 100.0
 	var size := get_viewport().get_visible_rect().size
 	var inst = blood_cells_scene.instantiate()
 	add_child(inst)
