@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://4sg263uyig2d" path="res://Assets/Items/outside_shot_glass.png" id="7_wk5cn"]
 [ext_resource type="Texture2D" uid="uid://bxv0tx0mkbbhx" path="res://Assets/UI/peter.png" id="9_n776p"]
 [ext_resource type="PackedScene" uid="uid://cm05k37ejgq5p" path="res://UI/Gameplay_ui/Debug_Menu.tscn" id="10_wk5cn"]
+[ext_resource type="Texture2D" uid="uid://dhwy3spw05iwl" path="res://Assets/Items/Drinks/beer.png" id="11_2tkpp"]
 [ext_resource type="Texture2D" uid="uid://xnqyp4q8b5va" path="res://Assets/3D_textures/toposcope_sunset_2k.hdr" id="14_pka58"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_v88eg"]
@@ -163,6 +164,10 @@ shape = SubResource("BoxShape3D_ris41")
 transform = Transform3D(0.49999994, 0, 1.1934898e-15, 0, 0.37383083, -0.33204204, 7.1054274e-15, 0.33204204, 0.37383083, 0.1262908, 0.25927472, -0.10352516)
 texture = ExtResource("5_g6ul3")
 
+[node name="Sprite3D" type="Sprite3D" parent="Coutner/BeerKeg/PourArea" unique_id=1787139192]
+transform = Transform3D(1.9999998, 2.0776717e-07, -1.0127194e-07, -7.530345e-08, 1.4142126, 1.4142145, 2.1852377e-07, -1.4142145, 1.4142126, 0.14187145, 0.07686734, 0.7162752)
+texture = ExtResource("11_2tkpp")
+
 [node name="CPUParticles3D" type="CPUParticles3D" parent="Coutner/BeerKeg" unique_id=357297809]
 transform = Transform3D(-0.05843271, 0.97376543, -0.21992514, 0.52902687, -0.15662004, -0.834027, -0.8465911, -0.16508089, -0.50599635, 0, 1.1994112, -1.2267581)
 emitting = false
@@ -195,10 +200,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7157001, 2.3383586, 2.66273
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1607304, 2.3383586, 2.6630564)
 
 [node name="rum_marker" type="Marker3D" parent="." unique_id=1427671851]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7157001, 3.12, 2.6627347)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7157001, 2.9163537, 2.6627347)
 
 [node name="vodka_marker" type="Marker3D" parent="." unique_id=868453499]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.161, 3.12, 2.663)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.161, 2.917536, 2.663)
 
 [node name="blood_marker" type="Marker3D" parent="." unique_id=821430117]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.847186, 2.3383586, 2.6627347)

@@ -46,6 +46,7 @@ var species_marketing : Dictionary = {
 	"Tiny": 0,
 	"Vampire": 0
 }
+
 var species_banners : Dictionary = {
 	"Human": false,
 	"Slime": false,
@@ -124,12 +125,15 @@ func get_spawn_rate() -> float:
 
 func get_species_spawn_weight(species: String) -> float:
 	var key: String = _find_species_key(species)
-	var base_weight: float = 10.0
+	var base_weight: float = 5.0
 	match key:
 		"Slime":
 			base_weight = 2.0
+		"Vampire":
+			base_weight = 2.0
 		_:
 			base_weight = 10.0
+	
 	var marketing_multiplier: float = species_marketing.get(key, 1.0)
 	var banner_multiplier: float = 2.0 if species_banners.get(key, false) else 1.0
 	var final_weight: float = base_weight * marketing_multiplier * banner_multiplier

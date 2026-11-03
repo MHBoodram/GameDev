@@ -294,6 +294,7 @@ func _add_npc() -> void:
 
 	var human_weight: float = PlayerStats.get_species_spawn_weight("Human")
 	var slime_weight: float = PlayerStats.get_species_spawn_weight("Slime")
+	var vampire_weight: float = PlayerStats.get_species_spawn_weight("Vampire")
 	var total_weight: float = human_weight + slime_weight
 	var roll: float = randf_range(0.0, total_weight)
 
@@ -302,7 +303,9 @@ func _add_npc() -> void:
 	if roll <= slime_weight:
 		chosen_species = "Slime"
 		path = "res://NPC/Resources/slime.tres"
-
+	if roll <= vampire_weight:
+		chosen_species = "Vampire"
+		path = "res://NPC/Resources/cesti.tres"
 	print("[customer_spawned]: ", chosen_species)
 
 	var npc = BASE_NPC.instantiate()

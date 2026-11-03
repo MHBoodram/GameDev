@@ -4,6 +4,23 @@ Slime:[wave amp=25 freq=5] [[Jello|O|Slowdy]], My Order is {{drink_list}}[/wave]
 do _add_recipt()
 set speaking_title = "mid"
 => END
+~ Positive
+set emo = "happy"
+Slime: [wave amp=25 freq=5] This is fresh sewer goo [/wave]
+Slime: I thank you for the service sir
+do _give_payment()
+=> END
+
+~ Negative
+set emo = "mad"
+Slime: [wave amp=25 freq=5] This goo is not good [/wave]
+do _give_payment()
+=> END
+
+~ Mid
+Slime: [wave amp=25 freq=5] Not too bad [/wave]
+do _give_payment()
+=> END
 
 ~ mid
 Slime:[wave amp=25 freq=5]GET IT DONE[/wave]

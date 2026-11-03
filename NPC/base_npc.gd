@@ -158,6 +158,7 @@ func _obtain_drink(drink: Array) -> float:
 	if(drink_list.size() <= 0):
 		$Area3D/CollisionShape3D.disabled = false
 		await get_tree().create_timer(1).timeout
+		print("Unique talk: ", unique_talk)
 		if(!unique_talk):
 			if(drink_score >= 0.75):
 				speaking_title = "Positive"
@@ -182,6 +183,7 @@ func _give_payment()-> void:
 	PlayerStats._change_money(PlayerStats.money + payment_global)
 	if(drink_list.size() <= 0):
 		$Area3D/CollisionShape3D.disabled = true
+	_leaving()
 	#_leaving()
 
 # Generates random drink and adds it to order queue
@@ -190,12 +192,16 @@ func _want_drink() -> Array:
 	for drinks in PlayerStats["unlocks"]["Drinks"]:
 		if(PlayerStats["unlocks"]["Drinks"][drinks]):
 			drink_list_want.push_back(drinks)
+	
+	
 
 	var race_key: String = npc_resource.race.to_upper() if npc_resource else "HUMAN"
 	var drink_count: int = 1
-	if race_key == "SLIME":
-		drink_count = randi_range(1, 2)
-
+	#if race_key == "SLIME":
+		#drink_count = randi_range(1, 2)
+	if(PlayerStats["unlocks"]["Ingredients"]["Blood"] && race_key == "VAMPIRE"):
+		drink_list_want.push_back("blood")
+	
 	var total: Array = []
 	for i in range(drink_count):
 		var liquid_num = randi_range(80,100)
