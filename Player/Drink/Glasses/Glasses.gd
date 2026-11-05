@@ -263,6 +263,18 @@ func _rebuild_liquid_gradient() -> void:
 	liquid_gradient.colors = colors
 
 func _pouring(id : String, liquids_num : float) -> void:
+	var current_total: float = 0.0
+	for l in liquids:
+		current_total += float(l[1])
+
+	var available_space: float = size - current_total
+	if available_space <= 0.0:
+		return
+
+	liquids_num = minf(liquids_num, available_space)
+	if liquids_num <= 0.0:
+		return
+
 	if(len(liquids) != 0):
 		var top_drink = liquids[len(liquids)-1]
 		if(top_drink[0] == id):
@@ -289,6 +301,12 @@ func _pouring(id : String, liquids_num : float) -> void:
 	slosh_velocity += randf_range(-0.35, 0.35) * (1.0 - clampf(viscosity, 0.0, 1.0))
 	slosh_vertical_velocity += randf_range(-0.15, 0.05)
 	wave_amplitude = minf(wave_amplitude + 0.035, 0.07)
+
+func is_full() -> bool:
+	var current_total: float = 0.0
+	for l in liquids:
+		current_total += float(l[1])
+	return current_total >= size
 
 func _pushing_glass(other_glass : Area3D) -> void:
 	var push_dir: Vector3 = global_position - other_glass.global_position
