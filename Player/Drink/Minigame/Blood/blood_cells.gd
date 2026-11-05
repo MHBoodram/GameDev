@@ -4,7 +4,7 @@ func _ready() -> void:
 	var parent = get_parent()
 	$Button.scale = Vector2(4,4)
 	var tween = get_tree().create_tween()
-	tween.tween_property($Button,"scale",Vector2(0.5,0.5),2.5)
+	tween.tween_property($Button,"scale",Vector2(0.5,0.5),2)
 	await tween.finished
 	parent._check_all_finished()
 	queue_free()
