@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" uid="uid://cm05k37ejgq5p" path="res://UI/Gameplay_ui/Debug_Menu.tscn" id="10_wk5cn"]
 [ext_resource type="Texture2D" uid="uid://dhwy3spw05iwl" path="res://Assets/Items/Drinks/beer.png" id="11_2tkpp"]
 [ext_resource type="Texture2D" uid="uid://cg54c51342qpt" path="res://Assets/UI/The_sott.png" id="13_e1j77"]
+[ext_resource type="PackedScene" uid="uid://cw00ac021vjlu" path="res://UI/Tutorial/Keys.tscn" id="14_nmhfw"]
 [ext_resource type="Texture2D" uid="uid://xnqyp4q8b5va" path="res://Assets/3D_textures/toposcope_sunset_2k.hdr" id="14_pka58"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_v88eg"]
@@ -292,6 +293,22 @@ visible = false
 [node name="Night_Time" type="Timer" parent="." unique_id=1785817623]
 wait_time = 300.0
 one_shot = true
+
+[node name="Keys" parent="." unique_id=394097111 instance=ExtResource("14_nmhfw")]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -97.50586
+offset_top = -74.0
+offset_right = 97.50586
+offset_bottom = 74.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.9204147, 1.9204147)
+pivot_offset = Vector2(92.688324, 70.81804)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1277346395]
 environment = SubResource("Environment_ris41")
