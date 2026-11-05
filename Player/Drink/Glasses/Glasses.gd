@@ -325,15 +325,11 @@ func _on_area_3d_area_entered(area: Area3D) -> void:
 func can_interact_with(target: Ingredients) -> bool:
 	if target and target.is_in_group("trash"):
 		return true
-	if target and target.is_in_group("shaker"):
-		return can_be_shaken()
 	return false
 
 func execute_interaction(target: Ingredients) -> void:
 	if target and target.is_in_group("trash"):
 		_delete()
-	elif target and target.is_in_group("shaker") and can_be_shaken():
-		target.call("start_shake", self)
 
 func _remove_displaying_list() -> void:
 	if(liquid_box):
