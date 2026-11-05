@@ -29,7 +29,7 @@ render_priority = 0
 shader = ExtResource("3_50xmu")
 shader_parameter/texture_albedo = SubResource("CompressedTexture2D_i3eed")
 shader_parameter/gradient_texture = SubResource("GradientTexture1D_hpxhq")
-shader_parameter/fill_amount = 0.738000035055
+shader_parameter/fill_amount = 1.0
 shader_parameter/slosh_angle = 0.0
 shader_parameter/slosh_vertical_offset = 0.0
 shader_parameter/wave_phase = 0.0
@@ -52,6 +52,11 @@ shader_parameter/flip_gradient = false
 [node name="Liquids" type="Area3D" unique_id=280743464]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 script = ExtResource("2_mic12")
+size = null
+hold_lift = null
+snap_to_glass = null
+snap_offset = null
+follow_speed = null
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1051334637]
 shape = SubResource("CapsuleShape3D_s74th")

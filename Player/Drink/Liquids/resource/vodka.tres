@@ -10,4 +10,5 @@ sprite = ExtResource("3_h7xst")
 outside_Sprite = ExtResource("1_2wohq")
 alchol = true
 id = "vodka"
+liquid_color = Color(0.13725491, 0.37254903, 1, 1)
 metadata/_custom_type_script = "uid://ouggsev6087j"

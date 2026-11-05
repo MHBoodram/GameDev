@@ -9,4 +9,5 @@ script = ExtResource("1_53euf")
 sprite = ExtResource("3_dqtbx")
 outside_Sprite = ExtResource("1_e370l")
 id = "blood"
+liquid_color = Color(0.8509804, 0.050980393, 0.050980393, 1)
 metadata/_custom_type_script = "uid://ouggsev6087j"

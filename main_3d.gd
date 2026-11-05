@@ -290,7 +290,6 @@ func add_scene_once_drink(path: String, node_name: String, parent: Node = self) 
 	instance.name = node_name
 	parent.add_child(instance)
 	instance.setup(existing,$Coutner,resource_found)
-
 	return instance
 
 func _print_reading_dialogue() -> void:

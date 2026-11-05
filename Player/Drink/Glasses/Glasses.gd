@@ -12,14 +12,14 @@ var current_position = 0
 var in_game: bool = false
 var is_being_served: bool = false
 const LIQUID_COLOR = {
-	"gin" : Color(0.0, 0.953, 0.0, 1.0),
-	"beer" : Color(0.98, 0.322, 0.051, 1.0),
-	"spirit" : Color(0.542, 0.691, 1.0, 1.0),
-	"vodka" : Color(0.137, 0.372, 1.0, 1.0),
-	"rum" : Color(0.458, 0.154, 0.014, 1.0),
-	"tequila" : Color(0.9, 0.85, 0.3, 1.0),
-	"whiskey" : Color(0.78, 0.42, 0.1, 1.0),
-	"blood" : Color(0.85, 0.05, 0.05, 1.0)
+	"gin" : Color("00f300ff"),
+	"beer" : Color("fa520dff"),
+	"spirit" : Color("8ab0ffff"),
+	"vodka" : Color("235fffff"),
+	"rum" : Color("752704ff"),
+	"tequila" : Color("e6d94dff"),
+	"whiskey" : Color("c76b1aff"),
+	"blood" : Color("d90d0dff")
 }
 
 @export_group("Liquid Physics")

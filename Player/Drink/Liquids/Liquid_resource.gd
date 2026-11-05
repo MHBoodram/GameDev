@@ -6,3 +6,4 @@ class_name Liquid
 @export var alchol: bool = false
 @export var id: String = "gin"
 @export var liquid_size = 50
+@export var liquid_color : Color = Color(1.0, 1.0, 1.0, 1.0)
