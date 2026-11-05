@@ -418,7 +418,9 @@ func _npc_patience_end(seat_num: int) -> void:
 	if(!recipt_node):
 		push_warning("Can't find seat ReciptPaper")
 		return
-	recipt_node.is_balls_dragging = false
+	recipt_node.ordered = false
+	recipt_node._finish_drag_or_click()
+	
 	var tween = get_tree().create_tween().set_parallel(true)
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
