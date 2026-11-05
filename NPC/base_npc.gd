@@ -256,7 +256,9 @@ func _on_patience_timer_timeout() -> void:
 	print("[tip]: ", tip)
 	print("[payment]: ", payment)
 	PlayerStats._change_money(PlayerStats.money + payment)
-	_leaving()
+	GameState.main_node._npc_patience_end(seat_num)
+	if(!unique_talk):
+		_leaving()
 
 # Changes cursor to interact on hover
 func _on_area_3d_mouse_entered() -> void:

@@ -31,12 +31,12 @@ func can_interact_with(target: Ingredients) -> bool:
 	return ordered and target is Glasses and not (target is Drinks)
 
 func execute_interaction(target: Ingredients) -> void:
-	if can_interact_with(target):
+	if can_interact_with(target) && target.is_in_group("glass"):
 		ordered = false
 		target.set_highlight(false)
-		if target is Glasses:
+		if target is Glasses :
 			target.is_being_served = true
-		get_parent()._give_drink(self, target, seat_num)
+			get_parent()._give_drink(self, target, seat_num)
 
 func on_drop_failed() -> void:
 	if ordered and recipt_marker:

@@ -1,6 +1,6 @@
 ~ start
 
-Slime:[wave amp=25 freq=5] [[Jello|O|Slowdy]], My Order is {{drink_list}}[/wave]
+Slime: [wave amp=25 freq=5] [[Jello|O|Slowdy]], My Order is {{drink_list}}[/wave]
 do _add_recipt()
 set speaking_title = "mid"
 => END
@@ -23,5 +23,5 @@ do _give_payment()
 => END
 
 ~ mid
-Slime:[wave amp=25 freq=5]GET IT DONE[/wave]
+Slime: [wave amp=25 freq=5]GET IT DONE[/wave]
 => END

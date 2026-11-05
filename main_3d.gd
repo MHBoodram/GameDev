@@ -174,15 +174,15 @@ func _night_select() -> void:
 			GameState.special_state = true
 			pause_night()
 
-func _on_dialogue_ended(_resource) -> void:
+func _on_dialogue_ended(_resource) -> void: #WHO IN THE SHITTER DID THIS CODE
 	is_dialogue_open = false
 	GameState.is_dialogue_open = false
-	if GameState.special_state:
-		for seat_idx in seats.size():
-			var npc = seats[seat_idx]
-			if npc and is_instance_valid(npc) and npc.unique_talk and npc.drink_list.size() <= 0:
-				npc._leaving()
-				break
+	#if GameState.special_state:
+		#for seat_idx in seats.size():
+			#var npc = seats[seat_idx]
+			#if npc and is_instance_valid(npc) and npc.unique_talk and npc.drink_list.size() <= 0:
+				#npc._leaving()
+				#break
 
 func _is_debug_menu_blocked() -> bool:
 	if get_tree().paused:
@@ -409,9 +409,20 @@ func _give_drink(recipt: Node3D, drink:Glasses, seat: int) -> void:
 	var tween = get_tree().create_tween().set_parallel(true)
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_property(recipt,"global_position",seat_marker.global_position,0.5)
-	tween.tween_property(drink,"global_position",seat_marker.global_position,0.5)
+	#tween.tween_property(recipt,"global_position",seat_marker.global_position,0.25)
+	tween.tween_property(drink,"global_position",seat_marker.global_position,0.25)
 	tween.tween_property(recipt,"global_position",$HiddenRecipt.global_position,0.5)
+
+func _npc_patience_end(seat_num: int) -> void:
+	var recipt_node = get_node_or_null("ReciptPaper" + str(seat_num))
+	if(!recipt_node):
+		push_warning("Can't find seat ReciptPaper")
+		return
+	recipt_node.is_balls_dragging = false
+	var tween = get_tree().create_tween().set_parallel(true)
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(recipt_node,"global_position",$HiddenRecipt.global_position,0.1)
 
 func _period_game() -> void:
 	var blood_scene = blood_game.instantiate()

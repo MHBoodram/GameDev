@@ -120,7 +120,7 @@ func reset_night_reputation_gains() -> void:
 
 func get_spawn_rate() -> float:
 	var rate: float = 1.0 * overall_marketing
-	print("[spawn_rate]: ", rate)
+	#print("[spawn_rate]: ", rate)
 	return rate
 
 func get_species_spawn_weight(species: String) -> float:
