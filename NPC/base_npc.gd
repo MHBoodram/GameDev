@@ -101,22 +101,36 @@ func _obtain_drink(drink: Array) -> float:
 	var want = drink_list.pop_front()
 	var drink_score: float = 1.0
 
+	var have_ingredients: Dictionary = {}
+	for layer in drink:
+		if layer is Array and layer.size() >= 2:
+			if layer.size() > 3 and layer[3] is Dictionary:
+				for ing in layer[3]:
+					var amt: float = float(layer[3][ing])
+					have_ingredients[str(ing)] = have_ingredients.get(str(ing), 0.0) + amt
+			elif layer[0] is Array:
+				var split_amt: float = float(layer[1]) / maxf(float(layer[0].size()), 1.0)
+				for ing in layer[0]:
+					have_ingredients[str(ing)] = have_ingredients.get(str(ing), 0.0) + split_amt
+			elif layer[0] is Dictionary:
+				for ing in layer[0]:
+					have_ingredients[str(ing)] = have_ingredients.get(str(ing), 0.0) + float(layer[0][ing])
+			else:
+				var ing_name: String = str(layer[0])
+				have_ingredients[ing_name] = have_ingredients.get(ing_name, 0.0) + float(layer[1])
+
 	for check in want:
 		var check_name: String = check[0]
 		var check_amount: float = float(check[1])
-		var found_match: bool = false
-		for have in drink:
-			if check_name == have[0]:
-				found_match = true
-				var difference: float = abs(check_amount - float(have[1]))
-				var proportion_penalty: float = 0.3 * clampf(difference / MAX_DIFF, 0.0, 1.0)
-				drink_score -= proportion_penalty
-				break
-		if not found_match:
+		if have_ingredients.has(check_name):
+			var actual_amount: float = float(have_ingredients[check_name])
+			var difference: float = abs(check_amount - actual_amount)
+			var proportion_penalty: float = 0.3 * clampf(difference / MAX_DIFF, 0.0, 1.0)
+			drink_score -= proportion_penalty
+		else:
 			drink_score -= FLAT_PENALTY_MISSING_INGREDIENT
 
-	for have in drink:
-		var have_name: String = have[0]
+	for have_name in have_ingredients.keys():
 		var was_wanted: bool = false
 		for check in want:
 			if check[0] == have_name:
@@ -289,3 +303,4 @@ func _talking(open_mouth: bool = false):
 		frame_check = 0
 		push_warning("TOO FAR")
 	frame = frame_check
+	
