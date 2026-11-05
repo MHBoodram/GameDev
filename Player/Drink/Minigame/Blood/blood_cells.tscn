@@ -41,6 +41,9 @@ corner_radius_bottom_right = 20
 corner_radius_bottom_left = 20
 corner_detail = 7
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nwg0y"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_caksa"]
 bg_color = Color(1, 0, 0, 0)
 border_width_left = 2
@@ -57,14 +60,15 @@ corner_detail = 7
 [node name="BloodCells" type="Button" unique_id=2135264374]
 offset_right = 30.0
 offset_bottom = 30.0
-scale = Vector2(3, 3)
+scale = Vector2(2, 2)
 theme_override_styles/normal = SubResource("StyleBoxFlat_ngh8x")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_6fkkf")
 theme_override_styles/hover = SubResource("StyleBoxFlat_7ik1p")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_nwg0y")
 text = "   "
 script = ExtResource("1_6fkkf")
 
-[node name="Button" type="Button" parent="." unique_id=650300458]
+[node name="Button" type="Panel" parent="." unique_id=1799049203]
 modulate = Color(0.43134022, 0.43134025, 0.43134025, 1)
 z_index = -1
 layout_mode = 1
@@ -75,8 +79,6 @@ grow_horizontal = 2
 grow_vertical = 2
 pivot_offset = Vector2(15, 15)
 mouse_filter = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_ngh8x")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_caksa")
-disabled = true
+theme_override_styles/panel = SubResource("StyleBoxFlat_caksa")
 
 [connection signal="pressed" from="." to="." method="_on_pressed"]

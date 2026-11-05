@@ -1,6 +1,10 @@
 [gd_scene format=3 uid="uid://ptx2ek23fpem"]
 
 [ext_resource type="Script" uid="uid://bccoqt1jiegjo" path="res://Player/Drink/Minigame/Blood/blood_minigame.gd" id="1_hsqqf"]
+[ext_resource type="Texture2D" uid="uid://1yul4dtngbg4" path="res://Assets/Items/beer.png" id="2_3juvt"]
+[ext_resource type="Shader" uid="uid://b5kpwtrmoc3g5" path="res://Shader/shot_cup.gdshader" id="2_rlg7l"]
+[ext_resource type="Texture2D" uid="uid://d1lg7pdai3jyu" path="res://Assets/Items/beer_outside.png" id="3_rlg7l"]
+[ext_resource type="Shader" uid="uid://tyhfgk6oy2oi" path="res://Shader/shot_cup_2D.gdshader" id="4_vg78n"]
 
 [sub_resource type="Animation" id="Animation_hsqqf"]
 length = 0.001
@@ -40,7 +44,60 @@ _data = {
 &"hurt": SubResource("Animation_fmsg0")
 }
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vg78n"]
+render_priority = 0
+shader = ExtResource("2_rlg7l")
+shader_parameter/fill_amount = 0.60400002869
+shader_parameter/slosh_angle = 0.0
+shader_parameter/slosh_vertical_offset = 0.0
+shader_parameter/wave_phase = 0.0
+shader_parameter/wave_amplitude = 0.0
+shader_parameter/pixel_resolution = 48.0
+shader_parameter/surface_highlight_color = Color(1.4, 1.4, 1.5, 1)
+shader_parameter/secondary_highlight_color = Color(0.9, 0.4, 0.95, 0.85)
+shader_parameter/surface_highlight_thickness = 1.2
+shader_parameter/bottom_darkening = 0.45
+shader_parameter/liquid_transparency = 0.9
+shader_parameter/inner_margin_top = 0.12
+shader_parameter/inner_margin_bottom = 0.88
+shader_parameter/caustic_beam_strength = 0.35
+shader_parameter/sparkle_density = 0.7
+shader_parameter/glass_reflection_strength = 0.28
+shader_parameter/meniscus_curve = 0.03
+shader_parameter/gradient_offset = 0.0
+shader_parameter/flip_gradient = false
+
+[sub_resource type="Gradient" id="Gradient_apvkm"]
+colors = PackedColorArray(0.48775607, 1.0287948e-06, 3.3691526e-07, 1, 0.4862745, 0, 0, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_7yj7u"]
+gradient = SubResource("Gradient_apvkm")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_eh3cp"]
+shader = ExtResource("4_vg78n")
+shader_parameter/gradient_texture = SubResource("GradientTexture1D_7yj7u")
+shader_parameter/fill_amount = 0.0
+shader_parameter/slosh_angle = 0.0
+shader_parameter/slosh_vertical_offset = 0.0
+shader_parameter/wave_phase = 0.0
+shader_parameter/wave_amplitude = 0.0
+shader_parameter/pixel_resolution = 48.0
+shader_parameter/surface_highlight_color = Color(0.34615508, 6.317161e-08, 0, 1)
+shader_parameter/secondary_highlight_color = Color(0.39215687, 0.015686275, 0, 1)
+shader_parameter/surface_highlight_thickness = 1.2
+shader_parameter/bottom_darkening = 0.45
+shader_parameter/liquid_transparency = 0.9
+shader_parameter/inner_margin_top = 0.12
+shader_parameter/inner_margin_bottom = 0.88
+shader_parameter/caustic_beam_strength = 0.35
+shader_parameter/sparkle_density = 0.7
+shader_parameter/glass_reflection_strength = 0.28
+shader_parameter/meniscus_curve = 0.03
+shader_parameter/gradient_offset = 0.0
+shader_parameter/flip_gradient = false
+
 [node name="BloodMinigame" type="CanvasLayer" unique_id=1782682726]
+layer = 2
 script = ExtResource("1_hsqqf")
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=874679032]
@@ -56,13 +113,33 @@ color = Color(1, 0.3019608, 0.3019608, 0.6392157)
 libraries/ = SubResource("AnimationLibrary_3juvt")
 
 [node name="Label" type="Label" parent="." unique_id=771920295]
-offset_left = 1103.0
-offset_top = 169.0
-offset_right = 1195.0
-offset_bottom = 192.0
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -46.0
+offset_top = -109.0
+offset_right = 46.0
+offset_bottom = -86.0
+grow_horizontal = 2
+grow_vertical = 0
 text = "Total Blood:"
 
 [node name="Marker2D" type="Marker2D" parent="." unique_id=985589755]
-position = Vector2(1233, 177)
+position = Vector2(639, 639)
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=913556583]
+texture_filter = 3
+material = SubResource("ShaderMaterial_vg78n")
+position = Vector2(642, 680)
+texture = ExtResource("2_3juvt")
+offset = Vector2(-1, -40)
+
+[node name="Sprite2D" type="Sprite2D" parent="Sprite2D" unique_id=1447588304]
+modulate = Color(1, 0, 0, 1)
+texture_filter = 3
+material = SubResource("ShaderMaterial_eh3cp")
+position = Vector2(-1, -40)
+texture = ExtResource("3_rlg7l")

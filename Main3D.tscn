@@ -14,6 +14,7 @@
 [ext_resource type="Texture2D" uid="uid://bxv0tx0mkbbhx" path="res://Assets/UI/peter.png" id="9_n776p"]
 [ext_resource type="PackedScene" uid="uid://cm05k37ejgq5p" path="res://UI/Gameplay_ui/Debug_Menu.tscn" id="10_wk5cn"]
 [ext_resource type="Texture2D" uid="uid://dhwy3spw05iwl" path="res://Assets/Items/Drinks/beer.png" id="11_2tkpp"]
+[ext_resource type="Texture2D" uid="uid://cg54c51342qpt" path="res://Assets/UI/The_sott.png" id="13_e1j77"]
 [ext_resource type="Texture2D" uid="uid://xnqyp4q8b5va" path="res://Assets/3D_textures/toposcope_sunset_2k.hdr" id="14_pka58"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_v88eg"]
@@ -275,6 +276,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.081238, 7.160312, 3.426609)
 [node name="Sprite3D" type="Sprite3D" parent="HiddenRecipt" unique_id=1983726433]
 transform = Transform3D(0.05, 0, 0, 0, 0.05, 0, 0, 0, 0.05, 0.02605009, -0.11582613, -0.21608734)
 texture = ExtResource("9_n776p")
+
+[node name="Sprite3D2" type="Sprite3D" parent="HiddenRecipt" unique_id=648356432]
+transform = Transform3D(0.5496605, 0, 0, 0, 0.5496605, 0, 0, 0, 0.05, 0.5278053, -0.11582613, -0.21608734)
+texture = ExtResource("13_e1j77")
 
 [node name="Player" parent="." unique_id=1043279115 node_paths=PackedStringArray("counter") instance=ExtResource("3_c30fp")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2993567, 0, 0)

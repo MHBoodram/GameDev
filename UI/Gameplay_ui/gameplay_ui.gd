@@ -154,7 +154,7 @@ func _on_right_button_pressed() -> void:
 
 func _on_bottom_button_pressed() -> void:
 	if(GameState.player):
-		if(GameState.player.return_tool() == "knife"):
+		if(GameState.player.return_tool() == "knife" && down):
 			GameState.main_node._period_game()
 			_in_down_minigame()
 			return
