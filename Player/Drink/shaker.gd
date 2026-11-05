@@ -1,4 +1,5 @@
-extends Glasses
+extends Processor
+class_name Shaker
 
 const SHAKE_SCENE := preload("res://Player/Drink/ShakeMinigame.tscn")
 
@@ -13,19 +14,20 @@ var _jiggle_tweens : Dictionary = {}
 func ready() -> void:
 	super.ready()
 	add_to_group("shaker")
-	if area_body == null:
-		area_body = get_node_or_null("CollisionShape3D")
-
 
 func can_be_shaken() -> bool:
 	return false
 
 func can_interact_with(target: Ingredients) -> bool:
-	if not is_instance_valid(target):
+	if not is_instance_valid(target) or in_game:
 		return false
-	if not in_game and target is Glasses and target.is_in_group("glass") and not target.is_in_group("shaker"):
-		return (target as Glasses).can_be_shaken()
-	return super.can_interact_with(target)
+	if target is Glasses:
+		return target.can_be_shaken()
+	return false
+
+func execute_interaction(target: Ingredients) -> void:
+	if target is Glasses and can_interact_with(target):
+		start_shake(target as Glasses)
 
 func start_shake(glass: Glasses) -> void:
 	if _shaking or ShakerMinigame.active:
@@ -93,3 +95,4 @@ func _end_jiggle() -> void:
 	_jiggle_nodes.clear()
 	_jiggle_home.clear()
 	_jiggle_tweens.clear()
+	
