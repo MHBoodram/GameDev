@@ -3,6 +3,11 @@
 [ext_resource type="PackedScene" uid="uid://dcns2u2wox6od" path="res://Assets/3D/bar.glb" id="1_sh2qq"]
 [ext_resource type="Shader" uid="uid://qothrby8gojn" path="res://Shader/per_object_pixel_shader.gdshader" id="2_5snmu"]
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bq4gq"]
+render_priority = 0
+shader = ExtResource("2_5snmu")
+shader_parameter/pixel_size = 3
+
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_2joti"]
 render_priority = 0
 shader = ExtResource("2_5snmu")
@@ -29,11 +34,6 @@ shader = ExtResource("2_5snmu")
 shader_parameter/pixel_size = 3
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_cfncv"]
-render_priority = 0
-shader = ExtResource("2_5snmu")
-shader_parameter/pixel_size = 3
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_bq4gq"]
 render_priority = 0
 shader = ExtResource("2_5snmu")
 shader_parameter/pixel_size = 3
@@ -90,59 +90,77 @@ shader_parameter/pixel_size = 3
 
 [node name="new_bar" unique_id=47131528 instance=ExtResource("1_sh2qq")]
 
-[node name="Back counter pattern" parent="." index="1" unique_id=1928819216]
-transform = Transform3D(-2.6917652e-07, 0, 1.0640978, 0, 2.3574443, 0, -6.158041, 0, -4.6513193e-08, -5.8180113, 3.6521893, -9.786367)
-
-[node name="Cushion_001" parent="." index="4" unique_id=911689185]
-material_overlay = SubResource("ShaderMaterial_2joti")
-
-[node name="Cushion_002" parent="." index="5" unique_id=1697178954]
-material_overlay = SubResource("ShaderMaterial_on0uf")
-
-[node name="Cushion_003" parent="." index="6" unique_id=1177670188]
-material_overlay = SubResource("ShaderMaterial_x4n3n")
-
-[node name="Cushion_004" parent="." index="7" unique_id=1758366397]
-material_overlay = SubResource("ShaderMaterial_chapp")
-
-[node name="Cushion_007" parent="." index="8" unique_id=1015368930]
-material_overlay = SubResource("ShaderMaterial_v8qlf")
-
-[node name="Floor" parent="." index="12" unique_id=478260854]
-material_overlay = SubResource("ShaderMaterial_cfncv")
-
-[node name="Frame_001" parent="." index="13" unique_id=1541143310]
+[node name="Back counter" parent="." index="0" unique_id=1342372790]
 material_overlay = SubResource("ShaderMaterial_bq4gq")
 
-[node name="Frame_002" parent="." index="14" unique_id=1811644523]
+[node name="Back counter pattern" parent="." index="1" unique_id=1465925431]
+transform = Transform3D(-2.6917652e-07, 0, 1.0640978, 0, 2.3574443, 0, -6.158041, 0, -4.6513193e-08, -5.8180113, 3.6521893, -9.786367)
+
+[node name="Cushion_001" parent="." index="4" unique_id=1330946570]
+material_overlay = SubResource("ShaderMaterial_2joti")
+
+[node name="Cushion_002" parent="." index="5" unique_id=1406765623]
+material_overlay = SubResource("ShaderMaterial_on0uf")
+
+[node name="Cushion_003" parent="." index="6" unique_id=805712862]
+material_overlay = SubResource("ShaderMaterial_x4n3n")
+
+[node name="Cushion_004" parent="." index="7" unique_id=1844649206]
+material_overlay = SubResource("ShaderMaterial_chapp")
+
+[node name="Cushion_007" parent="." index="8" unique_id=611406312]
+material_overlay = SubResource("ShaderMaterial_v8qlf")
+
+[node name="Floor" parent="." index="12" unique_id=865089894]
+material_overlay = SubResource("ShaderMaterial_cfncv")
+
+[node name="Frame_001" parent="." index="13" unique_id=1374238933]
+material_overlay = SubResource("ShaderMaterial_bq4gq")
+
+[node name="Frame_002" parent="." index="14" unique_id=1108725308]
 material_overlay = SubResource("ShaderMaterial_tyxmf")
 
-[node name="Frame_003" parent="." index="15" unique_id=1318183070]
+[node name="Frame_003" parent="." index="15" unique_id=2108545908]
 material_overlay = SubResource("ShaderMaterial_x4qe3")
 
-[node name="Frame_004" parent="." index="16" unique_id=1799942277]
+[node name="Frame_004" parent="." index="16" unique_id=21917498]
 material_overlay = SubResource("ShaderMaterial_xjrtr")
 
-[node name="Frame_005" parent="." index="17" unique_id=1404620253]
+[node name="Frame_005" parent="." index="17" unique_id=1190970931]
 material_overlay = SubResource("ShaderMaterial_4itrx")
 
-[node name="Sink cutout" parent="." index="36" unique_id=778710678]
+[node name="Front counter" parent="." index="19" unique_id=982325968]
+material_overlay = SubResource("ShaderMaterial_bq4gq")
+
+[node name="Shelf" parent="." index="31" unique_id=1430351583]
+material_overlay = SubResource("ShaderMaterial_bq4gq")
+
+[node name="Shelf_001" parent="." index="32" unique_id=266484421]
+material_overlay = SubResource("ShaderMaterial_bq4gq")
+
+[node name="Shelf_002" parent="." index="33" unique_id=1327476985]
+material_overlay = SubResource("ShaderMaterial_bq4gq")
+
+[node name="Shelf_003" parent="." index="34" unique_id=1506989934]
+material_overlay = SubResource("ShaderMaterial_bq4gq")
+
+[node name="Sink cutout" parent="." index="36" unique_id=1926839888]
 visible = false
 
-[node name="Table_001" parent="." index="42" unique_id=523249310]
+[node name="Table_001" parent="." index="42" unique_id=1247706366]
 material_overlay = SubResource("ShaderMaterial_l25nj")
 
-[node name="Table_002" parent="." index="43" unique_id=1384844973]
+[node name="Table_002" parent="." index="43" unique_id=1322580622]
 material_overlay = SubResource("ShaderMaterial_0j8rr")
 
-[node name="Table_003" parent="." index="44" unique_id=2107572980]
+[node name="Table_003" parent="." index="44" unique_id=92167460]
 material_overlay = SubResource("ShaderMaterial_0p5id")
 
-[node name="Table_004" parent="." index="45" unique_id=440707153]
+[node name="Table_004" parent="." index="45" unique_id=717261522]
 material_overlay = SubResource("ShaderMaterial_glf7r")
 
-[node name="Table_005" parent="." index="46" unique_id=2009234900]
+[node name="Table_005" parent="." index="46" unique_id=854415562]
 material_overlay = SubResource("ShaderMaterial_r7riq")
 
-[node name="Walls" parent="." index="47" unique_id=2086118720]
+[node name="Walls" parent="." index="47" unique_id=1879523605]
 material_overlay = SubResource("ShaderMaterial_5snmu")

@@ -48,7 +48,7 @@ sky_material = SubResource("PanoramaSkyMaterial_2tkpp")
 
 [sub_resource type="Environment" id="Environment_ris41"]
 background_mode = 2
-background_energy_multiplier = 0.7
+background_energy_multiplier = 0.25
 sky = SubResource("Sky_pka58")
 sky_rotation = Vector3(0, -2.120575, 0)
 
@@ -225,6 +225,7 @@ visible = false
 
 [node name="Night_Time" type="Timer" parent="." unique_id=1785817623]
 wait_time = 300.0
+one_shot = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1277346395]
 environment = SubResource("Environment_ris41")

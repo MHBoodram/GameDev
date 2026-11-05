@@ -214,7 +214,7 @@ sky_material = SubResource("PanoramaSkyMaterial_tclvf")
 
 [sub_resource type="Environment" id="Environment_vom8s"]
 background_mode = 2
-background_energy_multiplier = 0.7
+background_energy_multiplier = 0.2
 sky = SubResource("Sky_pka58")
 sky_rotation = Vector3(0, -2.120575, 0)
 

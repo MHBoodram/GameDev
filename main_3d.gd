@@ -19,7 +19,7 @@ var initial_fog_albedo: Color = Color(0.9843137, 0.7411765, 0.0, 1.0)
 var sky_material: PanoramaSkyMaterial
 
 @export var dusk_start_seconds: float = 0.0
-@export var dusk_end_seconds: float = 60.0
+@export var dusk_end_seconds: float = 15.0
 @export var night_hdri_energy: float = 0.025
 @export var night_sun_pitch_degrees: float = 45.0
 @export var night_fog_albedo: Color = Color(0.04, 0.06, 0.12, 1.0)
@@ -420,7 +420,6 @@ func _npc_patience_end(seat_num: int) -> void:
 		return
 	recipt_node.ordered = false
 	recipt_node._finish_drag_or_click()
-	
 	var tween = get_tree().create_tween().set_parallel(true)
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
