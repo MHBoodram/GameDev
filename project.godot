@@ -24,11 +24,11 @@ buses/default_bus_layout="uid://g8pei7ewj4ad"
 
 DialogueManager="*uid://c3rodes2l3gxb"
 GameState="*uid://c0vdm1x1jn41b"
-PlayerStats="*uid://dwr0w6ek46qk1"
 UIAudio="*res://UI/Audio/UIAudio.tscn"
 MusicPlayer="*uid://bx0ui2flch67q"
 SettingState="*uid://ddsldglo0bq85"
 Transition="*uid://byxvojpl8qte4"
+PlayerStats="*uid://bx81qr1x8enbp"
 
 [display]
 
