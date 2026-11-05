@@ -2,8 +2,8 @@ extends Control
 
 const GAME_SCENE := "res://Main3D.tscn"
 
-@onready var play_button: Button = $CenterContainer/VBox/PlayButton
-@onready var quit_button: Button = $CenterContainer/VBox/QuitButton
+@onready var play_button: Button = $Paper/CenterContainer/VBox/PlayButton
+@onready var quit_button: Button = $Paper/CenterContainer/VBox/QuitButton
 
 func _ready() -> void:
 	#$CenterContainer/VBox/Button.grab_focus()
@@ -24,14 +24,14 @@ func _on_play_pressed() -> void:
 	Transition._changing_scene(GAME_SCENE)
 
 func _change_hover(n_name: String = "Setting") -> void:
-	var getting_node = get_node("CenterContainer/VBox/" + n_name + "Button")
+	var getting_node = get_node("Paper/CenterContainer/VBox/" + n_name + "Button")
 	if(!getting_node):
 		push_warning("Can't find node: " + n_name)
 		return
 	getting_node.modulate = Color(0.898, 0.831, 0.0, 0.624)
 
 func _remove_hover(n_name: String = "Setting") -> void:
-	var getting_node = get_node("CenterContainer/VBox/" + n_name + "Button")
+	var getting_node = get_node("Paper/CenterContainer/VBox/" + n_name + "Button")
 	if(!getting_node):
 		push_warning("Can't find node: " + n_name)
 		return

@@ -41,6 +41,19 @@ corner_radius_bottom_right = 20
 corner_radius_bottom_left = 20
 corner_detail = 7
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_caksa"]
+bg_color = Color(1, 0, 0, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_blend = true
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+corner_detail = 7
+
 [node name="BloodCells" type="Button" unique_id=2135264374]
 offset_right = 30.0
 offset_bottom = 30.0
@@ -63,7 +76,7 @@ grow_vertical = 2
 pivot_offset = Vector2(15, 15)
 mouse_filter = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_ngh8x")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_ngh8x")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_caksa")
 disabled = true
 
 [connection signal="pressed" from="." to="." method="_on_pressed"]

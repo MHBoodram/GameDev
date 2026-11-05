@@ -6,7 +6,7 @@
 [node name="BarSetting" type="Node3D" unique_id=1770039662]
 script = ExtResource("1_ck6hi")
 
-[node name="SpotLight3D" type="SpotLight3D" parent="." unique_id=1267194052]
+[node name="SpotLight3D1" type="SpotLight3D" parent="." unique_id=1267194052]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 3.5863514, 0)
 light_color = Color(1, 0.895, 0.58000004, 1)
 light_energy = 4.0

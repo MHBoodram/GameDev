@@ -119,6 +119,7 @@ player = NodePath("..")
 [node name="Hand" type="Sprite2D" parent="GameplayUi" unique_id=597545569]
 process_mode = 3
 top_level = true
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("4_ddoul")
 hframes = 11
 

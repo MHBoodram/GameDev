@@ -45,7 +45,16 @@ func _moving_2d_to_3d():
 @warning_ignore("unused_parameter")
 func _on_area_3d_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		var tween = get_tree().create_tween().set_parallel(true)
+		tween.set_trans(Tween.TRANS_SINE)
+		tween.set_ease(Tween.EASE_OUT)
+		tween.tween_property($Menu2/Menu3/Viewport,"modulate:a",0,0.3)
+		#tween.tween_property($Menu2,"modulate:a",0,0.5)
+		tween.tween_property($SpotLight3D,"light_energy",0,0.3)
+		await tween.finished
+		await get_tree().create_timer(1).timeout
 		$Menu2/Menu3/Viewport/SubViewport/StartMenu._on_play_pressed()
+		
 
 func _on_play_mouse_entered() -> void:
 	_update_hand("interact")
@@ -62,7 +71,6 @@ func _on_play_mouse_exited() -> void:
 
 func _on_setting_mouse_exited() -> void:
 	_update_hand("idle")
-
 	start_menu._remove_hover("Setting")
 
 

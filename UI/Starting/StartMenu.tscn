@@ -4,6 +4,14 @@
 [ext_resource type="Script" uid="uid://cdw65vses6vur" path="res://UI/Starting/StartMenu.gd" id="1_start"]
 [ext_resource type="Texture2D" uid="uid://b1g27nful45ro" path="res://UI/Game_Title_Asset.png" id="2_logo"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b2fhn"]
+bg_color = Color(1, 0.8901961, 0.73333335, 1)
+border_width_left = 10
+border_width_top = 10
+border_width_right = 10
+border_width_bottom = 10
+border_color = Color(0, 0, 0, 1)
+
 [sub_resource type="AtlasTexture" id="AtlasTexture_logo"]
 atlas = ExtResource("2_logo")
 region = Rect2(23, 33, 463, 289)
@@ -19,6 +27,7 @@ theme = ExtResource("1_b2fhn")
 script = ExtResource("1_start")
 
 [node name="Background" type="ColorRect" parent="." unique_id=1959663630]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -27,7 +36,16 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.99999994, 0.8914112, 0.7336545, 1)
 
-[node name="CenterContainer" type="CenterContainer" parent="." unique_id=894323069]
+[node name="Paper" type="Panel" parent="." unique_id=943284422]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_b2fhn")
+
+[node name="CenterContainer" type="CenterContainer" parent="Paper" unique_id=894323069]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -35,11 +53,11 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="CenterContainer" unique_id=302025385]
+[node name="VBox" type="VBoxContainer" parent="Paper/CenterContainer" unique_id=302025385]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Logo" type="TextureRect" parent="CenterContainer/VBox" unique_id=450784215]
+[node name="Logo" type="TextureRect" parent="Paper/CenterContainer/VBox" unique_id=450784215]
 texture_filter = 1
 custom_minimum_size = Vector2(695, 434)
 layout_mode = 2
@@ -47,20 +65,20 @@ texture = SubResource("AtlasTexture_logo")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="PlayButton" type="Button" parent="CenterContainer/VBox" unique_id=937122296]
+[node name="PlayButton" type="Button" parent="Paper/CenterContainer/VBox" unique_id=937122296]
 custom_minimum_size = Vector2(240, 48)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Play"
 
-[node name="SettingButton" type="Button" parent="CenterContainer/VBox" unique_id=1516208611]
+[node name="SettingButton" type="Button" parent="Paper/CenterContainer/VBox" unique_id=1516208611]
 custom_minimum_size = Vector2(240, 48)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Setting
 "
 
-[node name="QuitButton" type="Button" parent="CenterContainer/VBox" unique_id=504631371]
+[node name="QuitButton" type="Button" parent="Paper/CenterContainer/VBox" unique_id=504631371]
 custom_minimum_size = Vector2(240, 48)
 layout_mode = 2
 size_flags_horizontal = 4

@@ -35,6 +35,8 @@ func _ready() -> void:
 	_check_unlocks_drinks()
 	_setup_environment_day_night()
 	SettingState.apply_world_environment()
+	$AnimationPlayer.play("opening")
+	await $AnimationPlayer.animation_finished
 	night_timer.timeout.connect(_on_night_time_timeout)
 	PlayerStats.previous_money = PlayerStats.money
 	_setup_shift()
@@ -148,6 +150,11 @@ func _on_night_time_timeout() -> void:
 # Transitions to intermission menu if timer expired and all seats are cleared
 func _check_night_concluded() -> void:
 	if not is_spawning_allowed and seats.count(null) == seats.size() and GameState.can_end_night and not GameState.night_paused:
+		$AnimationPlayer.play_backwards("opening")
+		$BarSetting._spotlight_dim()
+		var tween = get_tree().create_tween()
+		tween.tween_property($Coutner/SpotLight3D,"light_energy",0,0.5)
+		await get_tree().create_timer(1.5).timeout
 		Transition._changing_scene("res://UI/After_night/after_night_menu.tscn")
 
 func _check_upgrades() -> void:
