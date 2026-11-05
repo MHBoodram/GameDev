@@ -16,7 +16,8 @@ const LIQUID_COLOR = {
 	"beer" : Color(0.98, 0.322, 0.051, 1.0),
 	"spirit" : Color(0.542, 0.691, 1.0, 1.0),
 	"vodka" : Color(0.137, 0.372, 1.0, 1.0),
-	"rum" : Color(0.458, 0.154, 0.014, 1.0)
+	"rum" : Color(0.458, 0.154, 0.014, 1.0),
+	"blood" : Color("cd0f00ff")
 }
 
 @export_group("Liquid Physics")
