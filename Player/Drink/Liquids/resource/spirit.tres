@@ -1,11 +1,13 @@
 [gd_resource type="Resource" script_class="Liquid" format=3 uid="uid://ddi3vgfhmp5j"]
 
+[ext_resource type="Texture2D" uid="uid://ce7uneimt67sk" path="res://Assets/Items/Drinks/spirit_color.png" id="1_0chv8"]
 [ext_resource type="Script" uid="uid://ouggsev6087j" path="res://Player/Drink/Liquids/Liquid_resource.gd" id="1_byul6"]
-[ext_resource type="Texture2D" uid="uid://dds0g16npfvxe" path="res://Assets/Items/Drinks/spirit.png" id="2_1iy1x"]
+[ext_resource type="Texture2D" uid="uid://bchgvbxoj1u7e" path="res://Assets/Items/Drinks/spirit_outline.png" id="3_fms2u"]
 
 [resource]
 script = ExtResource("1_byul6")
-sprite = ExtResource("2_1iy1x")
+sprite = ExtResource("3_fms2u")
+outside_Sprite = ExtResource("1_0chv8")
 alchol = true
 id = "spirit"
 metadata/_custom_type_script = "uid://ouggsev6087j"

@@ -245,7 +245,9 @@ func _rebuild_liquid_gradient() -> void:
 			if(liquids.size()-1 == i):
 				drink_list_label.material.set_shader_parameter("base_color", col)
 			liquid_box.modulate.a = 1
-			drink_list_label.text = str(liquids[liquids.size()-1][0]) + ": " +str(liquids[liquids.size()-1][1])
+			drink_list_label.text = str(liquids[liquids.size()-1][0]) + ": " +str(int(liquids[liquids.size()-1][1]* 10))
+			drink_list_label._change_bottom_text(str(liquids[liquids.size()-1][0]) + ": " +str(int(liquids[liquids.size()-1][1]* 10)))
+			
 
 		colors.append(col)
 		current_pos += amount / total_liquids

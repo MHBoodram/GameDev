@@ -1,11 +1,13 @@
 [gd_resource type="Resource" script_class="Liquid" format=3 uid="uid://cy5o4c0bxslh6"]
 
+[ext_resource type="Texture2D" uid="uid://4shdtkr1lsgy" path="res://Assets/Items/Drinks/vodka_color.png" id="1_2wohq"]
 [ext_resource type="Script" uid="uid://ouggsev6087j" path="res://Player/Drink/Liquids/Liquid_resource.gd" id="1_w0p58"]
-[ext_resource type="Texture2D" uid="uid://dfnrg3cjfolv6" path="res://Assets/Items/Drinks/vodka.png" id="2_w0p58"]
+[ext_resource type="Texture2D" uid="uid://b7to3dkydm1cn" path="res://Assets/Items/Drinks/vodka_outline.png" id="3_h7xst"]
 
 [resource]
 script = ExtResource("1_w0p58")
-sprite = ExtResource("2_w0p58")
+sprite = ExtResource("3_h7xst")
+outside_Sprite = ExtResource("1_2wohq")
 alchol = true
 id = "vodka"
 metadata/_custom_type_script = "uid://ouggsev6087j"

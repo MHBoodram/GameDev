@@ -22,6 +22,7 @@ func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 	liquid_resource = _liquid
 	size = liquid_resource.liquid_size
 	$Inside.texture = liquid_resource.sprite
+	$Inside/Outside.texture = liquid_resource.outside_Sprite
 	original_position = og_position
 	counter_origin = Counter
 	global_position = og_position.global_position

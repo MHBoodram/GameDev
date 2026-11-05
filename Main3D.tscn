@@ -117,6 +117,7 @@ _data = {
 
 [node name="Main3d" type="Node3D" unique_id=692509091]
 script = ExtResource("1_8iyjh")
+dusk_end_seconds = 60.0
 
 [node name="BarSetting" parent="." unique_id=1770039662 instance=ExtResource("2_qgfr0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.004, 1.17, 1.426)
