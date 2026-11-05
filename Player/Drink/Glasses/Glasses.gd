@@ -16,7 +16,10 @@ const LIQUID_COLOR = {
 	"beer" : Color(0.98, 0.322, 0.051, 1.0),
 	"spirit" : Color(0.542, 0.691, 1.0, 1.0),
 	"vodka" : Color(0.137, 0.372, 1.0, 1.0),
-	"rum" : Color(0.458, 0.154, 0.014, 1.0)
+	"rum" : Color(0.458, 0.154, 0.014, 1.0),
+	"tequila" : Color(0.9, 0.85, 0.3, 1.0),
+	"whiskey" : Color(0.78, 0.42, 0.1, 1.0),
+	"blood" : Color(0.85, 0.05, 0.05, 1.0)
 }
 
 @export_group("Liquid Physics")
@@ -217,10 +220,100 @@ func _update_shader_parameters() -> void:
 	liquid_shader_mat.set_shader_parameter("inner_margin_top", inner_margin_top)
 	liquid_shader_mat.set_shader_parameter("inner_margin_bottom", inner_margin_bottom)
 
+
+
+# Color functions just for mixing
+
+func _format_layer_name(layer_id) -> String:
+	if layer_id is Array:
+		var names: Array = layer_id.duplicate()
+		names.sort()
+		return " + ".join(names)
+	elif layer_id is Dictionary:
+		var names: Array = layer_id.keys()
+		names.sort()
+		return " + ".join(names)
+	return str(layer_id)
+
+func _get_layer_color(layer: Array) -> Color:
+	if layer.size() > 2 and layer[2] is Color:
+		return layer[2]
+	if layer[0] is Array or layer[0] is Dictionary:
+		return _get_layer_hsv_color(layer)
+	return LIQUID_COLOR.get(str(layer[0]), Color.WHITE)
+
+func _get_layer_hsv_color(layer: Array) -> Color:
+	if layer.size() > 2 and layer[2] is Color:
+		return layer[2]
+	var color_weights: Array = []
+	if layer.size() > 3 and layer[3] is Dictionary:
+		for ing_id in layer[3]:
+			var ing_col: Color = LIQUID_COLOR.get(str(ing_id), Color.WHITE)
+			color_weights.append([ing_col, float(layer[3][ing_id])])
+	elif layer[0] is Array:
+		for ing_id in layer[0]:
+			var ing_col: Color = LIQUID_COLOR.get(str(ing_id), Color.WHITE)
+			color_weights.append([ing_col, 1.0])
+	elif layer[0] is Dictionary:
+		for ing_id in layer[0]:
+			var ing_col: Color = LIQUID_COLOR.get(str(ing_id), Color.WHITE)
+			color_weights.append([ing_col, float(layer[0][ing_id])])
+	else:
+		return LIQUID_COLOR.get(str(layer[0]), Color.WHITE)
+	return _average_hsv_color(color_weights)
+
+func _average_hsv_color(color_weights: Array) -> Color:
+	if color_weights.is_empty():
+		return Color.WHITE
+
+	var total_weight: float = 0.0
+	var sum_x: float = 0.0
+	var sum_y: float = 0.0
+	var sum_s: float = 0.0
+	var sum_v: float = 0.0
+	var sum_a: float = 0.0
+
+	for item in color_weights:
+		var c: Color = item[0]
+		var w: float = float(item[1])
+		if w <= 0.0:
+			continue
+		total_weight += w
+		var angle: float = c.h * TAU
+		var sat_w: float = maxf(c.s, 0.01) * w
+		sum_x += cos(angle) * sat_w
+		sum_y += sin(angle) * sat_w
+		sum_s += c.s * w
+		sum_v += c.v * w
+		sum_a += c.a * w
+
+	if total_weight <= 0.0:
+		return Color.WHITE
+
+	var avg_h: float = 0.0
+	if absf(sum_x) > 0.0001 or absf(sum_y) > 0.0001:
+		var avg_angle: float = atan2(sum_y, sum_x)
+		if avg_angle < 0.0:
+			avg_angle += TAU
+		avg_h = avg_angle / TAU
+	else:
+		avg_h = color_weights[0][0].h
+
+	var avg_s: float = clampf(sum_s / total_weight, 0.0, 1.0)
+	var avg_v: float = clampf(sum_v / total_weight, 0.0, 1.0)
+	var avg_a: float = clampf(sum_a / total_weight, 0.0, 1.0)
+
+	avg_s = clampf(avg_s, 0.35, 1.0)
+	avg_v = clampf(avg_v, 0.5, 1.0)
+
+	return Color.from_hsv(avg_h, avg_s, avg_v, avg_a)
+
+
+
 func _rebuild_liquid_gradient() -> void:
 	total_liquids = 0.0
 	for l in liquids:
-		total_liquids += l[1]
+		total_liquids += float(l[1])
 
 	if not liquid_gradient:
 		return
@@ -230,22 +323,37 @@ func _rebuild_liquid_gradient() -> void:
 		liquid_gradient.colors = PackedColorArray([Color(0, 0, 0, 0), Color(0, 0, 0, 0)])
 		return
 
+	if liquid_box and tcmtd:
+		var children = liquid_box.get_children()
+		if children.size() != liquids.size():
+			for child in children:
+				child.queue_free()
+			for layer in liquids:
+				var lbl = tcmtd.instantiate()
+				liquid_box.add_child(lbl)
+		children = liquid_box.get_children()
+		for idx in range(min(children.size(), liquids.size())):
+			var lbl = children[idx]
+			var layer = liquids[idx]
+			var col = _get_layer_color(layer)
+			if lbl.material:
+				lbl.material.set_shader_parameter("base_color", col)
+			var layer_name: String = _format_layer_name(layer[0])
+			lbl.text = layer_name + ": " + str(snappedf(float(layer[1]), 0.01))
+		if not children.is_empty():
+			drink_list_label = children[children.size() - 1]
+		liquid_box.modulate.a = 1.0
+
 	var offsets := PackedFloat32Array([0.0])
 	var colors := PackedColorArray()
 
 	var current_pos: float = 0.0
 	for i in range(liquids.size() - 1, -1, -1):
-		var liquid_id: String = liquids[i][0]
-		var amount: float = liquids[i][1]
+		var layer = liquids[i]
+		var amount: float = float(layer[1])
 		if amount <= 0.0:
 			continue
-		var col: Color = LIQUID_COLOR.get(liquid_id, Color.WHITE)
-
-		if(drink_list_label != null):
-			if(liquids.size()-1 == i):
-				drink_list_label.material.set_shader_parameter("base_color", col)
-			liquid_box.modulate.a = 1
-			drink_list_label.text = str(liquids[liquids.size()-1][0]) + ": " +str(liquids[liquids.size()-1][1])
+		var col: Color = _get_layer_color(layer)
 
 		colors.append(col)
 		current_pos += amount / total_liquids
@@ -273,28 +381,30 @@ func _pouring(id : String, liquids_num : float) -> void:
 	if liquids_num <= 0.0:
 		return
 
-	if(len(liquids) != 0):
-		var top_drink = liquids[len(liquids)-1]
-		if(top_drink[0] == id):
+	var col: Color = LIQUID_COLOR.get(id, Color.WHITE)
+
+	if len(liquids) != 0:
+		var top_drink = liquids[len(liquids) - 1]
+		if top_drink[0] is String and top_drink[0] == id:
 			top_drink[1] += liquids_num
-			_visuals_change(liquids_num,id,false)
+			if top_drink.size() > 3 and top_drink[3] is Dictionary:
+				top_drink[3][id] = top_drink[1]
+			_visuals_change(liquids_num, id, false)
 		else:
 			print("new drink")
 			var new_label = tcmtd.instantiate()
 			liquid_box.add_child(new_label)
 			drink_list_label = new_label
-			var temp_liquid = [id,liquids_num]
+			var temp_liquid = [id, liquids_num, col, {id: liquids_num}]
 			liquids.push_back(temp_liquid)
-			_visuals_change(liquids_num,id,true)
-
+			_visuals_change(liquids_num, id, true)
 	else:
 		var new_label = tcmtd.instantiate()
 		liquid_box.add_child(new_label)
 		drink_list_label = new_label
-		var temp_liquid = [id,liquids_num]
+		var temp_liquid = [id, liquids_num, col, {id: liquids_num}]
 		liquids.push_back(temp_liquid)
-		_visuals_change(liquids_num,id,true)
-
+		_visuals_change(liquids_num, id, true)
 
 	slosh_velocity += randf_range(-0.35, 0.35) * (1.0 - clampf(viscosity, 0.0, 1.0))
 	slosh_vertical_velocity += randf_range(-0.15, 0.05)
@@ -341,11 +451,15 @@ func _on_area_3d_area_entered(area: Area3D) -> void:
 func can_interact_with(target: Ingredients) -> bool:
 	if target and target.is_in_group("trash"):
 		return true
+	if target is Shaker and can_be_shaken():
+		return true
 	return false
 
 func execute_interaction(target: Ingredients) -> void:
 	if target and target.is_in_group("trash"):
 		_delete()
+	elif target is Shaker and can_be_shaken():
+		target.start_shake(self)
 
 func _remove_displaying_list() -> void:
 	if(liquid_box):
@@ -363,47 +477,141 @@ var _mixed_signature : String = ""
 func get_unique_liquids_ids() -> Array[String]:
 	var ids: Array[String] = []
 	for l in liquids:
-		var id: String = l[0]
-		if not ids.has(id):
-			ids.append(id)
+		if l[0] is Array:
+			for sub_id in l[0]:
+				var s: String = str(sub_id)
+				if not ids.has(s):
+					ids.append(s)
+		elif l[0] is Dictionary:
+			for sub_id in l[0].keys():
+				var s: String = str(sub_id)
+				if not ids.has(s):
+					ids.append(s)
+		else:
+			var s: String = str(l[0])
+			if not ids.has(s):
+				ids.append(s)
+	ids.sort()
 	return ids
 
 func _liquid_signature() -> String:
 	var parts: PackedStringArray = []
 	for l in liquids:
-		parts.append("%s:%.3f" % [l[0], float(l[1])])
+		if l[0] is Array:
+			var sorted_names = l[0].duplicate()
+			sorted_names.sort()
+			parts.append("[%s]:%.3f" % [",".join(sorted_names), float(l[1])])
+		elif l[0] is Dictionary:
+			var keys = l[0].keys()
+			keys.sort()
+			var dict_parts: PackedStringArray = []
+			for k in keys:
+				dict_parts.append("%s:%.3f" % [k, float(l[0][k])])
+			parts.append("{%s}:%.3f" % [",".join(dict_parts), float(l[1])])
+		else:
+			parts.append("%s:%.3f" % [str(l[0]), float(l[1])])
 	return ",".join(parts)
 
 func can_be_shaken() -> bool:
-	return not in_game and not is_being_served and not is_mixed() and get_unique_liquids_ids().size() >= 2
+	if in_game or is_being_served:
+		return false
+	if liquids.is_empty():
+		return false
+	if get_unique_liquids_ids().size() < 2:
+		return false
+	if is_mixed():
+		return false
+	return true
 
 func is_mixed() -> bool:
-	return _mixed_signature != "" and _mixed_signature == _liquid_signature()
+	if liquids.is_empty():
+		return false
+	if liquids.size() > 1:
+		return false
+	var layer0 = liquids[0]
+	if layer0[0] is Array and layer0[0].size() >= 2:
+		return true
+	if layer0[0] is Dictionary and layer0[0].size() >= 2:
+		return true
+	return false
 
 func mark_mixed() -> void:
-	if get_unique_liquids_ids().size() < 2:
+	if get_unique_liquids_ids().size() < 2 or liquids.is_empty():
 		return
+
+	var combined_amounts: Dictionary = {}
+	var color_weights: Array = []
+	var total_amount: float = 0.0
+
+	for layer in liquids:
+		var layer_amt: float = float(layer[1])
+		if layer_amt <= 0.0:
+			continue
+		total_amount += layer_amt
+		if layer.size() > 3 and layer[3] is Dictionary:
+			for ing_id in layer[3]:
+				var a: float = float(layer[3][ing_id])
+				combined_amounts[str(ing_id)] = combined_amounts.get(str(ing_id), 0.0) + a
+				var c: Color = LIQUID_COLOR.get(str(ing_id), Color.WHITE)
+				color_weights.append([c, a])
+		elif layer[0] is Array:
+			var split_a: float = layer_amt / maxf(float(layer[0].size()), 1.0)
+			for ing_id in layer[0]:
+				var s: String = str(ing_id)
+				combined_amounts[s] = combined_amounts.get(s, 0.0) + split_a
+				var c: Color = LIQUID_COLOR.get(s, Color.WHITE)
+				color_weights.append([c, split_a])
+		elif layer[0] is Dictionary:
+			for ing_id in layer[0]:
+				var a: float = float(layer[0][ing_id])
+				combined_amounts[str(ing_id)] = combined_amounts.get(str(ing_id), 0.0) + a
+				var c: Color = LIQUID_COLOR.get(str(ing_id), Color.WHITE)
+				color_weights.append([c, a])
+		else:
+			var s: String = str(layer[0])
+			combined_amounts[s] = combined_amounts.get(s, 0.0) + layer_amt
+			var c: Color = LIQUID_COLOR.get(s, Color.WHITE)
+			color_weights.append([c, layer_amt])
+
+	var mixed_color: Color = _average_hsv_color(color_weights)
+
+	var mixed_names: Array[String] = []
+	for ing_id in combined_amounts.keys():
+		mixed_names.append(str(ing_id))
+	mixed_names.sort()
+
+	liquids.clear()
+	var new_mixed_layer = [mixed_names, total_amount, mixed_color, combined_amounts]
+	liquids.push_back(new_mixed_layer)
+
 	_mixed_signature = _liquid_signature()
 	_rebuild_liquid_gradient()
 
 func get_mixed_ingredients() -> Array[String]:
 	var result: Array[String] = []
-	if is_mixed():
-		result = get_unique_liquids_ids()
+	for layer in liquids:
+		if layer[0] is Array:
+			for ing in layer[0]:
+				var s: String = str(ing)
+				if not result.has(s):
+					result.append(s)
+		elif layer[0] is Dictionary:
+			for ing in layer[0].keys():
+				var s: String = str(ing)
+				if not result.has(s):
+					result.append(s)
+	result.sort()
 	return result
 
 func _mixed_color() -> Color:
-	var total: float = 0.0
-	var r: float = 0.0
-	var g: float = 0.0
-	var b: float = 0.0
+	var color_weights: Array = []
 	for l in liquids:
 		var amount: float = float(l[1])
-		var col: Color = LIQUID_COLOR.get(l[0], Color.WHITE)
-		r += col.r * amount
-		g += col.g * amount
-		b += col.b * amount
-		total += amount
-	if total <= 0.0:
-		return Color.WHITE
-	return Color(r/total, g/total, b/total, 1.0)
+		if l.size() > 2 and l[2] is Color:
+			color_weights.append([l[2], amount])
+		elif l[0] is Array or l[0] is Dictionary:
+			color_weights.append([_get_layer_hsv_color(l), amount])
+		else:
+			var col: Color = LIQUID_COLOR.get(str(l[0]), Color.WHITE)
+			color_weights.append([col, amount])
+	return _average_hsv_color(color_weights)
