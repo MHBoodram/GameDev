@@ -4,12 +4,17 @@ var mouse_entered: bool = false
 @export var camera_movement_rotation = 10
 @export var player : Node3D
 var current_position : int = 3
-var match_position_counter : Dictionary ={1 : 5.8,2:2.8,3: -0.2}
+var match_position_counter : Dictionary ={1 : 3.17, 2 : 0.17, 3 : -2.83}
 var camera : Camera3D
 var down : bool = false
 var up_down_checks : bool = false
 
-var base_camera_rotation : Vector3 = Vector3(-16.3, 0.0, 0.0)
+const CAMERA_Y_OFFSET : float = 0.3
+const CAMERA_TILT_OFFSET : float = 5.0
+const BASE_FRONT_CAMERA_ROTATION : Vector3 = Vector3(-16.3, 0.0, 0.0)
+const BASE_BACK_CAMERA_ROTATION : Vector3 = Vector3(-21.0, 180.0, 0.0)
+
+var base_camera_rotation : Vector3 = BASE_FRONT_CAMERA_ROTATION + Vector3(CAMERA_TILT_OFFSET, 0.0, 0.0)
 var current_tilt_yaw : float = 0.0
 var current_tilt_pitch : float = 0.0
 const MAX_TILT_YAW : float = 3.0
@@ -20,7 +25,23 @@ var default_camera_local_pos : Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
+	var scene_root: Node = player.get_parent() if player else get_tree().current_scene
+	if scene_root:
+		var seat1 := scene_root.get_node_or_null("Seat1") as Node3D
+		var seat2 := scene_root.get_node_or_null("Seat2") as Node3D
+		var seat3 := scene_root.get_node_or_null("Seat3") as Node3D
+		var cam_x_offset: float = camera.position.x if camera else 0.0
+		if seat3:
+			match_position_counter[1] = seat3.global_position.x - cam_x_offset
+		if seat2:
+			match_position_counter[2] = seat2.global_position.x - cam_x_offset
+		if seat1:
+			match_position_counter[3] = seat1.global_position.x - cam_x_offset
+			if camera:
+				var p_z: float = player.global_position.z if player else 0.0
+				camera.position.z = (seat1.global_position.z + 1.6) - p_z
 	if camera:
+		camera.position.y += CAMERA_Y_OFFSET
 		default_camera_local_pos = camera.position
 	if player and match_position_counter.has(current_position):
 		player.position.x = match_position_counter[current_position]
@@ -78,7 +99,14 @@ func _look_behind() -> void:
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
 	var back_position = Vector3(3.28, 2.75, 0.85)
-	tween.tween_property(self, "base_camera_rotation", Vector3(-21.0, 180.0, 0.0), 0.5)
+	var camera_mark = get_tree().get_first_node_in_group("counter_mark") as Node3D
+	if not camera_mark and player and "counter" in player and player.counter:
+		camera_mark = player.counter.get_node_or_null("Camera mark") as Node3D
+	if camera_mark:
+		back_position = camera_mark.global_position
+	back_position.y += CAMERA_Y_OFFSET
+	var target_rot = BASE_BACK_CAMERA_ROTATION + Vector3(CAMERA_TILT_OFFSET, 0.0, 0.0)
+	tween.tween_property(self, "base_camera_rotation", target_rot, 0.5)
 	tween.tween_property(camera, "global_position", back_position, 0.5)
 	tween.chain().tween_callback(func():
 		$Left_Button.disabled = true
@@ -94,7 +122,8 @@ func _look_forward() -> void:
 	var tween = get_tree().create_tween().set_parallel(true)
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_property(self, "base_camera_rotation", Vector3(-16.3, 0.0, 0.0), 0.5)
+	var target_rot = BASE_FRONT_CAMERA_ROTATION + Vector3(CAMERA_TILT_OFFSET, 0.0, 0.0)
+	tween.tween_property(self, "base_camera_rotation", target_rot, 0.5)
 	tween.tween_property(camera, "position", default_camera_local_pos, 0.5)
 	tween.chain().tween_callback(func():
 		$Left_Button.disabled = false
