@@ -98,6 +98,8 @@ func _process(_delta: float) -> void:
 	super._process(_delta)
 	_update_liquid_physics(_delta)
 	_update_shader_parameters()
+	if camera and not is_balls_dragging:
+		_look_at_sprite(camera.global_position)
 	if is_being_served:
 		return
 	_apply_collision_push(_delta)
@@ -132,7 +134,8 @@ func _look_at_sprite(looking_at: Vector3) -> void:
 	if looking_at and sprite:
 		var target_flat: Vector3 = looking_at
 		target_flat.y = sprite.global_position.y
-		sprite.look_at(target_flat, Vector3.UP)
+		if target_flat.distance_squared_to(sprite.global_position) > 0.0001:
+			sprite.look_at(target_flat, Vector3.UP)
 
 func _update_liquid_physics(delta: float) -> void:
 	if delta <= 0.0:

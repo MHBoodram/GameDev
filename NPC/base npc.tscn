@@ -98,6 +98,7 @@ autostart = true
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=1251642218]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7339805, 0)
+render_priority = 1
 texture = SubResource("ViewportTexture_lmq4y")
 
 [node name="SubViewport" type="SubViewport" parent="Sprite3D" unique_id=1333856061]

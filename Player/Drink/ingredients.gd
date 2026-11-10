@@ -36,7 +36,20 @@ func _ready() -> void:
 	if not mouse_exited.is_connected(_on_area_3d_mouse_exited):
 		mouse_exited.connect(_on_area_3d_mouse_exited)
 	_cache_visual_nodes()
+	_setup_render_priority()
 	ready()
+
+func _setup_render_priority() -> void:
+	for node in find_children("*", "VisualInstance3D", true, false):
+		if node is Sprite3D:
+			node.render_priority = 1
+		elif node is GeometryInstance3D:
+			node.sorting_offset = 1.0
+	var outside = get_node_or_null("Inside/Outside")
+	if outside and outside is Sprite3D:
+		outside.render_priority = 2
+	if _explicit_highlight and _explicit_highlight is Sprite3D:
+		_explicit_highlight.render_priority = 3
 
 func ready() -> void:
 	pass

@@ -13,6 +13,7 @@ func _apply_pixel_shader() -> void:
 	var mat = ShaderMaterial.new()
 	mat.shader = preload("res://Shader/per_object_pixel_shader.gdshader")
 	mat.set_shader_parameter("pixel_size", pixel_size)
+	mat.render_priority = -1
 
 	for mesh in find_children("*", "GeometryInstance3D"):
 		mesh.material_overlay = mat
@@ -23,3 +24,4 @@ func _spotlight_dim() -> void:
 		var spotlight_node = get_node(name_spotlight)
 		var tween = get_tree().create_tween()
 		tween.tween_property(spotlight_node,"light_energy",0,0.5)
+		

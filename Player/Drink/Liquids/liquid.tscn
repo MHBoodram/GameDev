@@ -32,6 +32,8 @@ gravity = Vector3(0, 0, -9.8)
 
 [node name="Inside" type="Sprite3D" parent="." unique_id=645485084]
 flip_h = true
+alpha_cut = 2
+render_priority = 1
 texture = ExtResource("2_46qyp")
 
 [connection signal="area_entered" from="." to="." method="_on_interact_area_entered"]

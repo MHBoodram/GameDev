@@ -286,7 +286,7 @@ texture = ExtResource("13_e1j77")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6275828, 0, 0)
 counter = NodePath("../Coutner")
 spawn_y = 1.8
-spawn_scale = Vector3(0, 0.2, 0.2)
+spawn_scale = Vector3(0.2, 0.2, 0.2)
 
 [node name="DebugMenu" parent="." unique_id=249711118 instance=ExtResource("10_wk5cn")]
 visible = false

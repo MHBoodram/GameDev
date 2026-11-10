@@ -25,9 +25,11 @@ mesh = SubResource("PlaneMesh_wk5cn")
 
 [node name="Base_viewport" type="Sprite3D" parent="." unique_id=96737958]
 transform = Transform3D(-0.049562767, 0.00011018357, 0.006763168, -0.00053406315, -0.0012722295, -0.62899595, -6.5573215e-05, -0.07291917, 0.0109844655, 2.872527e-09, -0.005765382, 0.01349288)
+render_priority = 1
 texture = SubResource("ViewportTexture_v88eg")
 
 [node name="SubViewport" type="SubViewport" parent="Base_viewport" unique_id=1639890423]
 transparent_bg = true
 
 [node name="Recipt" parent="Base_viewport/SubViewport" unique_id=2118297349 instance=ExtResource("2_w43kb")]
+
