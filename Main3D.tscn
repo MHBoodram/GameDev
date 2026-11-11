@@ -257,19 +257,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 1.728)
 visible = false
 
 [node name="gin_marker" type="Marker3D" parent="." unique_id=495649145]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.014297485, 3.8334715, 3.4702659)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.014297485, 3.7947829, 3.4702659)
 
 [node name="spirit_marker" type="Marker3D" parent="." unique_id=580399797]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5406723, 3.8334715, 3.4705875)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5406723, 3.7947829, 3.4705875)
 
 [node name="rum_marker" type="Marker3D" parent="." unique_id=1427671851]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.014297485, 4.4114666, 3.4702659)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.014297485, 4.372778, 3.4702659)
 
 [node name="vodka_marker" type="Marker3D" parent="." unique_id=868453499]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.54040265, 4.412649, 3.4705312)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.54040265, 4.3739605, 3.4705312)
 
 [node name="blood_marker" type="Marker3D" parent="." unique_id=821430117]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1457834, 3.8334715, 3.4702659)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1457834, 3.7947829, 3.4702659)
 
 [node name="HiddenRecipt" type="Marker3D" parent="." unique_id=1336744346]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.081238, 7.160312, 3.426609)
@@ -286,7 +286,6 @@ texture = ExtResource("13_e1j77")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6275828, 0, 0)
 counter = NodePath("../Coutner")
 spawn_y = 1.8
-spawn_scale = Vector3(0.2, 0.2, 0.2)
 
 [node name="DebugMenu" parent="." unique_id=249711118 instance=ExtResource("10_wk5cn")]
 visible = false

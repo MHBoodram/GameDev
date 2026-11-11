@@ -4,10 +4,29 @@ class_name Processor
 var in_game: bool = false
 @export var area_body: CollisionShape3D
 
+func is_working_area_item() -> bool:
+	return true
+
 func ready() -> void:
 	super.ready()
 	if area_body == null:
 		area_body = get_node_or_null("CollisionShape3D")
+	rotation = Vector3.ZERO
+	_face_camera()
+	_snap_to_working_area()
+
+func _process(delta: float) -> void:
+	super._process(delta)
+	if in_game:
+		return
+	if camera and not is_balls_dragging:
+		_face_camera()
+	if not is_balls_dragging:
+		global_position = _clamp_to_counter(global_position)
+		if not is_selected:
+			var target_y: float = get_working_area_surface_y()
+			base_y_position = target_y
+			global_position.y = target_y
 
 func _in_game() -> void:
 	in_game = true

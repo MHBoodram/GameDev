@@ -420,7 +420,7 @@ current = true
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 3.5430827, 0)
 
 [node name="Menu2" type="MeshInstance3D" parent="." unique_id=365639541]
-transform = Transform3D(0.86602503, 7.4505784e-09, -0.5, 0.12940949, 0.9659255, 0.22414388, 0.48296276, -0.25881895, 0.8365163, 0.30466104, -0.66305804, 0.09071362)
+transform = Transform3D(0.866025, -3.7252892e-08, -0.5, 0.1294095, 0.9659255, 0.22414385, 0.48296273, -0.25881895, 0.8365163, 0.30466104, -0.66305804, 0.09071362)
 mesh = SubResource("BoxMesh_aj1h6")
 
 [node name="Menu3" type="MeshInstance3D" parent="Menu2" unique_id=765720054]

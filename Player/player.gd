@@ -117,30 +117,47 @@ func _input(event: InputEvent) -> void:
 			_out_of_game()
 
 func _spawn_cup(scene: PackedScene, cup_name: String) -> void:
-	var pos := get_mouse_world_position($Camera3D, spawn_y)
-	var min_x : float = counter.global_position.x + counter_min_x
-	var max_x : float = counter.global_position.x + counter_max_x
-	pos.x = clamp(pos.x , min_x, max_x)
-	pos.z = max(pos.z, min_z)
-	pos += cup_offsets.get(cup_name, Vector3.ZERO)
 	var new_instance = scene.instantiate()
-	get_parent().add_child(new_instance)
 	new_instance.scale = spawn_scale
-	new_instance.global_position = pos
 	if new_instance.has_method("_instiate"):
 		new_instance._instiate(counter)
+	get_parent().add_child(new_instance)
+
+	var offset: Vector3 = cup_offsets.get(cup_name, Vector3.ZERO)
+	var working_area_bounds = Ingredients.get_working_area_bounds(self)
+	if working_area_bounds is AABB:
+		var counter_boundary: AABB = working_area_bounds
+		var spawn_position: Vector3 = get_mouse_world_position($Camera3D, counter_boundary.end.y) + offset
+		new_instance.global_position = spawn_position
+		if new_instance.has_method("_snap_to_working_area"):
+			new_instance._snap_to_working_area()
+	else:
+		var spawn_position: Vector3 = get_mouse_world_position($Camera3D, spawn_y)
+		var min_x : float = counter.global_position.x + counter_min_x
+		var max_x : float = counter.global_position.x + counter_max_x
+		spawn_position.x = clamp(spawn_position.x , min_x, max_x)
+		spawn_position.z = max(spawn_position.z, min_z)
+		spawn_position += offset
+		new_instance.global_position = spawn_position
 
 func _spawn_and_begin_drag(scene: PackedScene, cup_name: String) -> void:
-	var center_x: float = counter.global_position.x + 0.335 if counter else global_position.x
-	var center_z: float = counter.global_position.z + 0.015 if counter else global_position.z
-	var spawn_pos: Vector3 = Vector3(center_x, 1.6, center_z) + cup_offsets.get(cup_name, Vector3.ZERO)
-
 	var new_instance = scene.instantiate()
-	get_parent().add_child(new_instance)
 	new_instance.scale = spawn_scale
-	new_instance.global_position = spawn_pos
 	if new_instance.has_method("_instiate"):
 		new_instance._instiate(counter)
+	get_parent().add_child(new_instance)
+
+	var offset: Vector3 = cup_offsets.get(cup_name, Vector3.ZERO)
+	var working_area_bounds = Ingredients.get_working_area_bounds(self)
+	if working_area_bounds is AABB:
+		var surface_center: Vector3 = (working_area_bounds as AABB).get_center()
+		new_instance.global_position = Vector3(surface_center.x, (working_area_bounds as AABB).end.y, surface_center.z) + offset
+		if new_instance.has_method("_snap_to_working_area"):
+			new_instance._snap_to_working_area()
+	else:
+		var center_x: float = counter.global_position.x + 0.335 if counter else global_position.x
+		var center_z: float = counter.global_position.z + 0.015 if counter else global_position.z
+		new_instance.global_position = Vector3(center_x, 1.6, center_z) + offset
 
 	if new_instance.has_method("start_drag_from_spawn"):
 		new_instance.start_drag_from_spawn(get_viewport().get_mouse_position())
@@ -197,3 +214,4 @@ func _on_beer_glass_button_input_event(_camera: Node, event: InputEvent, _event_
 func _on_trash_area_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
 		area._delete()
+		

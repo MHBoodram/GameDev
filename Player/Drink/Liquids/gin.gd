@@ -18,6 +18,9 @@ var _depth_now : float = 0.0
 var _smooth_pos : Vector3 = Vector3.ZERO
 var _return_tween : Tween
 
+func uses_working_area_drag_plane() -> bool:
+	return false
+
 func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 	liquid_resource = _liquid
 	size = liquid_resource.liquid_size
@@ -168,3 +171,4 @@ func _on_interact_area_entered(area: Area3D) -> void:
 		#pouring_into = null
 func _on_interact_area_exited(area: Area3D) -> void:
 	pass
+	

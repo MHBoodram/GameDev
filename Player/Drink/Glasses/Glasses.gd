@@ -64,14 +64,18 @@ var wave_phase : float = 0.0
 var wave_amplitude : float = 0.0
 @onready var highlight = get_node_or_null("Inside/highlight")
 
+func is_working_area_item() -> bool:
+	return true
+
 func ready() -> void:
 	rotation = Vector3.ZERO
-	_last_global_pos = global_position
 	_setup_liquid_shader()
 	if highlight:
 		highlight.modulate = Color(1.5, 1.5, 0.0, 5.0)
 	if camera:
 		_look_at_sprite(camera.global_position)
+	_snap_to_working_area()
+	_last_global_pos = global_position
 
 func _delete():
 	queue_free()
@@ -100,13 +104,17 @@ func _process(_delta: float) -> void:
 	_update_shader_parameters()
 	if camera and not is_balls_dragging:
 		_look_at_sprite(camera.global_position)
-	if is_being_served:
+	if is_being_served or in_game:
 		return
 	_apply_collision_push(_delta)
 	if is_balls_dragging:
 		_update_hand_position(_delta)
-	elif counter_origin:
+	else:
 		global_position = _clamp_to_counter(global_position)
+		if not is_selected:
+			var target_y: float = get_working_area_surface_y()
+			base_y_position = target_y
+			global_position.y = target_y
 
 func _apply_collision_push(delta: float) -> void:
 	if not is_balls_dragging:
@@ -124,8 +132,7 @@ func _apply_collision_push(delta: float) -> void:
 
 		if push_velocity.length_squared() > 0.0001:
 			global_position += push_velocity * delta
-			if counter_origin:
-				global_position = _clamp_to_counter(global_position)
+			global_position = _clamp_to_counter(global_position)
 			push_velocity = push_velocity.lerp(Vector3.ZERO, 1.0 - exp(-PUSH_FRICTION * delta))
 			if camera:
 				_look_at_sprite(camera.global_position)
