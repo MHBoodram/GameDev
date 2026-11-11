@@ -174,7 +174,7 @@ func _check_unlocks_drinks() -> void:
 func _night_select() -> void:
 	match GameState.night:
 		1:
-			_set_shit("shark",180,"introduction_game")
+			_set_shit("shark",180,"tutorial_walk")
 			GameState.special_state = true
 			pause_night()
 		2:

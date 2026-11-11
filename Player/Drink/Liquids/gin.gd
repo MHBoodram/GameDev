@@ -257,8 +257,15 @@ func set_liquid_amount(amount: float) -> void:
 func _update_liquid_shader() -> void:
 	if not liquid_shader_mat or size <= 0.0:
 		return
+
+	# Level
 	var fill := clampf(current_liquid / size, 0.0, 1.0)
 	liquid_shader_mat.set_shader_parameter("fill_amount", fill)
+
+	# Color: solid, fully opaque gradient
+	if liquid_gradient:
+		liquid_gradient.offsets = PackedFloat32Array([0.0, 1.0])
+		liquid_gradient.colors = PackedColorArray([color_liquid, color_liquid])
 
 
 func refill() -> void:

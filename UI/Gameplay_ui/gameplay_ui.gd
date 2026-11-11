@@ -28,6 +28,11 @@ func _ready() -> void:
 	GameState.gameplay_ui = self
 	set_shift_hud_visible(false)
 
+func _input(event: InputEvent) -> void:
+	if(event.is_action_pressed("ui_accept")):
+		print(get_viewport().get_mouse_position())
+
+
 func _process(delta: float) -> void:
 	if not camera:
 		return

@@ -191,6 +191,7 @@ func _obtain_drink(drink: Array) -> float:
 			else:
 				speaking_title = "introduction_mid_bad"
 	payment_global += payment
+	patient_2d._recipt_obtain()
 	return drink_score
 
 func _give_payment()-> void:
@@ -281,6 +282,18 @@ func _on_area_3d_mouse_entered() -> void:
 # Changes cursor to idle on unhover
 func _on_area_3d_mouse_exited() -> void:
 	GameState.player._update_hand("idle")
+
+func _tutorial_enabler(scene_string: String) -> void:
+	var tutorial_scene = load("res://UI/Tutorial/" + scene_string + ".tscn").instantiate()
+	$CanvasLayer.add_child(tutorial_scene)
+
+
+func _check_tutorial() -> bool:
+	var tutorial_single = $CanvasLayer.get_children()
+	var truth = tutorial_single[0]._tutorial_finished()
+	if(truth):
+		tutorial_single[0]._bye_bye()
+	return truth
 
 func _talking(open_mouth: bool = false):
 	var frame_check = 0
