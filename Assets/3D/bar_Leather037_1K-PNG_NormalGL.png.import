@@ -2,7 +2,7 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bd4p6hrsf40jj"
+uid="uid://c02gut4x5qau4"
 path.s3tc="res://.godot/imported/bar_Leather037_1K-PNG_NormalGL.png-e4261717579c84e28903864a78dfa8aa.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
@@ -29,8 +29,8 @@ compress/normal_map=1
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1
-roughness/mode=1
-roughness/src_normal="res://Assets/3D/bar_Leather037_1K-PNG_NormalGL.png"
+roughness/mode=0
+roughness/src_normal=""
 process/channel_remap/red=0
 process/channel_remap/green=1
 process/channel_remap/blue=2
