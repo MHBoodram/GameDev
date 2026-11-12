@@ -243,7 +243,8 @@ func _leaving() -> void:
 	queue_free()
 
 func _add_recipt() -> void:
-	GameState.main_node._add_recipt(seat_num,str(_item_print()))
+	var race_name: String = npc_resource.race if npc_resource else ""
+	GameState.main_node._add_recipt(seat_num, str(_item_print()), race_name)
 
 # Gets drink from overlapping glass area and triggers empty glass state
 func _on_area_Obtain_drink_entered(area: Area3D) -> void:

@@ -31,14 +31,30 @@ Label/colors/font_color = Color(1, 1, 1, 1)
 Label/colors/font_outline_color = Color(0, 0, 0, 1)
 Label/colors/font_shadow_color = Color(0, 0, 0, 0)
 Label/constants/line_spacing = 3
-Label/constants/outline_size = 50
+Label/constants/outline_size = 34
 Label/constants/shadow_offset_x = 1
 Label/constants/shadow_offset_y = 1
 Label/constants/shadow_outline_size = 1
-Label/font_sizes/font_size = 200
+Label/font_sizes/font_size = 135
 Label/fonts/font = ExtResource("1_y5c7y")
 Label/styles/focus = SubResource("StyleBoxFlat_383mu")
 Label/styles/normal = SubResource("StyleBoxEmpty_v8l20")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_icon_placeholder"]
+content_margin_left = 6.0
+content_margin_top = 6.0
+content_margin_right = 6.0
+content_margin_bottom = 6.0
+bg_color = Color(0.9, 0.9, 0.9, 0.85)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [node name="Recipt" type="Control" unique_id=2118297349]
 layout_mode = 3
@@ -51,16 +67,63 @@ script = ExtResource("1_383mu")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1426596345]
 layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -212.5
-offset_right = 212.5
-offset_bottom = 723.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
 grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 14
+
+[node name="Header" type="HBoxContainer" parent="VBoxContainer" unique_id=1741290411]
+layout_mode = 2
+alignment = 1
+
+[node name="SeatLabel" type="Label" parent="VBoxContainer/Header" unique_id=1741290412]
+layout_mode = 2
+theme = SubResource("Theme_mfd7k")
+theme_override_constants/outline_size = 28
+theme_override_font_sizes/font_size = 110
+text = "#1"
+vertical_alignment = 1
+
+[node name="Spacer" type="Control" parent="VBoxContainer/Header" unique_id=1741290413]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CustomerIconFrame" type="PanelContainer" parent="VBoxContainer/Header" unique_id=1741290414]
+custom_minimum_size = Vector2(120, 90)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_icon_placeholder")
+
+[node name="CustomerIcon" type="TextureRect" parent="VBoxContainer/Header/CustomerIconFrame" unique_id=1741290415]
+texture_filter = 1
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PlaceholderLabel" type="Label" parent="VBoxContainer/Header/CustomerIconFrame" unique_id=1741290416]
+visible = false
+layout_mode = 2
+theme = SubResource("Theme_mfd7k")
+theme_override_constants/outline_size = 16
+theme_override_font_sizes/font_size = 64
+text = "?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Divider" type="ColorRect" parent="VBoxContainer" unique_id=1741290417]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+color = Color(0, 0, 0, 1)
 
 [node name="Label" type="Label" parent="VBoxContainer" unique_id=598583150]
 layout_mode = 2
+size_flags_vertical = 3
 theme = SubResource("Theme_mfd7k")
 text = "Beer"
 autowrap_mode = 2
