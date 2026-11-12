@@ -339,7 +339,7 @@ func _rebuild_liquid_gradient() -> void:
 			if lbl.material:
 				lbl.material.set_shader_parameter("base_color", col)
 			var layer_name: String = _format_layer_name(layer[0])
-			lbl.change_text(layer_name + ": " + str(snappedf(float(layer[1]), 0.01)))
+			lbl.change_text(layer_name + ": " + str(snappedf(float(layer[1]), 0.01) * 10))
 		if not children.is_empty():
 			drink_list_label = children[children.size() - 1]
 		liquid_box.modulate.a = 1.0
