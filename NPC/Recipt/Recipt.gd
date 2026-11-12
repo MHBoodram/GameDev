@@ -85,16 +85,30 @@ func _set_customer_info(seat: int, race: String = "", icon_texture: Texture2D = 
 		elif race != "":
 			recipt_2d._set_customer_race(race)
 
-func can_interact_with(_target: Ingredients) -> bool:
+func _get_npc() -> Base_NPC:
+	var main = GameState.main_node if GameState.main_node else get_parent()
+	if main and "seats" in main and seat_num >= 1 and seat_num <= main.seats.size():
+		return main.seats[seat_num - 1]
+	return null
+
+func can_interact_with(target: Ingredients) -> bool:
+	if not ordered or not is_instance_valid(target):
+		return false
+	if target is Glasses:
+		var npc := _get_npc()
+		if is_instance_valid(npc):
+			return target.can_serve_npc(npc)
 	return false
 
 func execute_interaction(target: Ingredients) -> void:
-	if can_interact_with(target) && target.is_in_group("glass"):
+	if can_interact_with(target) and target is Glasses:
 		ordered = false
 		target.set_highlight(false)
-		if target is Glasses :
-			target.is_being_served = true
-			get_parent()._give_drink(self, target, seat_num)
+		if _move_tween and _move_tween.is_valid():
+			_move_tween.kill()
+		var npc := _get_npc()
+		if is_instance_valid(npc):
+			target.execute_npc_interaction(npc)
 
 func on_drop_failed() -> void:
 	if ordered:
