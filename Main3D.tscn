@@ -117,6 +117,7 @@ _data = {
 
 [node name="Main3d" type="Node3D" unique_id=692509091]
 script = ExtResource("1_8iyjh")
+dusk_end_seconds = 60.0
 
 [node name="BarSetting" parent="." unique_id=1770039662 instance=ExtResource("2_qgfr0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.004, 1.17, 1.426)
@@ -189,9 +190,11 @@ texture = ExtResource("6_p0p6f")
 
 [node name="ShotGlass Button" type="Area3D" parent="Coutner" unique_id=746714498]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9951551, 1.053846, 0.3553003)
+visible = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/ShotGlass Button" unique_id=692371114]
 shape = SubResource("SphereShape3D_v88eg")
+disabled = true
 
 [node name="Sprite3D" type="Sprite3D" parent="Coutner/ShotGlass Button" unique_id=815208176]
 transform = Transform3D(0.22749029, 0, 0, 0, 0.24296804, 0, 0, 0, 0.7237263, 0, 0, 0)
@@ -297,15 +300,11 @@ one_shot = true
 [node name="Keys" parent="." unique_id=394097111 instance=ExtResource("14_nmhfw")]
 visible = false
 anchors_preset = 8
-anchor_left = 0.5
 anchor_top = 0.5
-anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -97.50586
-offset_top = -74.0
-offset_right = 97.50586
-offset_bottom = 74.0
-grow_horizontal = 2
+offset_top = -521.0
+offset_right = -444.98828
+offset_bottom = -373.0
 grow_vertical = 2
 scale = Vector2(1.9204147, 1.9204147)
 pivot_offset = Vector2(92.688324, 70.81804)
@@ -324,6 +323,8 @@ shadow_enabled = true
 libraries/ = SubResource("AnimationLibrary_nmhfw")
 
 [connection signal="input_event" from="Coutner/BeerGlass Button" to="Player" method="_on_beer_glass_button_input_event"]
+[connection signal="mouse_entered" from="Coutner/BeerGlass Button" to="." method="_on_beer_glass_button_mouse_entered"]
+[connection signal="mouse_exited" from="Coutner/BeerGlass Button" to="." method="_on_beer_glass_button_mouse_exited"]
 [connection signal="input_event" from="Coutner/ShotGlass Button" to="Player" method="_on_shot_glass_button_input_event"]
 [connection signal="input_event" from="Coutner/BeerKeg" to="Coutner/BeerKeg" method="_on_beer_keg_input_event"]
 [connection signal="area_entered" from="Coutner/BeerKeg/PourArea" to="Coutner/BeerKeg" method="_on_pour_area_area_entered"]

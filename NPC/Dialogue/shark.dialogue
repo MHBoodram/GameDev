@@ -15,6 +15,32 @@ Shark: doesn't matter
 Shark: Just show me what you got
 do _add_recipt()
 set speaking_title = "introduction_mid_talk"
+do GameState.player.gameplay_ui._tutorial_start_drink()
+=> END
+
+~ tutorial_walk
+Shark: How you liking the bar
+Shark: Walk around the bar see how it is
+do _tutorial_enabler("Keys")
+set speaking_title = "tutorial_walk_wait"
+=> END
+
+~ tutorial_walk_wait
+if _check_tutorial():
+	=> tutorial_walk_finished
+else:
+	Shark: You haven't seen the whole property yet
+	Shark: Keeping walking buddy
+=> END
+
+~ tutorial_walk_finished
+Shark: How you liking it 
+- It's alright
+	Shark: No problem buddy
+- It's kinda lacking
+	Shark: Yeah, if I was broke this the only thing I would get also
+set speaking_title = "introduction_game"
+=> introduction_game
 => END
 
 ~ night_2_introduction

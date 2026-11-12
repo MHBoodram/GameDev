@@ -28,7 +28,7 @@ UIAudio="*res://UI/Audio/UIAudio.tscn"
 MusicPlayer="*uid://bx0ui2flch67q"
 SettingState="*uid://ddsldglo0bq85"
 Transition="*uid://byxvojpl8qte4"
-PlayerStats="*uid://bx81qr1x8enbp"
+PlayerStats="*uid://c1dbco27r7anh"
 
 [display]
 

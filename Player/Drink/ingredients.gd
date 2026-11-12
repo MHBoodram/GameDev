@@ -2,10 +2,18 @@ extends Area3D
 class_name Ingredients
 
 static var active_selected_item: Ingredients = null
+static var active_dragging_item: Ingredients = null
 static var current_hovered_target: Ingredients = null
 static var _cached_query: PhysicsRayQueryParameters3D = null
 
-var is_balls_dragging: bool = false
+var is_balls_dragging: bool = false:
+	set(value):
+		is_balls_dragging = value
+		if value:
+			active_dragging_item = self
+		elif active_dragging_item == self:
+			active_dragging_item = null
+
 var is_selected: bool = false
 var camera: Camera3D
 @export var counter_origin: Node3D
@@ -215,6 +223,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				GameState.player._update_hand("idle")
 
 func _on_area_3d_mouse_entered() -> void:
+	if active_dragging_item != null:
+		return
 	if not is_balls_dragging:
 		current_hovered_target = self
 		if active_selected_item != null and active_selected_item != self :
@@ -226,6 +236,8 @@ func _on_area_3d_mouse_entered() -> void:
 				GameState.player._update_hand("interact")
 
 func _on_area_3d_mouse_exited() -> void:
+	if active_dragging_item != null:
+		return
 	if not is_balls_dragging and current_hovered_target == self:
 		current_hovered_target = null
 	if not is_selected:
@@ -286,3 +298,5 @@ func execute_interaction(_target: Ingredients) -> void:
 
 func on_drop_failed() -> void:
 	pass
+
+	

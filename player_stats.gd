@@ -58,7 +58,7 @@ var species_banners : Dictionary = {
 var unlocks : Dictionary = {
 	"Drinks" :{
 		"gin" : true,
-		"rum" : false,
+		"rum" : true,
 		"vodka" : false,
 		"spirit" : false,
 		"tequila" : false,

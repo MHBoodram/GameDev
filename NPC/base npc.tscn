@@ -112,6 +112,8 @@ transform = Transform3D(1, 0, 0, 0, 0, 1.0000001, 0, -1.0000001, 0, 0, -1.441681
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.04840088, -0.08605957, 0)
 shape = SubResource("BoxShape3D_lmq4y")
 
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=838250369]
+
 [connection signal="input_event" from="Area3D" to="." method="_on_interaction_input_event"]
 [connection signal="mouse_entered" from="Area3D" to="." method="_on_area_3d_mouse_entered"]
 [connection signal="mouse_exited" from="Area3D" to="." method="_on_area_3d_mouse_exited"]
