@@ -367,7 +367,8 @@ func _rebuild_liquid_gradient() -> void:
 			if lbl.material:
 				lbl.material.set_shader_parameter("base_color", col)
 			var layer_name: String = _format_layer_name(layer[0])
-			lbl.text = layer_name + ": " + str(snappedf(float(layer[1]), 0.01))
+			var pct: float = (float(layer[1]) / maxf(size, 0.001)) * 100.0
+			lbl.text = layer_name + ": " + str(snappedf(pct, 0.1)) + "%"
 		if not children.is_empty():
 			drink_list_label = children[children.size() - 1]
 		liquid_box.modulate.a = 1.0
@@ -473,7 +474,25 @@ func _dranked() -> void:
 	queue_free()
 
 func _return_drink() -> Array:
-	return liquids
+	var scale_to_pct: float = 100.0 / maxf(size, 0.001)
+	var normalized: Array = []
+	for layer in liquids:
+		if not (layer is Array and layer.size() >= 2):
+			continue
+		var new_layer: Array = layer.duplicate()
+		new_layer[1] = float(layer[1]) * scale_to_pct
+		if new_layer.size() > 3 and new_layer[3] is Dictionary:
+			var new_dict: Dictionary = {}
+			for k in new_layer[3]:
+				new_dict[k] = float(new_layer[3][k]) * scale_to_pct
+			new_layer[3] = new_dict
+		elif new_layer[0] is Dictionary:
+			var new_dict: Dictionary = {}
+			for k in new_layer[0]:
+				new_dict[k] = float(new_layer[0][k]) * scale_to_pct
+			new_layer[0] = new_dict
+		normalized.append(new_layer)
+	return normalized
 
 func _on_area_3d_area_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):

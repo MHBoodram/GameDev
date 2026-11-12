@@ -117,58 +117,81 @@ func _set_reputation(is_satisfactory: bool, drink_score: float) -> void:
 # Gets drink score then gives payment and reputation
 func _obtain_drink(drink: Array) -> float:
 	var want = drink_list.pop_front()
+	if want == null:
+		return 0.0
 	var drink_score: float = 1.0
 
 	var have_ingredients: Dictionary = {}
+	var total_served_amount: float = 0.0
 	for layer in drink:
 		if layer is Array and layer.size() >= 2:
 			if layer.size() > 3 and layer[3] is Dictionary:
 				for ing in layer[3]:
 					var amt: float = float(layer[3][ing])
-					have_ingredients[str(ing)] = have_ingredients.get(str(ing), 0.0) + amt
+					if amt > 0.0:
+						have_ingredients[str(ing)] = have_ingredients.get(str(ing), 0.0) + amt
+						total_served_amount += amt
 			elif layer[0] is Array:
 				var split_amt: float = float(layer[1]) / maxf(float(layer[0].size()), 1.0)
-				for ing in layer[0]:
-					have_ingredients[str(ing)] = have_ingredients.get(str(ing), 0.0) + split_amt
+				if split_amt > 0.0:
+					for ing in layer[0]:
+						have_ingredients[str(ing)] = have_ingredients.get(str(ing), 0.0) + split_amt
+						total_served_amount += split_amt
 			elif layer[0] is Dictionary:
 				for ing in layer[0]:
-					have_ingredients[str(ing)] = have_ingredients.get(str(ing), 0.0) + float(layer[0][ing])
+					var amt: float = float(layer[0][ing])
+					if amt > 0.0:
+						have_ingredients[str(ing)] = have_ingredients.get(str(ing), 0.0) + amt
+						total_served_amount += amt
 			else:
 				var ing_name: String = str(layer[0])
-				have_ingredients[ing_name] = have_ingredients.get(ing_name, 0.0) + float(layer[1])
+				var amt: float = float(layer[1])
+				if amt > 0.0:
+					have_ingredients[ing_name] = have_ingredients.get(ing_name, 0.0) + amt
+					total_served_amount += amt
 
-	for check in want:
-		var check_name: String = check[0]
-		var check_amount: float = float(check[1])
-		if have_ingredients.has(check_name):
-			var actual_amount: float = float(have_ingredients[check_name])
-			var difference: float = abs(check_amount - actual_amount)
-			var proportion_penalty: float = 0.3 * clampf(difference / MAX_DIFF, 0.0, 1.0)
-			drink_score -= proportion_penalty
-		else:
-			drink_score -= FLAT_PENALTY_MISSING_INGREDIENT
-
-	for have_name in have_ingredients.keys():
-		var was_wanted: bool = false
+	if want.size() > 0 and (have_ingredients.is_empty() or total_served_amount <= 0.0):
+		drink_score = 0.0
+	else:
+		var want_count: float = maxf(float(want.size()), 1.0)
+		var missing_penalty: float = maxf(FLAT_PENALTY_MISSING_INGREDIENT, 1.0 / want_count)
 		for check in want:
-			if check[0] == have_name:
-				was_wanted = true
-				break
-		if not was_wanted:
-			drink_score -= FLAT_PENALTY_WRONG_INGREDIENT
+			var check_name: String = check[0]
+			var check_amount: float = float(check[1])
+			if have_ingredients.has(check_name):
+				var actual_amount: float = float(have_ingredients[check_name])
+				var difference: float = abs(check_amount - actual_amount)
+				var proportion_penalty: float = 0.0
+				if difference <= MAX_DIFF:
+					proportion_penalty = 0.3 * (difference / MAX_DIFF)
+				else:
+					proportion_penalty = 0.3 + 0.7 * clampf((difference - MAX_DIFF) / maxf(check_amount - MAX_DIFF, 45.0), 0.0, 1.0)
+				drink_score -= proportion_penalty / want_count
+			else:
+				drink_score -= missing_penalty
+
+		for have_name in have_ingredients.keys():
+			var was_wanted: bool = false
+			for check in want:
+				if check[0] == have_name:
+					was_wanted = true
+					break
+			if not was_wanted:
+				drink_score -= FLAT_PENALTY_WRONG_INGREDIENT
 
 	drink_score = clampf(drink_score, 0.0, 1.0)
 	print("[drink_score]: ", drink_score)
 
 	var is_satisfactory: bool = drink_score >= SATISFACTORY_THRESHOLD
 	if not is_satisfactory:
-		var satisfaction_loss: float = (1.0 - drink_score) * 0.5
+		var satisfaction_loss: float = 1.0 - drink_score
 		customer_satisfaction = maxf(0.0, customer_satisfaction - satisfaction_loss)
 	print("[customer_satisfaction]: ", customer_satisfaction)
 
 	var replenish_time: float = REPLENISH_BASE_TIME * drink_score
-	var new_patience: float = minf(max_patience, patience_timer.time_left + replenish_time)
-	patience_timer.start(new_patience)
+	if replenish_time > 0.0:
+		var new_patience: float = minf(max_patience, patience_timer.time_left + replenish_time)
+		patience_timer.start(maxf(0.01, new_patience))
 	print("[patience_replenished]: ", replenish_time)
 
 	_set_reputation(is_satisfactory, drink_score)
@@ -176,12 +199,18 @@ func _obtain_drink(drink: Array) -> float:
 	var race_name: String = npc_resource.race if npc_resource else "Human"
 	var group_rep: float = PlayerStats.get_species_reputation(race_name)
 	var drink_cost: float = BASE_DRINK_PRICE
-	var tip: float = (PlayerStats.overall_reputation + group_rep) * customer_satisfaction
-	var payment: float = drink_cost + tip
+	var tip: float = 0.0
+	var payment: float = drink_cost
 
-	if race_name.to_upper() == "SLIME":
+	if race_name.to_upper() == "SLIME" and is_satisfactory:
 		payment += drink_cost
 		print("[slime_refund_payment]: ", payment)
+
+	if drink_list.size() <= 0:
+		tip = (PlayerStats.overall_reputation + group_rep) * customer_satisfaction
+		payment += tip
+
+	payment_global += payment
 
 	print("[drink_cost]: ", drink_cost)
 	print("[tip]: ", tip)
@@ -208,11 +237,11 @@ func _obtain_drink(drink: Array) -> float:
 				speaking_title = "introduction_mid_mid"
 			else:
 				speaking_title = "introduction_mid_bad"
-	payment_global += payment
 	return drink_score
 
 func _give_payment()-> void:
 	PlayerStats._change_money(PlayerStats.money + payment_global)
+	payment_global = 0.0
 	if(drink_list.size() <= 0):
 		$Area3D/CollisionShape3D.disabled = true
 	_leaving()
@@ -292,6 +321,9 @@ func _item_print() -> String:
 
 # Customer leaves when patience timer expires paying only base drink cost
 func _on_patience_timer_timeout() -> void:
+	if is_leaving:
+		return
+	patience_timer.stop()
 	var drink_cost: float = BASE_DRINK_PRICE
 	var tip: float = 0.0
 	var payment: float = drink_cost
