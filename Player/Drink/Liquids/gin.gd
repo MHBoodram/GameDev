@@ -13,13 +13,20 @@ var current_liquid : float = size
 @export var snap_offset : Vector3 = Vector3(0, 0.5, 0)
 @export var follow_speed : float = 30.0
 
-var _grab_depth : float = 0.0
-var _depth_now : float = 0.0
-var _smooth_pos : Vector3 = Vector3.ZERO
-var _return_tween : Tween
+func _is_drag_blocked() -> bool:
+	return in_game
 
-func uses_working_area_drag_plane() -> bool:
-	return false
+func _get_drag_follow_speed() -> float:
+	return follow_speed
+
+func _get_drag_hold_lift() -> float:
+	return hold_lift
+
+func _get_free_drag_target(delta: float) -> Vector3:
+	if snap_to_glass and camera and is_instance_valid(current_hovered_target) and can_interact_with(current_hovered_target):
+		var to_cam := (camera.global_position - current_hovered_target.global_position).normalized()
+		return current_hovered_target.global_position + snap_offset + to_cam * hold_lift
+	return super._get_free_drag_target(delta)
 
 func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 	liquid_resource = _liquid
@@ -31,49 +38,14 @@ func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 	rotation_degrees = Vector3.ZERO
 	base_y_position = global_position.y
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if in_game:
 		return
-	super._process(_delta)
-	if is_balls_dragging:
-		_follow_cursor(_delta)
-	if camera:
-		var target_flat: Vector3 = camera.global_position
-		target_flat.y = $Inside.global_position.y
-		$Inside.look_at(target_flat, Vector3.UP)
-
-# new function that tracks cursor to see what's being hovered
-func _follow_cursor(delta: float) -> void:
-	if not camera:
-		return
-	var target : Vector3
-	var glass := current_hovered_target
-	if snap_to_glass and is_instance_valid(glass) and can_interact_with(glass):
-		var to_cam := (camera.global_position - glass.global_position).normalized()
-		target = glass.global_position + snap_offset + to_cam * hold_lift
-	else:
-		var mouse_pos := get_viewport().get_mouse_position()
-		_depth_now = lerpf(_depth_now, _grab_depth - hold_lift, 1.0 - exp(-12.0 * delta))
-		target = camera.project_position(mouse_pos, _depth_now)
-	_smooth_pos = _smooth_pos.lerp(target, 1.0 - exp(-follow_speed * delta))
-	global_position = _smooth_pos
-	#global_position = global_position.lerp(target,1.0 - exp(-follow_speed * delta))
-
-func _capture_grab_depth() -> void:
-	_smooth_pos = global_position
-	var cam := camera if camera else get_viewport().get_camera_3d()
-	if cam == null:
-		return
-	var forward := -cam.global_transform.basis.z
-	_grab_depth = (global_position - cam.global_position).dot(forward)
-	_depth_now = _grab_depth
+	super._process(delta)
+	_face_camera()
 
 func _on_area_3d_input_event(camera_node: Node, event: InputEvent, event_pos: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if not in_game:
-		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			if _return_tween:
-				_return_tween.kill()
-			_capture_grab_depth()
 		super._on_area_3d_input_event(camera_node, event, event_pos, normal, shape_idx)
 		return
 
@@ -107,11 +79,14 @@ func _look_at_sprite(looking_at: Vector3) -> void:
 		$Inside.look_at(target_flat, Vector3.UP)
 
 func _return_original() -> void:
-	var tween = get_tree().create_tween().set_parallel(true)
-	tween.set_trans(Tween.TRANS_SINE)
-	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_property(self, "global_position", original_position.global_position, 0.5)
-	tween.tween_property($Inside, "global_rotation", Vector3.ZERO, 0.5)
+	if _drag_return_tween and _drag_return_tween.is_valid():
+		_drag_return_tween.kill()
+	_drag_return_tween = get_tree().create_tween().set_parallel(true)
+	_drag_return_tween.set_trans(Tween.TRANS_SINE)
+	_drag_return_tween.set_ease(Tween.EASE_OUT)
+	if original_position:
+		_drag_return_tween.tween_property(self, "global_position", original_position.global_position, 0.5)
+	_drag_return_tween.tween_property($Inside, "global_rotation", Vector3.ZERO, 0.5)
 	rotation_degrees = Vector3.ZERO
 
 func _in_game() -> void:
@@ -153,22 +128,9 @@ func _on_interact_mouse_entered() -> void:
 func _on_interact_mouse_exited() -> void:
 	_on_area_3d_mouse_exited()
 
-#func _on_interact_area_entered(area: Area3D) -> void:
-	#if area.is_in_group("glass") and is_balls_dragging and pouring_into == null:
-		#pouring_into = area
-		#if area.has_method("_on_hover"):
-			#area._on_hover(true)
-
-# targeting is now handeled by the base class (ray from under the cursor + set_highlight)
-# the bottles don't sit on the counter tho, MATT NOTE (pls pls pls play around with this to make sure it looks good and doesn't feel cheap or janky)
-func _on_interact_area_entered(area: Area3D) -> void:
+func _on_interact_area_entered(_area: Area3D) -> void:
 	pass
 
-#func _on_interact_area_exited(area: Area3D) -> void:
-	#if area == pouring_into and is_balls_dragging:
-		#if area.has_method("_on_hover"):
-			#area._on_hover(false)
-		#pouring_into = null
-func _on_interact_area_exited(area: Area3D) -> void:
+func _on_interact_area_exited(_area: Area3D) -> void:
 	pass
 	

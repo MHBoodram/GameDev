@@ -9,7 +9,6 @@ class_name Glasses
 @export var customer_hold_distance : float = 1.0
 var drink_list_label : Label
 var total_liquids : float = 0
-var current_position = 0
 var in_game: bool = false
 var is_being_served: bool = false
 var is_consumed: bool = false
@@ -70,10 +69,13 @@ var wave_amplitude : float = 0.0
 func is_working_area_item() -> bool:
 	return true
 
-func uses_working_area_drag_plane() -> bool:
-	if GameState.gameplay_ui and (not GameState.gameplay_ui.down or GameState.gameplay_ui.is_transitioning):
-		return false
-	return true
+func _is_drag_blocked() -> bool:
+	return in_game or is_being_served or is_consumed
+
+func _get_free_drag_target(_delta: float) -> Vector3:
+	if camera:
+		return camera.project_position(get_viewport().get_mouse_position(), customer_hold_distance)
+	return global_position
 
 func ready() -> void:
 	rotation = Vector3.ZERO
@@ -115,51 +117,70 @@ func _update_hand_position(delta: float) -> void:
 	if hand:
 		hand.global_position = hand.global_position.lerp(goal, 1.0 - exp(-30.0 * delta))
 
-func _process(_delta: float) -> void:
-	super._process(_delta)
-	_update_liquid_physics(_delta)
+func _process(delta: float) -> void:
+	super._process(delta)
+	_update_liquid_physics(delta)
 	_update_shader_parameters()
 	if camera and not is_balls_dragging:
 		_look_at_sprite(camera.global_position)
-	if is_being_served or in_game:
+	if _is_drag_blocked():
 		return
-	if not _is_returning_to_counter:
-		_apply_collision_push(_delta)
+
 	if is_balls_dragging:
-		if not uses_working_area_drag_plane() and camera:
-			var mouse_pos: Vector2 = get_viewport().get_mouse_position()
-			var target_pos: Vector3 = camera.project_position(mouse_pos, customer_hold_distance)
-			global_position = global_position.lerp(target_pos, 1.0 - exp(-25.0 * _delta))
-			_look_at_sprite(camera.global_position)
-		_update_hand_position(_delta)
-	elif not _is_returning_to_counter:
-		global_position = _clamp_to_counter(global_position)
-		if not is_selected:
-			var target_y: float = get_working_area_surface_y()
-			base_y_position = target_y
-			global_position.y = target_y
+		_update_hand_position(delta)
+
+	if get_drag_mode() == DragMode.COLLISION and not _is_returning_to_counter:
+		_apply_collision_push(delta)
+		if not is_balls_dragging:
+			if not is_selected:
+				var target_y: float = get_working_area_surface_y()
+				base_y_position = target_y
+				if absf(global_position.y - target_y) <= 0.002:
+					global_position.y = target_y
+				else:
+					global_position.y = lerpf(global_position.y, target_y, 1.0 - exp(-20.0 * delta))
 			_last_counter_position = global_position
 
 func _apply_collision_push(delta: float) -> void:
-	if not is_balls_dragging:
-		for area in get_overlapping_areas():
-			if area != self and area is Glasses:
-				var diff: Vector3 = global_position - area.global_position
-				diff.y = 0.0
-				var dist: float = diff.length()
-				if dist < 0.001:
-					diff = Vector3(randf_range(-1.0, 1.0), 0.0, randf_range(-1.0, 1.0))
-					dist = 0.001
-				var overlap: float = INTERACTION_SEPARATION_DISTANCE - dist
-				if overlap > 0.0:
-					push_velocity += diff.normalized() * (overlap * 6.0 * delta)
+	var surface_y: float = get_working_area_surface_y()
+	if absf(global_position.y - surface_y) > 0.15:
+		return
 
-		if push_velocity.length_squared() > 0.0001:
-			global_position += push_velocity * delta
-			global_position = _clamp_to_counter(global_position)
-			push_velocity = push_velocity.lerp(Vector3.ZERO, 1.0 - exp(-PUSH_FRICTION * delta))
-			if camera:
-				_look_at_sprite(camera.global_position)
+	for area in get_overlapping_areas():
+		if area == self or not (area is Glasses):
+			continue
+		var other := area as Glasses
+		if other._is_drag_blocked() or other.get_drag_mode() != DragMode.COLLISION:
+			continue
+		if absf(other.global_position.y - surface_y) > 0.15:
+			continue
+
+		var diff: Vector3 = global_position - other.global_position
+		diff.y = 0.0
+		var dist: float = diff.length()
+		if dist < 0.001:
+			diff = Vector3(randf_range(-1.0, 1.0), 0.0, randf_range(-1.0, 1.0))
+			dist = 0.001
+		var overlap: float = INTERACTION_SEPARATION_DISTANCE - dist
+		if overlap <= 0.0:
+			continue
+
+		var dir: Vector3 = diff.normalized()
+		if is_balls_dragging:
+			if not other.is_balls_dragging:
+				global_position += dir * (overlap * 0.25)
+		else:
+			if other.is_balls_dragging:
+				global_position += dir * (overlap * 0.75)
+				push_velocity += dir * (overlap * 12.0 * delta)
+			else:
+				push_velocity += dir * (overlap * 8.0 * delta)
+
+	if not is_balls_dragging and push_velocity.length_squared() > 0.0001:
+		global_position += push_velocity * delta
+		push_velocity = push_velocity.lerp(Vector3.ZERO, 1.0 - exp(-PUSH_FRICTION * delta))
+		if camera:
+			_look_at_sprite(camera.global_position)
 
 func _look_at_sprite(looking_at: Vector3) -> void:
 	if looking_at and sprite:
@@ -509,7 +530,7 @@ func _return_drink() -> Array:
 	return normalized
 
 func _on_area_3d_area_entered(area: Area3D) -> void:
-	if(area.is_in_group("glass")):
+	if area.is_in_group("glass") and get_drag_mode() == DragMode.COLLISION and not is_balls_dragging:
 		_pushing_glass(area)
 
 func can_interact_with(target: Ingredients) -> bool:
@@ -526,7 +547,7 @@ func execute_interaction(target: Ingredients) -> void:
 		target.start_shake(self)
 
 func can_serve_npc(npc: Base_NPC) -> bool:
-	if in_game or is_being_served or is_consumed:
+	if _is_drag_blocked():
 		return false
 	if not is_instance_valid(npc):
 		return false

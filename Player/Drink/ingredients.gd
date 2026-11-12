@@ -1,6 +1,8 @@
 extends Area3D
 class_name Ingredients
 
+enum DragMode { FREE, COLLISION }
+
 static var active_selected_item: Ingredients = null
 static var active_dragging_item: Ingredients = null
 static var current_hovered_target: Ingredients = null
@@ -12,6 +14,12 @@ static var _working_area_transform: Transform3D = Transform3D.IDENTITY
 static var _working_area_bounds: AABB = AABB()
 static var _working_area_has_bounds: bool = false
 static var _sprite_opaque_rect_cache: Dictionary = {}
+
+const BAR_COLLISION_TARGETS := ["leftshelf", "rightshelf", "pillar009"]
+static var _bar_obstacle_tree: SceneTree = null
+static var _bar_obstacle_meshes: Array[MeshInstance3D] = []
+static var _bar_obstacle_transforms: Array[Transform3D] = []
+static var _bar_obstacle_obbs: Array[Dictionary] = []
 
 var is_balls_dragging: bool = false:
 	set(value):
@@ -69,8 +77,22 @@ func ready() -> void:
 func is_working_area_item() -> bool:
 	return false
 
+func get_drag_mode() -> DragMode:
+	if is_working_area_item() and (not GameState.gameplay_ui or (GameState.gameplay_ui.down and not GameState.gameplay_ui.is_transitioning)):
+		return DragMode.COLLISION
+	return DragMode.FREE
+
 func uses_working_area_drag_plane() -> bool:
-	return true
+	return get_drag_mode() == DragMode.COLLISION
+
+func _is_drag_blocked() -> bool:
+	return false
+
+func _get_drag_follow_speed() -> float:
+	return 25.0
+
+func _get_drag_hold_lift() -> float:
+	return _drag_hold_lift
 
 static func _find_working_area_node(search_root: Node) -> Node3D:
 	if not is_instance_valid(search_root):
@@ -172,6 +194,187 @@ static func get_working_area_bounds(calling_context: Node) -> Variant:
 
 static func get_working_area_aabb(calling_context: Node) -> Variant:
 	return get_working_area_bounds(calling_context)
+
+static func _get_bar_obstacle_obbs(calling_context: Node) -> Array[Dictionary]:
+	if not is_instance_valid(calling_context) or not calling_context.is_inside_tree():
+		return []
+	var scene_tree := calling_context.get_tree()
+	if not scene_tree:
+		return []
+
+	var needs_discovery: bool = (_bar_obstacle_tree != scene_tree) or _bar_obstacle_meshes.is_empty()
+	if not needs_discovery:
+		for m in _bar_obstacle_meshes:
+			if not is_instance_valid(m) or not m.is_inside_tree():
+				needs_discovery = true
+				break
+
+	if needs_discovery:
+		_bar_obstacle_tree = scene_tree
+		_bar_obstacle_meshes.clear()
+		_bar_obstacle_transforms.clear()
+		_bar_obstacle_obbs.clear()
+
+		var candidate_roots: Array[Node] = []
+		var current_ancestor: Node = calling_context
+		while current_ancestor.get_parent() and current_ancestor.get_parent() != scene_tree.root:
+			current_ancestor = current_ancestor.get_parent()
+		candidate_roots.append(current_ancestor)
+		if scene_tree.current_scene and not candidate_roots.has(scene_tree.current_scene):
+			candidate_roots.append(scene_tree.current_scene)
+		if scene_tree.root and not candidate_roots.has(scene_tree.root):
+			candidate_roots.append(scene_tree.root)
+
+		for root_candidate in candidate_roots:
+			if not is_instance_valid(root_candidate):
+				continue
+			for child in root_candidate.find_children("*", "Node3D", true, false):
+				var compact_name: String = child.name.to_lower().replace("_", "").replace(".", "").replace(" ", "")
+				if not BAR_COLLISION_TARGETS.has(compact_name):
+					continue
+				if child is MeshInstance3D and child.mesh and not _bar_obstacle_meshes.has(child):
+					_bar_obstacle_meshes.append(child)
+				for sub in child.find_children("*", "MeshInstance3D", true, false):
+					if sub is MeshInstance3D and sub.mesh and not _bar_obstacle_meshes.has(sub):
+						_bar_obstacle_meshes.append(sub)
+			if not _bar_obstacle_meshes.is_empty():
+				break
+
+	var transforms_changed: bool = _bar_obstacle_obbs.size() != _bar_obstacle_meshes.size()
+	if not transforms_changed:
+		for i in _bar_obstacle_meshes.size():
+			if _bar_obstacle_meshes[i].global_transform != _bar_obstacle_transforms[i]:
+				transforms_changed = true
+				break
+
+	if transforms_changed:
+		_bar_obstacle_transforms.clear()
+		_bar_obstacle_obbs.clear()
+		for mesh_inst in _bar_obstacle_meshes:
+			var xf: Transform3D = mesh_inst.global_transform
+			_bar_obstacle_transforms.append(xf)
+			var local_aabb: AABB = mesh_inst.mesh.get_aabb()
+			var col0: Vector3 = xf.basis.x * (local_aabb.size.x * 0.5)
+			var col1: Vector3 = xf.basis.y * (local_aabb.size.y * 0.5)
+			var col2: Vector3 = xf.basis.z * (local_aabb.size.z * 0.5)
+			var half := Vector3(col0.length(), col1.length(), col2.length())
+			var axes: Array[Vector3] = [
+				col0 / half.x if half.x > 0.00001 else Vector3.RIGHT,
+				col1 / half.y if half.y > 0.00001 else Vector3.UP,
+				col2 / half.z if half.z > 0.00001 else Vector3.BACK,
+			]
+			_bar_obstacle_obbs.append({
+				"center": xf * local_aabb.get_center(),
+				"axes": axes,
+				"half": half,
+			})
+
+	return _bar_obstacle_obbs
+
+static func _compute_aabb_obb_push(aabb_center: Vector3, aabb_half: Vector3, obb: Dictionary, horizontal_only: bool) -> Vector3:
+	var b_center: Vector3 = obb["center"]
+	var b_axes: Array[Vector3] = obb["axes"]
+	var b_half: Vector3 = obb["half"]
+	var d: Vector3 = aabb_center - b_center
+
+	var max_r: float = aabb_half.length() + b_half.length()
+	if d.length_squared() > max_r * max_r:
+		return Vector3.ZERO
+
+	var a_axes: Array[Vector3] = [Vector3.RIGHT, Vector3.UP, Vector3.BACK]
+	var test_axes: Array[Vector3] = [
+		Vector3.RIGHT, Vector3.UP, Vector3.BACK,
+		b_axes[0], b_axes[1], b_axes[2]
+	]
+	for i in 3:
+		for j in 3:
+			var cross_axis: Vector3 = a_axes[i].cross(b_axes[j])
+			if cross_axis.length_squared() > 0.0001:
+				test_axes.append(cross_axis.normalized())
+
+	var min_overlap: float = INF
+	var best_axis: Vector3 = Vector3.ZERO
+	var min_horiz_overlap: float = INF
+	var best_horiz_axis: Vector3 = Vector3.ZERO
+
+	for axis in test_axes:
+		var dist: float = d.dot(axis)
+		var r_a: float = aabb_half.x * absf(axis.x) + aabb_half.y * absf(axis.y) + aabb_half.z * absf(axis.z)
+		var r_b: float = b_half.x * absf(b_axes[0].dot(axis)) + b_half.y * absf(b_axes[1].dot(axis)) + b_half.z * absf(b_axes[2].dot(axis))
+		var overlap: float = (r_a + r_b) - absf(dist)
+		if overlap <= 0.0:
+			return Vector3.ZERO
+
+		var signed_axis: Vector3 = axis if dist >= 0.0 else -axis
+		if overlap < min_overlap:
+			min_overlap = overlap
+			best_axis = signed_axis
+
+		if horizontal_only and absf(axis.y) < 0.05:
+			if overlap < min_horiz_overlap:
+				min_horiz_overlap = overlap
+				best_horiz_axis = signed_axis
+
+	if horizontal_only:
+		if best_horiz_axis != Vector3.ZERO:
+			best_horiz_axis.y = 0.0
+			if best_horiz_axis.length_squared() > 0.00001:
+				return best_horiz_axis.normalized() * min_horiz_overlap
+		var flat_push: Vector3 = Vector3(best_axis.x, 0.0, best_axis.z)
+		if flat_push.length_squared() > 0.00001:
+			return flat_push.normalized() * min_overlap
+		return Vector3.ZERO
+
+	return best_axis * min_overlap
+
+func _get_drag_collision_bounds() -> AABB:
+	var visual_bounds = _get_combined_visual_world_bounds()
+	if visual_bounds is AABB and (visual_bounds as AABB).size != Vector3.ZERO:
+		return visual_bounds
+	var mesh_bounds = _compute_node_world_bounds(self)
+	if mesh_bounds is AABB and (mesh_bounds as AABB).size != Vector3.ZERO:
+		return mesh_bounds
+	return AABB(global_position - Vector3(0.08, 0.12, 0.08), Vector3(0.16, 0.24, 0.16))
+
+func _resolve_bar_collisions() -> void:
+	var obbs: Array[Dictionary] = _get_bar_obstacle_obbs(self)
+	if obbs.is_empty():
+		return
+
+	var item_bounds: AABB = _get_drag_collision_bounds()
+	var item_center: Vector3 = item_bounds.get_center()
+	var item_half: Vector3 = item_bounds.size * 0.5
+	item_half.x = maxf(item_half.x, 0.03)
+	item_half.y = maxf(item_half.y, 0.03)
+	item_half.z = maxf(item_half.z, 0.03)
+
+	var total_push: Vector3 = Vector3.ZERO
+	for _pass in 2:
+		var moved: bool = false
+		for obb in obbs:
+			var push: Vector3 = _compute_aabb_obb_push(item_center + total_push, item_half, obb, true)
+			if push.length_squared() > 0.0000001:
+				total_push += push
+				moved = true
+		if not moved:
+			break
+
+	if total_push.length_squared() > 0.0000001:
+		global_position += total_push
+
+func _post_process_counter_constraints() -> void:
+	if not is_inside_tree() or is_queued_for_deletion():
+		return
+	if _is_drag_blocked() or _is_returning_to_counter or get_drag_mode() != DragMode.COLLISION:
+		return
+	if absf(global_position.y - get_working_area_surface_y()) > 0.15:
+		return
+
+	var current_y: float = global_position.y
+	var clamped: Vector3 = _clamp_to_counter(global_position)
+	clamped.y = current_y
+	global_position = clamped
+	_resolve_bar_collisions()
 
 func _get_visual_sprite_nodes() -> Array[Sprite3D]:
 	var visual_sprites: Array[Sprite3D] = []
@@ -342,40 +545,66 @@ func _capture_drag_depth() -> void:
 	_drag_grab_depth = clampf(raw_depth, 0.9, 3.2)
 	_drag_current_depth = _drag_grab_depth
 
-func _follow_cursor_in_camera_space(delta: float) -> void:
+func _get_free_drag_target(delta: float) -> Vector3:
 	if not camera:
 		camera = get_viewport().get_camera_3d()
 	if not camera:
-		return
+		return global_position
 	var mouse_pos: Vector2 = get_viewport().get_mouse_position()
-	var target_depth: float = maxf(_drag_grab_depth - _drag_hold_lift, 0.85)
+	var target_depth: float = maxf(_drag_grab_depth - _get_drag_hold_lift(), 0.85)
 	_drag_current_depth = lerpf(_drag_current_depth, target_depth, 1.0 - exp(-12.0 * delta))
-	var target_pos: Vector3 = camera.project_position(mouse_pos, _drag_current_depth)
-	global_position = global_position.lerp(target_pos, 1.0 - exp(-25.0 * delta))
+	return camera.project_position(mouse_pos, _drag_current_depth)
+
+func _get_counter_drag_target() -> Vector3:
+	var surface_y: float = get_working_area_surface_y()
+	if not camera:
+		camera = get_viewport().get_camera_3d()
+	if not camera:
+		var fallback: Vector3 = _clamp_to_counter(global_position)
+		fallback.y = surface_y
+		return fallback
+
+	var mouse_pos: Vector2 = get_viewport().get_mouse_position()
+	var from: Vector3 = camera.project_ray_origin(mouse_pos)
+	var dir: Vector3 = camera.project_ray_normal(mouse_pos)
+	var forward: Vector3 = -camera.global_transform.basis.z
+
+	var intersection = Plane(Vector3.UP, surface_y).intersects_ray(from, dir)
+	if intersection != null:
+		var to_hit: Vector3 = intersection - from
+		if to_hit.dot(forward) > 0.0 and to_hit.length() <= 5.0:
+			var clamped_hit: Vector3 = _clamp_to_counter(intersection)
+			clamped_hit.y = surface_y
+			return clamped_hit
+
+	var flat_forward := Vector3(forward.x, 0.0, forward.z)
+	if flat_forward.length_squared() > 0.0001:
+		flat_forward = flat_forward.normalized()
+		var back_point := Vector3(global_position.x, surface_y, global_position.z)
+		var bounds = get_working_area_bounds(self)
+		if bounds is AABB:
+			var box: AABB = bounds
+			back_point = box.get_center() + flat_forward * (box.size.z * 0.5)
+			back_point.y = surface_y
+		elif counter_origin:
+			back_point = counter_origin.global_position + flat_forward * 0.38
+			back_point.y = surface_y
+		var back_hit = Plane(flat_forward, back_point).intersects_ray(from, dir)
+		if back_hit != null:
+			var clamped_back: Vector3 = _clamp_to_counter(back_hit)
+			clamped_back.y = surface_y
+			return clamped_back
+
+	var clamped_cur: Vector3 = _clamp_to_counter(global_position)
+	clamped_cur.y = surface_y
+	return clamped_cur
 
 func _get_counter_drop_position(fallback_pos: Vector3) -> Vector3:
 	var drag_surface_y: float = get_working_area_surface_y()
 	if not camera:
 		camera = get_viewport().get_camera_3d()
 	if camera and (not GameState.gameplay_ui or (GameState.gameplay_ui.down and not GameState.gameplay_ui.is_transitioning)):
-		var mouse_pos: Vector2 = get_viewport().get_mouse_position()
-		var intersection = _get_drag_point(mouse_pos, drag_surface_y)
-		var forward: Vector3 = -camera.global_transform.basis.z
-		if intersection != null:
-			var to_hit: Vector3 = intersection - camera.global_position
-			if to_hit.dot(forward) > 0.0 and to_hit.length() <= 4.5:
-				var clamped_hit: Vector3 = _clamp_to_counter(intersection)
-				clamped_hit.y = drag_surface_y
-				return clamped_hit
-		var above_horizon_pos: Vector3 = global_position
-		var bounds = get_working_area_bounds(self)
-		if bounds is AABB:
-			above_horizon_pos.z = (bounds as AABB).end.z
-		elif counter_origin:
-			above_horizon_pos.z = counter_origin.global_position.z + 0.38
-		var clamped_above: Vector3 = _clamp_to_counter(above_horizon_pos)
-		clamped_above.y = drag_surface_y
-		return clamped_above
+		return _get_counter_drag_target()
 	var clamped_fallback: Vector3 = _clamp_to_counter(fallback_pos)
 	clamped_fallback.y = drag_surface_y
 	return clamped_fallback
@@ -426,11 +655,18 @@ func _process(delta: float) -> void:
 			if GameState.player:
 				GameState.player._update_hand("holding")
 
+	if _is_drag_blocked():
+		return
+
 	if is_balls_dragging:
-		if uses_working_area_drag_plane():
-			_follow_cursor_in_camera_space(delta)
-			_face_camera()
+		var mode: DragMode = get_drag_mode()
+		var target_pos: Vector3 = _get_counter_drag_target() if mode == DragMode.COLLISION else _get_free_drag_target(delta)
+		global_position = global_position.lerp(target_pos, 1.0 - exp(-_get_drag_follow_speed() * delta))
+		_face_camera()
 		_update_drag_hover()
+
+	if get_drag_mode() == DragMode.COLLISION and not _is_returning_to_counter:
+		call_deferred("_post_process_counter_constraints")
 
 func _update_drag_hover() -> void:
 	var collider: Object = _get_ray_collider_under_mouse(get_viewport(), get_rid())

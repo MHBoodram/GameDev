@@ -7,6 +7,9 @@ var in_game: bool = false
 func is_working_area_item() -> bool:
 	return true
 
+func _is_drag_blocked() -> bool:
+	return in_game
+
 func ready() -> void:
 	super.ready()
 	if area_body == null:
@@ -21,12 +24,13 @@ func _process(delta: float) -> void:
 		return
 	if camera and not is_balls_dragging:
 		_face_camera()
-	if not is_balls_dragging and not _is_returning_to_counter:
-		global_position = _clamp_to_counter(global_position)
-		if not is_selected:
-			var target_y: float = get_working_area_surface_y()
-			base_y_position = target_y
+	if not is_balls_dragging and get_drag_mode() == DragMode.COLLISION and not _is_returning_to_counter and not is_selected:
+		var target_y: float = get_working_area_surface_y()
+		base_y_position = target_y
+		if absf(global_position.y - target_y) <= 0.002:
 			global_position.y = target_y
+		else:
+			global_position.y = lerpf(global_position.y, target_y, 1.0 - exp(-20.0 * delta))
 
 func _in_game() -> void:
 	in_game = true
