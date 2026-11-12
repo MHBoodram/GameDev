@@ -1,6 +1,7 @@
 extends CanvasLayer
 var camera : Camera3D
 
+
 func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
 
