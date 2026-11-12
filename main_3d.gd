@@ -118,6 +118,7 @@ func _update_day_night_cycle() -> void:
 		return
 	var elapsed_seconds: float = night_timer.wait_time - night_timer.time_left
 	var raw_progress: float = (elapsed_seconds - dusk_start_seconds) / (dusk_end_seconds - dusk_start_seconds)
+	
 	var transition_weight: float = clampf(raw_progress, 0.0, 1.0)
 	var smooth_weight: float = smoothstep(0.0, 1.0, transition_weight)
 	var pitch_offset: Basis = Basis(Vector3.RIGHT, deg_to_rad(night_sun_pitch_degrees * smooth_weight))
@@ -173,7 +174,7 @@ func _check_unlocks_drinks() -> void:
 func _night_select() -> void:
 	match GameState.night:
 		1:
-			_set_shit("shark",180,"introduction_game")
+			_set_shit("shark",180,"tutorial_walk")
 			GameState.special_state = true
 			pause_night()
 		2:
@@ -289,7 +290,6 @@ func add_scene_once_drink(path: String, node_name: String, parent: Node = self) 
 	instance.name = node_name
 	parent.add_child(instance)
 	instance.setup(existing,$Coutner,resource_found)
-
 	return instance
 
 func _print_reading_dialogue() -> void:
