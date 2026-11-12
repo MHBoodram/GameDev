@@ -474,22 +474,29 @@ func _dranked() -> void:
 	queue_free()
 
 func _return_drink() -> Array:
-	var scale_to_pct: float = 100.0 / maxf(size, 0.001)
+	var current_total: float = 0.0
+	for layer in liquids:
+		if layer is Array and layer.size() >= 2:
+			current_total += float(layer[1])
+	if current_total <= 0.0:
+		return []
+
+	var scale_to_proportion: float = 1.0 / current_total
 	var normalized: Array = []
 	for layer in liquids:
 		if not (layer is Array and layer.size() >= 2):
 			continue
 		var new_layer: Array = layer.duplicate()
-		new_layer[1] = float(layer[1]) * scale_to_pct
+		new_layer[1] = float(layer[1]) * scale_to_proportion
 		if new_layer.size() > 3 and new_layer[3] is Dictionary:
 			var new_dict: Dictionary = {}
 			for k in new_layer[3]:
-				new_dict[k] = float(new_layer[3][k]) * scale_to_pct
+				new_dict[k] = float(new_layer[3][k]) * scale_to_proportion
 			new_layer[3] = new_dict
 		elif new_layer[0] is Dictionary:
 			var new_dict: Dictionary = {}
 			for k in new_layer[0]:
-				new_dict[k] = float(new_layer[0][k]) * scale_to_pct
+				new_dict[k] = float(new_layer[0][k]) * scale_to_proportion
 			new_layer[0] = new_dict
 		normalized.append(new_layer)
 	return normalized

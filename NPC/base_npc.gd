@@ -23,7 +23,7 @@ var is_leaving : bool = false
 var _is_highlighted : bool = false
 var _original_modulate : Color = Color.WHITE
 const SATISFACTORY_THRESHOLD := 0.6
-const MAX_DIFF := 15.0
+const MAX_DIFF := 0.15
 const FLAT_PENALTY_WRONG_INGREDIENT := 0.3
 const FLAT_PENALTY_MISSING_INGREDIENT := 0.4
 const REPLENISH_BASE_TIME := 30.0
@@ -150,6 +150,14 @@ func _obtain_drink(drink: Array) -> float:
 					have_ingredients[ing_name] = have_ingredients.get(ing_name, 0.0) + amt
 					total_served_amount += amt
 
+	if total_served_amount > 0.0:
+		for ing_name in have_ingredients.keys():
+			have_ingredients[ing_name] = float(have_ingredients[ing_name]) / total_served_amount
+
+	var total_want_amount: float = 0.0
+	for check in want:
+		total_want_amount += float(check[1])
+
 	if want.size() > 0 and (have_ingredients.is_empty() or total_served_amount <= 0.0):
 		drink_score = 0.0
 	else:
@@ -157,7 +165,7 @@ func _obtain_drink(drink: Array) -> float:
 		var missing_penalty: float = maxf(FLAT_PENALTY_MISSING_INGREDIENT, 1.0 / want_count)
 		for check in want:
 			var check_name: String = check[0]
-			var check_amount: float = float(check[1])
+			var check_amount: float = float(check[1]) / total_want_amount if total_want_amount > 0.0 else float(check[1])
 			if have_ingredients.has(check_name):
 				var actual_amount: float = float(have_ingredients[check_name])
 				var difference: float = abs(check_amount - actual_amount)
@@ -165,7 +173,7 @@ func _obtain_drink(drink: Array) -> float:
 				if difference <= MAX_DIFF:
 					proportion_penalty = 0.3 * (difference / MAX_DIFF)
 				else:
-					proportion_penalty = 0.3 + 0.7 * clampf((difference - MAX_DIFF) / maxf(check_amount - MAX_DIFF, 45.0), 0.0, 1.0)
+					proportion_penalty = 0.3 + 0.7 * clampf((difference - MAX_DIFF) / maxf(check_amount - MAX_DIFF, 0.45), 0.0, 1.0)
 				drink_score -= proportion_penalty / want_count
 			else:
 				drink_score -= missing_penalty
@@ -247,12 +255,45 @@ func _give_payment()-> void:
 	_leaving()
 	#_leaving()
 
+func _generate_proportions(ingredient_count: int, increment: float = 0.1) -> Array[float]:
+	var proportions: Array[float] = []
+	if ingredient_count <= 0:
+		return proportions
+	if ingredient_count == 1:
+		proportions.append(1.0)
+		return proportions
+
+	var total_steps: int = maxi(1, int(round(1.0 / increment)))
+	if ingredient_count >= total_steps:
+		var even_prop: float = 1.0 / float(ingredient_count)
+		for i in range(ingredient_count):
+			proportions.append(even_prop)
+		return proportions
+
+	var available_cuts: Array[int] = []
+	for step_idx in range(1, total_steps):
+		available_cuts.append(step_idx)
+	available_cuts.shuffle()
+
+	var cuts: Array[int] = []
+	for i in range(ingredient_count - 1):
+		cuts.append(available_cuts[i])
+	cuts.sort()
+
+	var prev_cut: int = 0
+	for cut in cuts:
+		proportions.append(snappedf(float(cut - prev_cut) * increment, increment))
+		prev_cut = cut
+	proportions.append(snappedf(float(total_steps - prev_cut) * increment, increment))
+	return proportions
+
 # Generates random drink and adds it to order queue
 func _want_drink() -> Array:
 	var drink_list_want = ["beer","gin"]
 	for drinks in PlayerStats["unlocks"]["Drinks"]:
 		if(PlayerStats["unlocks"]["Drinks"][drinks]):
-			drink_list_want.push_back(drinks)
+			if not drink_list_want.has(drinks):
+				drink_list_want.push_back(drinks)
 	
 	
 
@@ -261,13 +302,14 @@ func _want_drink() -> Array:
 	#if race_key == "SLIME":
 		#drink_count = randi_range(1, 2)
 	if(PlayerStats["unlocks"]["Ingredients"]["Blood"] && race_key == "VAMPIRE"):
-		drink_list_want.push_back("blood")
+		if not drink_list_want.has("blood"):
+			drink_list_want.push_back("blood")
 	
 	var total: Array = []
 	for i in range(drink_count):
-		var liquid_num = randi_range(80,100)
 		var drink_name = drink_list_want.pick_random()
-		var order_item = [drink_name, liquid_num]
+		var proportions: Array[float] = _generate_proportions(1)
+		var order_item = [drink_name, proportions[0]]
 		total.append(order_item)
 		drink_list.push_front([order_item])
 
@@ -314,9 +356,8 @@ func _item_print() -> String:
 	var total = ""
 	for x in drink_list:
 		for y in x:
-			for z in y:
-				total += str(str(z) + " ")
-		total += "\n"
+			if y is Array and y.size() >= 2:
+				total += str(y[0]) + " " + str(int(round(float(y[1]) * 100.0))) + "%\n"
 	return total
 
 # Customer leaves when patience timer expires paying only base drink cost

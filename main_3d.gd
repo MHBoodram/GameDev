@@ -235,8 +235,7 @@ func _serve_all_customers_scored(score_type: String = "good") -> void:
 		while npc.drink_list.size() > 0:
 			var drink_data: Array = []
 			if score_type == "good":
-				var target_item = npc.drink_list[0][0]
-				drink_data = [[target_item[0], target_item[1]]]
+				drink_data = npc.drink_list[0].duplicate(true)
 			else:
 				drink_data = [["garbage_water", 0], ["spoiled_milk", 0], ["wrong_spirit", 0]]
 			_serve_seat(seat_index, drink_data)
@@ -477,4 +476,3 @@ func _add_blood(blood: float) -> void:
 	var blood_bottle = get_node_or_null("blood")
 	if(blood_bottle):
 		blood_bottle.current_liquid += blood
-		
