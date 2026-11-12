@@ -32,6 +32,11 @@ const DRAG_THRESHOLD: float = 4.0
 var _original_modulates: Dictionary = {}
 var _highlight_visuals: Array[Node] = []
 var _explicit_highlight: Node3D = null
+var _drag_grab_depth: float = 0.0
+var _drag_current_depth: float = 0.0
+var _drag_hold_lift: float = 0.25
+var _drag_return_tween: Tween = null
+var _is_returning_to_counter: bool = false
 
 func _ready() -> void:
 	add_to_group("interactable")
@@ -327,7 +332,78 @@ func _cache_visual_nodes() -> void:
 func _instiate(counter: Node3D) -> void:
 	counter_origin = counter
 
+func _capture_drag_depth() -> void:
+	if not camera:
+		camera = get_viewport().get_camera_3d()
+	if not camera:
+		return
+	var forward: Vector3 = -camera.global_transform.basis.z
+	var raw_depth: float = (global_position - camera.global_position).dot(forward)
+	_drag_grab_depth = clampf(raw_depth, 0.9, 3.2)
+	_drag_current_depth = _drag_grab_depth
+
+func _follow_cursor_in_camera_space(delta: float) -> void:
+	if not camera:
+		camera = get_viewport().get_camera_3d()
+	if not camera:
+		return
+	var mouse_pos: Vector2 = get_viewport().get_mouse_position()
+	var target_depth: float = maxf(_drag_grab_depth - _drag_hold_lift, 0.85)
+	_drag_current_depth = lerpf(_drag_current_depth, target_depth, 1.0 - exp(-12.0 * delta))
+	var target_pos: Vector3 = camera.project_position(mouse_pos, _drag_current_depth)
+	global_position = global_position.lerp(target_pos, 1.0 - exp(-25.0 * delta))
+
+func _get_counter_drop_position(fallback_pos: Vector3) -> Vector3:
+	var drag_surface_y: float = get_working_area_surface_y()
+	if not camera:
+		camera = get_viewport().get_camera_3d()
+	if camera and (not GameState.gameplay_ui or (GameState.gameplay_ui.down and not GameState.gameplay_ui.is_transitioning)):
+		var mouse_pos: Vector2 = get_viewport().get_mouse_position()
+		var intersection = _get_drag_point(mouse_pos, drag_surface_y)
+		var forward: Vector3 = -camera.global_transform.basis.z
+		if intersection != null:
+			var to_hit: Vector3 = intersection - camera.global_position
+			if to_hit.dot(forward) > 0.0 and to_hit.length() <= 4.5:
+				var clamped_hit: Vector3 = _clamp_to_counter(intersection)
+				clamped_hit.y = drag_surface_y
+				return clamped_hit
+		var above_horizon_pos: Vector3 = global_position
+		var bounds = get_working_area_bounds(self)
+		if bounds is AABB:
+			above_horizon_pos.z = (bounds as AABB).end.z
+		elif counter_origin:
+			above_horizon_pos.z = counter_origin.global_position.z + 0.38
+		var clamped_above: Vector3 = _clamp_to_counter(above_horizon_pos)
+		clamped_above.y = drag_surface_y
+		return clamped_above
+	var clamped_fallback: Vector3 = _clamp_to_counter(fallback_pos)
+	clamped_fallback.y = drag_surface_y
+	return clamped_fallback
+
+func _return_to_counter_smoothly(target_pos: Vector3, duration: float = 0.3) -> void:
+	if not is_inside_tree():
+		return
+	_is_returning_to_counter = true
+	if _drag_return_tween and _drag_return_tween.is_valid():
+		_drag_return_tween.kill()
+	_drag_return_tween = get_tree().create_tween()
+	_drag_return_tween.set_trans(Tween.TRANS_SINE)
+	_drag_return_tween.set_ease(Tween.EASE_OUT)
+	_drag_return_tween.tween_property(self, "global_position", target_pos, duration)
+	_drag_return_tween.finished.connect(func():
+		_is_returning_to_counter = false
+		base_y_position = target_pos.y
+		_on_returned_to_counter(target_pos)
+	)
+
+func _on_returned_to_counter(_target_pos: Vector3) -> void:
+	pass
+
 func start_drag_from_spawn(press_screen_pos: Vector2) -> void:
+	_is_returning_to_counter = false
+	if _drag_return_tween and _drag_return_tween.is_valid():
+		_drag_return_tween.kill()
+	_capture_drag_depth()
 	_pointer_down_pos = press_screen_pos
 	_is_pointer_pressed = true
 	_has_dragged = false
@@ -335,7 +411,7 @@ func start_drag_from_spawn(press_screen_pos: Vector2) -> void:
 	if GameState.player:
 		GameState.player._update_hand("holding")
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if _is_pointer_pressed:
 		if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 			_finish_drag_or_click()
@@ -352,13 +428,7 @@ func _process(_delta: float) -> void:
 
 	if is_balls_dragging:
 		if uses_working_area_drag_plane():
-			var drag_surface_y: float = get_working_area_surface_y()
-			var mouse_pos: Vector2 = get_viewport().get_mouse_position()
-			var intersection = _get_drag_point(mouse_pos, drag_surface_y)
-			if intersection != null:
-				var clamped_point: Vector3 = _clamp_to_counter(intersection)
-				clamped_point.y = drag_surface_y
-				global_position = clamped_point
+			_follow_cursor_in_camera_space(delta)
 			_face_camera()
 		_update_drag_hover()
 
@@ -462,6 +532,11 @@ func _finish_drag_or_click() -> void:
 		current_hovered_target = null
 		target.set_highlight(false)
 		execute_interaction(target)
+	elif collider is Node and (collider as Node).is_in_group("trash") and is_in_group("glass") and has_method("_delete"):
+		if is_instance_valid(current_hovered_target):
+			current_hovered_target.set_highlight(false)
+		current_hovered_target = null
+		call("_delete")
 	else:
 		if is_instance_valid(current_hovered_target):
 			current_hovered_target.set_highlight(false)
@@ -512,6 +587,10 @@ func _on_area_3d_input_event(_cam: Node, event: InputEvent, _pos: Vector3, _norm
 					active_selected_item.set_selected(false)
 					active_selected_item = null
 
+			_is_returning_to_counter = false
+			if _drag_return_tween and _drag_return_tween.is_valid():
+				_drag_return_tween.kill()
+			_capture_drag_depth()
 			_pointer_down_pos = get_viewport().get_mouse_position()
 			_is_pointer_pressed = true
 			_has_dragged = false

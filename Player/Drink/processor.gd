@@ -21,7 +21,7 @@ func _process(delta: float) -> void:
 		return
 	if camera and not is_balls_dragging:
 		_face_camera()
-	if not is_balls_dragging:
+	if not is_balls_dragging and not _is_returning_to_counter:
 		global_position = _clamp_to_counter(global_position)
 		if not is_selected:
 			var target_y: float = get_working_area_surface_y()
@@ -37,6 +37,7 @@ func _out_of_game() -> void:
 	in_game = false
 	if area_body:
 		area_body.disabled = false
+	_return_to_counter_smoothly(_get_counter_drop_position(global_position))
 
 func _on_hover(hovered: bool) -> void:
 	set_highlight(hovered)
@@ -51,6 +52,10 @@ func can_interact_with(target: Ingredients) -> bool:
 func execute_interaction(target: Ingredients) -> void:
 	if target is Glasses and can_interact_with(target):
 		start_shake(target as Glasses)
+
+func on_drop_failed() -> void:
+	var target_pos: Vector3 = _get_counter_drop_position(global_position)
+	_return_to_counter_smoothly(target_pos)
 
 func start_shake(_glass: Glasses) -> void:
 	pass

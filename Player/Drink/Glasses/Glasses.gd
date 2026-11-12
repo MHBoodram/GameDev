@@ -86,6 +86,12 @@ func ready() -> void:
 	_last_counter_position = global_position
 	_last_global_pos = global_position
 
+func start_drag_from_spawn(press_screen_pos: Vector2) -> void:
+	_last_counter_position = _clamp_to_counter(global_position)
+	_last_counter_position.y = get_working_area_surface_y()
+	_last_global_pos = global_position
+	super.start_drag_from_spawn(press_screen_pos)
+
 func _delete():
 	queue_free()
 
@@ -117,22 +123,22 @@ func _process(_delta: float) -> void:
 		_look_at_sprite(camera.global_position)
 	if is_being_served or in_game:
 		return
-	_apply_collision_push(_delta)
+	if not _is_returning_to_counter:
+		_apply_collision_push(_delta)
 	if is_balls_dragging:
-		if uses_working_area_drag_plane():
-			_last_counter_position = global_position
-		elif camera:
+		if not uses_working_area_drag_plane() and camera:
 			var mouse_pos: Vector2 = get_viewport().get_mouse_position()
 			var target_pos: Vector3 = camera.project_position(mouse_pos, customer_hold_distance)
 			global_position = global_position.lerp(target_pos, 1.0 - exp(-25.0 * _delta))
 			_look_at_sprite(camera.global_position)
 		_update_hand_position(_delta)
-	else:
+	elif not _is_returning_to_counter:
 		global_position = _clamp_to_counter(global_position)
 		if not is_selected:
 			var target_y: float = get_working_area_surface_y()
 			base_y_position = target_y
 			global_position.y = target_y
+			_last_counter_position = global_position
 
 func _apply_collision_push(delta: float) -> void:
 	if not is_balls_dragging:
@@ -460,6 +466,7 @@ func _out_of_game():
 	in_game = false
 	area_body.disabled = false
 	_remove_displaying_list()
+	_return_to_counter_smoothly(_get_counter_drop_position(_last_counter_position))
 
 func _visuals_change(liquids_num: float,liquid_name: String,new: bool) -> void:
 	_rebuild_liquid_gradient()
@@ -539,11 +546,11 @@ func execute_npc_interaction(npc: Base_NPC) -> void:
 		GameState.main_node._serve_cup_to_npc(self, npc)
 
 func on_drop_failed() -> void:
-	if not uses_working_area_drag_plane():
-		global_position = _clamp_to_counter(_last_counter_position)
-		var target_y: float = get_working_area_surface_y()
-		global_position.y = target_y
-		base_y_position = target_y
+	var target_pos: Vector3 = _get_counter_drop_position(_last_counter_position)
+	_return_to_counter_smoothly(target_pos)
+
+func _on_returned_to_counter(target_pos: Vector3) -> void:
+	_last_counter_position = target_pos
 
 func _remove_displaying_list() -> void:
 	if(liquid_box):
