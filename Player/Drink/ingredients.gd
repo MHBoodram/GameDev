@@ -4,6 +4,7 @@ class_name Ingredients
 static var active_selected_item: Ingredients = null
 static var active_dragging_item: Ingredients = null
 static var current_hovered_target: Ingredients = null
+static var current_hovered_npc: Base_NPC = null
 static var _cached_query: PhysicsRayQueryParameters3D = null
 
 static var _working_area_node: Node3D = null
@@ -362,15 +363,29 @@ func _process(_delta: float) -> void:
 		_update_drag_hover()
 
 func _update_drag_hover() -> void:
-	var target: Ingredients = get_interactable_under_mouse(get_viewport(), get_rid())
+	var collider: Object = _get_ray_collider_under_mouse(get_viewport(), get_rid())
+	var target: Ingredients = collider as Ingredients if collider is Ingredients else null
+	var npc: Base_NPC = null
+	if collider is Node:
+		var parent_node := (collider as Node).get_parent()
+		if parent_node is Base_NPC:
+			npc = parent_node as Base_NPC
+
 	if target != current_hovered_target:
-		if current_hovered_target and current_hovered_target != active_selected_item:
+		if is_instance_valid(current_hovered_target) and current_hovered_target != active_selected_item:
 			current_hovered_target.set_highlight(false)
 		current_hovered_target = target
-		if current_hovered_target and can_interact_with(current_hovered_target):
+		if is_instance_valid(current_hovered_target) and can_interact_with(current_hovered_target):
 			current_hovered_target.set_highlight(true)
 
-static func get_interactable_under_mouse(viewport: Viewport, exclude_rid: RID = RID()) -> Ingredients:
+	if npc != current_hovered_npc:
+		if is_instance_valid(current_hovered_npc):
+			current_hovered_npc.set_highlight(false)
+		current_hovered_npc = npc
+		if is_instance_valid(current_hovered_npc) and can_serve_npc(current_hovered_npc):
+			current_hovered_npc.set_highlight(true)
+
+static func _get_ray_collider_under_mouse(viewport: Viewport, exclude_rid: RID = RID()) -> Object:
 	var cam: Camera3D = viewport.get_camera_3d()
 	if not cam:
 		return null
@@ -391,8 +406,14 @@ static func get_interactable_under_mouse(viewport: Viewport, exclude_rid: RID = 
 		_cached_query.exclude = []
 
 	var result := cam.get_world_3d().direct_space_state.intersect_ray(_cached_query)
-	if result and result.collider is Ingredients:
+	if result:
 		return result.collider
+	return null
+
+static func get_interactable_under_mouse(viewport: Viewport, exclude_rid: RID = RID()) -> Ingredients:
+	var collider: Object = _get_ray_collider_under_mouse(viewport, exclude_rid)
+	if collider is Ingredients:
+		return collider as Ingredients
 	return null
 
 func _face_camera() -> void:
@@ -413,17 +434,38 @@ func _finish_drag_or_click() -> void:
 	if GameState.player:
 		GameState.player._update_hand("idle")
 
-	var target: Ingredients = current_hovered_target
-	if not target:
-		target = get_interactable_under_mouse(get_viewport(), get_rid())
+	var collider: Object = _get_ray_collider_under_mouse(get_viewport(), get_rid())
+	var npc: Base_NPC = current_hovered_npc if is_instance_valid(current_hovered_npc) else null
+	if npc == null and collider is Node:
+		var parent_node := (collider as Node).get_parent()
+		if parent_node is Base_NPC:
+			npc = parent_node as Base_NPC
+
+	if is_instance_valid(npc) and can_serve_npc(npc):
+		current_hovered_npc = null
+		npc.set_highlight(false)
+		if is_instance_valid(current_hovered_target):
+			current_hovered_target.set_highlight(false)
+		current_hovered_target = null
+		execute_npc_interaction(npc)
+		_has_dragged = false
+		return
+
+	if is_instance_valid(current_hovered_npc):
+		current_hovered_npc.set_highlight(false)
+	current_hovered_npc = null
+
+	var target: Ingredients = current_hovered_target if is_instance_valid(current_hovered_target) else null
+	if not target and collider is Ingredients:
+		target = collider as Ingredients
 	if target and can_interact_with(target):
 		current_hovered_target = null
 		target.set_highlight(false)
 		execute_interaction(target)
 	else:
-		if current_hovered_target:
+		if is_instance_valid(current_hovered_target):
 			current_hovered_target.set_highlight(false)
-			current_hovered_target = null
+		current_hovered_target = null
 		on_drop_failed()
 	_has_dragged = false
 
@@ -558,6 +600,12 @@ func can_interact_with(_target: Ingredients) -> bool:
 	return false
 
 func execute_interaction(_target: Ingredients) -> void:
+	pass
+
+func can_serve_npc(_npc: Base_NPC) -> bool:
+	return false
+
+func execute_npc_interaction(_npc: Base_NPC) -> void:
 	pass
 
 func on_drop_failed() -> void:

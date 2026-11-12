@@ -164,7 +164,6 @@ func _check_upgrades() -> void:
 	pass
 
 func _check_unlocks_drinks() -> void:
-	#print(PlayerStats.unlocks)
 	for i in PlayerStats.unlocks["Drinks"]:
 		if(PlayerStats.unlocks["Drinks"][i]):
 			var temp_scene_check = "res://Player/Drink/Liquids/liquid.tscn"
@@ -429,7 +428,21 @@ func _add_recipt(seat: int, change_words: String, customer_race: String = "", cu
 			var tween = get_tree().create_tween()
 			tween.tween_property(recipt_node, "global_position", marker_node.global_position, 0.5)
 
-func _give_drink(recipt: Node3D, drink:Glasses, seat: int) -> void:
+func _serve_cup_to_npc(drink: Glasses, npc: Base_NPC) -> void:
+	var seat: int = npc.seat_num
+	_clear_receipt_for_seat(seat)
+	var seat_marker = get_node_or_null("SeatDrink" + str(seat))
+	var target_pos: Vector3 = seat_marker.global_position if seat_marker else npc.global_position
+	var tween = get_tree().create_tween().set_parallel(true)
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(drink, "global_position", target_pos, 0.25)
+	await tween.finished
+	if is_instance_valid(drink) and not drink.is_consumed and is_instance_valid(npc) and npc.can_accept_drink():
+		npc._obtain_drink(drink._return_drink())
+		drink._dranked()
+
+func _give_drink(recipt: Node3D, drink: Glasses, seat: int) -> void:
 	var seat_marker = get_node_or_null("SeatDrink" + str(seat))
 	if(!seat_marker):
 		push_warning("Can't find seat marker")

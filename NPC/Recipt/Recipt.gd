@@ -85,8 +85,8 @@ func _set_customer_info(seat: int, race: String = "", icon_texture: Texture2D = 
 		elif race != "":
 			recipt_2d._set_customer_race(race)
 
-func can_interact_with(target: Ingredients) -> bool:
-	return ordered and target is Glasses and not (target is Drinks)
+func can_interact_with(_target: Ingredients) -> bool:
+	return false
 
 func execute_interaction(target: Ingredients) -> void:
 	if can_interact_with(target) && target.is_in_group("glass"):

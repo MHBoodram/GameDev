@@ -6,11 +6,14 @@ class_name Glasses
 @export var area_body : CollisionShape3D
 @export var sprite : Sprite3D
 @export var liquid_box : VBoxContainer
+@export var customer_hold_distance : float = 1.0
 var drink_list_label : Label
 var total_liquids : float = 0
 var current_position = 0
 var in_game: bool = false
 var is_being_served: bool = false
+var is_consumed: bool = false
+var _last_counter_position: Vector3 = Vector3.ZERO
 const LIQUID_COLOR = {
 	"gin" : Color(0.0, 0.953, 0.0, 1.0),
 	"beer" : Color(0.98, 0.322, 0.051, 1.0),
@@ -67,6 +70,11 @@ var wave_amplitude : float = 0.0
 func is_working_area_item() -> bool:
 	return true
 
+func uses_working_area_drag_plane() -> bool:
+	if GameState.gameplay_ui and (not GameState.gameplay_ui.down or GameState.gameplay_ui.is_transitioning):
+		return false
+	return true
+
 func ready() -> void:
 	rotation = Vector3.ZERO
 	_setup_liquid_shader()
@@ -75,6 +83,7 @@ func ready() -> void:
 	if camera:
 		_look_at_sprite(camera.global_position)
 	_snap_to_working_area()
+	_last_counter_position = global_position
 	_last_global_pos = global_position
 
 func _delete():
@@ -87,6 +96,8 @@ func _delete():
 
 func _update_hand_position(delta: float) -> void:
 	if not camera or not GameState.player:
+		return
+	if camera.is_position_behind(global_position):
 		return
 	var mouse: Vector2 = get_viewport().get_mouse_position()
 	var glass_screen: Vector2 = camera.unproject_position(global_position)
@@ -108,6 +119,13 @@ func _process(_delta: float) -> void:
 		return
 	_apply_collision_push(_delta)
 	if is_balls_dragging:
+		if uses_working_area_drag_plane():
+			_last_counter_position = global_position
+		elif camera:
+			var mouse_pos: Vector2 = get_viewport().get_mouse_position()
+			var target_pos: Vector3 = camera.project_position(mouse_pos, customer_hold_distance)
+			global_position = global_position.lerp(target_pos, 1.0 - exp(-25.0 * _delta))
+			_look_at_sprite(camera.global_position)
 		_update_hand_position(_delta)
 	else:
 		global_position = _clamp_to_counter(global_position)
@@ -449,6 +467,9 @@ func _on_hover(hovered: bool) -> void:
 	set_highlight(hovered)
 
 func _dranked() -> void:
+	if is_consumed:
+		return
+	is_consumed = true
 	queue_free()
 
 func _return_drink() -> Array:
@@ -470,6 +491,33 @@ func execute_interaction(target: Ingredients) -> void:
 		_delete()
 	elif target is Shaker and can_be_shaken():
 		target.start_shake(self)
+
+func can_serve_npc(npc: Base_NPC) -> bool:
+	if in_game or is_being_served or is_consumed:
+		return false
+	if not is_instance_valid(npc):
+		return false
+	return npc.can_accept_drink()
+
+func execute_npc_interaction(npc: Base_NPC) -> void:
+	if not can_serve_npc(npc):
+		on_drop_failed()
+		return
+	is_being_served = true
+	_is_pointer_pressed = false
+	is_balls_dragging = false
+	_remove_displaying_list()
+	if has_method("_giving_drink"):
+		call("_giving_drink")
+	if GameState.main_node and GameState.main_node.has_method("_serve_cup_to_npc"):
+		GameState.main_node._serve_cup_to_npc(self, npc)
+
+func on_drop_failed() -> void:
+	if not uses_working_area_drag_plane():
+		global_position = _clamp_to_counter(_last_counter_position)
+		var target_y: float = get_working_area_surface_y()
+		global_position.y = target_y
+		base_y_position = target_y
 
 func _remove_displaying_list() -> void:
 	if(liquid_box):

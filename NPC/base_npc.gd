@@ -19,6 +19,9 @@ var emo: String = "netural"
 var customer_satisfaction : float = 1.0
 var max_patience : float = 90.0
 var payment_global : float
+var is_leaving : bool = false
+var _is_highlighted : bool = false
+var _original_modulate : Color = Color.WHITE
 const SATISFACTORY_THRESHOLD := 0.6
 const MAX_DIFF := 15.0
 const FLAT_PENALTY_WRONG_INGREDIENT := 0.3
@@ -49,6 +52,19 @@ func talk() -> void:
 	if dialogue_resource:
 		GameState.character_talking = self
 		DialogueManager.show_dialogue_balloon_scene(custom_balloon, dialogue_resource, speaking_title, [self])
+
+func can_accept_drink() -> bool:
+	return not is_leaving and drink_list.size() > 0
+
+func set_highlight(enabled: bool) -> void:
+	if _is_highlighted == enabled:
+		return
+	_is_highlighted = enabled
+	if enabled:
+		_original_modulate = modulate
+		modulate = _original_modulate * Color(1.5, 1.5, 0.4, 1.0)
+	else:
+		modulate = _original_modulate
 
 # Another initailization function
 func _institate(npc_source : NPC,seat: int,rec_marker: Marker3D, patience: float = 90,starting_dialogue: String = "start") -> void:
@@ -83,6 +99,8 @@ func _tween_bounce() -> void:
 # Opens dialogue on click on customer
 @warning_ignore("shadowed_variable", "unused_parameter")
 func _on_interaction_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
+	if Ingredients.active_dragging_item != null:
+		return
 	if(event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and abs(camera.global_position.x - global_position.x) < 2):
 		talk()
 
@@ -233,6 +251,8 @@ func _get_drink() -> String:
 
 # Tweens customer to exit and frees seat
 func _leaving() -> void:
+	is_leaving = true
+	set_highlight(false)
 	var tween = get_tree().create_tween()
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
@@ -249,6 +269,14 @@ func _add_recipt() -> void:
 # Gets drink from overlapping glass area and triggers empty glass state
 func _on_area_Obtain_drink_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
+		if "is_balls_dragging" in area and area.is_balls_dragging:
+			return
+		if "is_being_served" in area and not area.is_being_served:
+			return
+		if "is_consumed" in area and area.is_consumed:
+			return
+		if not can_accept_drink():
+			return
 		_obtain_drink(area._return_drink())
 		area._dranked()
 
@@ -277,10 +305,14 @@ func _on_patience_timer_timeout() -> void:
 
 # Changes cursor to interact on hover
 func _on_area_3d_mouse_entered() -> void:
+	if Ingredients.active_dragging_item != null:
+		return
 	GameState.player._update_hand("interact")
 
 # Changes cursor to idle on unhover
 func _on_area_3d_mouse_exited() -> void:
+	if Ingredients.active_dragging_item != null:
+		return
 	GameState.player._update_hand("idle")
 
 func _talking(open_mouth: bool = false):

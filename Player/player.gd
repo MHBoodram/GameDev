@@ -30,8 +30,6 @@ func _ready():
 	_update_hand("idle")
 
 func _process(delta: float) -> void:
-	#if($GameplayUi/Hand/AnimationPlayer.current_animation == "hold"):
-		#return
 	$GameplayUi/Hand.global_position = get_viewport().get_mouse_position()
 
 func _force_cursor_image(move_to: Vector3) -> void:
@@ -96,6 +94,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_QUOTELEFT or event.physical_keycode == KEY_QUOTELEFT or event.keycode == KEY_ASCIITILDE:
 			if GameState.main_node and GameState.main_node.has_method("toggle_debug_menu"):
 				GameState.main_node.toggle_debug_menu()
+	elif event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			if gameplay_ui and gameplay_ui.has_method("bendover"):
+				gameplay_ui.bendover()
 
 func _handle_dialogue_input() -> void:
 	if GameState.is_dialogue_open:
@@ -181,7 +183,7 @@ func _perfect_pour(drink : Drinks, glass : Glasses) -> void:
 	await get_tree().process_frame
 	drink.look_at($Camera3D.global_position)
 
-
+	
 
 func _out_of_game() -> void:
 	in_game = false
@@ -214,4 +216,5 @@ func _on_beer_glass_button_input_event(_camera: Node, event: InputEvent, _event_
 func _on_trash_area_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
 		area._delete()
+
 		
