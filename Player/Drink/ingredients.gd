@@ -45,6 +45,12 @@ var _drag_current_depth: float = 0.0
 var _drag_hold_lift: float = 0.25
 var _drag_return_tween: Tween = null
 var _is_returning_to_counter: bool = false
+var _waiting_for_working_area: bool = false
+var _active_drag_mode: DragMode = DragMode.FREE
+var _is_mode_transitioning: bool = false
+var _mode_transition_elapsed: float = 0.0
+var _mode_transition_duration: float = 0.35
+var _mode_transition_start_pos: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	add_to_group("interactable")
@@ -78,7 +84,7 @@ func is_working_area_item() -> bool:
 	return false
 
 func get_drag_mode() -> DragMode:
-	if is_working_area_item() and (not GameState.gameplay_ui or (GameState.gameplay_ui.down and not GameState.gameplay_ui.is_transitioning)):
+	if is_working_area_item() and not _waiting_for_working_area and (not GameState.gameplay_ui or (GameState.gameplay_ui.down and not GameState.gameplay_ui.is_transitioning)):
 		return DragMode.COLLISION
 	return DragMode.FREE
 
@@ -93,6 +99,51 @@ func _get_drag_follow_speed() -> float:
 
 func _get_drag_hold_lift() -> float:
 	return _drag_hold_lift
+
+func _begin_mode_transition(new_mode: DragMode) -> void:
+	_active_drag_mode = new_mode
+	_is_mode_transitioning = true
+	_mode_transition_elapsed = 0.0
+	_mode_transition_start_pos = global_position
+
+func _is_pointer_over_working_area() -> bool:
+	if not camera:
+		camera = get_viewport().get_camera_3d()
+	if not camera:
+		return true
+
+	var surface_y: float = get_working_area_surface_y()
+	var mouse_pos: Vector2 = get_viewport().get_mouse_position()
+	var from: Vector3 = camera.project_ray_origin(mouse_pos)
+	var dir: Vector3 = camera.project_ray_normal(mouse_pos)
+	var forward: Vector3 = -camera.global_transform.basis.z
+
+	var intersection = Plane(Vector3.UP, surface_y).intersects_ray(from, dir)
+	if intersection == null:
+		return false
+	var to_hit: Vector3 = intersection - from
+	if to_hit.dot(forward) <= 0.0 or to_hit.length() > 5.0:
+		return false
+
+	var hit: Vector3 = intersection
+	var bounds = get_working_area_bounds(self)
+	if bounds is AABB:
+		var box: AABB = bounds
+		var pad_x: float = 0.35
+		var pad_z_back: float = 0.05
+		return (
+			hit.x >= box.position.x - pad_x
+			and hit.x <= box.end.x + pad_x
+			and hit.z <= box.end.z + pad_z_back
+		)
+
+	if counter_origin:
+		var min_x: float = counter_origin.global_position.x - 1.4
+		var max_x: float = counter_origin.global_position.x + 2.05
+		var max_z: float = counter_origin.global_position.z + 0.43
+		return hit.x >= min_x and hit.x <= max_x and hit.z <= max_z
+
+	return true
 
 static func _find_working_area_node(search_root: Node) -> Node3D:
 	if not is_instance_valid(search_root):
@@ -365,7 +416,7 @@ func _resolve_bar_collisions() -> void:
 func _post_process_counter_constraints() -> void:
 	if not is_inside_tree() or is_queued_for_deletion():
 		return
-	if _is_drag_blocked() or _is_returning_to_counter or get_drag_mode() != DragMode.COLLISION:
+	if _is_drag_blocked() or _is_returning_to_counter or _is_mode_transitioning or get_drag_mode() != DragMode.COLLISION:
 		return
 	if absf(global_position.y - get_working_area_surface_y()) > 0.15:
 		return
@@ -628,11 +679,14 @@ func _return_to_counter_smoothly(target_pos: Vector3, duration: float = 0.3) -> 
 func _on_returned_to_counter(_target_pos: Vector3) -> void:
 	pass
 
-func start_drag_from_spawn(press_screen_pos: Vector2) -> void:
+func start_drag_from_spawn(press_screen_pos: Vector2, from_shelf: bool = false) -> void:
 	_is_returning_to_counter = false
 	if _drag_return_tween and _drag_return_tween.is_valid():
 		_drag_return_tween.kill()
 	_capture_drag_depth()
+	_waiting_for_working_area = from_shelf and is_working_area_item() and (not GameState.gameplay_ui or GameState.gameplay_ui.down)
+	_active_drag_mode = get_drag_mode()
+	_is_mode_transitioning = false
 	_pointer_down_pos = press_screen_pos
 	_is_pointer_pressed = true
 	_has_dragged = false
@@ -659,13 +713,31 @@ func _process(delta: float) -> void:
 		return
 
 	if is_balls_dragging:
+		if _waiting_for_working_area:
+			if GameState.gameplay_ui and not GameState.gameplay_ui.down:
+				_waiting_for_working_area = false
+			elif _is_pointer_over_working_area():
+				_waiting_for_working_area = false
+
 		var mode: DragMode = get_drag_mode()
+		if mode != _active_drag_mode:
+			_begin_mode_transition(mode)
+
 		var target_pos: Vector3 = _get_counter_drag_target() if mode == DragMode.COLLISION else _get_free_drag_target(delta)
-		global_position = global_position.lerp(target_pos, 1.0 - exp(-_get_drag_follow_speed() * delta))
+		if _is_mode_transitioning:
+			_mode_transition_elapsed += delta
+			var t: float = clampf(_mode_transition_elapsed / maxf(_mode_transition_duration, 0.001), 0.0, 1.0)
+			var ease_t: float = t * t * (3.0 - 2.0 * t)
+			global_position = _mode_transition_start_pos.lerp(target_pos, ease_t)
+			if t >= 1.0:
+				_is_mode_transitioning = false
+		else:
+			global_position = global_position.lerp(target_pos, 1.0 - exp(-_get_drag_follow_speed() * delta))
+
 		_face_camera()
 		_update_drag_hover()
 
-	if get_drag_mode() == DragMode.COLLISION and not _is_returning_to_counter:
+	if get_drag_mode() == DragMode.COLLISION and not _is_returning_to_counter and not _is_mode_transitioning:
 		call_deferred("_post_process_counter_constraints")
 
 func _update_drag_hover() -> void:
@@ -737,6 +809,8 @@ func _face_camera() -> void:
 func _finish_drag_or_click() -> void:
 	_is_pointer_pressed = false
 	is_balls_dragging = false
+	_is_mode_transitioning = false
+	_waiting_for_working_area = false
 	if GameState.player:
 		GameState.player._update_hand("idle")
 
@@ -827,6 +901,9 @@ func _on_area_3d_input_event(_cam: Node, event: InputEvent, _pos: Vector3, _norm
 			if _drag_return_tween and _drag_return_tween.is_valid():
 				_drag_return_tween.kill()
 			_capture_drag_depth()
+			_waiting_for_working_area = false
+			_active_drag_mode = get_drag_mode()
+			_is_mode_transitioning = false
 			_pointer_down_pos = get_viewport().get_mouse_position()
 			_is_pointer_pressed = true
 			_has_dragged = false

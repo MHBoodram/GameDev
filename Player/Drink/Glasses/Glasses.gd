@@ -13,6 +13,7 @@ var in_game: bool = false
 var is_being_served: bool = false
 var is_consumed: bool = false
 var _last_counter_position: Vector3 = Vector3.ZERO
+var _skip_initial_snap: bool = false
 const LIQUID_COLOR = {
 	"gin" : Color(0.0, 0.953, 0.0, 1.0),
 	"beer" : Color(0.98, 0.322, 0.051, 1.0),
@@ -72,9 +73,12 @@ func is_working_area_item() -> bool:
 func _is_drag_blocked() -> bool:
 	return in_game or is_being_served or is_consumed
 
-func _get_free_drag_target(_delta: float) -> Vector3:
+func _get_free_drag_target(delta: float) -> Vector3:
+	if _waiting_for_working_area:
+		return super._get_free_drag_target(delta)
 	if camera:
-		return camera.project_position(get_viewport().get_mouse_position(), customer_hold_distance)
+		_drag_current_depth = lerpf(_drag_current_depth, customer_hold_distance, 1.0 - exp(-12.0 * delta))
+		return camera.project_position(get_viewport().get_mouse_position(), _drag_current_depth)
 	return global_position
 
 func ready() -> void:
@@ -84,15 +88,30 @@ func ready() -> void:
 		highlight.modulate = Color(1.5, 1.5, 0.0, 5.0)
 	if camera:
 		_look_at_sprite(camera.global_position)
-	_snap_to_working_area()
+	if not _skip_initial_snap:
+		_snap_to_working_area()
+	else:
+		base_y_position = get_working_area_surface_y()
 	_last_counter_position = global_position
 	_last_global_pos = global_position
 
-func start_drag_from_spawn(press_screen_pos: Vector2) -> void:
-	_last_counter_position = _clamp_to_counter(global_position)
-	_last_counter_position.y = get_working_area_surface_y()
+func start_drag_from_spawn(press_screen_pos: Vector2, from_shelf: bool = false) -> void:
+	if from_shelf:
+		var working_area_bounds = Ingredients.get_working_area_bounds(self)
+		if working_area_bounds is AABB:
+			var center: Vector3 = (working_area_bounds as AABB).get_center()
+			_last_counter_position = Vector3(center.x, get_working_area_surface_y(), center.z)
+		else:
+			_last_counter_position = _clamp_to_counter(global_position)
+			_last_counter_position.y = get_working_area_surface_y()
+	else:
+		_last_counter_position = _clamp_to_counter(global_position)
+		_last_counter_position.y = get_working_area_surface_y()
 	_last_global_pos = global_position
-	super.start_drag_from_spawn(press_screen_pos)
+	_last_velocity = Vector3.ZERO
+	if camera:
+		_look_at_sprite(camera.global_position)
+	super.start_drag_from_spawn(press_screen_pos, from_shelf)
 
 func _delete():
 	queue_free()
@@ -129,7 +148,7 @@ func _process(delta: float) -> void:
 	if is_balls_dragging:
 		_update_hand_position(delta)
 
-	if get_drag_mode() == DragMode.COLLISION and not _is_returning_to_counter:
+	if get_drag_mode() == DragMode.COLLISION and not _is_returning_to_counter and not _is_mode_transitioning:
 		_apply_collision_push(delta)
 		if not is_balls_dragging:
 			if not is_selected:

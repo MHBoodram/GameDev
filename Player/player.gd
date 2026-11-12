@@ -142,27 +142,32 @@ func _spawn_cup(scene: PackedScene, cup_name: String) -> void:
 		spawn_position += offset
 		new_instance.global_position = spawn_position
 
-func _spawn_and_begin_drag(scene: PackedScene, cup_name: String) -> void:
+func _spawn_and_begin_drag(scene: PackedScene, cup_name: String, spawn_world_pos: Variant = null) -> void:
 	var new_instance = scene.instantiate()
 	new_instance.scale = spawn_scale
 	if new_instance.has_method("_instiate"):
 		new_instance._instiate(counter)
+	var offset: Vector3 = cup_offsets.get(cup_name, Vector3.ZERO)
+	if spawn_world_pos is Vector3 and "_skip_initial_snap" in new_instance:
+		new_instance._skip_initial_snap = true
 	get_parent().add_child(new_instance)
 
-	var offset: Vector3 = cup_offsets.get(cup_name, Vector3.ZERO)
-	var working_area_bounds = Ingredients.get_working_area_bounds(self)
-	if working_area_bounds is AABB:
-		var surface_center: Vector3 = (working_area_bounds as AABB).get_center()
-		new_instance.global_position = Vector3(surface_center.x, (working_area_bounds as AABB).end.y, surface_center.z) + offset
-		if new_instance.has_method("_snap_to_working_area"):
-			new_instance._snap_to_working_area()
+	if spawn_world_pos is Vector3:
+		new_instance.global_position = (spawn_world_pos as Vector3) + offset
 	else:
-		var center_x: float = counter.global_position.x + 0.335 if counter else global_position.x
-		var center_z: float = counter.global_position.z + 0.015 if counter else global_position.z
-		new_instance.global_position = Vector3(center_x, 1.6, center_z) + offset
+		var working_area_bounds = Ingredients.get_working_area_bounds(self)
+		if working_area_bounds is AABB:
+			var surface_center: Vector3 = (working_area_bounds as AABB).get_center()
+			new_instance.global_position = Vector3(surface_center.x, (working_area_bounds as AABB).end.y, surface_center.z) + offset
+			if new_instance.has_method("_snap_to_working_area"):
+				new_instance._snap_to_working_area()
+		else:
+			var center_x: float = counter.global_position.x + 0.335 if counter else global_position.x
+			var center_z: float = counter.global_position.z + 0.015 if counter else global_position.z
+			new_instance.global_position = Vector3(center_x, 1.6, center_z) + offset
 
 	if new_instance.has_method("start_drag_from_spawn"):
-		new_instance.start_drag_from_spawn(get_viewport().get_mouse_position())
+		new_instance.start_drag_from_spawn(get_viewport().get_mouse_position(), spawn_world_pos is Vector3)
 
 func _perfect_pour(drink : Drinks, glass : Glasses) -> void:
 	var tween = get_tree().create_tween().set_parallel(true)
@@ -207,11 +212,21 @@ func _out_of_game() -> void:
 
 func _on_shot_glass_button_input_event(_camera: Node, event: InputEvent, _event_position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		_spawn_and_begin_drag(shot_glass, "shot_glass")
+		var spawn_pos: Variant = null
+		if counter:
+			var btn := counter.get_node_or_null("ShotGlass Button") as Node3D
+			if btn:
+				spawn_pos = btn.global_position
+		_spawn_and_begin_drag(shot_glass, "shot_glass", spawn_pos)
 
 func _on_beer_glass_button_input_event(_camera: Node, event: InputEvent, _event_position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		_spawn_and_begin_drag(beer_glass, "beer_glass")
+		var spawn_pos: Variant = null
+		if counter:
+			var btn := counter.get_node_or_null("BeerGlass Button") as Node3D
+			if btn:
+				spawn_pos = btn.global_position
+		_spawn_and_begin_drag(beer_glass, "beer_glass", spawn_pos)
 
 func _on_trash_area_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
