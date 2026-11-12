@@ -77,7 +77,12 @@ flip_h = true
 modulate = Color(1, 1, 1, 0)
 texture = ExtResource("3_5iee8")
 
+[node name="Liquid_refresh" type="Timer" parent="." unique_id=227173742]
+wait_time = 5.0
+autostart = true
+
 [connection signal="area_entered" from="." to="." method="_on_interact_area_entered"]
 [connection signal="area_exited" from="." to="." method="_on_interact_area_exited"]
 [connection signal="mouse_entered" from="." to="." method="_on_interact_mouse_entered"]
 [connection signal="mouse_exited" from="." to="." method="_on_interact_mouse_exited"]
+[connection signal="timeout" from="Liquid_refresh" to="." method="_on_liquid_refresh_timeout"]

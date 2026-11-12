@@ -28,6 +28,7 @@ func _ready() -> void:
 		player.position.x = match_position_counter[current_position]
 	$FishEye.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	GameState.gameplay_ui = self
+	_change_money(PlayerStats.money)
 	set_shift_hud_visible(false)
 
 func _input(event: InputEvent) -> void:
@@ -161,7 +162,7 @@ func _on_right_button_pressed() -> void:
 
 func _on_bottom_button_pressed() -> void:
 	if(GameState.player):
-		if(GameState.player.return_tool() == "knife" && down):
+		if(GameState.player.return_tool() == "knife" && down && !GameState.player.in_game):
 			GameState.main_node._period_game()
 			_in_down_minigame()
 			return
@@ -362,7 +363,7 @@ func _create_start_area_drink() -> void:
 
 	start_area.add_child(shape)
 	add_child(start_area)
-	start_area.global_position = Vector2(789, 591)
+	start_area.global_position = Vector2(839, 591)
 
 	start_area.input_event.connect(_on_start_area_input_event)
 

@@ -4,6 +4,7 @@ class_name Drinks
 const POUR_AMOUNT: float = 0.25
 const POUR_INTERVAL: float = 0.1
 
+@onready var liquid_refresh = get_node("Liquid_refresh")
 @export var liquid_resource: Liquid
 @export var size: float = 50.0
 @export var hold_lift: float = 0.2
@@ -39,7 +40,6 @@ func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 
 	# Only touch albedo_texture if the overlay really is a StandardMaterial3D
 	
-
 	original_position = og_position
 	counter_origin = Counter
 	global_position = og_position.global_position
@@ -54,6 +54,7 @@ func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 		
 		$Inside/Outside.material_overlay = overlay
 	# in setup(), replace the old overlay block with:
+
 	_setup_liquid_shader()
 	_apply_outside_texture()
 	set_liquid_color(liquid_resource.liquid_color)
@@ -91,6 +92,7 @@ func _process(_delta: float) -> void:
 		var target_flat: Vector3 = camera.global_position
 		target_flat.y = $Inside.global_position.y
 		$Inside.look_at(target_flat, Vector3.UP)
+
 
 
 # Tracks the cursor / hovered glass while dragging
@@ -131,7 +133,7 @@ func _on_area_3d_input_event(camera_node: Node, event: InputEvent, event_pos: Ve
 			_capture_grab_depth()
 		super._on_area_3d_input_event(camera_node, event, event_pos, normal, shape_idx)
 		return
-
+	
 	if left_pressed and not is_pouring:
 		await _pour()
 
@@ -352,3 +354,11 @@ func _rebuild_liquid_gradient() -> void:
 	# Slide the "to" point along the original from -> to line
 	gradient_texture.fill_from = _tex_from
 	gradient_texture.fill_to = _tex_from.lerp(_tex_to_full, fill)
+	
+func _add_liquid(amount):
+	var temp_amount = current_liquid + amount
+	current_liquid = clampf(temp_amount, 0.0, size)
+	_update_liquid_shader()
+
+func _on_liquid_refresh_timeout() -> void:
+	_add_liquid(0.25)
