@@ -437,7 +437,20 @@ func _period_game() -> void:
 	add_child(blood_scene)
 	player.in_game = true
 
+func _get_blood_bottle():
+	var blood_bottle = get_node_or_null("blood")
+	return blood_bottle
+
 func _add_blood(blood: float) -> void:
 	var blood_bottle = get_node_or_null("blood")
 	if(blood_bottle):
 		blood_bottle.current_liquid += blood
+		blood_bottle._update_liquid_shader()
+
+
+func _on_beer_glass_button_mouse_entered() -> void:
+	GameState.player._update_hand("interact")
+
+
+func _on_beer_glass_button_mouse_exited() -> void:
+	GameState.player._update_hand("netural")

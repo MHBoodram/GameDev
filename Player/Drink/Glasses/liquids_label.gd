@@ -3,5 +3,6 @@ extends Label
 func _ready():
 	material = material.duplicate()
 
-func _change_bottom_text(temp_text : String) -> void:
+func change_text(temp_text : String) -> void:
+	text = temp_text
 	$Label.text = temp_text

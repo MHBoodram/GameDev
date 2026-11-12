@@ -15,6 +15,7 @@ Shark: doesn't matter
 Shark: Just show me what you got
 do _add_recipt()
 set speaking_title = "introduction_mid_talk"
+do GameState.player.gameplay_ui._tutorial_start_drink()
 => END
 
 ~ tutorial_walk
@@ -39,6 +40,7 @@ Shark: How you liking it
 - It's kinda lacking
 	Shark: Yeah, if I was broke this the only thing I would get also
 set speaking_title = "introduction_game"
+=> introduction_game
 => END
 
 ~ night_2_introduction

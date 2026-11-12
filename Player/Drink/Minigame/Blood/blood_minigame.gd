@@ -1,12 +1,20 @@
 extends CanvasLayer
 @onready var blood_cells_scene = load("res://Player/Drink/Minigame/Blood/blood_cells.tscn")
 var blood_cells_obtain : float = 0
+var previous_cells : float = 0
 var blood_cells_total = 0
 #@onready var inside_glass = $Inside
 #@onready var outside_glass = $Inside/Outside
 
 
 func _ready() -> void:
+	if(GameState.main_node._get_blood_bottle()):
+		var bottle_current_liquid = GameState.main_node._get_blood_bottle().current_liquid
+		previous_cells = bottle_current_liquid
+	else:
+		previous_cells = 0
+	set_fill(previous_cells)
+
 	$AnimationPlayer.play("hurt")
 	await $AnimationPlayer.animation_finished
 	for i in 10:
@@ -28,7 +36,6 @@ func _finish_game() -> void:
 		await $AnimationPlayer.animation_finished
 		GameState.main_node._add_blood(blood_cells_obtain)
 		GameState.player.in_game = false
-		
 		queue_free()
 
 func _return_nothing() -> void:
@@ -58,7 +65,7 @@ func _return_blood(blood: float = 0,node_position: Vector2 = Vector2.ZERO) -> vo
 	second_tween.tween_property($Sprite2D, "rotation_degrees", -shake_intensity, 0.1)
 	second_tween.tween_property($Sprite2D, "rotation_degrees", 0, 0.1)
 	blood_cells_obtain += blood
-	set_fill(blood_cells_obtain/100)
+	set_fill(blood_cells_obtain/100 + previous_cells/100)
 	$Label.text = "Total Blood: " + str(blood_cells_obtain)
 	_check_all_finished()
 

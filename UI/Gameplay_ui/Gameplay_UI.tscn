@@ -303,6 +303,22 @@ horizontal_alignment = 1
 [node name="ToolCircle" parent="." unique_id=714600700 instance=ExtResource("9_er0l6")]
 mouse_filter = 2
 
+[node name="Tutorial Label" type="Label" parent="." unique_id=1547912301]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -57.5
+offset_top = 44.0
+offset_right = 57.5
+offset_bottom = 67.0
+grow_horizontal = 2
+theme_override_fonts/font = ExtResource("6_0kmbd")
+theme_override_font_sizes/font_size = 50
+text = "Tutorial"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [connection signal="mouse_entered" from="Left_Button" to="." method="_on_left_button_mouse_entered"]
 [connection signal="mouse_exited" from="Left_Button" to="." method="_on_mouse_exited"]
 [connection signal="pressed" from="Left_Button" to="." method="_on_left_button_pressed"]
