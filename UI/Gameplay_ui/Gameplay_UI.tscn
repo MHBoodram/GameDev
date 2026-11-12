@@ -116,8 +116,10 @@ offset_right = 40.0
 offset_bottom = 40.0
 
 [node name="Left Container" type="VBoxContainer" parent="." unique_id=1974922797]
-offset_right = 150.0
-offset_bottom = 177.0
+offset_left = 27.0
+offset_top = 23.0
+offset_right = 177.0
+offset_bottom = 200.0
 mouse_filter = 2
 
 [node name="Timer" type="TextureProgressBar" parent="Left Container" unique_id=1415814912]
@@ -138,8 +140,10 @@ text = "Time"
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -174.0
-offset_bottom = 68.0
+offset_left = -203.0
+offset_top = 25.0
+offset_right = -29.0
+offset_bottom = 93.0
 grow_horizontal = 0
 mouse_filter = 2
 
@@ -274,9 +278,9 @@ libraries/ = SubResource("AnimationLibrary_ybnoy")
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = 432.0
+offset_left = 414.0
 offset_top = 133.0
-offset_right = 644.0
+offset_right = 626.0
 offset_bottom = 272.0
 grow_horizontal = 2
 mouse_filter = 2

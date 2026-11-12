@@ -170,7 +170,7 @@ func _check_unlocks_drinks() -> void:
 	if(PlayerStats.unlocks["Ingredients"]["Blood"]):
 		var temp_scene_check = "res://Player/Drink/Liquids/liquid.tscn"
 		add_scene_once_drink(temp_scene_check, str("blood"))
-	
+
 func _night_select() -> void:
 	match GameState.night:
 		1:
@@ -312,7 +312,7 @@ func _add_npc_specific(character: String) -> void:
 			path = "res://NPC/Resources/cesti.tres"
 		_:
 			path = "res://NPC/Resources/scott.tres"
-	
+
 	print("[customer_spawned]: ", chosen_species)
 
 	var npc = BASE_NPC.instantiate()

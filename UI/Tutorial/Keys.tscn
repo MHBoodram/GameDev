@@ -56,7 +56,7 @@ tracks/0/keys = {
 "times": PackedFloat32Array(0, 0.5),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Vector2(542.49414, -170), Vector2(542.49414, 53)]
+"values": [Vector2(453.55298, -298), Vector2(453.55298, 23)]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_ef8ei"]
@@ -71,127 +71,164 @@ anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -640.0
 offset_top = -161.0
-offset_right = -444.98828
-offset_bottom = -13.0
+offset_right = -267.10596
+offset_bottom = 122.0
 grow_horizontal = 2
-pivot_offset = Vector2(95, 68)
+scale = Vector2(0.70385724, 0.70385724)
+pivot_offset = Vector2(185.44702, 149.5)
 theme_override_styles/panel = SubResource("StyleBoxFlat_3oqen")
 script = ExtResource("1_3oqen")
 
 [node name="Panel" type="Panel" parent="." unique_id=182942543]
 layout_mode = 0
-offset_left = 75.0
-offset_top = 27.0
-offset_right = 115.0
-offset_bottom = 67.0
+offset_left = 156.0
+offset_top = 67.0
+offset_right = 218.0
+offset_bottom = 129.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_170cm")
 
 [node name="Label2" type="Label" parent="Panel" unique_id=1132043683]
 layout_mode = 0
-offset_left = -23.0
-offset_top = -15.0
-offset_right = 68.0
-offset_bottom = -4.0
+offset_left = -56.0
+offset_top = -19.0
+offset_right = 125.0
+offset_bottom = 2.0
 theme_override_fonts/font = ExtResource("1_b8ijg")
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 30
 text = "Moving to Counter"
 
 [node name="up" type="CenterContainer" parent="Panel" unique_id=2096462021]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -34.0
+offset_right = 20.0
+offset_bottom = 34.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Label" type="Label" parent="Panel/up" unique_id=1430086216]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("1_b8ijg")
-theme_override_font_sizes/font_size = 50
+theme_override_font_sizes/font_size = 100
 text = "W"
 
 [node name="Panel2" type="Panel" parent="." unique_id=1911212213]
 layout_mode = 0
-offset_left = 34.0
-offset_top = 68.0
-offset_right = 74.0
-offset_bottom = 108.0
+offset_left = 80.0
+offset_top = 134.0
+offset_right = 142.0
+offset_bottom = 196.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_170cm")
 
 [node name="Label2" type="Label" parent="Panel2" unique_id=933018443]
 layout_mode = 0
-offset_left = -7.0
-offset_top = -15.0
-offset_right = 41.0
-offset_bottom = -4.0
+offset_left = -27.0
+offset_top = -18.0
+offset_right = 69.0
+offset_bottom = 3.0
 theme_override_fonts/font = ExtResource("1_b8ijg")
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 30
 text = "Move Left"
 
 [node name="left" type="CenterContainer" parent="Panel2" unique_id=1457994608]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -34.0
+offset_right = 20.0
+offset_bottom = 34.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Label" type="Label" parent="Panel2/left" unique_id=1176977008]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("1_b8ijg")
-theme_override_font_sizes/font_size = 50
+theme_override_font_sizes/font_size = 100
 text = "A"
 
 [node name="Panel3" type="Panel" parent="." unique_id=156256092]
 layout_mode = 0
-offset_left = 75.0
-offset_top = 68.0
-offset_right = 115.0
-offset_bottom = 108.0
+offset_left = 155.0
+offset_top = 134.0
+offset_right = 217.0
+offset_bottom = 196.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_170cm")
 
 [node name="down" type="CenterContainer" parent="Panel3" unique_id=2091877]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -34.0
+offset_right = 20.0
+offset_bottom = 34.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Label" type="Label" parent="Panel3/down" unique_id=295302962]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("1_b8ijg")
-theme_override_font_sizes/font_size = 50
+theme_override_font_sizes/font_size = 100
 text = "S"
 
 [node name="Label2" type="Label" parent="Panel3" unique_id=1311195840]
 layout_mode = 0
-offset_left = -23.0
-offset_top = 43.0
-offset_right = 68.0
-offset_bottom = 54.0
+offset_left = -62.0
+offset_top = 61.0
+offset_right = 119.0
+offset_bottom = 82.0
 theme_override_fonts/font = ExtResource("1_b8ijg")
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 30
 text = "Moving to Counter"
 
 [node name="Panel4" type="Panel" parent="." unique_id=477485231]
 layout_mode = 0
-offset_left = 116.0
-offset_top = 68.0
-offset_right = 156.0
-offset_bottom = 108.0
+offset_left = 235.0
+offset_top = 134.0
+offset_right = 297.0
+offset_bottom = 196.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_170cm")
 
 [node name="right" type="CenterContainer" parent="Panel4" unique_id=50455625]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -34.0
+offset_right = 20.0
+offset_bottom = 34.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Label" type="Label" parent="Panel4/right" unique_id=1063926696]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("1_b8ijg")
-theme_override_font_sizes/font_size = 50
+theme_override_font_sizes/font_size = 100
 text = "D"
 
 [node name="Label2" type="Label" parent="Panel4" unique_id=453074743]
 layout_mode = 0
 offset_left = 1.0
-offset_top = -15.0
-offset_right = 55.0
-offset_bottom = -4.0
+offset_top = -20.0
+offset_right = 108.0
+offset_bottom = 1.0
 theme_override_fonts/font = ExtResource("1_b8ijg")
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 30
 text = "Move Right"
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1606652738]

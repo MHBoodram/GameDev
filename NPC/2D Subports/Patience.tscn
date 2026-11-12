@@ -61,6 +61,9 @@ grow_vertical = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 5
 theme_override_fonts/font = ExtResource("2_0y3eg")
 theme_override_font_sizes/font_size = 30
 theme_override_styles/background = SubResource("StyleBoxFlat_hkrex")
@@ -68,8 +71,7 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_0y3eg")
 value = 74.69
 
 [node name="Race_Face" type="Sprite2D" parent="HBoxContainer" unique_id=173033687]
-visible = false
-position = Vector2(184, -29.5)
+position = Vector2(-35, 8.5)
 texture = ExtResource("2_vwuhb")
 hframes = 12
 frame = 9
@@ -81,7 +83,7 @@ texture = ExtResource("2_vwuhb")
 hframes = 12
 frame = 2
 
-[node name="TextureRect" type="TextureRect" parent="HBoxContainer" unique_id=2027732819]
+[node name="TextureRect" type="Sprite2D" parent="HBoxContainer" unique_id=431745420]
 visible = false
-layout_mode = 2
+position = Vector2(403, 5.5)
 texture = ExtResource("4_hkrex")

@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://ptx2ek23fpem"]
 
-[ext_resource type="Script" uid="uid://bccoqt1jiegjo" path="res://Player/Drink/Minigame/Blood/blood_minigame.gd" id="1_hsqqf"]
+[ext_resource type="Script" uid="uid://b6khaumvfqs1o" path="res://Player/Drink/Minigame/Blood/blood_minigame.gd" id="1_hsqqf"]
+[ext_resource type="Texture2D" uid="uid://1yul4dtngbg4" path="res://Assets/Items/beer.png" id="2_3juvt"]
 [ext_resource type="Shader" uid="uid://b5kpwtrmoc3g5" path="res://Shader/shot_cup.gdshader" id="2_rlg7l"]
 [ext_resource type="Texture2D" uid="uid://cwjxfda0sowei" path="res://Assets/Items/Drinks/blood_outline.png" id="3_vg78n"]
 [ext_resource type="Shader" uid="uid://tyhfgk6oy2oi" path="res://Shader/shot_cup_2D.gdshader" id="4_vg78n"]

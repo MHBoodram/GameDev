@@ -18,6 +18,8 @@ var is_selected: bool = false
 var camera: Camera3D
 @export var counter_origin: Node3D
 var base_y_position: float = 1.6
+var drag_height: float = 1.6
+var drag_follow_speed: float = 0.0
 var _pointer_down_pos: Vector2 = Vector2.ZERO
 var _is_pointer_pressed: bool = false
 var _has_dragged: bool = false
@@ -94,11 +96,14 @@ func _process(_delta: float) -> void:
 
 	if is_balls_dragging:
 		var mouse_pos: Vector2 = get_viewport().get_mouse_position()
-		var hit = _get_drag_point(mouse_pos, 1.6)
+		var hit = _get_drag_point(mouse_pos, drag_height)
 		if hit != null:
 			var p: Vector3 = _clamp_to_counter(hit)
-			p.y = 1.6
-			global_position = p
+			p.y = drag_height
+			if drag_follow_speed > 0.0:
+				global_position = global_position.lerp(p, 1.0 - exp(-drag_follow_speed * _delta))
+			else:
+				global_position = p
 		_face_camera()
 		_update_drag_hover()
 
