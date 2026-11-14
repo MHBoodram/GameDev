@@ -8,6 +8,7 @@ var summoning : bool = false
 var icup_spawn : String = "shot_glass"
 var in_pour_zone : Area3D
 var in_game : bool = false
+var _pour_tween : Tween = null
 var tool_in_hand : String = "hand"
 var in_game_drinks : Dictionary = \
 {
@@ -170,39 +171,51 @@ func _spawn_and_begin_drag(scene: PackedScene, cup_name: String, spawn_world_pos
 		new_instance.start_drag_from_spawn(get_viewport().get_mouse_position(), spawn_world_pos is Vector3)
 
 func _perfect_pour(drink : Drinks, glass : Glasses) -> void:
-	var tween = get_tree().create_tween().set_parallel(true)
+	if _pour_tween and _pour_tween.is_valid():
+		_pour_tween.kill()
 	gameplay_ui._in_down_minigame()
 	in_game = true
 	in_game_drinks["Drink"]["Node"] = drink
 	in_game_drinks["Drink"]["position"] = drink.global_position
 	in_game_drinks["Drink"]["position"].x = drink.global_position.x + 0.5
 	in_game_drinks["Glass"]["Node"] = glass
-	in_game_drinks["Glass"]["position"] = glass.global_position
+	var glass_home_pos: Vector3 = glass.global_position
+	if glass.has_method("_get_saved_counter_position"):
+		glass_home_pos = glass._get_saved_counter_position(glass._last_counter_position)
+	in_game_drinks["Glass"]["position"] = glass_home_pos
 	drink._in_game()
 	glass._in_game()
-	tween.tween_property(drink,"global_position",$Camera3D/drink_mark.global_position,0.5)
-	tween.tween_property(glass,"global_position",$Camera3D/glass_mark.global_position,0.5)
-	tween.tween_property(glass,"rotation_degrees:y",0,0.5)
+	_pour_tween = get_tree().create_tween().set_parallel(true)
+	_pour_tween.tween_property(drink,"global_position",$Camera3D/drink_mark.global_position,0.5)
+	_pour_tween.tween_property(glass,"global_position",$Camera3D/glass_mark.global_position,0.5)
+	_pour_tween.tween_property(glass,"rotation_degrees:y",0,0.5)
 
-	await tween.finished
+	await _pour_tween.finished
+	if not in_game or not is_instance_valid(drink):
+		return
 	await get_tree().process_frame
-	drink.look_at($Camera3D.global_position)
+	if in_game and is_instance_valid(drink):
+		drink.look_at($Camera3D.global_position)
 
-	
+
 
 func _out_of_game() -> void:
+	if not in_game:
+		return
 	in_game = false
+	if _pour_tween and _pour_tween.is_valid():
+		_pour_tween.kill()
 	var drink = in_game_drinks["Drink"]["Node"]
 	var glass = in_game_drinks["Glass"]["Node"]
-	var tween = get_tree().create_tween().set_parallel(true)
+	_pour_tween = get_tree().create_tween().set_parallel(true)
 	if is_instance_valid(drink):
 		if "original_position" in drink and drink.original_position:
-			tween.tween_property(drink, "global_position", drink.original_position.global_position, 0.5)
+			_pour_tween.tween_property(drink, "global_position", drink.original_position.global_position, 0.5)
 		else:
-			tween.tween_property(drink, "global_position", in_game_drinks["Drink"]["position"], 0.5)
+			_pour_tween.tween_property(drink, "global_position", in_game_drinks["Drink"]["position"], 0.5)
 	if is_instance_valid(glass):
-		tween.tween_property(glass, "global_position", in_game_drinks["Glass"]["position"], 0.5)
-	await tween.finished
+		_pour_tween.tween_property(glass, "global_position", in_game_drinks["Glass"]["position"], 0.5)
+	await _pour_tween.finished
 	if is_instance_valid(drink):
 		drink._out_of_game()
 	if is_instance_valid(glass):
@@ -231,5 +244,6 @@ func _on_beer_glass_button_input_event(_camera: Node, event: InputEvent, _event_
 func _on_trash_area_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
 		area._delete()
+
 
 		
