@@ -111,8 +111,7 @@ func _pour() -> void:
 	
 	if pouring_into:
 		$CPUParticles3D.emitting = true
-		SFXAudio.play_liquidpour()
-		while _is_pour_button_held() and current_liquid > 0.0 and is_instance_valid(pouring_into):
+		while _is_pour_button_held() and in_game and GameState.player and GameState.player.in_game and current_liquid > 0.0 and is_instance_valid(pouring_into):
 			var amount := minf(POUR_AMOUNT, current_liquid)
 			pouring_into._pouring(liquid_resource.id, amount)
 			set_liquid_amount(current_liquid - amount)
@@ -127,7 +126,7 @@ func _pour() -> void:
 	is_pouring = false
 
 	await get_tree().create_timer(0.2).timeout
-	if is_inside_tree() and in_game and GameState.player:
+	if is_inside_tree() and in_game and GameState.player and GameState.player.in_game:
 		GameState.player._out_of_game()
 
 func _is_pour_button_held() -> bool:
@@ -153,6 +152,10 @@ func _return_original() -> void:
 
 func _in_game() -> void:
 	in_game = true
+	_is_pointer_pressed = false
+	is_balls_dragging = false
+	if _drag_return_tween and _drag_return_tween.is_valid():
+		_drag_return_tween.kill()
 	if pouring_into and pouring_into.has_method("_on_hover"):
 		pouring_into._on_hover(false)
 

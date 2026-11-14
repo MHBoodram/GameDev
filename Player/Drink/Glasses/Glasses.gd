@@ -505,13 +505,28 @@ func _pushing_glass(other_glass : Area3D) -> void:
 
 func _in_game():
 	in_game = true
-	area_body.disabled = true
+	_is_pointer_pressed = false
+	is_balls_dragging = false
+	_is_returning_to_counter = false
+	_is_mode_transitioning = false
+	push_velocity = Vector3.ZERO
+	if _drag_return_tween and _drag_return_tween.is_valid():
+		_drag_return_tween.kill()
+	if area_body:
+		area_body.disabled = true
 
 func _out_of_game():
 	in_game = false
-	area_body.disabled = false
+	if area_body:
+		area_body.disabled = false
 	_remove_displaying_list()
-	_return_to_counter_smoothly(_get_counter_drop_position(_last_counter_position))
+	var target_pos: Vector3 = _get_saved_counter_position(_last_counter_position)
+	if global_position.distance_to(target_pos) > 0.005:
+		_return_to_counter_smoothly(target_pos)
+	else:
+		global_position = target_pos
+		base_y_position = target_pos.y
+		_last_counter_position = target_pos
 
 func _visuals_change(liquids_num: float,liquid_name: String,new: bool) -> void:
 	_rebuild_liquid_gradient()
@@ -591,8 +606,11 @@ func execute_npc_interaction(npc: Base_NPC) -> void:
 		GameState.main_node._serve_cup_to_npc(self, npc)
 
 func on_drop_failed() -> void:
-	var target_pos: Vector3 = _get_counter_drop_position(_last_counter_position)
+	var target_pos: Vector3 = _get_counter_drop_position(_last_counter_position) if _has_dragged else _get_saved_counter_position(_last_counter_position)
 	_return_to_counter_smoothly(target_pos)
+
+func _on_returning_to_counter(target_pos: Vector3) -> void:
+	_last_counter_position = target_pos
 
 func _on_returned_to_counter(target_pos: Vector3) -> void:
 	_last_counter_position = target_pos
@@ -751,3 +769,4 @@ func _mixed_color() -> Color:
 			var col: Color = LIQUID_COLOR.get(str(l[0]), Color.WHITE)
 			color_weights.append([col, amount])
 	return _average_hsv_color(color_weights)
+	

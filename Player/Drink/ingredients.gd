@@ -652,20 +652,24 @@ func _get_counter_drag_target() -> Vector3:
 	clamped_cur.y = surface_y
 	return clamped_cur
 
-func _get_counter_drop_position(fallback_pos: Vector3) -> Vector3:
+func _get_saved_counter_position(saved_pos: Vector3) -> Vector3:
 	var drag_surface_y: float = get_working_area_surface_y()
+	var clamped_saved: Vector3 = _clamp_to_counter(saved_pos)
+	clamped_saved.y = drag_surface_y
+	return clamped_saved
+
+func _get_counter_drop_position(fallback_pos: Vector3) -> Vector3:
 	if not camera:
 		camera = get_viewport().get_camera_3d()
 	if camera and (not GameState.gameplay_ui or (GameState.gameplay_ui.down and not GameState.gameplay_ui.is_transitioning)):
 		return _get_counter_drag_target()
-	var clamped_fallback: Vector3 = _clamp_to_counter(fallback_pos)
-	clamped_fallback.y = drag_surface_y
-	return clamped_fallback
+	return _get_saved_counter_position(fallback_pos)
 
 func _return_to_counter_smoothly(target_pos: Vector3, duration: float = 0.3) -> void:
 	if not is_inside_tree():
 		return
 	_is_returning_to_counter = true
+	_on_returning_to_counter(target_pos)
 	if _drag_return_tween and _drag_return_tween.is_valid():
 		_drag_return_tween.kill()
 	_drag_return_tween = get_tree().create_tween()
@@ -677,6 +681,9 @@ func _return_to_counter_smoothly(target_pos: Vector3, duration: float = 0.3) -> 
 		base_y_position = target_pos.y
 		_on_returned_to_counter(target_pos)
 	)
+
+func _on_returning_to_counter(_target_pos: Vector3) -> void:
+	pass
 
 func _on_returned_to_counter(_target_pos: Vector3) -> void:
 	pass
@@ -885,6 +892,8 @@ func _clamp_to_counter(target_position: Vector3) -> Vector3:
 	return target_position
 
 func _on_area_3d_input_event(_cam: Node, event: InputEvent, _pos: Vector3, _normal: Vector3, _shape_idx: int) -> void:
+	if _is_drag_blocked():
+		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			if active_selected_item != null and active_selected_item != self:
@@ -1004,3 +1013,4 @@ func execute_npc_interaction(_npc: Base_NPC) -> void:
 
 func on_drop_failed() -> void:
 	pass
+	
