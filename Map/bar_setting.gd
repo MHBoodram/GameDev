@@ -7,25 +7,16 @@ const WORKING_AREA_MARGIN_RATIO_X := 0.05
 const WORKING_AREA_MARGIN_RATIO_Z := 0.10
 const WORKING_AREA_WALL_HEIGHT := 1.0
 
-@export var pixel_size: int = 3:
-	set(value):
-		pixel_size = value
-		_apply_pixel_shader()
-
 func _ready() -> void:
-	_apply_pixel_shader()
+	_clear_pixel_shader()
 	if not Engine.is_editor_hint():
 		_setup_drag_collisions()
 		call_deferred("_setup_working_area_walls")
 
-func _apply_pixel_shader() -> void:
-	var mat = ShaderMaterial.new()
-	mat.shader = preload("res://Shader/per_object_pixel_shader.gdshader")
-	mat.set_shader_parameter("pixel_size", pixel_size)
-	mat.render_priority = -1
-
+func _clear_pixel_shader() -> void:
 	for mesh in find_children("*", "GeometryInstance3D"):
-		mesh.material_overlay = mat
+		if mesh is GeometryInstance3D and mesh.material_overlay != null:
+			mesh.material_overlay = null
 
 func _setup_drag_collisions() -> void:
 	for node in find_children("*", "Node3D", true, false):
@@ -166,4 +157,5 @@ func _spotlight_dim() -> void:
 		var spotlight_node = get_node(name_spotlight)
 		var tween = get_tree().create_tween()
 		tween.tween_property(spotlight_node,"light_energy",0,0.5)
-	
+
+		
