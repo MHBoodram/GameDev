@@ -118,7 +118,7 @@ func _update_day_night_cycle() -> void:
 		return
 	var elapsed_seconds: float = night_timer.wait_time - night_timer.time_left
 	var raw_progress: float = (elapsed_seconds - dusk_start_seconds) / (dusk_end_seconds - dusk_start_seconds)
-	
+
 	var transition_weight: float = clampf(raw_progress, 0.0, 1.0)
 	var smooth_weight: float = smoothstep(0.0, 1.0, transition_weight)
 	var pitch_offset: Basis = Basis(Vector3.RIGHT, deg_to_rad(night_sun_pitch_degrees * smooth_weight))

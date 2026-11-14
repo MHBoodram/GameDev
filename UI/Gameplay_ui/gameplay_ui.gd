@@ -244,7 +244,7 @@ func _create_hint_hand() -> void:
 	hint_hand.z_index = 100
 	hint_hand.hide()
 	add_child(hint_hand)
-	
+
 func _tutorial_drink_on() -> void:
 	_create_hint_hand()
 	$"Tutorial Label".show()
@@ -273,7 +273,7 @@ func _tutorial_drink_on() -> void:
 	$"Tutorial Label".text = "Grab the Liquid drop it on the glass"
 	_create_start_area_liquid()
 	was_clicked = false
-	
+
 	while not was_clicked:
 		hint_hand.show()
 		hint_hand.global_position = Vector2(788, 294)
@@ -287,16 +287,16 @@ func _tutorial_drink_on() -> void:
 		print(was_clicked)
 		if not was_clicked:
 			await get_tree().create_timer(0.5).timeout
-			
+
 	while !GameState.player.in_game:
 		await get_tree().process_frame
-	
+
 	$"Tutorial Label".text = "Hold left click to pour the drink into the glass"
 	while not Input.is_action_just_pressed("Left_click"):
 		await get_tree().process_frame
 	while Input.get_action_strength("Left_click"):
 		await get_tree().process_frame
-	
+
 	_create_start_area_recipet()
 	was_clicked = false
 	$"Tutorial Label".text = "Bring the recipt onto the drink"
@@ -334,8 +334,8 @@ func _create_start_area_recipet() -> void:
 	start_area.global_position = Vector2(565.0, 294)
 
 	start_area.input_event.connect(_on_start_area_input_event)
-	
-	
+
+
 func _create_start_area_liquid() -> void:
 	start_area = Area2D.new()
 	start_area.input_pickable = true
@@ -350,7 +350,7 @@ func _create_start_area_liquid() -> void:
 	start_area.global_position = Vector2(788.0, 294)
 
 	start_area.input_event.connect(_on_start_area_input_event)
-	
+
 func _create_start_area_drink() -> void:
 	start_area = Area2D.new()
 	start_area.input_pickable = true
@@ -373,7 +373,7 @@ func _on_start_area_input_event(_viewport: Node, event: InputEvent, _shape_idx: 
 		clicked.emit()
 		start_area.queue_free()
 		start_area = null
-		
+
 #func _camera_down_tween() -> void:
 	#var tween = get_tree().create_tween().set_parallel(true)
 	#tween.set_trans(Tween.TRANS_SINE)
