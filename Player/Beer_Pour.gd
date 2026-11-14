@@ -67,7 +67,8 @@ func _on_pour_area_area_exited(area: Area3D) -> void:
 		#area._remove_displaying_list()
 		#in_pour_zone = null
 		#pour_zone.modulate = Color(1.0, 1.0, 1.0, 1.0)
-	_glasses_in_area.erase(area)
+	if(_glasses_in_area.size() > 0):
+		_glasses_in_area.erase(area)
 	if area == in_pour_zone:
 		if is_instance_valid(area):
 			area.exit_snap_zone(_snap_target())
