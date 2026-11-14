@@ -29,7 +29,7 @@ const MAX_DIFF := 0.15
 const FLAT_PENALTY_WRONG_INGREDIENT := 0.3
 const FLAT_PENALTY_MISSING_INGREDIENT := 0.4
 const REPLENISH_BASE_TIME := 30.0
-const BASE_DRINK_PRICE := 10.0
+const BASE_DRINK_PRICE := 0.0
 
 func _ready() -> void:
 	max_patience = npc_resource.patience_time

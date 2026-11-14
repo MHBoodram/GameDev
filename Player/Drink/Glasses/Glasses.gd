@@ -841,4 +841,3 @@ func _mixed_color() -> Color:
 			var col: Color = LIQUID_COLOR.get(str(l[0]), Color.WHITE)
 			color_weights.append([col, amount])
 	return _average_hsv_color(color_weights)
-	
