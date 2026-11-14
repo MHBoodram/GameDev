@@ -137,16 +137,6 @@ func _build_ui() -> void:
 	meter_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(meter_bg)
 
-	#meter_bg.clip_contents = true # added this so nothing happens outside of the bar
-	#_progress_fill = ColorRect.new()
-	#_progress_fill.color = Color(1.0, 0.82, 0.2, 1.0)
-	#_progress_fill.size = Vector2(meter_w, bar_size.y)
-	#_progress_fill.position = Vector2.ZERO
-	#_progress_fill.pivot_offset = Vector2(0.0, bar_size.y)
-	#_progress_fill.scale = Vector2(1.0,0.0)
-	#_progress_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	#meter_bg.add_child(_progress_fill)
-
 	meter_bg.clip_contents = true
 
 	_progress_fill = ColorRect.new()
@@ -161,7 +151,7 @@ func _build_ui() -> void:
 	title.size = Vector2(frame.size.x + 120, 60.0)
 	_ui.add_child(title)
 
-	var cap_gap := 48.0
+	var cap_gap := 65.0
 	var caps_width := keycap_size * 2.0 + cap_gap
 	var caps_x := frame.position.x + frame.size.x * 0.5 - caps_width  * 0.5
 	var caps_y := frame.position.y + frame.size.y + 10
