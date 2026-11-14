@@ -33,6 +33,8 @@ var is_selected: bool = false
 var camera: Camera3D
 @export var counter_origin: Node3D
 var base_y_position: float = 1.6
+var drag_height: float = 1.6
+var drag_follow_speed: float = 0.0
 var _pointer_down_pos: Vector2 = Vector2.ZERO
 var _is_pointer_pressed: bool = false
 var _has_dragged: bool = false
@@ -1002,5 +1004,3 @@ func execute_npc_interaction(_npc: Base_NPC) -> void:
 
 func on_drop_failed() -> void:
 	pass
-
-	

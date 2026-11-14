@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dbopjf61c8b21"]
 
 [ext_resource type="PackedScene" uid="uid://ci6fovgg0i85" path="res://Map/bar1.tscn" id="1_2t0lq"]
-[ext_resource type="Script" uid="uid://cgrldus8tt4ky" path="res://UI/Starting/starting_screen.gd" id="1_aj1h6"]
+[ext_resource type="Script" uid="uid://gm2337lcgrvo" path="res://UI/Starting/starting_screen.gd" id="1_aj1h6"]
 [ext_resource type="PackedScene" uid="uid://bdpvjjayusxo7" path="res://UI/Starting/StartMenu.tscn" id="3_pa3t7"]
 [ext_resource type="Texture2D" uid="uid://cmfpp3ot4ndl3" path="res://Assets/UI/Logo.png" id="4_8bcmw"]
 [ext_resource type="PackedScene" uid="uid://dmvyu064q12ba" path="res://UI/Starting/setting.tscn" id="5_vdsfn"]

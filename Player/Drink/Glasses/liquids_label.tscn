@@ -17,8 +17,19 @@ shader_parameter/secondary_color = Color(0.5, 0.9, 1, 1)
 shader_parameter/gradient_amount = 0.3
 
 [node name="LiquidsLabel" type="Label" unique_id=1876342748]
+modulate = Color(0, 0, 0, 1)
 material = SubResource("ShaderMaterial_dwiq7")
 theme_override_fonts/font = ExtResource("2_4yk5p")
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 50
 text = "THEY CALL ME THE DRINK"
 script = ExtResource("3_4yk5p")
+
+[node name="Label" type="Label" parent="." unique_id=1446628911]
+z_index = -1
+layout_mode = 0
+offset_right = 242.0
+offset_bottom = 23.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("2_4yk5p")
+theme_override_font_sizes/font_size = 50
+text = "THEY CALL ME THE DRINK"

@@ -34,11 +34,11 @@ func _change_bus_volume(n_bus: String,value : float): #Not working currently
 			AudioServer.set_bus_mute(bus_index,true)
 		else:
 			AudioServer.set_bus_mute(bus_index,false)
-			
+
 	else:
 		push_warning("UIAudio: bus '%s' not found, falling back to Master." % bus_name)
-		
-	
+
+
 	#if(value <= -24):
 		#AudioServer.set_bus_mute(bus_index,true)
 	#else:

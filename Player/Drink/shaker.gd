@@ -95,4 +95,3 @@ func _end_jiggle() -> void:
 	_jiggle_nodes.clear()
 	_jiggle_home.clear()
 	_jiggle_tweens.clear()
-	

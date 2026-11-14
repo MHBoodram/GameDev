@@ -1,7 +1,9 @@
 [gd_scene format=3 uid="uid://47xad203pngm"]
 
-[ext_resource type="Texture2D" uid="uid://bqfkwfepnejxy" path="res://Assets/Items/Drinks/gin.png" id="2_46qyp"]
+[ext_resource type="Texture2D" uid="uid://cbsy2m437skvb" path="res://Assets/Items/Drinks/gin_outline.png" id="2_50xmu"]
 [ext_resource type="Script" uid="uid://dyius6a3dgffd" path="res://Player/Drink/Liquids/gin.gd" id="2_mic12"]
+[ext_resource type="Texture2D" uid="uid://dd1l5asvb0lpk" path="res://Assets/Items/Drinks/gin_color.png" id="3_5iee8"]
+[ext_resource type="Shader" uid="uid://b5kpwtrmoc3g5" path="res://Shader/shot_cup.gdshader" id="3_50xmu"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_s74th"]
 radius = 0.28564453
@@ -12,6 +14,40 @@ shape = 0
 size = 0.5
 sections = 2
 section_length = 0.02
+
+[sub_resource type="Gradient" id="Gradient_5iee8"]
+colors = PackedColorArray(0, 1, 0, 1, 0, 1, 0, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_hpxhq"]
+gradient = SubResource("Gradient_5iee8")
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_i3eed"]
+load_path = "res://.godot/imported/gin_color.png-55500796f465de1f455b1a68987dbe77.s3tc.ctex"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_nq6ij"]
+render_priority = 2
+shader = ExtResource("3_50xmu")
+shader_parameter/texture_albedo = SubResource("CompressedTexture2D_i3eed")
+shader_parameter/gradient_texture = SubResource("GradientTexture1D_hpxhq")
+shader_parameter/fill_amount = 1.0
+shader_parameter/slosh_angle = 0.0
+shader_parameter/slosh_vertical_offset = 0.0
+shader_parameter/wave_phase = 0.0
+shader_parameter/wave_amplitude = 0.0
+shader_parameter/pixel_resolution = 48.0
+shader_parameter/surface_highlight_color = Color(1.4, 1.4, 1.5, 1)
+shader_parameter/secondary_highlight_color = Color(0.9, 0.4, 0.95, 0.85)
+shader_parameter/surface_highlight_thickness = 1.2
+shader_parameter/bottom_darkening = 0.45
+shader_parameter/liquid_transparency = 0.9
+shader_parameter/inner_margin_top = 0.12
+shader_parameter/inner_margin_bottom = 0.88
+shader_parameter/caustic_beam_strength = 0.35
+shader_parameter/sparkle_density = 0.7
+shader_parameter/glass_reflection_strength = 0.28
+shader_parameter/meniscus_curve = 0.03
+shader_parameter/gradient_offset = 0.0
+shader_parameter/flip_gradient = false
 
 [node name="Liquids" type="Area3D" unique_id=280743464]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
@@ -34,9 +70,21 @@ gravity = Vector3(0, 0, -9.8)
 flip_h = true
 alpha_cut = 2
 render_priority = 1
-texture = ExtResource("2_46qyp")
+texture = ExtResource("2_50xmu")
+
+[node name="Outside" type="Sprite3D" parent="Inside" unique_id=596075149]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.00033542514)
+material_overlay = SubResource("ShaderMaterial_nq6ij")
+flip_h = true
+modulate = Color(1, 1, 1, 0)
+texture = ExtResource("3_5iee8")
+
+[node name="Liquid_refresh" type="Timer" parent="." unique_id=227173742]
+wait_time = 5.0
+autostart = true
 
 [connection signal="area_entered" from="." to="." method="_on_interact_area_entered"]
 [connection signal="area_exited" from="." to="." method="_on_interact_area_exited"]
 [connection signal="mouse_entered" from="." to="." method="_on_interact_mouse_entered"]
 [connection signal="mouse_exited" from="." to="." method="_on_interact_mouse_exited"]
+[connection signal="timeout" from="Liquid_refresh" to="." method="_on_liquid_refresh_timeout"]

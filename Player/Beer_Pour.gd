@@ -27,6 +27,8 @@ func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: V
 
 func _on_pour_area_area_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass") && !in_pour_zone):
+		var temp_global_position = Vector3($PourArea/CollisionShape3D.global_position.x,area.global_position.y,$PourArea/CollisionShape3D.global_position.z)
+		area.global_position = temp_global_position
 		in_pour_zone = area
 		pour_zone.modulate = Color(1, 0, 0)
 

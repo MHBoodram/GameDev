@@ -245,6 +245,8 @@ func _obtain_drink(drink: Array) -> float:
 				speaking_title = "introduction_mid_mid"
 			else:
 				speaking_title = "introduction_mid_bad"
+		if is_instance_valid(patient_2d):
+			patient_2d._recipt_obtain()
 	return drink_score
 
 func _give_payment()-> void:
@@ -290,6 +292,7 @@ func _generate_proportions(ingredient_count: int, increment: float = 0.1) -> Arr
 # Generates random drink and adds it to order queue
 func _want_drink() -> Array:
 	var drink_list_want = ["beer","gin"]
+		
 	for drinks in PlayerStats["unlocks"]["Drinks"]:
 		if(PlayerStats["unlocks"]["Drinks"][drinks]):
 			if not drink_list_want.has(drinks):
@@ -306,6 +309,12 @@ func _want_drink() -> Array:
 			drink_list_want.push_back("blood")
 	
 	var total: Array = []
+	if(speaking_title =="tutorial_walk"):
+		var order_item = ["gin", 90]
+		total.append(order_item)
+		drink_list.push_front([order_item])
+		return total
+	
 	for i in range(drink_count):
 		var drink_name = drink_list_want.pick_random()
 		var proportions: Array[float] = _generate_proportions(1)
@@ -388,6 +397,18 @@ func _on_area_3d_mouse_exited() -> void:
 		return
 	GameState.player._update_hand("idle")
 
+func _tutorial_enabler(scene_string: String) -> void:
+	var tutorial_scene = load("res://UI/Tutorial/" + scene_string + ".tscn").instantiate()
+	$CanvasLayer.add_child(tutorial_scene)
+
+
+func _check_tutorial() -> bool:
+	var tutorial_single = $CanvasLayer.get_children()
+	var truth = tutorial_single[0]._tutorial_finished()
+	if(truth):
+		tutorial_single[0]._bye_bye()
+	return truth
+
 func _talking(open_mouth: bool = false):
 	var frame_check = 0
 	match emo:
@@ -409,4 +430,3 @@ func _talking(open_mouth: bool = false):
 		frame_check = 0
 		push_warning("TOO FAR")
 	frame = frame_check
-	

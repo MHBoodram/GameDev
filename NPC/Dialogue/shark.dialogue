@@ -4,30 +4,56 @@ do _add_recipt()
 => END
 
 ~ introduction_game
-Shark: You really want to start this business huh...
+Shark: You really wanna start this business huh...
 - Yeah what about it
-	Shark: Sharp tongue from someone who wants my money
+	Shark: Lotta sass for someone who needs my money
 - I'm excited about it
-	Shark: Yeah yeah yeah, just gotta give me my money at the end of this deal
+	Shark: Yeah yeah yeah, just be sure to pay me back my money
 - ...
 	Shark: Cat got your tongue,...[wait=0.5] doesn't really matter to me
 Shark: doesn't matter
 Shark: Just show me what you got
 do _add_recipt()
 set speaking_title = "introduction_mid_talk"
+do GameState.player.gameplay_ui._tutorial_start_drink()
+=> END
+
+~ tutorial_walk
+Shark: How you liking the bar
+Shark: Walk around the bar see how it is
+do _tutorial_enabler("Keys")
+set speaking_title = "tutorial_walk_wait"
+=> END
+
+~ tutorial_walk_wait
+if _check_tutorial():
+	=> tutorial_walk_finished
+else:
+	Shark: You haven't seen the whole property yet
+	Shark: Keeping walking buddy
+=> END
+
+~ tutorial_walk_finished
+Shark: How you liking it 
+- It's alright
+	Shark: No problem buddy
+- It's kinda lacking
+	Shark: Yeah, if I was broke this the only thing I would get also
+set speaking_title = "introduction_game"
+=> introduction_game
 => END
 
 ~ night_2_introduction
-Shark: Not bad for your first day
+Shark: Not bad... [wait=0.5] for your first day
 Shark: Whoa new drinks in the back already
 set emo = "mad"
-Shark: Dude where getting that blood from?
+Shark: Where's that blood coming from
 
 - It's from me
 	Shark: EWW
 - Don't worry bout it
 	Shark: Dude don't stab me for it
-	Shark: We are good buddy aren't we
+	Shark: We're good yeah, no hard feelings right?
 - ...
 	Shark: ...
 set emo = "happy"
@@ -45,8 +71,8 @@ Shark: Start making my drink
 ~ introduction_mid_bad
 set emo = "mad"
 Shark: Did you just give me straight gasoline you punk
-Shark: Is this really what I put my money into...
-Shark: Welp I'm gonna tear your business if you do bad
+Shark: Is this really what I'm putting my money into...
+Shark: Remember [wait=0.5] I'll tear this place down if you're tanking my wallet
 Shark: Good luck buddy
 do GameState.main_node.night_popup()
 do _give_payment()
@@ -58,8 +84,8 @@ do _leaving()
 set emo = "netural"
 Shark: Hey this isn't half bad
 Shark: I could get this somewhere better
-Shark: I feeling the potential...
-Shark: Good luck buddy
+Shark: I see the vision... 
+Shark: Good luck man
 do GameState.main_node.night_popup()
 do _give_payment()
 
@@ -70,8 +96,8 @@ do _leaving()
 set emo = "happy"
 Shark: Hey this is pretty good
 Shark: Not bad kiddo I would get another if I didn't have other business to tear up
-Shark: I feeling my money coming in
-Shark: Yeah you got that I believe
+Shark: I feel my money coming back
+Shark: Yeah you got that, I believe
 do GameState.main_node.night_popup()
 do _give_payment()
 

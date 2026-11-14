@@ -1,11 +1,14 @@
 [gd_resource type="Resource" script_class="Liquid" format=3 uid="uid://ckypifgush45m"]
 
+[ext_resource type="Texture2D" uid="uid://dudm74b5iw5hr" path="res://Assets/Items/Drinks/rum_color.png" id="1_fbrfb"]
 [ext_resource type="Script" uid="uid://ouggsev6087j" path="res://Player/Drink/Liquids/Liquid_resource.gd" id="1_orhwx"]
-[ext_resource type="Texture2D" uid="uid://ba3q8kv63ng2r" path="res://Assets/Items/Drinks/rum.png" id="2_wu1x3"]
+[ext_resource type="Texture2D" uid="uid://2qjvbhfsjicc" path="res://Assets/Items/Drinks/rum_outline.png" id="3_uf0ph"]
 
 [resource]
 script = ExtResource("1_orhwx")
-sprite = ExtResource("2_wu1x3")
+sprite = ExtResource("3_uf0ph")
+outside_Sprite = ExtResource("1_fbrfb")
 alchol = true
 id = "rum"
+liquid_color = Color(0.45882353, 0.15294118, 0.015686275, 1)
 metadata/_custom_type_script = "uid://ouggsev6087j"

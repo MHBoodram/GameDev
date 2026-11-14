@@ -23,6 +23,8 @@ var is_transitioning : bool = false
 var is_moving : bool = false
 var default_camera_local_pos : Vector3 = Vector3.ZERO
 
+var tutorial_mode : bool = false
+
 func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
 	var scene_root: Node = player.get_parent() if player else get_tree().current_scene
@@ -47,7 +49,13 @@ func _ready() -> void:
 		player.position.x = match_position_counter[current_position]
 	$FishEye.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	GameState.gameplay_ui = self
+	_change_money(PlayerStats.money)
 	set_shift_hud_visible(false)
+
+func _input(event: InputEvent) -> void:
+	if(event.is_action_pressed("ui_accept")):
+		print(get_viewport().get_mouse_position())
+
 
 func _process(delta: float) -> void:
 	if not camera:
@@ -183,7 +191,7 @@ func _on_right_button_pressed() -> void:
 
 func _on_bottom_button_pressed() -> void:
 	if(GameState.player):
-		if(GameState.player.return_tool() == "knife" && down):
+		if(GameState.player.return_tool() == "knife" && down && !GameState.player.in_game):
 			GameState.main_node._period_game()
 			_in_down_minigame()
 			return
@@ -250,6 +258,151 @@ func _on_up_button_pressed() -> void:
 	if down:
 		bendover()
 
+signal clicked
+var was_clicked := false
+
+var hint_hand: TextureRect
+
+func _tutorial_start_drink():
+	clicked.connect(func(): was_clicked = true)
+	_tutorial_drink_on()
+
+func _create_hint_hand() -> void:
+	hint_hand = TextureRect.new()
+	hint_hand.texture = preload("res://Assets/UI/Hand.png")
+	#hint_hand.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hint_hand.z_index = 100
+	hint_hand.hide()
+	add_child(hint_hand)
+
+func _tutorial_drink_on() -> void:
+	_create_hint_hand()
+	$"Tutorial Label".show()
+	$"Tutorial Label".text = "Go to your Counter to make the drink"
+	while not down:
+		await get_tree().create_timer(0.5).timeout
+
+	_create_start_area_drink()
+	$"Tutorial Label".text = "Left click the glass and drag it to the middle"
+
+	while not was_clicked:
+		hint_hand.show()
+		hint_hand.global_position = Vector2(937, 593)
+		hint_hand.modulate.a = 1.0
+
+		var tween := create_tween()
+		tween.tween_property(hint_hand, "global_position", Vector2(641, 589), 0.8)\
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tween.tween_property(hint_hand, "modulate:a", 0.0, 0.2)
+		await tween.finished
+		print(was_clicked)
+		if not was_clicked:
+			await get_tree().create_timer(0.5).timeout
+
+	#hint_hand.queue_free()
+	$"Tutorial Label".text = "Grab the Liquid drop it on the glass"
+	_create_start_area_liquid()
+	was_clicked = false
+
+	while not was_clicked:
+		hint_hand.show()
+		hint_hand.global_position = Vector2(788, 294)
+		hint_hand.modulate.a = 1.0
+
+		var tween := create_tween()
+		tween.tween_property(hint_hand, "global_position", Vector2(669, 609), 0.8)\
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tween.tween_property(hint_hand, "modulate:a", 0.0, 0.2)
+		await tween.finished
+		print(was_clicked)
+		if not was_clicked:
+			await get_tree().create_timer(0.5).timeout
+
+	while !GameState.player.in_game:
+		await get_tree().process_frame
+
+	$"Tutorial Label".text = "Hold left click to pour the drink into the glass"
+	while not Input.is_action_just_pressed("Left_click"):
+		await get_tree().process_frame
+	while Input.get_action_strength("Left_click"):
+		await get_tree().process_frame
+
+	_create_start_area_recipet()
+	was_clicked = false
+	$"Tutorial Label".text = "Bring the recipt onto the drink"
+	while not was_clicked:
+		hint_hand.show()
+		hint_hand.global_position = Vector2(565, 306)
+		hint_hand.modulate.a = 1.0
+
+		var tween := create_tween()
+		tween.tween_property(hint_hand, "global_position", Vector2(672, 610), 0.8)\
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tween.tween_property(hint_hand, "modulate:a", 0.0, 0.2)
+		await tween.finished
+		print(was_clicked)
+		if not was_clicked:
+			await get_tree().create_timer(0.5).timeout
+	$"Tutorial Label".text = "Talk To Loan Shark Again"
+	while not Input.is_action_just_pressed("Left_click"):
+		await get_tree().process_frame
+	hint_hand.queue_free()
+	$"Tutorial Label".hide()
+
+var start_area: Area2D
+func _create_start_area_recipet() -> void:
+	start_area = Area2D.new()
+	start_area.input_pickable = true
+
+	var shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(296, 100)
+	shape.shape = rect
+
+	start_area.add_child(shape)
+	add_child(start_area)
+	start_area.global_position = Vector2(565.0, 294)
+
+	start_area.input_event.connect(_on_start_area_input_event)
+
+
+func _create_start_area_liquid() -> void:
+	start_area = Area2D.new()
+	start_area.input_pickable = true
+
+	var shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(296, 100)
+	shape.shape = rect
+
+	start_area.add_child(shape)
+	add_child(start_area)
+	start_area.global_position = Vector2(788.0, 294)
+
+	start_area.input_event.connect(_on_start_area_input_event)
+
+func _create_start_area_drink() -> void:
+	start_area = Area2D.new()
+	start_area.input_pickable = true
+
+	var shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(296, 100)
+	shape.shape = rect
+
+	start_area.add_child(shape)
+	add_child(start_area)
+	start_area.global_position = Vector2(839, 591)
+
+	start_area.input_event.connect(_on_start_area_input_event)
+
+func _on_start_area_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
+	if event is InputEventMouseButton \
+	and event.button_index == MOUSE_BUTTON_LEFT \
+	and event.pressed:
+		clicked.emit()
+		start_area.queue_free()
+		start_area = null
 
 #func _camera_down_tween() -> void:
 	#var tween = get_tree().create_tween().set_parallel(true)
