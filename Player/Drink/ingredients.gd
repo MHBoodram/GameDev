@@ -15,6 +15,8 @@ static var _working_area_bounds: AABB = AABB()
 static var _working_area_has_bounds: bool = false
 static var _sprite_opaque_rect_cache: Dictionary = {}
 
+const WORKING_AREA_MARGIN_RATIO_X := 0.05
+const WORKING_AREA_MARGIN_RATIO_Z := 0.10
 const BAR_COLLISION_TARGETS := ["leftshelf", "rightshelf", "pillar009"]
 static var _bar_obstacle_tree: SceneTree = null
 static var _bar_obstacle_meshes: Array[MeshInstance3D] = []
@@ -248,6 +250,47 @@ static func get_working_area_bounds(calling_context: Node) -> Variant:
 static func get_working_area_aabb(calling_context: Node) -> Variant:
 	return get_working_area_bounds(calling_context)
 
+static func _is_near_side_min_z(calling_context: Node, box: AABB) -> bool:
+	if is_instance_valid(calling_context) and calling_context.is_inside_tree():
+		var tree := calling_context.get_tree()
+		if tree:
+			var counter_mark := tree.get_first_node_in_group("counter_mark") as Node3D
+			if is_instance_valid(counter_mark):
+				return counter_mark.global_position.z <= box.get_center().z
+			var cam := tree.root.get_viewport().get_camera_3d()
+			if is_instance_valid(cam):
+				return cam.global_position.z <= box.get_center().z
+	return true
+
+static func get_working_area_usable_bounds(calling_context: Node) -> Variant:
+	var raw_bounds = get_working_area_bounds(calling_context)
+	if not (raw_bounds is AABB):
+		return null
+
+	var box: AABB = raw_bounds
+	var margin_x: float = box.size.x * WORKING_AREA_MARGIN_RATIO_X
+	var margin_z: float = box.size.z * WORKING_AREA_MARGIN_RATIO_Z
+	var near_is_min_z: bool = _is_near_side_min_z(calling_context, box)
+
+	var min_x: float = box.position.x + margin_x
+	var max_x: float = box.end.x - margin_x
+	var min_z: float = box.position.z if near_is_min_z else (box.position.z + margin_z)
+	var max_z: float = (box.end.z - margin_z) if near_is_min_z else box.end.z
+
+	if max_x < min_x:
+		var mid_x: float = (box.position.x + box.end.x) * 0.5
+		min_x = mid_x
+		max_x = mid_x
+	if max_z < min_z:
+		var mid_z: float = (box.position.z + box.end.z) * 0.5
+		min_z = mid_z
+		max_z = mid_z
+
+	return AABB(
+		Vector3(min_x, box.position.y, min_z),
+		Vector3(max_x - min_x, box.size.y, max_z - min_z)
+	)
+
 static func _get_bar_obstacle_obbs(calling_context: Node) -> Array[Dictionary]:
 	if not is_instance_valid(calling_context) or not calling_context.is_inside_tree():
 		return []
@@ -428,6 +471,9 @@ func _post_process_counter_constraints() -> void:
 	clamped.y = current_y
 	global_position = clamped
 	_resolve_bar_collisions()
+	clamped = _clamp_to_counter(global_position)
+	clamped.y = current_y
+	global_position = clamped
 
 func _get_visual_sprite_nodes() -> Array[Sprite3D]:
 	var visual_sprites: Array[Sprite3D] = []
@@ -634,7 +680,7 @@ func _get_counter_drag_target() -> Vector3:
 	if flat_forward.length_squared() > 0.0001:
 		flat_forward = flat_forward.normalized()
 		var back_point := Vector3(global_position.x, surface_y, global_position.z)
-		var bounds = get_working_area_bounds(self)
+		var bounds = get_working_area_usable_bounds(self)
 		if bounds is AABB:
 			var box: AABB = bounds
 			back_point = box.get_center() + flat_forward * (box.size.z * 0.5)
@@ -873,7 +919,7 @@ func _get_drag_point(mouse_pos: Vector2, plane_y: float) -> Variant:
 	return Plane(Vector3.UP, plane_y).intersects_ray(from, dir)
 
 func _clamp_to_counter(target_position: Vector3) -> Vector3:
-	var surface_bounds = get_working_area_bounds(self)
+	var surface_bounds = get_working_area_usable_bounds(self)
 	if surface_bounds is AABB:
 		var counter_boundary: AABB = surface_bounds
 		var half_extents: Vector2 = _get_working_area_horizontal_extents()
@@ -883,10 +929,16 @@ func _clamp_to_counter(target_position: Vector3) -> Vector3:
 		target_position.z = clampf(target_position.z, counter_boundary.position.z + margin_z, counter_boundary.end.z - margin_z)
 		return target_position
 	if counter_origin:
-		var min_x: float = counter_origin.global_position.x - 1.15
-		var max_x: float = counter_origin.global_position.x + 1.82
-		var min_z: float = counter_origin.global_position.z - 0.35
-		var max_z: float = counter_origin.global_position.z + 0.38
+		var raw_min_x: float = counter_origin.global_position.x - 1.15
+		var raw_max_x: float = counter_origin.global_position.x + 1.82
+		var raw_min_z: float = counter_origin.global_position.z - 0.35
+		var raw_max_z: float = counter_origin.global_position.z + 0.38
+		var inset_x: float = (raw_max_x - raw_min_x) * WORKING_AREA_MARGIN_RATIO_X
+		var inset_z: float = (raw_max_z - raw_min_z) * WORKING_AREA_MARGIN_RATIO_Z
+		var min_x: float = raw_min_x + inset_x
+		var max_x: float = raw_max_x - inset_x
+		var min_z: float = raw_min_z
+		var max_z: float = raw_max_z - inset_z
 		target_position.x = clampf(target_position.x, min_x, max_x)
 		target_position.z = clampf(target_position.z, min_z, max_z)
 	return target_position
