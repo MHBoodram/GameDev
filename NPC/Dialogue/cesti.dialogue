@@ -4,7 +4,7 @@ do _add_recipt()
 set speaking_title = "mid"
 => END
 ~ mid
-Cesti: [I am awaiting my drink sir|Why keep talking if the drink isn't ready?]
+Cesti: [[I am awaiting my drink sir|Why keep talking if the drink isn't ready?]]
 => END
 ~ finish
 Cesti: Finished
