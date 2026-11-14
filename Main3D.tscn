@@ -302,15 +302,6 @@ one_shot = true
 
 [node name="Keys" parent="." unique_id=394097111 instance=ExtResource("14_nmhfw")]
 visible = false
-anchors_preset = 8
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_top = -521.0
-offset_right = -444.98828
-offset_bottom = -373.0
-grow_vertical = 2
-scale = Vector2(1.9204147, 1.9204147)
-pivot_offset = Vector2(92.688324, 70.81804)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1277346395]
 environment = SubResource("Environment_ris41")

@@ -260,6 +260,123 @@ func _on_up_button_pressed() -> void:
 
 var hint_hand: TextureRect
 var _tutorial_running: bool = false
+var _intro_tutorial_running: bool = false
+
+func _is_dialogue_active() -> bool:
+	if GameState.is_dialogue_open:
+		return true
+	if GameState.main_node and GameState.main_node.is_dialogue_open:
+		return true
+	var tree := get_tree()
+	if tree and tree.root:
+		var balloon1 = tree.root.find_child("Main_Ballon", true, false)
+		if balloon1 and balloon1.visible:
+			return true
+		var balloon2 = tree.root.find_child("ExampleBalloon", true, false)
+		if balloon2 and balloon2.visible:
+			return true
+	return false
+
+func start_tutorial(keys_node: Control = null) -> void:
+	if _intro_tutorial_running:
+		return
+	_intro_tutorial_running = true
+	_run_tutorial_intro(keys_node)
+
+func _run_tutorial_intro(keys_node: Control = null) -> void:
+	# Step 1: Pop up WASD keys immediately (at natural size)
+	var keys: Control = keys_node
+	if not is_instance_valid(keys) and GameState.main_node:
+		keys = GameState.main_node.get_node_or_null("Keys") as Control
+	if not is_instance_valid(keys):
+		var keys_scene = load("res://UI/Tutorial/Keys.tscn")
+		if keys_scene:
+			keys = keys_scene.instantiate() as Control
+			add_child(keys)
+
+	if is_instance_valid(keys):
+		if keys.has_method("popup"):
+			keys.popup()
+		else:
+			keys.show()
+
+		# Wait for Step 1 (WASD) to finish
+		while is_inside_tree() and is_instance_valid(keys) and not keys.is_queued_for_deletion():
+			if _is_dialogue_active():
+				if keys.has_method("_bye_bye"):
+					keys._bye_bye()
+				break
+			if keys.has_method("_tutorial_finished") and keys._tutorial_finished():
+				break
+			await get_tree().process_frame
+
+		if is_instance_valid(keys) and not keys.is_queued_for_deletion():
+			if keys.has_signal("tutorial_completed"):
+				await keys.tutorial_completed
+			elif keys.has_method("_bye_bye"):
+				keys._bye_bye()
+
+	# Enable loan shark interaction now that Step 1 is done
+	var shark := _tutorial_find_shark()
+	if shark:
+		shark.can_talk = true
+
+	# Step 2: Prompt to talk to the loan shark by clicking him
+	var label := $"Tutorial Label" as Label
+	if is_instance_valid(label):
+		label.show()
+	_create_hint_hand()
+
+	# Show prompt and hint hand until conversation starts
+	while is_inside_tree():
+		shark = _tutorial_find_shark()
+		if _is_dialogue_active() or shark == null or shark.is_leaving:
+			break
+
+		if down:
+			if is_instance_valid(label):
+				label.text = "Press W to look up"
+			if is_instance_valid(hint_hand):
+				hint_hand.hide()
+		else:
+			if is_instance_valid(label):
+				label.text = "Click the Loan Shark to talk to him"
+			if is_instance_valid(hint_hand) and camera and is_instance_valid(shark):
+				var shark_pos: Vector3 = shark.global_position + Vector3(0.0, 0.2, 0.0)
+				if not camera.is_position_behind(shark_pos):
+					var s_pos: Vector2 = camera.unproject_position(shark_pos)
+					var h_size: Vector2 = hint_hand.size
+					if h_size == Vector2.ZERO and hint_hand.texture:
+						h_size = hint_hand.texture.get_size()
+					var bob: float = sin(Time.get_ticks_msec() * 0.006) * 10.0
+					hint_hand.global_position = s_pos - h_size * 0.5 + Vector2(0.0, bob)
+					hint_hand.modulate.a = 1.0
+					hint_hand.show()
+				else:
+					hint_hand.hide()
+
+		await get_tree().process_frame
+
+	# Conversation has started! Hide prompt and hint hand immediately
+	if is_instance_valid(hint_hand):
+		hint_hand.hide()
+	if is_instance_valid(label):
+		label.hide()
+
+	# Wait until the conversation is completely finished before allowing next step!
+	while is_inside_tree() and _is_dialogue_active():
+		await get_tree().process_frame
+
+	_intro_tutorial_running = false
+
+	# Once conversation finishes: spawn receipt, lock re-talking, and start drink tutorial
+	if is_inside_tree():
+		shark = _tutorial_find_shark()
+		if shark and shark.drink_list.size() > 0:
+			shark._add_recipt()
+			shark.can_talk = false
+			shark.speaking_title = ""
+			_tutorial_start_drink()
 
 func _tutorial_start_drink():
 	if _tutorial_running:
@@ -344,9 +461,15 @@ func _update_tutorial_hint_drag(from_world: Variant, to_world: Variant, phase_ti
 
 func _tutorial_drink_on() -> void:
 	_tutorial_running = true
+
+	# Wait until any active dialogue is completely finished before showing drink steps
+	while is_inside_tree() and _is_dialogue_active():
+		await get_tree().process_frame
+
 	_create_hint_hand()
 	var label := $"Tutorial Label" as Label
-	label.show()
+	if is_instance_valid(label):
+		label.show()
 
 	var hint_elapsed: float = 0.0
 	var last_step: String = ""
@@ -354,6 +477,17 @@ func _tutorial_drink_on() -> void:
 	while is_inside_tree():
 		var delta: float = get_process_delta_time()
 		hint_elapsed += delta
+
+		# If any dialogue opens, hide hints and prompts until it finishes
+		if _is_dialogue_active():
+			if is_instance_valid(label):
+				label.hide()
+			if is_instance_valid(hint_hand):
+				hint_hand.hide()
+			await get_tree().process_frame
+			continue
+		elif is_instance_valid(label) and not label.visible:
+			label.show()
 
 		var shark := _tutorial_find_shark()
 		var glass := _tutorial_find_glass()
@@ -368,7 +502,7 @@ func _tutorial_drink_on() -> void:
 			if is_instance_valid(hint_hand):
 				hint_hand.hide()
 			label.text = "Talk To Loan Shark Again"
-			if GameState.is_dialogue_open or shark == null or shark.is_leaving:
+			if _is_dialogue_active() or shark == null or shark.is_leaving:
 				break
 			await get_tree().process_frame
 			continue
@@ -457,3 +591,4 @@ func _tutorial_drink_on() -> void:
 	if is_instance_valid(label):
 		label.hide()
 	_tutorial_running = false
+	

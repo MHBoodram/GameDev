@@ -15,6 +15,8 @@ var speaking_title : String = "start"
 var recipt_marker : Marker3D
 var recipt_clicked : bool = true
 var unique_talk : bool = false
+var can_talk : bool = true
+var has_receipt_spawned : bool = false
 var emo: String = "netural"
 var customer_satisfaction : float = 1.0
 var max_patience : float = 90.0
@@ -49,6 +51,8 @@ func _process(delta: float) -> void:
 		customer_satisfaction = maxf(0.0, customer_satisfaction - drain_rate)
 
 func talk() -> void:
+	if not can_talk or speaking_title == "" or speaking_title == null:
+		return
 	if dialogue_resource:
 		GameState.character_talking = self
 		DialogueManager.show_dialogue_balloon_scene(custom_balloon, dialogue_resource, speaking_title, [self])
@@ -77,6 +81,8 @@ func _institate(npc_source : NPC,seat: int,rec_marker: Marker3D, patience: float
 	speaking_title = starting_dialogue
 	if(starting_dialogue != "start"):
 		unique_talk = true
+		if starting_dialogue == "tutorial_walk":
+			can_talk = false
 	_ready()
 
 # Move customer sprite to seat
@@ -101,8 +107,11 @@ func _tween_bounce() -> void:
 func _on_interaction_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if Ingredients.active_dragging_item != null:
 		return
-	if(event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and abs(camera.global_position.x - global_position.x) < 2):
-		talk()
+	if not can_talk or speaking_title == "" or speaking_title == null:
+		return
+	if(event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
+		if abs(camera.global_position.x - global_position.x) < 2 or unique_talk:
+			talk()
 
 # Changes overall reputation and species reputation based on drink score
 func _set_reputation(is_satisfactory: bool, drink_score: float) -> void:
@@ -226,6 +235,7 @@ func _obtain_drink(drink: Array) -> float:
 	print("[drink score]: ",drink_score)
 	if(drink_list.size() <= 0):
 		$Area3D/CollisionShape3D.disabled = false
+		can_talk = true
 		await get_tree().create_timer(1).timeout
 		print("Unique talk: ", unique_talk)
 		if(!unique_talk):
@@ -237,6 +247,7 @@ func _obtain_drink(drink: Array) -> float:
 				speaking_title = "Negative"
 		else:
 			$Area3D/CollisionShape3D.disabled = false
+			can_talk = true
 			patience_timer.wait_time = 100
 			patience_timer.stop()
 			if(drink_score >= 0.75):
@@ -343,8 +354,12 @@ func _leaving() -> void:
 	queue_free()
 
 func _add_recipt() -> void:
+	if has_receipt_spawned:
+		return
+	has_receipt_spawned = true
 	var race_name: String = npc_resource.race if npc_resource else ""
-	GameState.main_node._add_recipt(seat_num, str(_item_print()), race_name)
+	if GameState.main_node:
+		GameState.main_node._add_recipt(seat_num, str(_item_print()), race_name)
 
 # Gets drink from overlapping glass area and triggers empty glass state
 func _on_area_Obtain_drink_entered(area: Area3D) -> void:
@@ -421,6 +436,8 @@ func _on_patience_timer_timeout() -> void:
 func _on_area_3d_mouse_entered() -> void:
 	if Ingredients.active_dragging_item != null:
 		return
+	if not can_talk or speaking_title == "" or speaking_title == null:
+		return
 	GameState.player._update_hand("interact")
 
 # Changes cursor to idle on unhover
@@ -430,6 +447,8 @@ func _on_area_3d_mouse_exited() -> void:
 	GameState.player._update_hand("idle")
 
 func _tutorial_enabler(scene_string: String) -> void:
+	if scene_string == "Keys":
+		return
 	var tutorial_scene = load("res://UI/Tutorial/" + scene_string + ".tscn").instantiate()
 	$CanvasLayer.add_child(tutorial_scene)
 

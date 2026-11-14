@@ -179,7 +179,15 @@ func _night_select() -> void:
 			_set_shit("shark",180,"tutorial_walk")
 			GameState.special_state = true
 			pause_night()
+			var ui = GameState.gameplay_ui
+			if not ui and player and player.get_node_or_null("GameplayUi"):
+				ui = player.get_node_or_null("GameplayUi")
+			if ui and ui.has_method("start_tutorial"):
+				ui.start_tutorial(get_node_or_null("Keys"))
 		2:
+			var keys_node = get_node_or_null("Keys")
+			if keys_node:
+				keys_node.queue_free()
 			_set_shit("shark",180,"night_2_introduction")
 			GameState.special_state = true
 			pause_night()
@@ -193,6 +201,21 @@ func _on_dialogue_ended(_resource) -> void: #WHO IN THE SHITTER DID THIS CODE
 			#if npc and is_instance_valid(npc) and npc.unique_talk and npc.drink_list.size() <= 0:
 				#npc._leaving()
 				#break
+	var talking_npc = GameState.character_talking
+	if talking_npc and is_instance_valid(talking_npc):
+		if talking_npc.drink_list.size() > 0:
+			talking_npc._add_recipt()
+			if talking_npc.unique_talk:
+				talking_npc.can_talk = false
+				talking_npc.speaking_title = ""
+	if GameState.night == 1 and GameState.special_state:
+		var shark = GameState.gameplay_ui._tutorial_find_shark() if GameState.gameplay_ui else null
+		if shark and shark.drink_list.size() > 0:
+			shark._add_recipt()
+			shark.can_talk = false
+			shark.speaking_title = ""
+			if GameState.gameplay_ui and GameState.gameplay_ui.has_method("_tutorial_start_drink"):
+				GameState.gameplay_ui._tutorial_start_drink()
 
 func _is_debug_menu_blocked() -> bool:
 	if get_tree().paused:
@@ -492,3 +515,4 @@ func _on_beer_glass_button_mouse_exited() -> void:
 		return
 	if GameState.player:
 		GameState.player._update_hand("idle")
+		
