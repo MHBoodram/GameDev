@@ -106,6 +106,78 @@ func _process(_delta: float) -> void:
 	elif counter_origin:
 		global_position = _clamp_to_counter(global_position)
 
+signal snappedIn(point: Node3D)
+signal snappedOut(point: Node3D)
+
+var _snap_point: Node3D = null
+var _snap_pos: Vector3 = Vector3.ZERO
+var _snap_blend: float = 1.0
+var _snap_suppressed: bool = false
+var _snap_locked: bool = false
+var _snap_pull_speed: float = 22.0
+var _snap_release_speed: float = 16.0
+var _snap_break_distance: float = 0.35
+var _inside_base_scale: Vector3 = Vector3.ONE
+
+func enter_snap_zone(point: Node3D, pull_speed: float = 22.0, release_speed: float = 16.0, break_distance: float = 0.35) -> void:
+	_snap_point = point
+	_snap_pull_speed = pull_speed
+	_snap_release_speed = release_speed
+	_snap_suppressed = false
+
+func exit_snap_zone(point: Node3D) -> void:
+	if _snap_point == point:
+		_snap_point = null
+		_snap_suppressed = false
+
+func is_snapped() -> bool:
+	return _snap_locked
+
+func _update_snap(delta: float) -> void:
+	var want: float = 0.0
+	if _snap_point and is_instance_valid(_snap_point):
+		_snap_pos = _snap_point.global_position
+		if is_balls_dragging:
+			var flat := Vector2(global_position.x - _snap_pos.x, global_position.z - _snap_pos.z)
+			if flat.length() > _snap_break_distance:
+				_snap_suppressed = true
+			else:
+				_snap_suppressed = false
+			if not _snap_suppressed:
+				want = 1.0
+			elif not is_balls_dragging:
+				_snap_blend = 0.0
+			var speed: float = _snap_pull_speed if want > _snap_blend else _snap_release_speed
+			_snap_blend = lerpf(_snap_blend, want, 1.0 - exp(speed * delta))
+			if absf(_snap_blend - want) < 0.01:
+				_snap_blend = want
+
+			if _snap_blend > 0.0:
+				var target := Vector3(_snap_pos.x, global_position.y, _snap_pos.z)
+				global_position = global_position.lerp(target, _snap_blend)
+				if _snap_blend >= 1.0:
+					push_velocity = Vector3.ZERO
+				if camera:
+					_look_at_sprite(camera.global_position)
+
+			var locked_now : bool = _snap_blend >= 0.95 and want >= 1.0
+			if locked_now and not _snap_locked:
+				_snap_locked = true
+				_play_snap_bounce()
+				snappedIn.emit(_snap_point)
+			elif not locked_now and _snap_locked:
+				_snap_locked = false
+				snappedOut.emit(_snap_point)
+
+func _play_snap_bounce() -> void:
+	if not sprite:
+		return
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(sprite, "scale", _inside_base_scale * Vector3(1.08, 0.92, 1.0),0.05)
+	tween.tween_property(sprite,"scale", _inside_base_scale, 0.12)
+
+
 func _apply_collision_push(delta: float) -> void:
 	if not is_balls_dragging:
 		for area in get_overlapping_areas():
