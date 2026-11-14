@@ -173,7 +173,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.9415827, -0.8089119)
 transform = Transform3D(-1, 0, 1.509958e-07, 0, 1, 0, -1.509958e-07, 0, -1, 0.29699588, 1.109501, 3.1713862)
 
 [node name="BeerGlass Button" type="Area3D" parent="Coutner" unique_id=2100852152]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.8744134, 1.8346125, -0.4186132)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.6652439, 1.8346125, -0.4186132)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/BeerGlass Button" unique_id=1985639721]
 shape = SubResource("SphereShape3D_v88eg")
@@ -207,7 +207,7 @@ billboard = 1
 texture = ExtResource("7_wk5cn")
 
 [node name="BeerKeg" type="Area3D" parent="Coutner" unique_id=70738904]
-transform = Transform3D(0.29999995, 0, 0, 0, -0.19884086, 0.22463806, 0, -0.22463806, -0.19884086, 0.8801341, 1.4483287, -0.3325984)
+transform = Transform3D(0.29999995, 0, 0, 0, -0.19884086, 0.22463806, 0, -0.22463806, -0.19884086, -1.2311976, 1.4483289, -0.33259797)
 script = ExtResource("6_n776p")
 
 [node name="CHUGCHUGBEER" type="Sprite3D" parent="Coutner/BeerKeg" unique_id=1652949852]
