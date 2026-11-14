@@ -2,14 +2,14 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bryp3qbrx11gg"
+uid="uid://c7p5dyuqt70qv"
 path.s3tc="res://.godot/imported/bar_BAKED_O34_M0_BASE_COLOR.png-8d36be24e768c68ffba7cdcca2e3f49d.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "d001ee2ee4e7de0e84600c83bef2ddbd"
+"md5": "01c8ba6e5495280aaf0de737920e387c"
 }
 
 [deps]
