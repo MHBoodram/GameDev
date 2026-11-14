@@ -173,7 +173,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.9415827, -0.8089119)
 transform = Transform3D(-1, 0, 1.509958e-07, 0, 1, 0, -1.509958e-07, 0, -1, 0.29699588, 1.109501, 3.1713862)
 
 [node name="BeerGlass Button" type="Area3D" parent="Coutner" unique_id=2100852152]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.8744134, 1.8346125, -0.4186132)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.6652439, 1.8346125, -0.4186132)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/BeerGlass Button" unique_id=1985639721]
 shape = SubResource("SphereShape3D_v88eg")
@@ -207,7 +207,7 @@ billboard = 1
 texture = ExtResource("7_wk5cn")
 
 [node name="BeerKeg" type="Area3D" parent="Coutner" unique_id=70738904]
-transform = Transform3D(0.29999995, 0, 0, 0, -0.19884086, 0.22463806, 0, -0.22463806, -0.19884086, 0.8801341, 1.4483287, -0.3325984)
+transform = Transform3D(0.29999995, 0, 0, 0, -0.19884086, 0.22463806, 0, -0.22463806, -0.19884086, -1.2311976, 1.4483289, -0.33259797)
 script = ExtResource("6_n776p")
 
 [node name="CHUGCHUGBEER" type="Sprite3D" parent="Coutner/BeerKeg" unique_id=1652949852]
@@ -260,22 +260,22 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 1.728)
 visible = false
 
 [node name="gin_marker" type="Marker3D" parent="." unique_id=495649145]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.014297485, 3.7947829, 3.4702659)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3291551, 3.7947829, 3.4702659)
 
 [node name="spirit_marker" type="Marker3D" parent="." unique_id=580399797]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5406723, 3.7947829, 3.4705875)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7135229, 3.7947829, 3.4705875)
 
 [node name="rum_marker" type="Marker3D" parent="." unique_id=1427671851]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.014297485, 4.372778, 3.4702659)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.07280153, 3.795, 3.47)
 
 [node name="vodka_marker" type="Marker3D" parent="." unique_id=868453499]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.54040265, 4.3739605, 3.4705312)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9789845, 3.795, 3.471)
 
 [node name="tequila_marker" type="Marker3D" parent="." unique_id=1031829616]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.847, 2.916, 2.663)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5072497, 3.795, 3.4722655)
 
 [node name="blood_marker" type="Marker3D" parent="." unique_id=821430117]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1457834, 3.7947829, 3.4702659)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4230571, 3.7947829, 3.4702659)
 
 [node name="HiddenRecipt" type="Marker3D" parent="." unique_id=1336744346]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.081238, 7.160312, 3.426609)
@@ -302,15 +302,6 @@ one_shot = true
 
 [node name="Keys" parent="." unique_id=394097111 instance=ExtResource("14_nmhfw")]
 visible = false
-anchors_preset = 8
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_top = -521.0
-offset_right = -444.98828
-offset_bottom = -373.0
-grow_vertical = 2
-scale = Vector2(1.9204147, 1.9204147)
-pivot_offset = Vector2(92.688324, 70.81804)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1277346395]
 environment = SubResource("Environment_ris41")
