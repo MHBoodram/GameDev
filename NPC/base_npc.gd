@@ -71,6 +71,7 @@ func _institate(npc_source : NPC,seat: int,rec_marker: Marker3D, patience: float
 	npc_resource = npc_source
 	seat_num = seat
 	recipt_marker = rec_marker
+	SFXAudio.play_entranto()
 	if(patience != 0):
 		max_patience = patience
 		patience_timer.wait_time = patience

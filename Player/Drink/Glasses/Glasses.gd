@@ -133,6 +133,7 @@ func _update_hand_position(delta: float) -> void:
 	var pull: float = clampf(excess / full_pull, 0.0, 1.0)
 	var goal: Vector2 = mouse.lerp(glass_screen, pull)
 	var hand = GameState.player.hand_sprite
+	SFXAudio.play_mugpickup()
 	if hand:
 		hand.global_position = hand.global_position.lerp(goal, 1.0 - exp(-30.0 * delta))
 
@@ -211,7 +212,6 @@ func _look_at_sprite(looking_at: Vector3) -> void:
 func _update_liquid_physics(delta: float) -> void:
 	if delta <= 0.0:
 		return
-
 	var current_pos: Vector3 = global_position
 	var frame_velocity: Vector3 = (current_pos - _last_global_pos) / delta
 	var frame_acceleration: Vector3 = (frame_velocity - _last_velocity) / delta
@@ -501,6 +501,7 @@ func _pushing_glass(other_glass : Area3D) -> void:
 	if push_dir.length() < 0.001:
 		push_dir = Vector3(1.0, 0.0, 0.0)
 	push_velocity += push_dir.normalized() * 0.1
+	SFXAudio.play_mugpickup()
 
 func _in_game():
 	in_game = true

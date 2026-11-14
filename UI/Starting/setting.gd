@@ -43,6 +43,7 @@ func _on_music_slider_value_changed(value: float) -> void:
 
 func _on_sound_effect_slider_value_changed(value: float) -> void:
 	UIAudio._change_bus_volume("UI",value)
+	UIAudio._change_bus_volume("SFX",value)
 	SettingState.setting_dic["Audio"]["UI_value"] = value
 
 func _on_full_screen_pressed() -> void:
@@ -68,6 +69,7 @@ func _on_audio_reset_pressed() -> void:
 	UIAudio._change_bus_volume("Master",0)
 	UIAudio._change_bus_volume("Music",0)
 	UIAudio._change_bus_volume("UI",0)
+	UIAudio._change_bus_volume("SFX",0)
 	SettingState.setting_dic["Audio"]["Master_value"] = 0
 	SettingState.setting_dic["Audio"]["Music_value"] = 0
 	SettingState.setting_dic["Audio"]["UI_value"] = 0

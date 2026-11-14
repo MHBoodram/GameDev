@@ -70,6 +70,7 @@ func start_shake(glass: Glasses) -> void:
 	_shaking = false
 
 func _on_shake_pumped() -> void:
+	SFXAudio.play_shakerrattle()
 	for n in _jiggle_nodes:
 		if not is_instance_valid(n):
 			continue
@@ -82,6 +83,7 @@ func _on_shake_pumped() -> void:
 		_jiggle_tweens[n] = tween
 		tween.tween_property(n, "global_position", home + offset, 0.04)
 		tween.tween_property(n, "global_position", home, 0.06)
+	#SFXAudio.play_shakerrattle()
 
 
 func _end_jiggle() -> void:

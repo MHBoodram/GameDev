@@ -108,9 +108,10 @@ func _pour() -> void:
 	if GameState.player:
 		GameState.player._update_hand("holding")
 	rotation_degrees.z = 80
-
+	
 	if pouring_into:
 		$CPUParticles3D.emitting = true
+		SFXAudio.play_liquidpour()
 		while _is_pour_button_held() and current_liquid > 0.0 and is_instance_valid(pouring_into):
 			var amount := minf(POUR_AMOUNT, current_liquid)
 			pouring_into._pouring(liquid_resource.id, amount)
