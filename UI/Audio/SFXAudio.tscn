@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://7r1xj8xd4gp2"]
+
+[ext_resource type="Script" uid="uid://dusgokysli0lu" path="res://UI/Audio/SFXAudio.gd" id="1_07rxx"]
+[ext_resource type="AudioStream" uid="uid://dgf4yck1mxl2a" path="res://Assets/Audio/SFX/842380__mihacappy__entrance_open1.wav" id="2_5d0rm"]
+[ext_resource type="AudioStream" uid="uid://c5x862xlywd8n" path="res://Assets/Audio/SFX/Knifesheaf.wav" id="2_mgs6v"]
+[ext_resource type="AudioStream" uid="uid://1msd7udfsxoa" path="res://Assets/Audio/SFX/KnifeStab.wav" id="3_mcuim"]
+[ext_resource type="AudioStream" uid="uid://cycaykicrdjes" path="res://Assets/Audio/SFX/liquidpour.wav" id="5_gcwsx"]
+[ext_resource type="AudioStream" uid="uid://di83dovd87eg8" path="res://Assets/Audio/SFX/Shaker1.mp3" id="6_5utgq"]
+[ext_resource type="AudioStream" uid="uid://3ccmoyyogc63" path="res://Assets/Audio/SFX/Pickupglass.wav" id="7_mcuim"]
+
+[node name="SFXAudio" type="Node" unique_id=1019576938]
+process_mode = 3
+script = ExtResource("1_07rxx")
+knifedraw_stream = ExtResource("2_mgs6v")
+knifestab_stream = ExtResource("3_mcuim")
+entranto_stream = ExtResource("2_5d0rm")
+liquidpour_stream = ExtResource("5_gcwsx")
+shakerrattle_stream = ExtResource("6_5utgq")
+mugpickup_stream = ExtResource("7_mcuim")

@@ -29,6 +29,7 @@ UIAudio="*res://UI/Audio/UIAudio.tscn"
 MusicPlayer="*uid://bx0ui2flch67q"
 SettingState="*uid://ddsldglo0bq85"
 Transition="*uid://byxvojpl8qte4"
+SFXAudio="*uid://7r1xj8xd4gp2"
 
 [display]
 

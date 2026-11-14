@@ -7,6 +7,7 @@ var blood_cells_total = 0
 
 
 func _ready() -> void:
+	SFXAudio.play_draw()
 	$AnimationPlayer.play("hurt")
 	await $AnimationPlayer.animation_finished
 	for i in 10:
@@ -74,6 +75,7 @@ func set_fill(value: float):
 	($Sprite2D/Sprite2D.material as ShaderMaterial).set_shader_parameter("fill_amount", value)
 
 func make_red_particles_2d_explsion() -> CPUParticles2D:
+	SFXAudio.play_stab()
 	var p := CPUParticles2D.new()
 	p.texture = make_tear_texture(16, 24)
 	p.emitting = true

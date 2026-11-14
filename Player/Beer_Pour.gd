@@ -19,6 +19,7 @@ func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: V
 					#glass_array.append(x)
 			if(in_pour_zone):
 				in_pour_zone._pouring("beer", 0.25)
+				SFXAudio.play_liquidpour()
 			#for glasses in glass_array:
 				#glasses.get_parent()._pouring("beer", 0.05)
 			await get_tree().create_timer(0.1).timeout

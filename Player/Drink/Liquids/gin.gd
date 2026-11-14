@@ -118,6 +118,7 @@ func _capture_grab_depth() -> void:
 	var forward := -cam.global_transform.basis.z
 	_grab_depth = (global_position - cam.global_position).dot(forward)
 	_depth_now = _grab_depth
+	SFXAudio.play_mugpickup()
 
 
 func _on_area_3d_input_event(camera_node: Node, event: InputEvent, event_pos: Vector3, normal: Vector3, shape_idx: int) -> void:
@@ -141,9 +142,10 @@ func _pour() -> void:
 	if GameState.player:
 		GameState.player._update_hand("holding")
 	rotation_degrees.z = 80
-
+	
 	if pouring_into:
 		$CPUParticles3D.emitting = true
+		SFXAudio.play_liquidpour()
 		while _is_pour_button_held() and current_liquid > 0.0 and is_instance_valid(pouring_into):
 			var amount := minf(POUR_AMOUNT, current_liquid)
 			pouring_into._pouring(liquid_resource.id, amount)

@@ -159,7 +159,6 @@ func _perfect_pour(drink : Drinks, glass : Glasses) -> void:
 	tween.tween_property(drink,"global_position",$Camera3D/drink_mark.global_position,0.5)
 	tween.tween_property(glass,"global_position",$Camera3D/glass_mark.global_position,0.5)
 	tween.tween_property(glass,"rotation_degrees:y",0,0.5)
-
 	await tween.finished
 	await get_tree().process_frame
 	drink.look_at($Camera3D.global_position)
@@ -188,10 +187,12 @@ func _out_of_game() -> void:
 
 func _on_shot_glass_button_input_event(_camera: Node, event: InputEvent, _event_position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		SFXAudio.play_mugpickup()
 		_spawn_and_begin_drag(shot_glass, "shot_glass")
 
 func _on_beer_glass_button_input_event(_camera: Node, event: InputEvent, _event_position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		SFXAudio.play_mugpickup()
 		_spawn_and_begin_drag(beer_glass, "beer_glass")
 
 func _on_trash_area_entered(area: Area3D) -> void:
