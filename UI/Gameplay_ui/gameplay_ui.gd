@@ -258,164 +258,202 @@ func _on_up_button_pressed() -> void:
 	if down:
 		bendover()
 
-signal clicked
-var was_clicked := false
-
 var hint_hand: TextureRect
+var _tutorial_running: bool = false
 
 func _tutorial_start_drink():
-	clicked.connect(func(): was_clicked = true)
+	if _tutorial_running:
+		return
 	_tutorial_drink_on()
 
 func _create_hint_hand() -> void:
+	if is_instance_valid(hint_hand):
+		hint_hand.queue_free()
 	hint_hand = TextureRect.new()
 	hint_hand.texture = preload("res://Assets/UI/Hand.png")
-	#hint_hand.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hint_hand.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hint_hand.z_index = 100
 	hint_hand.hide()
 	add_child(hint_hand)
 
+func _tutorial_find_glass() -> Glasses:
+	var best: Glasses = null
+	for node in get_tree().get_nodes_in_group("glass"):
+		if node is Glasses and is_instance_valid(node) and not node.is_queued_for_deletion():
+			var g := node as Glasses
+			if g.is_consumed:
+				continue
+			if g.total_liquids > 0.0:
+				return g
+			best = g
+	return best
+
+func _tutorial_find_bottle() -> Drinks:
+	if GameState.main_node:
+		var gin_node = GameState.main_node.get_node_or_null("gin")
+		if gin_node is Drinks and is_instance_valid(gin_node):
+			return gin_node as Drinks
+		for child in GameState.main_node.get_children():
+			if child is Drinks and is_instance_valid(child):
+				return child as Drinks
+	return null
+
+func _tutorial_find_receipt() -> Node3D:
+	if GameState.main_node:
+		for i in range(1, 4):
+			var rec = GameState.main_node.get_node_or_null("ReciptPaper" + str(i))
+			if rec is Node3D and is_instance_valid(rec) and "ordered" in rec and rec.ordered:
+				return rec as Node3D
+	return null
+
+func _tutorial_find_shark() -> Base_NPC:
+	if GameState.main_node and "seats" in GameState.main_node:
+		for npc in GameState.main_node.seats:
+			if npc is Base_NPC and is_instance_valid(npc) and npc.unique_talk:
+				return npc as Base_NPC
+	return null
+
+func _update_tutorial_hint_drag(from_world: Variant, to_world: Variant, phase_time: float) -> void:
+	if not is_instance_valid(hint_hand):
+		return
+	if not camera or not (from_world is Vector3) or not (to_world is Vector3):
+		hint_hand.hide()
+		return
+	var p0: Vector3 = from_world
+	var p1: Vector3 = to_world
+	if camera.is_position_behind(p0) or camera.is_position_behind(p1):
+		hint_hand.hide()
+		return
+	var hand_size: Vector2 = hint_hand.size
+	if hand_size == Vector2.ZERO and hint_hand.texture:
+		hand_size = hint_hand.texture.get_size()
+	var s0: Vector2 = camera.unproject_position(p0) - hand_size * 0.5
+	var s1: Vector2 = camera.unproject_position(p1) - hand_size * 0.5
+	var cycle: float = fmod(phase_time, 1.5)
+	if cycle < 0.8:
+		var t: float = 0.5 - 0.5 * cos((cycle / 0.8) * PI)
+		hint_hand.show()
+		hint_hand.modulate.a = 1.0
+		hint_hand.global_position = s0.lerp(s1, t)
+	elif cycle < 1.0:
+		hint_hand.show()
+		hint_hand.modulate.a = 1.0 - ((cycle - 0.8) / 0.2)
+		hint_hand.global_position = s1
+	else:
+		hint_hand.hide()
+
 func _tutorial_drink_on() -> void:
+	_tutorial_running = true
 	_create_hint_hand()
-	$"Tutorial Label".show()
-	$"Tutorial Label".text = "Go to your Counter to make the drink"
-	while not down:
-		await get_tree().create_timer(0.5).timeout
+	var label := $"Tutorial Label" as Label
+	label.show()
 
-	_create_start_area_drink()
-	$"Tutorial Label".text = "Left click the glass and drag it to the middle"
+	var hint_elapsed: float = 0.0
+	var last_step: String = ""
 
-	while not was_clicked:
-		hint_hand.show()
-		hint_hand.global_position = Vector2(937, 593)
-		hint_hand.modulate.a = 1.0
+	while is_inside_tree():
+		var delta: float = get_process_delta_time()
+		hint_elapsed += delta
 
-		var tween := create_tween()
-		tween.tween_property(hint_hand, "global_position", Vector2(641, 589), 0.8)\
-			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		tween.tween_property(hint_hand, "modulate:a", 0.0, 0.2)
-		await tween.finished
-		print(was_clicked)
-		if not was_clicked:
-			await get_tree().create_timer(0.5).timeout
+		var shark := _tutorial_find_shark()
+		var glass := _tutorial_find_glass()
+		var bottle := _tutorial_find_bottle()
+		var receipt := _tutorial_find_receipt()
+		var in_pour: bool = GameState.player != null and GameState.player.in_game
+		var has_liquid: bool = glass != null and glass.total_liquids > 0.0
+		var needs_drink: bool = shark != null and not shark.is_leaving and shark.drink_list.size() > 0
 
-	#hint_hand.queue_free()
-	$"Tutorial Label".text = "Grab the Liquid drop it on the glass"
-	_create_start_area_liquid()
-	was_clicked = false
+		# Step 6: Once the drink has been served, wait for player to talk to Loan Shark again
+		if not needs_drink:
+			if is_instance_valid(hint_hand):
+				hint_hand.hide()
+			label.text = "Talk To Loan Shark Again"
+			if GameState.is_dialogue_open or shark == null or shark.is_leaving:
+				break
+			await get_tree().process_frame
+			continue
 
-	while not was_clicked:
-		hint_hand.show()
-		hint_hand.global_position = Vector2(788, 294)
-		hint_hand.modulate.a = 1.0
+		# Step 4: Currently in pour minigame
+		if in_pour:
+			if last_step != "pour":
+				last_step = "pour"
+			if is_instance_valid(hint_hand):
+				hint_hand.hide()
+			label.text = "Hold left click to pour the drink into the glass"
+			await get_tree().process_frame
+			continue
 
-		var tween := create_tween()
-		tween.tween_property(hint_hand, "global_position", Vector2(669, 609), 0.8)\
-			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		tween.tween_property(hint_hand, "modulate:a", 0.0, 0.2)
-		await tween.finished
-		print(was_clicked)
-		if not was_clicked:
-			await get_tree().create_timer(0.5).timeout
+		# Step 1: Look down at counter to prepare the drink
+		if (not down or is_transitioning) and not has_liquid:
+			if last_step != "counter":
+				last_step = "counter"
+			if is_instance_valid(hint_hand):
+				hint_hand.hide()
+			label.text = "Go to your Counter to make the drink"
+			await get_tree().process_frame
+			continue
 
-	while !GameState.player.in_game:
+		# Step 2: Spawn and place a glass onto the counter
+		if glass == null or glass.is_balls_dragging or glass._is_returning_to_counter or glass._waiting_for_working_area:
+			if last_step != "glass":
+				last_step = "glass"
+				hint_elapsed = 0.0
+			label.text = "Left click the glass and drag it to the middle"
+			if glass != null and glass.is_balls_dragging:
+				if is_instance_valid(hint_hand):
+					hint_hand.hide()
+			else:
+				var btn_pos: Variant = null
+				if GameState.player and GameState.player.counter:
+					var btn := GameState.player.counter.get_node_or_null("BeerGlass Button") as Node3D
+					if btn:
+						btn_pos = btn.global_position
+				var center_pos: Variant = null
+				var bounds = Ingredients.get_working_area_bounds(self)
+				if bounds is AABB:
+					center_pos = (bounds as AABB).get_center()
+				elif GameState.player and GameState.player.counter:
+					center_pos = GameState.player.counter.global_position + Vector3(0.0, 1.5, 0.0)
+				_update_tutorial_hint_drag(btn_pos, center_pos, hint_elapsed)
+			await get_tree().process_frame
+			continue
+
+		# Step 3: Drag bottle onto the glass
+		if not has_liquid:
+			if last_step != "liquid":
+				last_step = "liquid"
+				hint_elapsed = 0.0
+			label.text = "Grab the Liquid drop it on the glass"
+			if bottle != null and bottle.is_balls_dragging:
+				if is_instance_valid(hint_hand):
+					hint_hand.hide()
+			else:
+				var b_pos: Variant = bottle.global_position if bottle else null
+				_update_tutorial_hint_drag(b_pos, glass.global_position, hint_elapsed)
+			await get_tree().process_frame
+			continue
+
+		# Step 5: Serve via receipt -> glass (or directly cup -> NPC)
+		if last_step != "receipt":
+			last_step = "receipt"
+			hint_elapsed = 0.0
+		label.text = "Bring the recipt onto the drink"
+		if (receipt != null and "is_balls_dragging" in receipt and receipt.is_balls_dragging) or glass.is_balls_dragging or glass.is_being_served or not down or is_transitioning:
+			if is_instance_valid(hint_hand):
+				hint_hand.hide()
+		else:
+			var r_pos: Variant = null
+			if receipt != null:
+				if "has_board_slot" in receipt and receipt.has_board_slot:
+					r_pos = receipt.board_slot_position
+				else:
+					r_pos = receipt.global_position
+			_update_tutorial_hint_drag(r_pos, glass.global_position, hint_elapsed)
 		await get_tree().process_frame
 
-	$"Tutorial Label".text = "Hold left click to pour the drink into the glass"
-	while not Input.is_action_just_pressed("Left_click"):
-		await get_tree().process_frame
-	while Input.get_action_strength("Left_click"):
-		await get_tree().process_frame
-
-	_create_start_area_recipet()
-	was_clicked = false
-	$"Tutorial Label".text = "Bring the recipt onto the drink"
-	while not was_clicked:
-		hint_hand.show()
-		hint_hand.global_position = Vector2(565, 306)
-		hint_hand.modulate.a = 1.0
-
-		var tween := create_tween()
-		tween.tween_property(hint_hand, "global_position", Vector2(672, 610), 0.8)\
-			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		tween.tween_property(hint_hand, "modulate:a", 0.0, 0.2)
-		await tween.finished
-		print(was_clicked)
-		if not was_clicked:
-			await get_tree().create_timer(0.5).timeout
-	$"Tutorial Label".text = "Talk To Loan Shark Again"
-	while not Input.is_action_just_pressed("Left_click"):
-		await get_tree().process_frame
-	hint_hand.queue_free()
-	$"Tutorial Label".hide()
-
-var start_area: Area2D
-func _create_start_area_recipet() -> void:
-	start_area = Area2D.new()
-	start_area.input_pickable = true
-
-	var shape := CollisionShape2D.new()
-	var rect := RectangleShape2D.new()
-	rect.size = Vector2(296, 100)
-	shape.shape = rect
-
-	start_area.add_child(shape)
-	add_child(start_area)
-	start_area.global_position = Vector2(565.0, 294)
-
-	start_area.input_event.connect(_on_start_area_input_event)
-
-
-func _create_start_area_liquid() -> void:
-	start_area = Area2D.new()
-	start_area.input_pickable = true
-
-	var shape := CollisionShape2D.new()
-	var rect := RectangleShape2D.new()
-	rect.size = Vector2(296, 100)
-	shape.shape = rect
-
-	start_area.add_child(shape)
-	add_child(start_area)
-	start_area.global_position = Vector2(788.0, 294)
-
-	start_area.input_event.connect(_on_start_area_input_event)
-
-func _create_start_area_drink() -> void:
-	start_area = Area2D.new()
-	start_area.input_pickable = true
-
-	var shape := CollisionShape2D.new()
-	var rect := RectangleShape2D.new()
-	rect.size = Vector2(296, 100)
-	shape.shape = rect
-
-	start_area.add_child(shape)
-	add_child(start_area)
-	start_area.global_position = Vector2(839, 591)
-
-	start_area.input_event.connect(_on_start_area_input_event)
-
-func _on_start_area_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
-	if event is InputEventMouseButton \
-	and event.button_index == MOUSE_BUTTON_LEFT \
-	and event.pressed:
-		clicked.emit()
-		start_area.queue_free()
-		start_area = null
-
-#func _camera_down_tween() -> void:
-	#var tween = get_tree().create_tween().set_parallel(true)
-	#tween.set_trans(Tween.TRANS_SINE)
-	#tween.set_ease(Tween.EASE_OUT)
-	#tween.tween_property(camera,"position:y",2.7,0.15)
-	#tween.tween_property(camera,"position:z",1.5,0.15)
-	#tween.tween_property(camera,"rotation_degrees:x",-16.3,0.15)
-#
-#func _camera_up_tween() -> void:
-	#var tween = get_tree().create_tween().set_parallel(true)
-	#tween.set_trans(Tween.TRANS_SINE)
-	#tween.set_ease(Tween.EASE_OUT)
-	#tween.tween_property(camera,"position:y",1.9,0.15)
-	#tween.tween_property(camera,"position:z",1.3,0.15)
-	#tween.tween_property(camera,"rotation_degrees:x",-55.3,0.15)
+	if is_instance_valid(hint_hand):
+		hint_hand.queue_free()
+		hint_hand = null
+	if is_instance_valid(label):
+		label.hide()
+	_tutorial_running = false

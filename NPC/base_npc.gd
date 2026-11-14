@@ -310,7 +310,7 @@ func _want_drink() -> Array:
 	
 	var total: Array = []
 	if(speaking_title =="tutorial_walk"):
-		var order_item = ["gin", 90]
+		var order_item = ["gin", 1.0]
 		total.append(order_item)
 		drink_list.push_front([order_item])
 		return total
@@ -362,11 +362,43 @@ func _on_area_Obtain_drink_entered(area: Area3D) -> void:
 
 # Formats current drink order list into text
 func _item_print() -> String:
-	var total = ""
-	for x in drink_list:
-		for y in x:
+	var total: String = ""
+	var show_cup_headers: bool = drink_list.size() > 1
+	for drink_idx in range(drink_list.size()):
+		var cup_order = drink_list[drink_idx]
+		if not (cup_order is Array):
+			continue
+		if show_cup_headers:
+			total += "Drink " + str(drink_idx + 1) + ":\n"
+		var items: Array = []
+		var raw_sum: float = 0.0
+		for y in cup_order:
 			if y is Array and y.size() >= 2:
-				total += str(y[0]) + " " + str(int(round(float(y[1]) * 100.0))) + "%\n"
+				var amt: float = maxf(0.0, float(y[1]))
+				items.append([str(y[0]), amt])
+				raw_sum += amt
+		if items.is_empty():
+			continue
+		var percentages: Array[int] = []
+		if raw_sum <= 0.0:
+			for _i in items.size():
+				percentages.append(0)
+		else:
+			var remainders: Array = []
+			var floor_sum: int = 0
+			for i in items.size():
+				var exact_pct: float = (float(items[i][1]) / raw_sum) * 100.0
+				var floored: int = int(floor(exact_pct))
+				percentages.append(floored)
+				floor_sum += floored
+				remainders.append([exact_pct - float(floored), i])
+			remainders.sort_custom(func(a, b): return a[0] > b[0])
+			var leftover: int = 100 - floor_sum
+			for k in range(mini(leftover, remainders.size())):
+				var idx: int = int(remainders[k][1])
+				percentages[idx] += 1
+		for i in items.size():
+			total += items[i][0] + " " + str(percentages[i]) + "%\n"
 	return total
 
 # Customer leaves when patience timer expires paying only base drink cost
@@ -404,6 +436,8 @@ func _tutorial_enabler(scene_string: String) -> void:
 
 func _check_tutorial() -> bool:
 	var tutorial_single = $CanvasLayer.get_children()
+	if tutorial_single.is_empty() or tutorial_single[0].is_queued_for_deletion():
+		return true
 	var truth = tutorial_single[0]._tutorial_finished()
 	if(truth):
 		tutorial_single[0]._bye_bye()
