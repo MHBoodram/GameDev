@@ -123,13 +123,14 @@ func can_interact_with(target: Ingredients) -> bool:
 
 func execute_interaction(target: Ingredients) -> void:
 	if can_interact_with(target) and target is Glasses:
-		ordered = false
-		target.set_highlight(false)
-		if _move_tween and _move_tween.is_valid():
-			_move_tween.kill()
 		var npc := _get_npc()
-		if is_instance_valid(npc):
+		if is_instance_valid(npc) and target.can_serve_npc(npc):
+			target.set_highlight(false)
+			if _move_tween and _move_tween.is_valid():
+				_move_tween.kill()
 			target.execute_npc_interaction(npc)
+		else:
+			on_drop_failed()
 
 func on_drop_failed() -> void:
 	if ordered:

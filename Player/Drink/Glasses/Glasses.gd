@@ -135,7 +135,7 @@ func _update_hand_position(delta: float) -> void:
 	var pull := clampf(excess / full_pull, 0.0, 1.0)
 	var goal := mouse.lerp(glass_screen, pull)
 	var hand = GameState.player.hand_sprite
-	SFXAudio.play_mugpickup()
+	GameState.play_sfx("play_mugpickup")
 	if hand:
 		hand.global_position = hand.global_position.lerp(goal, 1.0 - exp(-30.0 * delta))
 
@@ -347,10 +347,13 @@ func _pushing_glass(other_glass: Area3D) -> void:
 	if push_dir.length() < 0.001:
 		push_dir = Vector3(1.0, 0.0, 0.0)
 	push_velocity += push_dir.normalized() * 0.1
-	SFXAudio.play_mugpickup()
+	GameState.play_sfx("play_mugpickup")
 
 func _in_game() -> void:
 	in_game = true
+	_snap_point = null
+	_snap_locked = false
+	_snap_blend = 0.0
 	_is_pointer_pressed = false
 	is_balls_dragging = false
 	_is_returning_to_counter = false
@@ -417,17 +420,38 @@ func _on_area_3d_area_entered(area: Area3D) -> void:
 		_pushing_glass(area)
 
 func can_interact_with(target: Ingredients) -> bool:
-	if target and target.is_in_group("trash"):
+	if _is_drag_blocked() or not is_instance_valid(target) or target == self:
+		return false
+	if target.is_in_group("trash"):
 		return true
-	if target is Shaker and can_be_shaken():
-		return true
-	return false
+	if target is Glasses:
+		return false
+	if target is Shaker:
+		return can_be_shaken()
+	if target is Drinks:
+		return target.can_interact_with(self)
+	if target.has_method("_get_npc"):
+		var npc = target._get_npc()
+		if is_instance_valid(npc):
+			return can_serve_npc(npc)
+	return target.can_interact_with(self)
 
 func execute_interaction(target: Ingredients) -> void:
-	if target and target.is_in_group("trash"):
+	if not can_interact_with(target):
+		return
+	if target.is_in_group("trash"):
 		_delete()
 	elif target is Shaker and can_be_shaken():
 		target.start_shake(self)
+	elif target is Drinks and target.can_interact_with(self):
+		target.execute_interaction(self)
+	elif target.has_method("_get_npc"):
+		var npc = target._get_npc()
+		if is_instance_valid(npc) and can_serve_npc(npc):
+			target.set_highlight(false)
+			execute_npc_interaction(npc)
+	else:
+		target.execute_interaction(self)
 
 func can_serve_npc(npc: Base_NPC) -> bool:
 	if _is_drag_blocked():
@@ -441,6 +465,9 @@ func execute_npc_interaction(npc: Base_NPC) -> void:
 		on_drop_failed()
 		return
 	is_being_served = true
+	_snap_point = null
+	_snap_locked = false
+	_snap_blend = 0.0
 	_is_pointer_pressed = false
 	is_balls_dragging = false
 	_remove_displaying_list()

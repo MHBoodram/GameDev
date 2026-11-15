@@ -21,6 +21,9 @@ func _setup(max_value: float, type: String) -> void:
 func _recipt_obtain() -> void:
 	$HBoxContainer/TextureRect.show()
 
+func _recipt_hide() -> void:
+	$HBoxContainer/TextureRect.hide()
+
 func _change_max_progress(change: float) -> void:
 	timer.max_value = change
 	timer.value = change

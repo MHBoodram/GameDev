@@ -46,13 +46,7 @@ func _on_dialogue_started(_resource) -> void:
 
 func _on_dialogue_ended(_resource) -> void:
 	GameState.is_dialogue_open = false
-	var talking_npc := GameState.character_talking
-	if talking_npc and is_instance_valid(talking_npc):
-		if talking_npc.drink_list.size() > 0:
-			talking_npc._add_recipt()
-			if talking_npc.unique_talk:
-				talking_npc.can_talk = false
-				talking_npc.speaking_title = ""
+	GameState.character_talking = null
 
 func get_empty_seat_count() -> int:
 	return seats.count(null)
@@ -225,7 +219,7 @@ func serve_cup_to_npc(drink: Glasses, npc: Base_NPC) -> void:
 	tween.tween_property(drink, "global_position", target_pos, 0.25)
 	await tween.finished
 
-	if is_instance_valid(drink) and not drink.is_consumed and is_instance_valid(npc) and npc.can_accept_drink():
+	if is_instance_valid(drink) and not drink.is_consumed and is_instance_valid(npc):
 		if npc.has_method("receive_drink"):
 			npc.receive_drink(drink.drink_mix)
 		else:

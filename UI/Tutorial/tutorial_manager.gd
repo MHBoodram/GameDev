@@ -64,6 +64,8 @@ func _run_tutorial_intro(ui_node: CanvasLayer, keys_node: Control = null) -> voi
 	var shark := find_shark()
 	if shark:
 		shark.can_talk = true
+		if shark.speaking_title == "tutorial_walk":
+			shark.speaking_title = "tutorial_walk_finished"
 
 	var label := ui_node.get_node_or_null("Tutorial Label") as Label
 	if is_instance_valid(label):
@@ -112,10 +114,7 @@ func _run_tutorial_intro(ui_node: CanvasLayer, keys_node: Control = null) -> voi
 
 	if is_inside_tree():
 		shark = find_shark()
-		if shark and shark.drink_list.size() > 0:
-			shark._add_recipt()
-			shark.can_talk = false
-			shark.speaking_title = ""
+		if shark and shark.has_receipt_spawned and shark.drink_list.size() > 0:
 			start_drink_tutorial(ui_node)
 
 func start_drink_tutorial(ui_node: CanvasLayer) -> void:

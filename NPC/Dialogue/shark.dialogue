@@ -1,6 +1,13 @@
 ~ start
-Shark: [[Hi|Hello|Howdy]], this is some dialogue.
+Shark: [[Hi|Hello|Howdy]], I want {{_current_order_text()}}
 do _add_recipt()
+set speaking_title = "introduction_mid_talk"
+=> END
+
+~ next_order
+Shark: Don't get comfortable yet, I want {{_current_order_text()}}
+do _add_recipt()
+set speaking_title = "introduction_mid_talk"
 => END
 
 ~ introduction_game

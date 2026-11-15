@@ -91,6 +91,8 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 
 	patient_2d._change_max_progress(max_patience)
 	patient_2d._change_curent(max_patience)
+	if is_instance_valid(patient_2d) and patient_2d.has_method("_recipt_hide"):
+		patient_2d._recipt_hide()
 	customer_satisfaction = 1.0
 	modifier = CustomerModifier.roll_modifier(npc_resource.race if npc_resource else "HUMAN", unique_talk)
 	modifier.apply_visuals(self)
@@ -99,6 +101,8 @@ func _institate(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: floa
 	setup_npc(npc_source, seat, rec_marker, patience, starting_dialogue)
 
 func talk() -> void:
+	if GameState.is_dialogue_open:
+		return
 	if not can_talk or speaking_title == "" or speaking_title == null:
 		return
 	if dialogue_resource:
@@ -106,7 +110,7 @@ func talk() -> void:
 		DialogueManager.show_dialogue_balloon_scene(custom_balloon, dialogue_resource, speaking_title, [self])
 
 func can_accept_drink() -> bool:
-	return not is_leaving and drink_list.size() > 0 and has_receipt_spawned
+	return not is_leaving and drink_list.size() > 0 and has_receipt_spawned and not GameState.is_dialogue_open
 
 func set_highlight(enabled: bool) -> void:
 	if _is_highlighted == enabled:
@@ -143,9 +147,9 @@ func receive_drink(mix: DrinkMix) -> float:
 	var score_data := DrinkScorer.score_drink(mix, wanted_order)
 	var drink_score: float = score_data["score"]
 
-	if modifier.is_ghost and not modifier.check_ghost_drink(mix):
-		drink_score = 0.0
-		customer_satisfaction = 0.0
+	#if modifier.is_ghost and not modifier.check_ghost_drink(mix):
+	#	drink_score = 0.0
+	#	customer_satisfaction = 0.0
 
 	var is_satisfactory: bool = drink_score >= SATISFACTORY_THRESHOLD
 	if not is_satisfactory:
@@ -155,13 +159,25 @@ func receive_drink(mix: DrinkMix) -> float:
 	_apply_reputation_impact(is_satisfactory, drink_score)
 	_calculate_payout(drink_score, is_satisfactory)
 
+	has_receipt_spawned = false
+
 	if drink_list.size() > 0:
-		has_receipt_spawned = false
-		_add_recipt()
+		var col = get_node_or_null("Area3D/CollisionShape3D")
+		if col:
+			col.disabled = false
+		can_talk = true
+		speaking_title = _get_next_order_title()
+		if is_instance_valid(patient_2d):
+			patient_2d._recipt_obtain()
 		return drink_score
 
 	_on_all_orders_completed(drink_score)
 	return drink_score
+
+func _get_next_order_title() -> String:
+	if dialogue_resource and dialogue_resource.get_titles().has("next_order"):
+		return "next_order"
+	return "start"
 
 func _obtain_drink(drink: Variant) -> float:
 	if drink is DrinkMix:
@@ -257,34 +273,41 @@ func _want_drink() -> Array:
 	return total
 
 func _item_print() -> String:
+	if drink_list.is_empty():
+		return ""
 	var total: String = ""
-	var show_headers := drink_list.size() > 1
-	for idx in range(drink_list.size()):
-		var cup = drink_list[idx]
-		if show_headers:
-			total += "Drink " + str(idx + 1) + ":\n"
-
-		if cup is DrinkOrder:
-			var ing_dict: Dictionary = (cup as DrinkOrder).ingredients
-			for ing_name in ing_dict:
-				var pct: int = int(round(float(ing_dict[ing_name]) * 100.0))
-				total += str(ing_name) + " " + str(pct) + "%\n"
-		elif cup is Array:
-			for item in cup:
-				if item is Array and item.size() >= 2:
-					var pct: int = int(round(float(item[1]) * 100.0))
-					total += str(item[0]) + " " + str(pct) + "%\n"
+	var cup = drink_list[0]
+	if cup is DrinkOrder:
+		var order := cup as DrinkOrder
+		if order.recipe_name != "":
+			total += order.recipe_name + "\n"
+		var ing_dict: Dictionary = order.ingredients
+		for ing_name in ing_dict:
+			var pct: int = int(round(float(ing_dict[ing_name]) * 100.0))
+			total += str(ing_name) + " " + str(pct) + "%\n"
+	elif cup is Array:
+		for item in cup:
+			if item is Array and item.size() >= 2:
+				var pct: int = int(round(float(item[1]) * 100.0))
+				total += str(item[0]) + " " + str(pct) + "%\n"
 	return total
 
+func _current_order_text() -> String:
+	return _item_print().strip_edges().replace("\n", ", ")
+
 func _add_recipt() -> void:
-	if has_receipt_spawned:
+	if has_receipt_spawned or drink_list.is_empty():
 		return
 	has_receipt_spawned = true
+	if is_instance_valid(patient_2d) and patient_2d.has_method("_recipt_hide"):
+		patient_2d._recipt_hide()
 	var race_name: String = npc_resource.race if npc_resource else ""
 	if GameState.seat_manager:
 		GameState.seat_manager.add_receipt(seat_num, str(_item_print()), race_name)
 
 func _leaving() -> void:
+	if is_leaving:
+		return
 	is_leaving = true
 	set_highlight(false)
 	if _bounce_tween and _bounce_tween.is_valid():

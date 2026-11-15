@@ -175,7 +175,9 @@ func _pouring_game() -> void:
 	is_balls_dragging = false
 
 func can_interact_with(target: Ingredients) -> bool:
-	return target is Glasses and not (target is Drinks)
+	if _is_drag_blocked() or not is_instance_valid(target):
+		return false
+	return target is Glasses and not (target is Drinks) and not target._is_drag_blocked()
 
 func execute_interaction(target: Ingredients) -> void:
 	if can_interact_with(target) and target.is_in_group("glass"):
