@@ -64,6 +64,7 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 	npc_resource = npc_source
 	seat_num = seat
 	recipt_marker = rec_marker
+	has_receipt_spawned = false
 	GameState.play_sfx("play_entranto")
 
 	if patience > 0.0:
@@ -105,7 +106,7 @@ func talk() -> void:
 		DialogueManager.show_dialogue_balloon_scene(custom_balloon, dialogue_resource, speaking_title, [self])
 
 func can_accept_drink() -> bool:
-	return not is_leaving and drink_list.size() > 0
+	return not is_leaving and drink_list.size() > 0 and has_receipt_spawned
 
 func set_highlight(enabled: bool) -> void:
 	if _is_highlighted == enabled:
