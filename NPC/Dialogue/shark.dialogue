@@ -74,7 +74,7 @@ Shark: Did you just give me straight gasoline you punk
 Shark: Is this really what I'm putting my money into...
 Shark: Remember [wait=0.5] I'll tear this place down if you're tanking my wallet
 Shark: Good luck buddy
-do GameState.main_node.night_popup()
+do night_popup()
 do _give_payment()
 
 do _leaving()
@@ -86,7 +86,7 @@ Shark: Hey this isn't half bad
 Shark: I could get this somewhere better
 Shark: I see the vision... 
 Shark: Good luck man
-do GameState.main_node.night_popup()
+do night_popup()
 do _give_payment()
 
 do _leaving()
@@ -98,7 +98,7 @@ Shark: Hey this is pretty good
 Shark: Not bad kiddo I would get another if I didn't have other business to tear up
 Shark: I feel my money coming back
 Shark: Yeah you got that, I believe
-do GameState.main_node.night_popup()
+do night_popup()
 do _give_payment()
 
 do _leaving()

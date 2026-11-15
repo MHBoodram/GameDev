@@ -1,10 +1,12 @@
 extends Ingredients
 class_name Drinks
 
+# base controller script for all shelf liquor and blood bottles (liquid.tscn)
+
 const POUR_AMOUNT: float = 0.25
 const POUR_INTERVAL: float = 0.1
 
-@onready var liquid_refresh = get_node("Liquid_refresh")
+@onready var liquid_refresh: Timer = get_node("Liquid_refresh")
 @export var liquid_resource: Liquid
 @export var size: float = 50.0
 @export var hold_lift: float = 0.2
@@ -35,6 +37,7 @@ func _get_drag_follow_speed() -> float:
 func _get_drag_hold_lift() -> float:
 	return hold_lift
 
+# snaps bottle floating above glass if hovering over one
 func _get_free_drag_target(delta: float) -> Vector3:
 	if snap_to_glass and camera and is_instance_valid(current_hovered_target) and can_interact_with(current_hovered_target):
 		var to_cam := (camera.global_position - current_hovered_target.global_position).normalized()
@@ -44,7 +47,7 @@ func _get_free_drag_target(delta: float) -> Vector3:
 func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 	liquid_resource = _liquid
 	size = liquid_resource.liquid_size
-	current_liquid = size  # start full (the old default was set before size changed)
+	current_liquid = size
 
 	$Inside.texture = liquid_resource.sprite
 	$Inside/Outside.texture = liquid_resource.outside_Sprite
@@ -57,7 +60,7 @@ func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 
 	var overlay := $Inside/Outside.material_overlay as StandardMaterial3D
 	if overlay:
-		overlay = overlay.duplicate() as StandardMaterial3D  # don't share between instances
+		overlay = overlay.duplicate() as StandardMaterial3D
 		overlay.albedo_texture = liquid_resource.outside_Sprite
 		$Inside/Outside.material_overlay = overlay
 
@@ -68,18 +71,15 @@ func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 func _apply_outside_texture() -> void:
 	var tex: Texture2D = liquid_resource.outside_Sprite
 	if tex == null:
-		push_warning("Drinks: liquid_resource.outside_Sprite is null")
 		return
 
 	var outside := $Inside/Outside as GeometryInstance3D
 	if outside is Sprite3D:
 		outside.texture = tex
 
-	# Shader material (the one with the gradient): set the uniform directly
 	if liquid_shader_mat:
 		liquid_shader_mat.set_shader_parameter("texture_albedo", tex)
 
-	# Standard material fallback
 	var std := outside.material_overlay as StandardMaterial3D
 	if std:
 		std = std.duplicate() as StandardMaterial3D
@@ -93,8 +93,7 @@ func _process(delta: float) -> void:
 	_face_camera()
 
 func _on_area_3d_input_event(camera_node: Node, event: InputEvent, event_pos: Vector3, normal: Vector3, shape_idx: int) -> void:
-	var left_pressed: bool = event is InputEventMouseButton \
-		and event.button_index == MOUSE_BUTTON_LEFT and event.pressed
+	var left_pressed: bool = event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed
 
 	if not in_game:
 		super._on_area_3d_input_event(camera_node, event, event_pos, normal, shape_idx)
@@ -103,12 +102,13 @@ func _on_area_3d_input_event(camera_node: Node, event: InputEvent, event_pos: Ve
 	if left_pressed and not is_pouring:
 		await _pour()
 
+# tips bottle sideways and squirts liquid into the glass while left click is held
 func _pour() -> void:
 	is_pouring = true
 	if GameState.player:
 		GameState.player._update_hand("holding")
 	rotation_degrees.z = 80
-	
+
 	if pouring_into:
 		$CPUParticles3D.emitting = true
 		while _is_pour_button_held() and in_game and GameState.player and GameState.player.in_game and current_liquid > 0.0 and is_instance_valid(pouring_into):
@@ -130,12 +130,11 @@ func _pour() -> void:
 		GameState.player._out_of_game()
 
 func _is_pour_button_held() -> bool:
-	return Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) \
-		or Input.get_action_strength("Left_click") > 0.0
+	return Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.get_action_strength("Left_click") > 0.0
 
 func _look_at_sprite(looking_at: Vector3) -> void:
 	if looking_at:
-		var target_flat: Vector3 = looking_at
+		var target_flat := looking_at
 		target_flat.y = $Inside.global_position.y
 		$Inside.look_at(target_flat, Vector3.UP)
 
@@ -199,7 +198,7 @@ func _on_interact_area_entered(_area: Area3D) -> void:
 func _on_interact_area_exited(_area: Area3D) -> void:
 	pass
 
-# ---------- Liquid ----------
+# Liquid
 
 func set_liquid_color(new_color: Color) -> void:
 	color_liquid = new_color
@@ -212,12 +211,8 @@ func set_liquid_amount(amount: float) -> void:
 func _update_liquid_shader() -> void:
 	if not liquid_shader_mat or size <= 0.0:
 		return
-
-	# Level
 	var fill := clampf(current_liquid / size, 0.0, 1.0)
 	liquid_shader_mat.set_shader_parameter("fill_amount", fill)
-
-	# Color: solid, fully opaque gradient
 	if liquid_gradient:
 		liquid_gradient.offsets = PackedFloat32Array([0.0, 1.0])
 		liquid_gradient.colors = PackedColorArray([color_liquid, color_liquid])
@@ -228,7 +223,6 @@ func refill() -> void:
 func _setup_liquid_shader() -> void:
 	if liquid_shader_mat:
 		return
-
 	var outside := get_node_or_null("Inside/Outside") as GeometryInstance3D
 	if not outside:
 		return
@@ -241,17 +235,14 @@ func _setup_liquid_shader() -> void:
 	elif outside.material_overlay is ShaderMaterial:
 		source = outside.material_overlay
 	if not source:
-		push_warning("Drinks: no ShaderMaterial found on Inside/Outside")
 		return
 
-	# Own material per bottle, so bottles don't share a fill level
 	liquid_shader_mat = source.duplicate() as ShaderMaterial
 	if use_override:
 		outside.material_override = liquid_shader_mat
 	else:
 		outside.material_overlay = liquid_shader_mat
 
-	# Use the texture already set in the Inspector (keeps your from/to lines)
 	var existing := liquid_shader_mat.get_shader_parameter("gradient_texture") as GradientTexture2D
 	if existing:
 		gradient_texture = existing.duplicate() as GradientTexture2D
@@ -259,21 +250,20 @@ func _setup_liquid_shader() -> void:
 		gradient_texture = GradientTexture2D.new()
 		gradient_texture.width = 4
 		gradient_texture.height = 64
-		gradient_texture.fill_from = Vector2(0.5, 1.0)  # bottom
-		gradient_texture.fill_to = Vector2(0.5, 0.0)    # top
+		gradient_texture.fill_from = Vector2(0.5, 1.0)
+		gradient_texture.fill_to = Vector2(0.5, 0.0)
 
-	# Remember the full-range line from the Inspector
 	_tex_from = gradient_texture.fill_from
 	_tex_to_full = gradient_texture.fill_to
 
 	liquid_gradient = Gradient.new()
 	liquid_gradient.interpolation_mode = Gradient.GRADIENT_INTERPOLATE_CONSTANT
 	gradient_texture.gradient = liquid_gradient
-
 	liquid_shader_mat.set_shader_parameter("gradient_texture", gradient_texture)
 	_rebuild_liquid_gradient()
 	_update_liquid_shader()
 
+# slides gradient offset downwards as bottle liquid empties
 func _rebuild_liquid_gradient() -> void:
 	if not liquid_gradient or not gradient_texture or size <= 0.0:
 		return
@@ -286,17 +276,13 @@ func _rebuild_liquid_gradient() -> void:
 		liquid_gradient.colors = PackedColorArray([empty_color, empty_color])
 		return
 
-	# Liquid color up to just before the end of the line, empty color after it
 	liquid_gradient.offsets = PackedFloat32Array([0.0, 0.999])
 	liquid_gradient.colors = PackedColorArray([color_liquid, empty_color])
-
-	# Slide the "to" point along the original from -> to line
 	gradient_texture.fill_from = _tex_from
 	gradient_texture.fill_to = _tex_from.lerp(_tex_to_full, fill)
 
-func _add_liquid(amount) -> void:
-	var temp_amount = current_liquid + amount
-	current_liquid = clampf(temp_amount, 0.0, size)
+func _add_liquid(amount: float) -> void:
+	current_liquid = clampf(current_liquid + amount, 0.0, size)
 	_update_liquid_shader()
 
 func _on_liquid_refresh_timeout() -> void:

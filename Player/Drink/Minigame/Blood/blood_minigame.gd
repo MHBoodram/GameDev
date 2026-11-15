@@ -1,85 +1,91 @@
 extends CanvasLayer
-@onready var blood_cells_scene = load("res://Player/Drink/Minigame/Blood/blood_cells.tscn")
-var blood_cells_obtain : float = 0
-var previous_cells : float = 0
-var blood_cells_total = 0
+
+@onready var blood_cells_scene := load("res://Player/Drink/Minigame/Blood/blood_cells.tscn")
+var blood_cells_obtain: float = 0.0
+var previous_cells: float = 0.0
+var blood_cells_total: int = 10
+var phase: float = 0.0
 #@onready var inside_glass = $Inside
 #@onready var outside_glass = $Inside/Outside
 
+@export var min_distance := 150.0
+const MAX_ATTEMPTS := 50
 
 func _ready() -> void:
-	if(GameState.main_node._get_blood_bottle()):
-		var bottle_current_liquid = GameState.main_node._get_blood_bottle().current_liquid
-		previous_cells = bottle_current_liquid
-	else:
-		previous_cells = 0
+	if GameState.minigame_host:
+		var bottle = GameState.minigame_host.get_blood_bottle(GameState.main_node)
+		previous_cells = bottle.current_liquid if bottle and "current_liquid" in bottle else 0.0
 	set_fill(previous_cells)
 
 	SFXAudio.play_draw()
 	$AnimationPlayer.play("hurt")
 	await $AnimationPlayer.animation_finished
+
 	for i in 10:
+		if not is_inside_tree():
+			return
 		_spawn_blood_drops()
-		blood_cells_total += 1
-		await get_tree().create_timer(randf_range(0.5,1)).timeout
+		await get_tree().create_timer(randf_range(0.4, 0.75)).timeout
 	#_finish_game()
 
 func _check_all_finished() -> void:
 	#blood_cells_total -= 1
-	if(blood_cells_total <= 0):
+	if blood_cells_total <= 0:
 		_finish_game()
-		if(GameState.player):
-			GameState.player.gameplay_ui._out_down_minigame()
 
 func _finish_game() -> void:
-	if(GameState.main_node):
-		$AnimationPlayer.play_backwards("hurt")
-		await $AnimationPlayer.animation_finished
-		GameState.main_node._add_blood(blood_cells_obtain)
-		GameState.player.in_game = false
-		queue_free()
+	$AnimationPlayer.play_backwards("hurt")
+	await $AnimationPlayer.animation_finished
+	if GameState.minigame_host:
+		GameState.minigame_host.add_blood_to_bottle(GameState.main_node, blood_cells_obtain)
+	queue_free()
 
 func _return_nothing() -> void:
 	blood_cells_total -= 1
 	_check_all_finished()
 
-func _return_blood(blood: float = 0,node_position: Vector2 = Vector2.ZERO) -> void:
+# collects sliced blood drop and tweens particles toward vial
+func _return_blood(blood: float = 0.0, node_position: Vector2 = Vector2.ZERO) -> void:
 	blood_cells_total -= 1
-	var explosion = make_red_particles_2d_explsion()
-	var particle = make_red_particles_2d()
+	var explosion := make_red_particles_2d_explsion()
+	var particle := make_red_particles_2d()
 	explosion.global_position = node_position
 	particle.global_position = node_position
 	add_child(explosion)
 	add_child(particle)
-	var tween = create_tween()
+
+	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
 	tween.tween_property(particle, "global_position", $Marker2D.global_position, 1.0)
-	
-	await tween.finished  # only if you need to do something after the whole sequence
-	particle.queue_free()
-	var shake_intensity = blood * 2
-	var second_tween = create_tween()
-	tween.set_trans(Tween.TRANS_SINE)
-	tween.set_ease(Tween.EASE_OUT)
+	await tween.finished
+	if is_instance_valid(particle):
+		particle.queue_free()
+
+	var shake_intensity := blood * 2.0
+	var second_tween := create_tween()
+	second_tween.set_trans(Tween.TRANS_SINE)
+	second_tween.set_ease(Tween.EASE_OUT)
 	second_tween.tween_property($Sprite2D, "rotation_degrees", shake_intensity, 0.1)
 	second_tween.tween_property($Sprite2D, "rotation_degrees", -shake_intensity, 0.1)
-	second_tween.tween_property($Sprite2D, "rotation_degrees", 0, 0.1)
+	second_tween.tween_property($Sprite2D, "rotation_degrees", 0.0, 0.1)
+
 	blood_cells_obtain += blood
-	set_fill(blood_cells_obtain/100 + previous_cells/100)
-	$Label.text = "Total Blood: " + str(blood_cells_obtain)
+	set_fill(blood_cells_obtain / 100.0 + previous_cells / 100.0)
+	$Label.text = "Total Blood: " + str(int(blood_cells_obtain))
 	_check_all_finished()
 
-var phase := 0.0
-
-func _process(delta):
+func _process(delta: float) -> void:
 	phase += delta * 2.0
-	var mat := $Sprite2D/Sprite2D.material as ShaderMaterial as ShaderMaterial
-	mat.set_shader_parameter("wave_phase", phase)
-	mat.set_shader_parameter("wave_amplitude", 0.01)
+	var mat := $Sprite2D/Sprite2D.material as ShaderMaterial
+	if mat:
+		mat.set_shader_parameter("wave_phase", phase)
+		mat.set_shader_parameter("wave_amplitude", 0.01)
 
-func set_fill(value: float):
-	($Sprite2D/Sprite2D.material as ShaderMaterial).set_shader_parameter("fill_amount", value)
+func set_fill(value: float) -> void:
+	var mat := $Sprite2D/Sprite2D.material as ShaderMaterial
+	if mat:
+		mat.set_shader_parameter("fill_amount", value)
 
 func make_red_particles_2d_explsion() -> CPUParticles2D:
 	SFXAudio.play_stab()
@@ -90,17 +96,14 @@ func make_red_particles_2d_explsion() -> CPUParticles2D:
 	p.lifetime = 0.6
 	p.one_shot = true
 	p.explosiveness = 1.0
-
 	# Burst outward in all directions
 	p.direction = Vector2(0, -1)
 	p.spread = 180.0
 	p.initial_velocity_min = 100.0
 	p.initial_velocity_max = 150.0
 	p.gravity = Vector2(0, 400)
-
 	# Rotate each drop so it points along its movement
 	p.particle_flag_align_y = true
-
 	p.scale_amount_min = 0.6
 	p.scale_amount_max = 1.0
 	p.color = Color.RED
@@ -109,16 +112,15 @@ func make_red_particles_2d_explsion() -> CPUParticles2D:
 	ramp.set_color(0, Color(1, 1, 1, 1))
 	ramp.set_color(1, Color(1, 1, 1, 0))
 	p.color_ramp = ramp
-
 	p.finished.connect(p.queue_free)
 	return p
 
 func make_tear_texture(w: int = 16, h: int = 24) -> Texture2D:
 	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
 	img.fill(Color(1, 1, 1, 0))
-	var r := w * 0.5 - 1.0        # radius of the round bottom
-	var cx := w * 0.5 - 0.5       # horizontal center
-	var cy := h - r - 1.0         # center of the round part
+	var r := w * 0.5 - 1.0
+	var cx := w * 0.5 - 0.5
+	var cy := h - r - 1.0
 	for y in h:
 		for x in w:
 			var half: float
@@ -131,7 +133,6 @@ func make_tear_texture(w: int = 16, h: int = 24) -> Texture2D:
 				half = sqrt(maxf(r * r - dy * dy, 0.0))
 			if absf(x - cx) <= half:
 				img.set_pixel(x, y, Color.WHITE)
-
 	return ImageTexture.create_from_image(img)
 
 func make_red_particles_2d() -> CPUParticles2D:
@@ -140,7 +141,7 @@ func make_red_particles_2d() -> CPUParticles2D:
 	p.emitting = true
 	p.amount = 25
 	p.lifetime = 0.6
-	p.gravity = Vector2(0, 0)
+	p.gravity = Vector2.ZERO
 	p.scale_amount_min = 0.5
 	p.scale_amount_max = 0.5
 	# Fade from opaque red to transparent red over each particle's life
@@ -156,7 +157,6 @@ func make_circle_texture(diameter: int = 32) -> Texture2D:
 	gradient.set_color(1, Color(1, 1, 1, 0))
 	gradient.set_offset(0, 0.9)  # solid until 90% of the radius, then a thin fade
 	gradient.set_offset(1, 1.0)
-
 	var tex := GradientTexture2D.new()
 	tex.gradient = gradient
 	tex.fill = GradientTexture2D.FILL_RADIAL
@@ -166,29 +166,22 @@ func make_circle_texture(diameter: int = 32) -> Texture2D:
 	tex.height = diameter
 	return tex
 
-@export var min_distance := 150.0 
-const MAX_ATTEMPTS := 50
-
 func _spawn_blood_drops() -> void:
 	var padding := 300.0
-	var size := get_viewport().get_visible_rect().size
+	var visible_size := get_viewport().get_visible_rect().size
 	var pos := Vector2.ZERO
 	var found := false
 	for i in MAX_ATTEMPTS:
-		pos = Vector2(
-			randf_range(padding, size.x - padding),
-			randf_range(padding, size.y - padding)
-		)
+		pos = Vector2(randf_range(padding, visible_size.x - padding), randf_range(padding, visible_size.y - padding))
 		if _is_position_free(pos):
 			found = true
 			break
 	if not found:
-		return  
-	var inst = blood_cells_scene.instantiate()
+		return
+	var inst: Node = blood_cells_scene.instantiate()
 	add_child(inst)
 	inst.position = pos
 	inst.add_to_group("blood_buttons")
-
 
 func _is_position_free(pos: Vector2) -> bool:
 	for node in get_tree().get_nodes_in_group("blood_buttons"):
