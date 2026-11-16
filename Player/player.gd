@@ -246,6 +246,3 @@ func _on_beer_glass_button_input_event(_camera: Node, event: InputEvent, _event_
 func _on_trash_area_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
 		area._delete()
-
-
-		

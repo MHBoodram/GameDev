@@ -67,6 +67,7 @@ func start_night_shift() -> void:
 	GameState.night_paused = false
 	GameState.special_state = false
 	is_spawning_allowed = true
+	spawn_timer_acc = maxf(0.0, maxf(4.0, 16 / PlayerStats.get_spawn_rate()) - 6.0)
 	var active_quota: float = GameState.get_night_quota(GameState.night)
 	if GameState.gameplay_ui:
 		GameState.gameplay_ui.set_shift_hud_visible(true)
@@ -515,4 +516,3 @@ func _on_beer_glass_button_mouse_exited() -> void:
 		return
 	if GameState.player:
 		GameState.player._update_hand("idle")
-		

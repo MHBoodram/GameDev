@@ -591,4 +591,3 @@ func _tutorial_drink_on() -> void:
 	if is_instance_valid(label):
 		label.hide()
 	_tutorial_running = false
-	

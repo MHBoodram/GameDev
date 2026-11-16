@@ -309,8 +309,8 @@ func _want_drink() -> Array:
 		if(PlayerStats["unlocks"]["Drinks"][drinks]):
 			if not drink_list_want.has(drinks):
 				drink_list_want.push_back(drinks)
-	
-	
+
+
 
 	var race_key: String = npc_resource.race.to_upper() if npc_resource else "HUMAN"
 	var drink_count: int = 1
@@ -319,7 +319,7 @@ func _want_drink() -> Array:
 	if(PlayerStats["unlocks"]["Ingredients"]["Blood"] && race_key == "VAMPIRE"):
 		if not drink_list_want.has("blood"):
 			drink_list_want.push_back("blood")
-	
+
 	var total: Array = []
 	if(speaking_title =="tutorial_walk"):
 		var order_item = ["gin", 1.0]
