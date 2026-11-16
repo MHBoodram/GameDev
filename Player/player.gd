@@ -8,6 +8,7 @@ var summoning : bool = false
 var icup_spawn : String = "shot_glass"
 var in_pour_zone : Area3D
 var in_game : bool = false
+var _pour_tween : Tween = null
 var tool_in_hand : String = "hand"
 var in_game_drinks : Dictionary = \
 {
@@ -30,8 +31,6 @@ func _ready():
 	_update_hand("idle")
 
 func _process(delta: float) -> void:
-	#if($GameplayUi/Hand/AnimationPlayer.current_animation == "hold"):
-		#return
 	$GameplayUi/Hand.global_position = get_viewport().get_mouse_position()
 
 func _force_cursor_image(move_to: Vector3) -> void:
@@ -96,6 +95,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_QUOTELEFT or event.physical_keycode == KEY_QUOTELEFT or event.keycode == KEY_ASCIITILDE:
 			if GameState.main_node and GameState.main_node.has_method("toggle_debug_menu"):
 				GameState.main_node.toggle_debug_menu()
+	elif event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			if gameplay_ui and gameplay_ui.has_method("bendover"):
+				gameplay_ui.bendover()
 
 func _handle_dialogue_input() -> void:
 	if GameState.is_dialogue_open:
@@ -117,68 +120,102 @@ func _input(event: InputEvent) -> void:
 			_out_of_game()
 
 func _spawn_cup(scene: PackedScene, cup_name: String) -> void:
-	var pos := get_mouse_world_position($Camera3D, spawn_y)
-	var min_x : float = counter.global_position.x + counter_min_x
-	var max_x : float = counter.global_position.x + counter_max_x
-	pos.x = clamp(pos.x , min_x, max_x)
-	pos.z = max(pos.z, min_z)
-	pos += cup_offsets.get(cup_name, Vector3.ZERO)
 	var new_instance = scene.instantiate()
-	get_parent().add_child(new_instance)
 	new_instance.scale = spawn_scale
-	new_instance.global_position = pos
 	if new_instance.has_method("_instiate"):
 		new_instance._instiate(counter)
-
-func _spawn_and_begin_drag(scene: PackedScene, cup_name: String) -> void:
-	var center_x: float = counter.global_position.x + 0.335 if counter else global_position.x
-	var center_z: float = counter.global_position.z + 0.015 if counter else global_position.z
-	var spawn_pos: Vector3 = Vector3(center_x, 1.6, center_z) + cup_offsets.get(cup_name, Vector3.ZERO)
-
-	var new_instance = scene.instantiate()
 	get_parent().add_child(new_instance)
+
+	var offset: Vector3 = cup_offsets.get(cup_name, Vector3.ZERO)
+	var working_area_bounds = Ingredients.get_working_area_bounds(self)
+	if working_area_bounds is AABB:
+		var counter_boundary: AABB = working_area_bounds
+		var spawn_position: Vector3 = get_mouse_world_position($Camera3D, counter_boundary.end.y) + offset
+		new_instance.global_position = spawn_position
+		if new_instance.has_method("_snap_to_working_area"):
+			new_instance._snap_to_working_area()
+	else:
+		var spawn_position: Vector3 = get_mouse_world_position($Camera3D, spawn_y)
+		var min_x : float = counter.global_position.x + counter_min_x
+		var max_x : float = counter.global_position.x + counter_max_x
+		spawn_position.x = clamp(spawn_position.x , min_x, max_x)
+		spawn_position.z = max(spawn_position.z, min_z)
+		spawn_position += offset
+		new_instance.global_position = spawn_position
+
+func _spawn_and_begin_drag(scene: PackedScene, cup_name: String, spawn_world_pos: Variant = null) -> void:
+	var new_instance = scene.instantiate()
 	new_instance.scale = spawn_scale
-	new_instance.global_position = spawn_pos
 	if new_instance.has_method("_instiate"):
 		new_instance._instiate(counter)
+	var offset: Vector3 = cup_offsets.get(cup_name, Vector3.ZERO)
+	if spawn_world_pos is Vector3 and "_skip_initial_snap" in new_instance:
+		new_instance._skip_initial_snap = true
+	get_parent().add_child(new_instance)
+
+	if spawn_world_pos is Vector3:
+		new_instance.global_position = (spawn_world_pos as Vector3) + offset
+	else:
+		var working_area_bounds = Ingredients.get_working_area_bounds(self)
+		if working_area_bounds is AABB:
+			var surface_center: Vector3 = (working_area_bounds as AABB).get_center()
+			new_instance.global_position = Vector3(surface_center.x, (working_area_bounds as AABB).end.y, surface_center.z) + offset
+			if new_instance.has_method("_snap_to_working_area"):
+				new_instance._snap_to_working_area()
+		else:
+			var center_x: float = counter.global_position.x + 0.335 if counter else global_position.x
+			var center_z: float = counter.global_position.z + 0.015 if counter else global_position.z
+			new_instance.global_position = Vector3(center_x, 1.6, center_z) + offset
 
 	if new_instance.has_method("start_drag_from_spawn"):
-		new_instance.start_drag_from_spawn(get_viewport().get_mouse_position())
+		new_instance.start_drag_from_spawn(get_viewport().get_mouse_position(), spawn_world_pos is Vector3)
 
 func _perfect_pour(drink : Drinks, glass : Glasses) -> void:
-	var tween = get_tree().create_tween().set_parallel(true)
+	if _pour_tween and _pour_tween.is_valid():
+		_pour_tween.kill()
 	gameplay_ui._in_down_minigame()
 	in_game = true
 	in_game_drinks["Drink"]["Node"] = drink
 	in_game_drinks["Drink"]["position"] = drink.global_position
 	in_game_drinks["Drink"]["position"].x = drink.global_position.x + 0.5
 	in_game_drinks["Glass"]["Node"] = glass
-	in_game_drinks["Glass"]["position"] = glass.global_position
+	var glass_home_pos: Vector3 = glass.global_position
+	if glass.has_method("_get_saved_counter_position"):
+		glass_home_pos = glass._get_saved_counter_position(glass._last_counter_position)
+	in_game_drinks["Glass"]["position"] = glass_home_pos
 	drink._in_game()
 	glass._in_game()
-	tween.tween_property(drink,"global_position",$Camera3D/drink_mark.global_position,0.5)
-	tween.tween_property(glass,"global_position",$Camera3D/glass_mark.global_position,0.5)
-	tween.tween_property(glass,"rotation_degrees:y",0,0.5)
+	_pour_tween = get_tree().create_tween().set_parallel(true)
+	_pour_tween.tween_property(drink,"global_position",$Camera3D/drink_mark.global_position,0.5)
+	_pour_tween.tween_property(glass,"global_position",$Camera3D/glass_mark.global_position,0.5)
+	_pour_tween.tween_property(glass,"rotation_degrees:y",0,0.5)
 
-	await tween.finished
+	await _pour_tween.finished
+	if not in_game or not is_instance_valid(drink):
+		return
 	await get_tree().process_frame
-	drink.look_at($Camera3D.global_position)
+	if in_game and is_instance_valid(drink):
+		drink.look_at($Camera3D.global_position)
 
 
 
 func _out_of_game() -> void:
+	if not in_game:
+		return
 	in_game = false
+	if _pour_tween and _pour_tween.is_valid():
+		_pour_tween.kill()
 	var drink = in_game_drinks["Drink"]["Node"]
 	var glass = in_game_drinks["Glass"]["Node"]
-	var tween = get_tree().create_tween().set_parallel(true)
+	_pour_tween = get_tree().create_tween().set_parallel(true)
 	if is_instance_valid(drink):
 		if "original_position" in drink and drink.original_position:
-			tween.tween_property(drink, "global_position", drink.original_position.global_position, 0.5)
+			_pour_tween.tween_property(drink, "global_position", drink.original_position.global_position, 0.5)
 		else:
-			tween.tween_property(drink, "global_position", in_game_drinks["Drink"]["position"], 0.5)
+			_pour_tween.tween_property(drink, "global_position", in_game_drinks["Drink"]["position"], 0.5)
 	if is_instance_valid(glass):
-		tween.tween_property(glass, "global_position", in_game_drinks["Glass"]["position"], 0.5)
-	await tween.finished
+		_pour_tween.tween_property(glass, "global_position", in_game_drinks["Glass"]["position"], 0.5)
+	await _pour_tween.finished
 	if is_instance_valid(drink):
 		drink._out_of_game()
 	if is_instance_valid(glass):
@@ -188,12 +225,27 @@ func _out_of_game() -> void:
 
 func _on_shot_glass_button_input_event(_camera: Node, event: InputEvent, _event_position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		_spawn_and_begin_drag(shot_glass, "shot_glass")
+		var spawn_pos: Variant = null
+		if counter:
+			var btn := counter.get_node_or_null("ShotGlass Button") as Node3D
+			if btn:
+				spawn_pos = btn.global_position
+		SFXAudio.play_mugpickup()
+		_spawn_and_begin_drag(shot_glass, "shot_glass", spawn_pos)
 
 func _on_beer_glass_button_input_event(_camera: Node, event: InputEvent, _event_position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		_spawn_and_begin_drag(beer_glass, "beer_glass")
+		var spawn_pos: Variant = null
+		if counter:
+			var btn := counter.get_node_or_null("BeerGlass Button") as Node3D
+			if btn:
+				spawn_pos = btn.global_position
+		SFXAudio.play_mugpickup()
+		_spawn_and_begin_drag(beer_glass, "beer_glass", spawn_pos)
 
 func _on_trash_area_entered(area: Area3D) -> void:
 	if(area.is_in_group("glass")):
 		area._delete()
+
+
+		

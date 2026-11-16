@@ -4,97 +4,97 @@
 [ext_resource type="Shader" uid="uid://qothrby8gojn" path="res://Shader/per_object_pixel_shader.gdshader" id="2_y8s8e"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_a6oqs"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_y8s8e"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_0a5jv"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_wsloh"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_uuxun"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_1ryq2"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_m8v4e"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_h8x6s"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_yw3id"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_mymic"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_kja1s"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_l2gt4"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_2uw0u"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_m7hod"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_qqors"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_xbb4w"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ihqph"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_qwi7p"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_wi85q"]
-render_priority = 0
+render_priority = -10
 shader = ExtResource("2_y8s8e")
 shader_parameter/pixel_size = 4
 

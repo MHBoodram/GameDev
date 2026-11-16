@@ -25,7 +25,7 @@ gradient = SubResource("Gradient_5iee8")
 load_path = "res://.godot/imported/gin_color.png-55500796f465de1f455b1a68987dbe77.s3tc.ctex"
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_nq6ij"]
-render_priority = 0
+render_priority = 2
 shader = ExtResource("3_50xmu")
 shader_parameter/texture_albedo = SubResource("CompressedTexture2D_i3eed")
 shader_parameter/gradient_texture = SubResource("GradientTexture1D_hpxhq")
@@ -68,6 +68,8 @@ gravity = Vector3(0, 0, -9.8)
 
 [node name="Inside" type="Sprite3D" parent="." unique_id=645485084]
 flip_h = true
+alpha_cut = 2
+render_priority = 1
 texture = ExtResource("2_50xmu")
 
 [node name="Outside" type="Sprite3D" parent="Inside" unique_id=596075149]
@@ -77,7 +79,12 @@ flip_h = true
 modulate = Color(1, 1, 1, 0)
 texture = ExtResource("3_5iee8")
 
+[node name="Liquid_refresh" type="Timer" parent="." unique_id=227173742]
+wait_time = 5.0
+autostart = true
+
 [connection signal="area_entered" from="." to="." method="_on_interact_area_entered"]
 [connection signal="area_exited" from="." to="." method="_on_interact_area_exited"]
 [connection signal="mouse_entered" from="." to="." method="_on_interact_mouse_entered"]
 [connection signal="mouse_exited" from="." to="." method="_on_interact_mouse_exited"]
+[connection signal="timeout" from="Liquid_refresh" to="." method="_on_liquid_refresh_timeout"]

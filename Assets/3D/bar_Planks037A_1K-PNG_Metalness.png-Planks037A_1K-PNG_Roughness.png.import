@@ -2,14 +2,14 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dmctgams4xinm"
+uid="uid://cs08eojipxt54"
 path.s3tc="res://.godot/imported/bar_Planks037A_1K-PNG_Metalness.png-Planks037A_1K-PNG_Roughness.png-83f7c5f1c08df70a319643aec4d09c04.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "6cb0f6803e5753262e79f40a25610fa9"
+"md5": "e5c1dffe7832a904552368022bf77ec4"
 }
 
 [deps]

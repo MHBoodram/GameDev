@@ -1,7 +1,7 @@
 extends Node
 
 var previous_money : float
-var money : float = 500
+var money : float = 0
 var overall_reputation : float = 0.0
 var reputation_species : Dictionary = {
 	"Slime" : 0.0,
@@ -59,13 +59,13 @@ var unlocks : Dictionary = {
 	"Drinks" :{
 		"gin" : true,
 		"rum" : true,
-		"vodka" : false,
-		"spirit" : false,
-		"tequila" : false,
-		"whiskey" : false,
+		"vodka" : true,
+		"spirit" : true,
+		"tequila" : true,
+		"whiskey" : true,
 	},
 	"Ingredients":{
-		"Blood" : false,
+		"Blood" : true,
 		#"Slime" : false,
 		"Fishing_Rod" : false,
 		"Mag" : false

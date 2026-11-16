@@ -2,14 +2,14 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://1mb5036ebxdq"
+uid="uid://mcctjjhrsguf"
 path.s3tc="res://.godot/imported/bar_Wood049_1K-PNG_Color.png-868b5142090e6e193ba10ffd2834aeae.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "f2b7598bf8c5b731a11a4992ef4ae79e"
+"md5": "d39a6bae8bac8aba5bc6eee398f76ef8"
 }
 
 [deps]

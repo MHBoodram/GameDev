@@ -273,6 +273,7 @@ layout_mode = 2
 text = "Next night"
 
 [node name="BackGround" type="ColorRect" parent="." unique_id=362633353]
+visible = false
 layout_mode = 0
 offset_left = -770.0
 offset_top = -505.0
@@ -536,6 +537,7 @@ text = "Next Night"
 layer = 101
 
 [node name="Fish Shader" type="ColorRect" parent="." unique_id=911948366]
+visible = false
 material = SubResource("ShaderMaterial_ge20u")
 layout_mode = 0
 offset_right = 1279.0

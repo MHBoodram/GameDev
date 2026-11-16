@@ -2,14 +2,14 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dextdb2ld6qfi"
+uid="uid://xgh0ogpwubji"
 path.s3tc="res://.godot/imported/bar_Plaster001_1K-PNG_Roughness.png-1a9f882cd88fcac972b9c25c7570e194.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "71fe34ba0c7275e4d291a72281c5f3b9"
+"md5": "9a0401687456813e8e3391d0833d6834"
 }
 
 [deps]

@@ -10,6 +10,8 @@ transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 0, 0)
 script = ExtResource("2_rvwmc")
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=277907531]
+alpha_cut = 2
+render_priority = 1
 texture = ExtResource("2_rxtui")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=763278799]

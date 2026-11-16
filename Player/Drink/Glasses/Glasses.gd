@@ -6,20 +6,23 @@ class_name Glasses
 @export var area_body : CollisionShape3D
 @export var sprite : Sprite3D
 @export var liquid_box : VBoxContainer
+@export var customer_hold_distance : float = 1.0
 var drink_list_label : Label
 var total_liquids : float = 0
-var current_position = 0
 var in_game: bool = false
 var is_being_served: bool = false
+var is_consumed: bool = false
+var _last_counter_position: Vector3 = Vector3.ZERO
+var _skip_initial_snap: bool = false
 const LIQUID_COLOR = {
-	"gin" : Color("00f300ff"),
-	"beer" : Color("fa520dff"),
-	"spirit" : Color("8ab0ffff"),
-	"vodka" : Color("235fffff"),
-	"rum" : Color("752704ff"),
-	"tequila" : Color("e6d94dff"),
-	"whiskey" : Color("c76b1aff"),
-	"blood" : Color("d90d0dff")
+	"gin" : Color(0.0, 0.953, 0.0, 1.0),
+	"beer" : Color(0.98, 0.322, 0.051, 1.0),
+	"spirit" : Color(0.542, 0.691, 1.0, 1.0),
+	"vodka" : Color(0.137, 0.372, 1.0, 1.0),
+	"rum" : Color(0.458, 0.154, 0.014, 1.0),
+	"tequila" : Color(0.9, 0.85, 0.3, 1.0),
+	"whiskey" : Color(0.78, 0.42, 0.1, 1.0),
+	"blood" : Color(0.85, 0.05, 0.05, 1.0)
 }
 
 @export_group("Liquid Physics")
@@ -64,14 +67,51 @@ var wave_phase : float = 0.0
 var wave_amplitude : float = 0.0
 @onready var highlight = get_node_or_null("Inside/highlight")
 
+func is_working_area_item() -> bool:
+	return true
+
+func _is_drag_blocked() -> bool:
+	return in_game or is_being_served or is_consumed
+
+func _get_free_drag_target(delta: float) -> Vector3:
+	if _waiting_for_working_area:
+		return super._get_free_drag_target(delta)
+	if camera:
+		_drag_current_depth = lerpf(_drag_current_depth, customer_hold_distance, 1.0 - exp(-12.0 * delta))
+		return camera.project_position(get_viewport().get_mouse_position(), _drag_current_depth)
+	return global_position
+
 func ready() -> void:
 	rotation = Vector3.ZERO
-	_last_global_pos = global_position
 	_setup_liquid_shader()
 	if highlight:
 		highlight.modulate = Color(1.5, 1.5, 0.0, 5.0)
 	if camera:
 		_look_at_sprite(camera.global_position)
+	if not _skip_initial_snap:
+		_snap_to_working_area()
+	else:
+		base_y_position = get_working_area_surface_y()
+	_last_counter_position = global_position
+	_last_global_pos = global_position
+
+func start_drag_from_spawn(press_screen_pos: Vector2, from_shelf: bool = false) -> void:
+	if from_shelf:
+		var working_area_bounds = Ingredients.get_working_area_bounds(self)
+		if working_area_bounds is AABB:
+			var center: Vector3 = (working_area_bounds as AABB).get_center()
+			_last_counter_position = Vector3(center.x, get_working_area_surface_y(), center.z)
+		else:
+			_last_counter_position = _clamp_to_counter(global_position)
+			_last_counter_position.y = get_working_area_surface_y()
+	else:
+		_last_counter_position = _clamp_to_counter(global_position)
+		_last_counter_position.y = get_working_area_surface_y()
+	_last_global_pos = global_position
+	_last_velocity = Vector3.ZERO
+	if camera:
+		_look_at_sprite(camera.global_position)
+	super.start_drag_from_spawn(press_screen_pos, from_shelf)
 
 func _delete():
 	queue_free()
@@ -84,6 +124,8 @@ func _delete():
 func _update_hand_position(delta: float) -> void:
 	if not camera or not GameState.player:
 		return
+	if camera.is_position_behind(global_position):
+		return
 	var mouse: Vector2 = get_viewport().get_mouse_position()
 	var glass_screen: Vector2 = camera.unproject_position(global_position)
 	var gap: float = mouse.x - glass_screen.x
@@ -91,20 +133,33 @@ func _update_hand_position(delta: float) -> void:
 	var pull: float = clampf(excess / full_pull, 0.0, 1.0)
 	var goal: Vector2 = mouse.lerp(glass_screen, pull)
 	var hand = GameState.player.hand_sprite
+	SFXAudio.play_mugpickup()
 	if hand:
 		hand.global_position = hand.global_position.lerp(goal, 1.0 - exp(-30.0 * delta))
 
-func _process(_delta: float) -> void:
-	super._process(_delta)
-	_update_liquid_physics(_delta)
+func _process(delta: float) -> void:
+	super._process(delta)
+	_update_liquid_physics(delta)
 	_update_shader_parameters()
-	if is_being_served:
+	if camera and not is_balls_dragging:
+		_look_at_sprite(camera.global_position)
+	if _is_drag_blocked():
 		return
-	_apply_collision_push(_delta)
+
 	if is_balls_dragging:
-		_update_hand_position(_delta)
-	elif counter_origin:
-		global_position = _clamp_to_counter(global_position)
+		_update_hand_position(delta)
+
+	if get_drag_mode() == DragMode.COLLISION and not _is_returning_to_counter and not _is_mode_transitioning:
+		_apply_collision_push(delta)
+		if not is_balls_dragging:
+			if not is_selected:
+				var target_y: float = get_working_area_surface_y()
+				base_y_position = target_y
+				if absf(global_position.y - target_y) <= 0.002:
+					global_position.y = target_y
+				else:
+					global_position.y = lerpf(global_position.y, target_y, 1.0 - exp(-20.0 * delta))
+			_last_counter_position = global_position
 
 signal snappedIn(point: Node3D)
 signal snappedOut(point: Node3D)
@@ -179,37 +234,56 @@ func _play_snap_bounce() -> void:
 
 
 func _apply_collision_push(delta: float) -> void:
-	if not is_balls_dragging:
-		for area in get_overlapping_areas():
-			if area != self and area is Glasses:
-				var diff: Vector3 = global_position - area.global_position
-				diff.y = 0.0
-				var dist: float = diff.length()
-				if dist < 0.001:
-					diff = Vector3(randf_range(-1.0, 1.0), 0.0, randf_range(-1.0, 1.0))
-					dist = 0.001
-				var overlap: float = INTERACTION_SEPARATION_DISTANCE - dist
-				if overlap > 0.0:
-					push_velocity += diff.normalized() * (overlap * 6.0 * delta)
+	var surface_y: float = get_working_area_surface_y()
+	if absf(global_position.y - surface_y) > 0.15:
+		return
 
-		if push_velocity.length_squared() > 0.0001:
-			global_position += push_velocity * delta
-			if counter_origin:
-				global_position = _clamp_to_counter(global_position)
-			push_velocity = push_velocity.lerp(Vector3.ZERO, 1.0 - exp(-PUSH_FRICTION * delta))
-			if camera:
-				_look_at_sprite(camera.global_position)
+	for area in get_overlapping_areas():
+		if area == self or not (area is Glasses):
+			continue
+		var other := area as Glasses
+		if other._is_drag_blocked() or other.get_drag_mode() != DragMode.COLLISION:
+			continue
+		if absf(other.global_position.y - surface_y) > 0.15:
+			continue
+
+		var diff: Vector3 = global_position - other.global_position
+		diff.y = 0.0
+		var dist: float = diff.length()
+		if dist < 0.001:
+			diff = Vector3(randf_range(-1.0, 1.0), 0.0, randf_range(-1.0, 1.0))
+			dist = 0.001
+		var overlap: float = INTERACTION_SEPARATION_DISTANCE - dist
+		if overlap <= 0.0:
+			continue
+
+		var dir: Vector3 = diff.normalized()
+		if is_balls_dragging:
+			if not other.is_balls_dragging:
+				global_position += dir * (overlap * 0.25)
+		else:
+			if other.is_balls_dragging:
+				global_position += dir * (overlap * 0.75)
+				push_velocity += dir * (overlap * 12.0 * delta)
+			else:
+				push_velocity += dir * (overlap * 8.0 * delta)
+
+	if not is_balls_dragging and push_velocity.length_squared() > 0.0001:
+		global_position += push_velocity * delta
+		push_velocity = push_velocity.lerp(Vector3.ZERO, 1.0 - exp(-PUSH_FRICTION * delta))
+		if camera:
+			_look_at_sprite(camera.global_position)
 
 func _look_at_sprite(looking_at: Vector3) -> void:
 	if looking_at and sprite:
 		var target_flat: Vector3 = looking_at
 		target_flat.y = sprite.global_position.y
-		sprite.look_at(target_flat, Vector3.UP)
+		if target_flat.distance_squared_to(sprite.global_position) > 0.0001:
+			sprite.look_at(target_flat, Vector3.UP)
 
 func _update_liquid_physics(delta: float) -> void:
 	if delta <= 0.0:
 		return
-
 	var current_pos: Vector3 = global_position
 	var frame_velocity: Vector3 = (current_pos - _last_global_pos) / delta
 	var frame_acceleration: Vector3 = (frame_velocity - _last_velocity) / delta
@@ -411,7 +485,12 @@ func _rebuild_liquid_gradient() -> void:
 			if lbl.material:
 				lbl.material.set_shader_parameter("base_color", col)
 			var layer_name: String = _format_layer_name(layer[0])
-			lbl.change_text(layer_name + ": " + str(snappedf(float(layer[1]), 0.01) * 10))
+			var pct: float = (float(layer[1]) / maxf(size, 0.001)) * 100.0
+			var label_text: String = layer_name + ": " + str(snappedf(pct, 0.1)) + "%"
+			if lbl.has_method("change_text"):
+				lbl.change_text(label_text)
+			else:
+				lbl.text = label_text
 		if not children.is_empty():
 			drink_list_label = children[children.size() - 1]
 		liquid_box.modulate.a = 1.0
@@ -494,15 +573,32 @@ func _pushing_glass(other_glass : Area3D) -> void:
 	if push_dir.length() < 0.001:
 		push_dir = Vector3(1.0, 0.0, 0.0)
 	push_velocity += push_dir.normalized() * 0.1
+	SFXAudio.play_mugpickup()
 
 func _in_game():
 	in_game = true
-	area_body.disabled = true
+	_is_pointer_pressed = false
+	is_balls_dragging = false
+	_is_returning_to_counter = false
+	_is_mode_transitioning = false
+	push_velocity = Vector3.ZERO
+	if _drag_return_tween and _drag_return_tween.is_valid():
+		_drag_return_tween.kill()
+	if area_body:
+		area_body.disabled = true
 
 func _out_of_game():
 	in_game = false
-	area_body.disabled = false
+	if area_body:
+		area_body.disabled = false
 	_remove_displaying_list()
+	var target_pos: Vector3 = _get_saved_counter_position(_last_counter_position)
+	if global_position.distance_to(target_pos) > 0.005:
+		_return_to_counter_smoothly(target_pos)
+	else:
+		global_position = target_pos
+		base_y_position = target_pos.y
+		_last_counter_position = target_pos
 
 func _visuals_change(liquids_num: float,liquid_name: String,new: bool) -> void:
 	_rebuild_liquid_gradient()
@@ -511,27 +607,85 @@ func _on_hover(hovered: bool) -> void:
 	set_highlight(hovered)
 
 func _dranked() -> void:
+	if is_consumed:
+		return
+	is_consumed = true
 	queue_free()
 
 func _return_drink() -> Array:
-	return liquids
+	var current_total: float = 0.0
+	for layer in liquids:
+		if layer is Array and layer.size() >= 2:
+			current_total += float(layer[1])
+	if current_total <= 0.0:
+		return []
+
+	var scale_to_proportion: float = 1.0 / current_total
+	var normalized: Array = []
+	for layer in liquids:
+		if not (layer is Array and layer.size() >= 2):
+			continue
+		var new_layer: Array = layer.duplicate()
+		new_layer[1] = float(layer[1]) * scale_to_proportion
+		if new_layer.size() > 3 and new_layer[3] is Dictionary:
+			var new_dict: Dictionary = {}
+			for k in new_layer[3]:
+				new_dict[k] = float(new_layer[3][k]) * scale_to_proportion
+			new_layer[3] = new_dict
+		elif new_layer[0] is Dictionary:
+			var new_dict: Dictionary = {}
+			for k in new_layer[0]:
+				new_dict[k] = float(new_layer[0][k]) * scale_to_proportion
+			new_layer[0] = new_dict
+		normalized.append(new_layer)
+	return normalized
 
 func _on_area_3d_area_entered(area: Area3D) -> void:
-	if(area.is_in_group("glass")):
+	if area.is_in_group("glass") and get_drag_mode() == DragMode.COLLISION and not is_balls_dragging:
 		_pushing_glass(area)
 
 func can_interact_with(target: Ingredients) -> bool:
 	if target and target.is_in_group("trash"):
 		return true
-	if target and target.is_in_group("shaker"):
+	if target is Shaker and can_be_shaken():
 		return true
 	return false
 
 func execute_interaction(target: Ingredients) -> void:
 	if target and target.is_in_group("trash"):
 		_delete()
-	elif target and target.is_in_group("shaker") and can_be_shaken():
+	elif target is Shaker and can_be_shaken():
 		target.start_shake(self)
+
+func can_serve_npc(npc: Base_NPC) -> bool:
+	if _is_drag_blocked():
+		return false
+	if not is_instance_valid(npc):
+		return false
+	return npc.can_accept_drink()
+
+func execute_npc_interaction(npc: Base_NPC) -> void:
+	if not can_serve_npc(npc):
+		on_drop_failed()
+		return
+	is_being_served = true
+	_is_pointer_pressed = false
+	is_balls_dragging = false
+	_remove_displaying_list()
+	if has_method("_giving_drink"):
+		call("_giving_drink")
+	if GameState.main_node and GameState.main_node.has_method("_serve_cup_to_npc"):
+		GameState.main_node._serve_cup_to_npc(self, npc)
+
+func on_drop_failed() -> void:
+	var target_pos: Vector3 = _get_counter_drop_position(_last_counter_position) if _has_dragged else _get_saved_counter_position(_last_counter_position)
+	_return_to_counter_smoothly(target_pos)
+
+func _on_returning_to_counter(target_pos: Vector3) -> void:
+	_last_counter_position = target_pos
+
+func _on_returned_to_counter(target_pos: Vector3) -> void:
+	_last_counter_position = target_pos
 
 func _remove_displaying_list() -> void:
 	if(liquid_box):

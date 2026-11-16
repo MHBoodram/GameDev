@@ -123,22 +123,22 @@ dusk_end_seconds = 60.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.004, 1.17, 1.426)
 
 [node name="Seat1" type="Marker3D" parent="." unique_id=659153647]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.001, -0.71)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6026368, 2.5854628, 0.044678032)
 
 [node name="Seat2" type="Marker3D" parent="." unique_id=301102786]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 2.001, -0.71)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3973632, 2.5854628, 0.044678032)
 
 [node name="Seat3" type="Marker3D" parent="." unique_id=825412235]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2.001, -0.71)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.3973632, 2.5854628, 0.044678032)
 
 [node name="SeatDrink1" type="Marker3D" parent="." unique_id=1533204773]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4798261, -0.36288327)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6026368, 2.064289, 0.39179474)
 
 [node name="SeatDrink2" type="Marker3D" parent="." unique_id=1829500111]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 1.48, -0.363)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3973632, 2.064463, 0.391678)
 
 [node name="SeatDrink3" type="Marker3D" parent="." unique_id=1492462176]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1.48, -0.363)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.3973632, 2.064463, 0.391678)
 
 [node name="ReciptPaper1" parent="." unique_id=1049324574 node_paths=PackedStringArray("recipt_marker", "counter_origin") instance=ExtResource("3_n776p")]
 transform = Transform3D(1, 8.5078966e-10, 1.2166902e-08, 1.21668995e-08, -0.1391731, -0.9902681, 8.5079677e-10, 0.9902681, -0.1391731, 2.5202577, 7.160312, 3.426609)
@@ -167,13 +167,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2520065, 2.3, 2.736)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9720066, 2.3, 2.736)
 
 [node name="Spawn" type="Marker3D" parent="." unique_id=25745977]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.9415827, -0.8089119)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 2.188253, -0.8089119)
 
 [node name="Coutner" parent="." unique_id=183529817 instance=ExtResource("4_5ujjy")]
-transform = Transform3D(-1, 0, 1.509958e-07, 0, 1, 0, -1.509958e-07, 0, -1, 3.2777615, 0.30839622, 2.156)
+transform = Transform3D(-1, 0, 1.509958e-07, 0, 1, 0, -1.509958e-07, 0, -1, 0.29699588, 1.109501, 3.1713862)
 
 [node name="BeerGlass Button" type="Area3D" parent="Coutner" unique_id=2100852152]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.98018, 1.053846, 0.099915504)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.6652439, 1.8346125, -0.4186132)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/BeerGlass Button" unique_id=1985639721]
 shape = SubResource("SphereShape3D_v88eg")
@@ -189,7 +189,7 @@ billboard = 1
 texture = ExtResource("6_p0p6f")
 
 [node name="ShotGlass Button" type="Area3D" parent="Coutner" unique_id=746714498]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9951551, 1.053846, 0.3553003)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.6190291, 1.8346125, -0.43358803)
 visible = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/ShotGlass Button" unique_id=692371114]
@@ -207,7 +207,7 @@ billboard = 1
 texture = ExtResource("7_wk5cn")
 
 [node name="BeerKeg" type="Area3D" parent="Coutner" unique_id=70738904]
-transform = Transform3D(0.29999995, 0, 0, 0, -0.19884086, 0.22463806, 0, -0.22463806, -0.19884086, 0.8801341, 1.4483287, -0.3325984)
+transform = Transform3D(0.29999995, 0, 0, 0, -0.19884086, 0.22463806, 0, -0.22463806, -0.19884086, -1.2311976, 1.4483289, -0.33259797)
 script = ExtResource("6_n776p")
 
 [node name="CHUGCHUGBEER" type="Sprite3D" parent="Coutner/BeerKeg" unique_id=1652949852]
@@ -223,7 +223,7 @@ transform = Transform3D(1, -7.1054274e-15, 0, -1.4210855e-14, 1.0000004, 0, -7.1
 input_ray_pickable = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/BeerKeg/PourArea" unique_id=153202913]
-transform = Transform3D(0.9999999, -4.2632564e-14, 2.4755198e-13, 0, 0.74766237, -0.6640834, 8.7396756e-13, 0.6640834, 0.74766237, -0.35128784, -0.2992432, -0.26506424)
+transform = Transform3D(0.9999999, -4.2632564e-14, 2.7122748e-13, 0, 0.74766237, -0.6640834, 9.379164e-13, 0.6640834, 0.74766237, 0.16350698, 0.12765884, 0.11281395)
 shape = SubResource("BoxShape3D_ris41")
 
 [node name="PourZone" type="Sprite3D" parent="Coutner/BeerKeg/PourArea" unique_id=487294679]
@@ -242,7 +242,7 @@ mesh = SubResource("RibbonTrailMesh_pka58")
 spread = 0.0
 
 [node name="Trash" type="Area3D" parent="Coutner" unique_id=1858386361 groups=["trash"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9724557, 0, -1.3709536)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.385725, 0, -1.1753345)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/Trash" unique_id=1252558082]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2280426, 1.06, 1.4114742)
@@ -256,23 +256,29 @@ mesh = SubResource("BoxMesh_trash_square")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.88968897, 1.4529363, 0.24294817)
 
 [node name="Camera mark" type="Marker3D" parent="Coutner" unique_id=734330987 groups=["counter_mark"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13251233, 2, 0.6376586)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 1.728)
 visible = false
 
-[node name="gin_marker" type="Marker3D" parent="." unique_id=495649145]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7157001, 2.3383586, 2.6627347)
-
-[node name="spirit_marker" type="Marker3D" parent="." unique_id=580399797]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1607304, 2.3383586, 2.6630564)
-
-[node name="rum_marker" type="Marker3D" parent="." unique_id=1427671851]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7157001, 2.9163537, 2.6627347)
+[node name="blood_marker" type="Marker3D" parent="." unique_id=821430117]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.436548, 3.7947829, 3.4702659)
 
 [node name="vodka_marker" type="Marker3D" parent="." unique_id=868453499]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.161, 2.917536, 2.663)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0578635, 3.795, 3.471)
 
-[node name="blood_marker" type="Marker3D" parent="." unique_id=821430117]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.847186, 2.3383586, 2.6627347)
+[node name="tequila_marker" type="Marker3D" parent="." unique_id=1031829616]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6788634, 3.795, 3.472)
+
+[node name="whiskey_marker" type="Marker3D" parent="." unique_id=1264433021]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.29986346, 3.795, 3.472)
+
+[node name="gin_marker" type="Marker3D" parent="." unique_id=495649145]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45813656, 3.795, 3.47)
+
+[node name="rum_marker" type="Marker3D" parent="." unique_id=1427671851]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.079136565, 3.795, 3.47)
+
+[node name="spirit_marker" type="Marker3D" parent="." unique_id=580399797]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.83713657, 3.795, 3.47)
 
 [node name="HiddenRecipt" type="Marker3D" parent="." unique_id=1336744346]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.081238, 7.160312, 3.426609)
@@ -286,7 +292,7 @@ transform = Transform3D(0.5496605, 0, 0, 0, 0.5496605, 0, 0, 0, 0.05, 0.5278053,
 texture = ExtResource("13_e1j77")
 
 [node name="Player" parent="." unique_id=1043279115 node_paths=PackedStringArray("counter") instance=ExtResource("3_c30fp")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2993567, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6275828, 0, 0)
 counter = NodePath("../Coutner")
 spawn_y = 1.8
 
@@ -299,15 +305,6 @@ one_shot = true
 
 [node name="Keys" parent="." unique_id=394097111 instance=ExtResource("14_nmhfw")]
 visible = false
-anchors_preset = 8
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_top = -521.0
-offset_right = -444.98828
-offset_bottom = -373.0
-grow_vertical = 2
-scale = Vector2(1.9204147, 1.9204147)
-pivot_offset = Vector2(92.688324, 70.81804)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1277346395]
 environment = SubResource("Environment_ris41")

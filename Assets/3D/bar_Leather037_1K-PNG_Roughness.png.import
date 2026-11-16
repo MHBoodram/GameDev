@@ -2,14 +2,14 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c75shyhiu6yo3"
+uid="uid://dtnfkm6kno82k"
 path.s3tc="res://.godot/imported/bar_Leather037_1K-PNG_Roughness.png-de0bf2ba504474b99f91dafa3986a4dd.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "08f64c20af7729e3e68c486904d19c60"
+"md5": "ed4d6318c2e4074598c01f6839f96483"
 }
 
 [deps]

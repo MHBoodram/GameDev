@@ -1,7 +1,9 @@
 extends Node3D
 const PAUSE_MENU = preload("res://UI/Gameplay_ui/PauseMenu.tscn")
 const BASE_NPC = preload("res://NPC/base npc.tscn")
+const RECEIPT_SCENE = preload("res://NPC/Recipt/recipt_scene.tscn")
 var seats: Array[Base_NPC] = [null, null, null]
+var receipt_board: ReceiptBoard = ReceiptBoard.new()
 @onready var player = get_node("Player")
 var frame_count = 0
 var is_dialogue_open: bool = false
@@ -28,6 +30,7 @@ var sky_material: PanoramaSkyMaterial
 func _ready() -> void:
 	MusicPlayer.play_game()
 	add_child(PAUSE_MENU.instantiate())
+	receipt_board.setup(self)
 	GameState.player = $Player
 	GameState.main_node = self
 	DialogueManager.dialogue_started.connect(func(_resource): is_dialogue_open = true; GameState.is_dialogue_open = true)
@@ -162,7 +165,6 @@ func _check_upgrades() -> void:
 	pass
 
 func _check_unlocks_drinks() -> void:
-	#print(PlayerStats.unlocks)
 	for i in PlayerStats.unlocks["Drinks"]:
 		if(PlayerStats.unlocks["Drinks"][i]):
 			var temp_scene_check = "res://Player/Drink/Liquids/liquid.tscn"
@@ -177,7 +179,15 @@ func _night_select() -> void:
 			_set_shit("shark",180,"tutorial_walk")
 			GameState.special_state = true
 			pause_night()
+			var ui = GameState.gameplay_ui
+			if not ui and player and player.get_node_or_null("GameplayUi"):
+				ui = player.get_node_or_null("GameplayUi")
+			if ui and ui.has_method("start_tutorial"):
+				ui.start_tutorial(get_node_or_null("Keys"))
 		2:
+			var keys_node = get_node_or_null("Keys")
+			if keys_node:
+				keys_node.queue_free()
 			_set_shit("shark",180,"night_2_introduction")
 			GameState.special_state = true
 			pause_night()
@@ -191,6 +201,21 @@ func _on_dialogue_ended(_resource) -> void: #WHO IN THE SHITTER DID THIS CODE
 			#if npc and is_instance_valid(npc) and npc.unique_talk and npc.drink_list.size() <= 0:
 				#npc._leaving()
 				#break
+	var talking_npc = GameState.character_talking
+	if talking_npc and is_instance_valid(talking_npc):
+		if talking_npc.drink_list.size() > 0:
+			talking_npc._add_recipt()
+			if talking_npc.unique_talk:
+				talking_npc.can_talk = false
+				talking_npc.speaking_title = ""
+	if GameState.night == 1 and GameState.special_state:
+		var shark = GameState.gameplay_ui._tutorial_find_shark() if GameState.gameplay_ui else null
+		if shark and shark.drink_list.size() > 0:
+			shark._add_recipt()
+			shark.can_talk = false
+			shark.speaking_title = ""
+			if GameState.gameplay_ui and GameState.gameplay_ui.has_method("_tutorial_start_drink"):
+				GameState.gameplay_ui._tutorial_start_drink()
 
 func _is_debug_menu_blocked() -> bool:
 	if get_tree().paused:
@@ -214,7 +239,7 @@ func toggle_debug_menu() -> void:
 func _clear_receipt_for_seat(seat_number: int) -> void:
 	var recipt_node = get_node_or_null("ReciptPaper" + str(seat_number))
 	if recipt_node:
-		recipt_node.ordered = false
+		receipt_board.release_receipt(recipt_node)
 		recipt_node.global_position = $HiddenRecipt.global_position
 
 func _serve_seat(seat_index: int, drink_data: Array) -> void:
@@ -234,8 +259,7 @@ func _serve_all_customers_scored(score_type: String = "good") -> void:
 		while npc.drink_list.size() > 0:
 			var drink_data: Array = []
 			if score_type == "good":
-				var target_item = npc.drink_list[0][0]
-				drink_data = [[target_item[0], target_item[1]]]
+				drink_data = npc.drink_list[0].duplicate(true)
 			else:
 				drink_data = [["garbage_water", 0], ["spoiled_milk", 0], ["wrong_spirit", 0]]
 			_serve_seat(seat_index, drink_data)
@@ -398,21 +422,54 @@ func _remove(seat: int) -> void:
 			start_night_shift()
 	_check_night_concluded()
 
-func _add_recipt(seat: int,change_words: String) -> void:
+func _add_recipt(seat: int, change_words: String, customer_race: String = "", customer_icon: Texture2D = null) -> void:
 	var string_recipt = "ReciptPaper" + str(seat)
-	var recipt_node = get_node(string_recipt)
-	var marker_node = get_node("Recipt" + str(seat))
-	var tween = get_tree().create_tween()
+	var recipt_node = get_node_or_null(string_recipt)
+	if not recipt_node:
+		recipt_node = RECEIPT_SCENE.instantiate()
+		recipt_node.name = string_recipt
+		recipt_node.seat_num = seat
+		recipt_node.counter_origin = $Coutner
+		add_child(recipt_node)
+
+	if customer_race == "" and seat >= 1 and seat <= seats.size():
+		var npc = seats[seat - 1]
+		if npc and is_instance_valid(npc) and npc.npc_resource:
+			customer_race = npc.npc_resource.race
+
+	if recipt_node.has_method("_set_customer_info"):
+		recipt_node._set_customer_info(seat, customer_race, customer_icon)
 	recipt_node._write(change_words)
 	recipt_node.ordered = true
 	recipt_node.global_position = player.global_position
-	tween.tween_property(recipt_node,"global_position",marker_node.global_position,0.5)
 
-func _give_drink(recipt: Node3D, drink:Glasses, seat: int) -> void:
+	if not receipt_board.mount_receipt(recipt_node):
+		push_warning("Receipts board node not found in bar.glb; falling back to marker.")
+		var marker_node = get_node_or_null("Recipt" + str(seat))
+		if marker_node:
+			var tween = get_tree().create_tween()
+			tween.tween_property(recipt_node, "global_position", marker_node.global_position, 0.5)
+
+func _serve_cup_to_npc(drink: Glasses, npc: Base_NPC) -> void:
+	var seat: int = npc.seat_num
+	_clear_receipt_for_seat(seat)
+	var seat_marker = get_node_or_null("SeatDrink" + str(seat))
+	var target_pos: Vector3 = seat_marker.global_position if seat_marker else npc.global_position
+	var tween = get_tree().create_tween().set_parallel(true)
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(drink, "global_position", target_pos, 0.25)
+	await tween.finished
+	if is_instance_valid(drink) and not drink.is_consumed and is_instance_valid(npc) and npc.can_accept_drink():
+		npc._obtain_drink(drink._return_drink())
+		drink._dranked()
+
+func _give_drink(recipt: Node3D, drink: Glasses, seat: int) -> void:
 	var seat_marker = get_node_or_null("SeatDrink" + str(seat))
 	if(!seat_marker):
 		push_warning("Can't find seat marker")
 		return
+	receipt_board.release_receipt(recipt)
 	var tween = get_tree().create_tween().set_parallel(true)
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
@@ -425,8 +482,9 @@ func _npc_patience_end(seat_num: int) -> void:
 	if(!recipt_node):
 		push_warning("Can't find seat ReciptPaper")
 		return
-	recipt_node.ordered = false
-	recipt_node._finish_drag_or_click()
+	receipt_board.release_receipt(recipt_node)
+	if recipt_node.is_balls_dragging:
+		recipt_node._finish_drag_or_click()
 	var tween = get_tree().create_tween().set_parallel(true)
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
@@ -444,13 +502,17 @@ func _get_blood_bottle():
 func _add_blood(blood: float) -> void:
 	var blood_bottle = get_node_or_null("blood")
 	if(blood_bottle):
-		blood_bottle.current_liquid += blood
-		blood_bottle._update_liquid_shader()
-
+		blood_bottle._add_liquid(blood)
 
 func _on_beer_glass_button_mouse_entered() -> void:
-	GameState.player._update_hand("interact")
-
+	if Ingredients.active_dragging_item != null:
+		return
+	if GameState.player:
+		GameState.player._update_hand("interact")
 
 func _on_beer_glass_button_mouse_exited() -> void:
-	GameState.player._update_hand("netural")
+	if Ingredients.active_dragging_item != null:
+		return
+	if GameState.player:
+		GameState.player._update_hand("idle")
+		
