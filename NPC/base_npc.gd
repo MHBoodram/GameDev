@@ -204,12 +204,12 @@ func _give_payment()-> void:
 # Generates random drink and adds it to order queue
 func _want_drink() -> Array:
 	var drink_list_want = ["beer","gin"]
-		
+
 	for drinks in PlayerStats["unlocks"]["Drinks"]:
 		if(PlayerStats["unlocks"]["Drinks"][drinks]):
 			drink_list_want.push_back(drinks)
-	
-	
+
+
 
 	var race_key: String = npc_resource.race.to_upper() if npc_resource else "HUMAN"
 	var drink_count: int = 1
@@ -217,14 +217,14 @@ func _want_drink() -> Array:
 		#drink_count = randi_range(1, 2)
 	if(PlayerStats["unlocks"]["Ingredients"]["Blood"] && race_key == "VAMPIRE"):
 		drink_list_want.push_back("blood")
-	
+
 	var total: Array = []
 	if(speaking_title =="tutorial_walk"):
 		var order_item = ["gin", 90]
 		total.append(order_item)
 		drink_list.push_front([order_item])
 		return total
-	
+
 	for i in range(drink_count):
 		var liquid_num = randi_range(80,100)
 		var drink_name = drink_list_want.pick_random()
@@ -323,4 +323,3 @@ func _talking(open_mouth: bool = false):
 		frame_check = 0
 		push_warning("TOO FAR")
 	frame = frame_check
-	
