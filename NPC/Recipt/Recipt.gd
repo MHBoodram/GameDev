@@ -1,18 +1,20 @@
+# Physical draggable 3D receipt representing an active customer order
+# Mounts to the 3D board or snaps to drink glasses to complete orders
 extends Ingredients
 
 @onready var recipt_2d = get_node_or_null("Base_viewport/SubViewport/Recipt")
-@export var recipt_marker : Marker3D
-@export var seat_num : int = 1
-var ordered : bool = false
-var has_board_slot : bool = false
-var board_slot_position : Vector3 = Vector3.ZERO
-var board_slot_quaternion : Quaternion = Quaternion.IDENTITY
-var _move_tween : Tween = null
+@export var recipt_marker: Marker3D
+@export var seat_num: int = 1
+var ordered: bool = false
+var has_board_slot: bool = false
+var board_slot_position: Vector3 = Vector3.ZERO
+var board_slot_quaternion: Quaternion = Quaternion.IDENTITY
+var _move_tween: Tween = null
 
-@export var hold_lift : float = 0.3
-@export var snap_to_glass : bool = true
-@export var snap_offset : Vector3 = Vector3(0, 0.5, 0)
-@export var follow_speed : float = 20.0
+@export var hold_lift: float = 0.3
+@export var snap_to_glass: bool = true
+@export var snap_offset: Vector3 = Vector3(0, 0.5, 0)
+@export var follow_speed: float = 20.0
 
 func ready() -> void:
 	base_y_position = 1.6
@@ -106,9 +108,8 @@ func _set_customer_info(seat: int, race: String = "", icon_texture: Texture2D = 
 			recipt_2d._set_customer_race(race)
 
 func _get_npc() -> Base_NPC:
-	var main = GameState.main_node if GameState.main_node else get_parent()
-	if main and "seats" in main and seat_num >= 1 and seat_num <= main.seats.size():
-		return main.seats[seat_num - 1]
+	if GameState.seat_manager:
+		return GameState.seat_manager.get_customer_at_seat(seat_num)
 	return null
 
 func can_interact_with(target: Ingredients) -> bool:
@@ -122,13 +123,14 @@ func can_interact_with(target: Ingredients) -> bool:
 
 func execute_interaction(target: Ingredients) -> void:
 	if can_interact_with(target) and target is Glasses:
-		ordered = false
-		target.set_highlight(false)
-		if _move_tween and _move_tween.is_valid():
-			_move_tween.kill()
 		var npc := _get_npc()
-		if is_instance_valid(npc):
+		if is_instance_valid(npc) and target.can_serve_npc(npc):
+			target.set_highlight(false)
+			if _move_tween and _move_tween.is_valid():
+				_move_tween.kill()
 			target.execute_npc_interaction(npc)
+		else:
+			on_drop_failed()
 
 func on_drop_failed() -> void:
 	if ordered:

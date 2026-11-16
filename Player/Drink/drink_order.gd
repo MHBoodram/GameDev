@@ -1,0 +1,59 @@
+class_name DrinkOrder
+extends RefCounted
+
+# what the customer actually asked for
+var recipe_name: String = ""
+var ingredients: Dictionary = {} # name -> desired proportion (0.0 to 1.0)
+var garnishes: Array[String] = []
+var required_processing: Array[String] = [] # "shaken", "spectral", etc
+var required_glass: String = ""
+var is_tiny: bool = false
+
+func get_normalized_ingredients() -> Dictionary:
+	var total: float = 0.0
+	for amt in ingredients.values():
+		total += float(amt)
+	var result: Dictionary = {}
+	if total <= 0.0001:
+		return result
+	for id in ingredients.keys():
+		result[id] = float(ingredients[id]) / total
+	return result
+
+# converts the older [["beer", 1.0]] or [["gin", 0.5], ["vermouth", 0.5]] format
+static func from_legacy_want(want: Array) -> DrinkOrder:
+	var order := DrinkOrder.new()
+	if want.is_empty():
+		return order
+
+	var raw_sum: float = 0.0
+	for item in want:
+		if item is Array and item.size() >= 2:
+			var ing_name = str(item[0])
+			var amt = float(item[1])
+			order.ingredients[ing_name] = order.ingredients.get(ing_name, 0.0) + amt
+			raw_sum += amt
+
+	# normalize to 1.0 ratios
+	if raw_sum > 0.0:
+		for id in order.ingredients.keys():
+			order.ingredients[id] = float(order.ingredients[id]) / raw_sum
+
+	return order
+
+static func from_recipe(recipe: DrinkRecipe) -> DrinkOrder:
+	var order := DrinkOrder.new()
+	order.recipe_name = recipe.display_name
+	order.required_glass = recipe.required_glass
+	order.garnishes = recipe.garnishes.duplicate()
+	order.required_processing = recipe.processing.duplicate()
+
+	# normalize recipe ingredients
+	var raw_sum: float = 0.0
+	for amt in recipe.ingredients.values():
+		raw_sum += float(amt)
+	if raw_sum > 0.0:
+		for id in recipe.ingredients.keys():
+			order.ingredients[id] = float(recipe.ingredients[id]) / raw_sum
+
+	return order

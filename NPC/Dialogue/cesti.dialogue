@@ -1,5 +1,10 @@
 ~ start
-Cesti: [[Hi|I bid thee|Good evening bartender]], My Order is {{drink_list}}
+Cesti: [[Hi|I bid thee|Good evening bartender]], I want {{_current_order_text()}}
+do _add_recipt()
+set speaking_title = "mid"
+=> END
+~ next_order
+Cesti: [[Another one, bartender|I require one more]], I want {{_current_order_text()}}
 do _add_recipt()
 set speaking_title = "mid"
 => END

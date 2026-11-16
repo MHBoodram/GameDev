@@ -1,13 +1,12 @@
+# All audio sound effects
 extends Node
-## Autoload that plays menu sound effects on the "SFX" audio bus.
 
-
-@export var knifedraw_stream: AudioStream 
-@export var knifestab_stream: AudioStream
-@export var entranto_stream: AudioStream
-@export var liquidpour_stream: AudioStream
-@export var shakerrattle_stream: AudioStream
-@export var mugpickup_stream: AudioStream
+@export var knifedraw_stream: AudioStream = preload("res://Assets/Audio/SFX/Knifesheaf.wav")
+@export var knifestab_stream: AudioStream = preload("res://Assets/Audio/SFX/KnifeStab.wav")
+@export var entranto_stream: AudioStream = preload("res://Assets/Audio/SFX/842380__mihacappy__entrance_open1.wav")
+@export var liquidpour_stream: AudioStream = preload("res://Assets/Audio/SFX/liquidpour.wav")
+@export var shakerrattle_stream: AudioStream = preload("res://Assets/Audio/SFX/Shaker1.mp3")
+@export var mugpickup_stream: AudioStream = preload("res://Assets/Audio/SFX/Pickupglass.wav")
 @export var bus_name: StringName = &"SFX"
 
 var knifedraw: AudioStreamPlayer
@@ -18,8 +17,7 @@ var shakerrattle: AudioStreamPlayer
 var mugpickup: AudioStreamPlayer
 
 func _ready() -> void:
-	# AudioStreamPlayers stop when the tree is paused unless they can process
-	# while paused, so this node (and all it's children nodes) must always process
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	knifedraw = _make_player(knifedraw_stream)
 	knifestab = _make_player(knifestab_stream)
 	entranto = _make_player(entranto_stream)
@@ -38,49 +36,27 @@ func _make_player(stream: AudioStream) -> AudioStreamPlayer:
 	add_child(player)
 	return player
 
-func _change_bus_volume(n_bus: String,value : float): #Not working currently
-	if AudioServer.get_bus_index(bus_name) != -1:
-		var bus_index := AudioServer.get_bus_index(n_bus)
-		AudioServer.set_bus_volume_db(bus_index,value)
-		if(value <= -24):
-			AudioServer.set_bus_mute(bus_index,true)
-		else:
-			AudioServer.set_bus_mute(bus_index,false)
-			
-	else:
-		push_warning("SFXAudio: bus '%s' not found, falling back to Master." % bus_name)
-		
-	
-	#if(value <= -24):
-		#AudioServer.set_bus_mute(bus_index,true)
-	#else:
-		#AudioServer.set_bus_mute(bus_index,false)
+func _change_bus_volume(n_bus: String, value: float) -> void:
+	SettingState.set_bus_volume(n_bus, value)
 
 func play_draw() -> void:
 	_play(knifedraw)
 
 func play_stab() -> void:
 	_play(knifestab)
-	
+
 func play_entranto() -> void:
 	_play(entranto)
 
 func play_liquidpour() -> void:
 	_play(liquidpour)
-	
+
 func play_shakerrattle() -> void:
 	_play(shakerrattle)
 
 func play_mugpickup() -> void:
 	_play(mugpickup)
 
-func _play(player : AudioStreamPlayer) -> void:
-	if player.stream:
+func _play(player: AudioStreamPlayer) -> void:
+	if player and player.stream:
 		player.play()
-
-
-#func hook(root: Node) -> void:
-	#for node in root.find_children("*","BaseButton",true,false):
-		#var button := node as BaseButton
-		#if not button.pressed.is_connected(play_entranto):
-			#button.pressed.connect(play_entranto)

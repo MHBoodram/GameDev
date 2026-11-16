@@ -1,5 +1,10 @@
 ~ start
-Scott: [[Hi|Yo|Howdy]], My Order is {{drink_list}}
+Scott: [[Hi|Yo|Howdy]], I want {{_current_order_text()}}
+do _add_recipt()
+set speaking_title = "mid"
+=> END
+~ next_order
+Scott: [[Hit me with another|One more]], I want {{_current_order_text()}}
 do _add_recipt()
 set speaking_title = "mid"
 => END
@@ -40,4 +45,3 @@ do _give_payment()
 ~ TimeWarning1
 Scott: Damn bartender, you making the spirits by hand or something? What's taking so long
 => END
-

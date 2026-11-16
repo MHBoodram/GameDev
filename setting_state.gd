@@ -58,6 +58,7 @@ func _loading_setting():
 	if not FileAccess.file_exists(SAVE_PATH):
 		print("No save data found.")
 		apply_world_environment()
+		apply_audio_settings()
 		return
 	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
 	print(SAVE_PATH)
@@ -84,6 +85,20 @@ func _loading_setting():
 						"Audio":
 							setting_dic[main_key][sub_key] = 0
 		apply_world_environment()
+		apply_audio_settings()
+
+func set_bus_volume(bus_name: String, value: float) -> void:
+	var bus_index := AudioServer.get_bus_index(bus_name)
+	if bus_index != -1:
+		AudioServer.set_bus_volume_db(bus_index, value)
+		AudioServer.set_bus_mute(bus_index, value <= -24.0)
+
+# applies loaded slider decibel levels to AudioServer buses on load
+func apply_audio_settings() -> void:
+	set_bus_volume("Master", setting_dic["Audio"]["Master_value"])
+	set_bus_volume("UI", setting_dic["Audio"]["UI_value"])
+	set_bus_volume("SFX", setting_dic["Audio"].get("SFX_value", setting_dic["Audio"]["UI_value"]))
+	set_bus_volume("Music", setting_dic["Audio"]["Music_value"])
 
 func apply_world_environment():
 	var enabled = setting_dic["Video"].get("WorldEnvironment", true)
@@ -130,4 +145,3 @@ func _reset_to_default_controls():
 			setting_dic["Control"][key] = DEFAULT_SETTING["Control"][key]
 		else:
 			setting_dic["Control"].erase(key)
-			

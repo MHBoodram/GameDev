@@ -1,45 +1,48 @@
 extends CanvasLayer
-var camera : Camera3D
-
+var camera: Camera3D
 
 func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
 
-func _process(delta: float) -> void:
-	if(visible):
+func _process(_delta: float) -> void:
+	if visible:
 		$TextureRect/VBoxContainer/HBoxContainer/Fps.text = "FPS: " + str(Engine.get_frames_per_second())
 
 func _on_serve_good_pressed() -> void:
-	if GameState.main_node and GameState.main_node.has_method("_serve_all_customers_scored"):
-		GameState.main_node._serve_all_customers_scored("good")
+	if GameState.seat_manager:
+		GameState.seat_manager.debug_serve_all("good")
 
 func _on_serve_bad_pressed() -> void:
-	if GameState.main_node and GameState.main_node.has_method("_serve_all_customers_scored"):
-		GameState.main_node._serve_all_customers_scored("bad")
+	if GameState.seat_manager:
+		GameState.seat_manager.debug_serve_all("bad")
 
 func _on_add_rep_pressed() -> void:
 	PlayerStats.add_overall_reputation(10.0)
 
 func _on_end_night_pressed() -> void:
-	if GameState.main_node and GameState.main_node.has_method("end_night_early"):
-		GameState.main_node.end_night_early()
+	if GameState.night_manager:
+		GameState.night_manager.end_shift()
+	if GameState.seat_manager:
+		GameState.seat_manager.clear_all_customers()
 
 func _on_add_npc_pressed() -> void:
-	GameState.main_node._add_npc()
+	if GameState.seat_manager:
+		GameState.seat_manager.spawn_random_customer()
 
 func _on_add_money_pressed() -> void:
 	PlayerStats._change_money(PlayerStats.money + 1000.0)
 
 func _on_remove_npc_pressed() -> void:
-	for i in GameState.main_node.seats.size():
-		if GameState.main_node.seats[i] != null:
-			GameState.main_node._remove_npc(i +1)
-			break
+	if GameState.seat_manager:
+		GameState.seat_manager.remove_first_occupied_seat()
 
 func _on_camera_shake_pressed() -> void:
-	camera.add_shake(5)
-
+	if camera and camera.has_method("add_shake"):
+		camera.add_shake(5)
 
 func _on_add_npc_specific_pressed() -> void:
-	var index = $TextureRect/VBoxContainer/HBoxContainer/HBoxContainer/OptionButton.selected
-	GameState.main_node._add_npc_specific($TextureRect/VBoxContainer/HBoxContainer/HBoxContainer/OptionButton.get_item_text(index))
+	if GameState.seat_manager:
+		var opt := $TextureRect/VBoxContainer/HBoxContainer/HBoxContainer/OptionButton as OptionButton
+		if opt:
+			var species_name: String = opt.get_item_text(opt.selected)
+			GameState.seat_manager.spawn_specific_species(species_name)

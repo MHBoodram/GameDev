@@ -1,43 +1,57 @@
+# All customers are this class - has patience, ordering, payment, dialogue
+#Provides DialogueManager mutation hooks (_tutorial_enabler, _check_tutorial, night_popup)
+# Consumes DrinkMix instances from Glasses and
+# Gives receipt and seat events to GameState.seat_manager.
 extends Sprite3D
 class_name Base_NPC
-@export var npc_resource : NPC
+
+@export var npc_resource: NPC
 enum State { SEAT, SIT, EXIT }
-var current_state : State = State.SEAT
-var seat_num : int
-var camera = null
-var drink_list : Array = []
-var dialogue_resource : DialogueResource
-var speaking_title : String = "start"
-@export var drink_offset : float = 5
+var current_state: State = State.SEAT
+var seat_num: int
+var camera: Camera3D = null
+var drink_list: Array = []
+var dialogue_resource: DialogueResource
+var speaking_title: String = "start"
+@export var drink_offset: float = 5.0
 @onready var custom_balloon = load("res://addons/dialogue_manager/example_balloon/main_balloon.tscn")
-@onready var patience_timer = get_node("Patience_timer")
-@onready var patient_2d = get_node("Sprite3D/SubViewport/Patience")
-var recipt_marker : Marker3D
-var recipt_clicked : bool = true
-var unique_talk : bool = false
-var can_talk : bool = true
-var has_receipt_spawned : bool = false
+@onready var patience_timer: Timer = $Patience_timer
+@onready var patient_2d = $Sprite3D/SubViewport/Patience
+
+var recipt_marker: Marker3D
+var recipt_clicked: bool = true
+var unique_talk: bool = false
+var can_talk: bool = true
+var has_receipt_spawned: bool = false
 var emo: String = "netural"
-var customer_satisfaction : float = 1.0
+var customer_satisfaction: float = 1.0
 var _dialouge_paused_patience : float = -1.0
-var max_patience : float = 90.0
-var payment_global : float
-var is_leaving : bool = false
-var _is_highlighted : bool = false
-var _original_modulate : Color = Color.WHITE
+var max_patience: float = 90.0
+var payment_global: float = 0.0
+var is_leaving: bool = false
+var _is_highlighted: bool = false
+var _original_modulate: Color = Color.WHITE
+
+var modifier: CustomerModifier = CustomerModifier.new()
+
 const SATISFACTORY_THRESHOLD := 0.6
-const MAX_DIFF := 0.15
-const FLAT_PENALTY_WRONG_INGREDIENT := 0.3
-const FLAT_PENALTY_MISSING_INGREDIENT := 0.4
 const REPLENISH_BASE_TIME := 30.0
 const BASE_DRINK_PRICE := 0.0
 
+var _bounce_tween: Tween
 
 func _ready() -> void:
-	max_patience = npc_resource.patience_time
+	if npc_resource:
+		max_patience = npc_resource.patience_time
+		texture = npc_resource.sprite_sheet
+		hframes = npc_resource.hframe
+		dialogue_resource = npc_resource.dialogue_resource
+
 	patience_timer.wait_time = max_patience
+	patience_timer.start(max_patience)
+	patient_2d._setup(max_patience, npc_resource.race if npc_resource else "HUMAN")
 	patient_2d._change_max_progress(max_patience)
-	patient_2d._setup(max_patience, npc_resource.race)
+	patient_2d._change_curent(max_patience)
 	camera = get_viewport().get_camera_3d()
 	self.texture = npc_resource.sprite_sheet
 	hframes = npc_resource.hframe
@@ -70,7 +84,49 @@ func _process(delta: float) -> void:
 		#var drain_rate: float = (1.0 - (patience_timer / (max_patience * 0.25))) * 0.05 * delta
 		#customer_satisfaction = maxf(0.0, customer_satisfaction - drain_rate)
 
+func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float = 90.0, starting_dialogue: String = "start") -> void:
+	npc_resource = npc_source
+	seat_num = seat
+	recipt_marker = rec_marker
+	has_receipt_spawned = false
+	GameState.play_sfx("play_entranto")
+
+	if patience > 0.0:
+		max_patience = patience
+	elif npc_source and npc_source.patience_time > 0.0:
+		max_patience = npc_source.patience_time
+	else:
+		max_patience = 90.0
+
+	patience_timer.wait_time = max_patience
+	patience_timer.start(max_patience)
+
+	speaking_title = starting_dialogue
+	if starting_dialogue != "start":
+		unique_talk = true
+		if starting_dialogue == "tutorial_walk":
+			can_talk = false
+
+	if npc_resource:
+		texture = npc_resource.sprite_sheet
+		hframes = npc_resource.hframe
+		dialogue_resource = npc_resource.dialogue_resource
+		patient_2d._setup(max_patience, npc_resource.race)
+
+	patient_2d._change_max_progress(max_patience)
+	patient_2d._change_curent(max_patience)
+	if is_instance_valid(patient_2d) and patient_2d.has_method("_recipt_hide"):
+		patient_2d._recipt_hide()
+	customer_satisfaction = 1.0
+	modifier = CustomerModifier.roll_modifier(npc_resource.race if npc_resource else "HUMAN", unique_talk)
+	modifier.apply_visuals(self)
+
+func _institate(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float = 90.0, starting_dialogue: String = "start") -> void:
+	setup_npc(npc_source, seat, rec_marker, patience, starting_dialogue)
+
 func talk() -> void:
+	if GameState.is_dialogue_open:
+		return
 	if not can_talk or speaking_title == "" or speaking_title == null:
 		return
 	if dialogue_resource:
@@ -88,7 +144,7 @@ func _on_dialogue_ended(dialogue_resource : DialogueResource) -> void:
 		_dialouge_paused_patience = -1.0
 
 func can_accept_drink() -> bool:
-	return not is_leaving and drink_list.size() > 0
+	return not is_leaving and drink_list.size() > 0 and has_receipt_spawned and not GameState.is_dialogue_open
 
 func set_highlight(enabled: bool) -> void:
 	if _is_highlighted == enabled:
@@ -100,52 +156,77 @@ func set_highlight(enabled: bool) -> void:
 	else:
 		modulate = _original_modulate
 
-# Another initailization function
-func _institate(npc_source : NPC,seat: int,rec_marker: Marker3D, patience: float = 90,starting_dialogue: String = "start") -> void:
-	npc_resource = npc_source
-	seat_num = seat
-	recipt_marker = rec_marker
-	SFXAudio.play_entranto()
-	if(patience != 0):
-		max_patience = patience
-		patience_timer.wait_time = patience
-	speaking_title = starting_dialogue
-	if(starting_dialogue != "start"):
-		unique_talk = true
-		if starting_dialogue == "tutorial_walk":
-			can_talk = false
-	_ready()
-
-# Move customer sprite to seat
 func _moving_to(to: Marker3D) -> void:
 	var tween = get_tree().create_tween()
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_property(self,"position",to.position,0.8)
+	tween.tween_property(self, "position", to.position, 0.8)
 	current_state = State.SIT
 
-func _tween_bounce() -> void:
-	var tween = get_tree().create_tween()
-	var rand_time = randf_range(0.503,0.505)
-	tween.tween_property(self, "scale", Vector3(0.505,rand_time,0.5), 0.5)
-	tween.tween_property(self, "scale", Vector3(0.5,0.5,0.5), 0.4)
-	await tween.finished
-	await get_tree().create_timer(0.1).timeout
-	_tween_bounce()
+func _start_bounce() -> void:
+	if _bounce_tween and _bounce_tween.is_valid():
+		_bounce_tween.kill()
+	_bounce_tween = get_tree().create_tween().set_loops()
+	_bounce_tween.tween_property(self, "scale", Vector3(0.505, 0.504, 0.5), 0.5)
+	_bounce_tween.tween_property(self, "scale", Vector3(0.5, 0.5, 0.5), 0.4)
+	_bounce_tween.tween_interval(0.1)
 
-# Opens dialogue on click on customer
-@warning_ignore("shadowed_variable", "unused_parameter")
-func _on_interaction_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
-	if Ingredients.active_dragging_item != null:
-		return
-	if not can_talk or speaking_title == "" or speaking_title == null:
-		return
-	if(event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
-		if abs(camera.global_position.x - global_position.x) < 2 or unique_talk:
-			talk()
+# Serving and payouts
+func receive_drink(mix: DrinkMix) -> float:
+	var want = drink_list.pop_front()
+	if want == null:
+		return 0.0
 
-# Changes overall reputation and species reputation based on drink score
-func _set_reputation(is_satisfactory: bool, drink_score: float) -> void:
+	var wanted_order: DrinkOrder = want if want is DrinkOrder else DrinkOrder.from_legacy_want(want)
+	var score_data := DrinkScorer.score_drink(mix, wanted_order)
+	var drink_score: float = score_data["score"]
+
+	#if modifier.is_ghost and not modifier.check_ghost_drink(mix):
+	#	drink_score = 0.0
+	#	customer_satisfaction = 0.0
+
+	var is_satisfactory: bool = drink_score >= SATISFACTORY_THRESHOLD
+	if not is_satisfactory:
+		customer_satisfaction = maxf(0.0, customer_satisfaction - (1.0 - drink_score))
+
+	_replenish_patience(drink_score)
+	_apply_reputation_impact(is_satisfactory, drink_score)
+	_calculate_payout(drink_score, is_satisfactory)
+
+	has_receipt_spawned = false
+
+	if drink_list.size() > 0:
+		var col = get_node_or_null("Area3D/CollisionShape3D")
+		if col:
+			col.disabled = false
+		can_talk = true
+		speaking_title = _get_next_order_title()
+		if is_instance_valid(patient_2d):
+			patient_2d._recipt_obtain()
+		return drink_score
+
+	_on_all_orders_completed(drink_score)
+	return drink_score
+
+func _get_next_order_title() -> String:
+	if dialogue_resource and dialogue_resource.get_titles().has("next_order"):
+		return "next_order"
+	return "start"
+
+func _obtain_drink(drink: Variant) -> float:
+	if drink is DrinkMix:
+		return receive_drink(drink as DrinkMix)
+	elif drink is Array:
+		return receive_drink(DrinkMix.from_legacy_layers(drink as Array))
+	return 0.0
+
+func _replenish_patience(drink_score: float) -> void:
+	var replenish_time := REPLENISH_BASE_TIME * drink_score
+	if replenish_time > 0.0:
+		var new_patience := minf(max_patience, patience_timer.time_left + replenish_time)
+		patience_timer.start(maxf(0.01, new_patience))
+
+func _apply_reputation_impact(is_satisfactory: bool, drink_score: float) -> void:
 	var race_name: String = npc_resource.race if npc_resource else "Human"
 	if is_satisfactory:
 		PlayerStats.add_overall_reputation(1.0)
@@ -154,363 +235,213 @@ func _set_reputation(is_satisfactory: bool, drink_score: float) -> void:
 		var penalty: float = (1.0 - drink_score) * 2.0
 		PlayerStats.change_species_reputation(race_name, -penalty)
 
-# Gets drink score then gives payment and reputation
-func _obtain_drink(drink: Array) -> float:
-	var want = drink_list.pop_front()
-	if want == null:
-		return 0.0
-	var drink_score: float = 1.0
-
-	var have_ingredients: Dictionary = {}
-	var total_served_amount: float = 0.0
-	for layer in drink:
-		if layer is Array and layer.size() >= 2:
-			if layer.size() > 3 and layer[3] is Dictionary:
-				for ing in layer[3]:
-					var amt: float = float(layer[3][ing])
-					if amt > 0.0:
-						have_ingredients[str(ing)] = have_ingredients.get(str(ing), 0.0) + amt
-						total_served_amount += amt
-			elif layer[0] is Array:
-				var split_amt: float = float(layer[1]) / maxf(float(layer[0].size()), 1.0)
-				if split_amt > 0.0:
-					for ing in layer[0]:
-						have_ingredients[str(ing)] = have_ingredients.get(str(ing), 0.0) + split_amt
-						total_served_amount += split_amt
-			elif layer[0] is Dictionary:
-				for ing in layer[0]:
-					var amt: float = float(layer[0][ing])
-					if amt > 0.0:
-						have_ingredients[str(ing)] = have_ingredients.get(str(ing), 0.0) + amt
-						total_served_amount += amt
-			else:
-				var ing_name: String = str(layer[0])
-				var amt: float = float(layer[1])
-				if amt > 0.0:
-					have_ingredients[ing_name] = have_ingredients.get(ing_name, 0.0) + amt
-					total_served_amount += amt
-
-	if total_served_amount > 0.0:
-		for ing_name in have_ingredients.keys():
-			have_ingredients[ing_name] = float(have_ingredients[ing_name]) / total_served_amount
-
-	var total_want_amount: float = 0.0
-	for check in want:
-		total_want_amount += float(check[1])
-
-	if want.size() > 0 and (have_ingredients.is_empty() or total_served_amount <= 0.0):
-		drink_score = 0.0
-	else:
-		var want_count: float = maxf(float(want.size()), 1.0)
-		var missing_penalty: float = maxf(FLAT_PENALTY_MISSING_INGREDIENT, 1.0 / want_count)
-		for check in want:
-			var check_name: String = check[0]
-			var check_amount: float = float(check[1]) / total_want_amount if total_want_amount > 0.0 else float(check[1])
-			if have_ingredients.has(check_name):
-				var actual_amount: float = float(have_ingredients[check_name])
-				var difference: float = abs(check_amount - actual_amount)
-				var proportion_penalty: float = 0.0
-				if difference <= MAX_DIFF:
-					proportion_penalty = 0.3 * (difference / MAX_DIFF)
-				else:
-					proportion_penalty = 0.3 + 0.7 * clampf((difference - MAX_DIFF) / maxf(check_amount - MAX_DIFF, 0.45), 0.0, 1.0)
-				drink_score -= proportion_penalty / want_count
-			else:
-				drink_score -= missing_penalty
-
-		for have_name in have_ingredients.keys():
-			var was_wanted: bool = false
-			for check in want:
-				if check[0] == have_name:
-					was_wanted = true
-					break
-			if not was_wanted:
-				drink_score -= FLAT_PENALTY_WRONG_INGREDIENT
-
-	drink_score = clampf(drink_score, 0.0, 1.0)
-	print("[drink_score]: ", drink_score)
-
-	var is_satisfactory: bool = drink_score >= SATISFACTORY_THRESHOLD
-	if not is_satisfactory:
-		var satisfaction_loss: float = 1.0 - drink_score
-		customer_satisfaction = maxf(0.0, customer_satisfaction - satisfaction_loss)
-	print("[customer_satisfaction]: ", customer_satisfaction)
-
-	var replenish_time: float = REPLENISH_BASE_TIME * drink_score
-	if replenish_time > 0.0:
-		var new_patience: float = minf(max_patience, patience_timer.time_left + replenish_time)
-		patience_timer.start(maxf(0.01, new_patience))
-	print("[patience_replenished]: ", replenish_time)
-
-	_set_reputation(is_satisfactory, drink_score)
-
+func _calculate_payout(drink_score: float, is_satisfactory: bool) -> void:
 	var race_name: String = npc_resource.race if npc_resource else "Human"
 	var group_rep: float = PlayerStats.get_species_reputation(race_name)
-	var drink_cost: float = BASE_DRINK_PRICE
-	var tip: float = 0.0
-	var payment: float = drink_cost
+	var payment: float = BASE_DRINK_PRICE
 
 	if race_name.to_upper() == "SLIME" and is_satisfactory:
-		payment += drink_cost
-		print("[slime_refund_payment]: ", payment)
+		payment += BASE_DRINK_PRICE
 
 	if drink_list.size() <= 0:
-		tip = (PlayerStats.overall_reputation + group_rep) * customer_satisfaction
+		var tip := (PlayerStats.overall_reputation + group_rep) * customer_satisfaction
+		tip = modifier.calculate_tip_modifier(tip)
 		payment += tip
 
 	payment_global += payment
 
-	print("[drink_cost]: ", drink_cost)
-	print("[tip]: ", tip)
-	print("[payment]: ", payment)
-	print("[drink score]: ",drink_score)
-	if(drink_list.size() <= 0):
-		$Area3D/CollisionShape3D.disabled = false
-		can_talk = true
-		await get_tree().create_timer(1).timeout
-		print("Unique talk: ", unique_talk)
-		if(!unique_talk):
-			if(drink_score >= 0.75):
-				speaking_title = "Positive"
-			elif(drink_score >= 0.5):
-				speaking_title = "Mid"
-			else:
-				speaking_title = "Negative"
-		else:
-			$Area3D/CollisionShape3D.disabled = false
-			can_talk = true
-			patience_timer.wait_time = 100
-			patience_timer.stop()
-			if(drink_score >= 0.75):
-				speaking_title = "introduction_mid_good"
-			elif(drink_score >= 0.5):
-				speaking_title = "introduction_mid_mid"
-			else:
-				speaking_title = "introduction_mid_bad"
-		if is_instance_valid(patient_2d):
-			patient_2d._recipt_obtain()
-	return drink_score
+func _on_all_orders_completed(drink_score: float) -> void:
+	var col = get_node_or_null("Area3D/CollisionShape3D")
+	if col:
+		col.disabled = false
+	can_talk = true
+	_update_speaking_title(drink_score)
+	if is_instance_valid(patient_2d):
+		patient_2d._recipt_obtain()
 
-func _give_payment()-> void:
+func _update_speaking_title(drink_score: float) -> void:
+	if not unique_talk:
+		if drink_score >= 0.75:
+			speaking_title = "Positive"
+		elif drink_score >= 0.5:
+			speaking_title = "Mid"
+		else:
+			speaking_title = "Negative"
+	else:
+		patience_timer.wait_time = 100.0
+		patience_timer.stop()
+		if drink_score >= 0.75:
+			speaking_title = "introduction_mid_good"
+		elif drink_score >= 0.5:
+			speaking_title = "introduction_mid_mid"
+		else:
+			speaking_title = "introduction_mid_bad"
+
+func _give_payment() -> void:
 	PlayerStats._change_money(PlayerStats.money + payment_global)
 	payment_global = 0.0
-	if(drink_list.size() <= 0):
-		$Area3D/CollisionShape3D.disabled = true
+	var col = get_node_or_null("Area3D/CollisionShape3D")
+	if col and drink_list.size() <= 0:
+		col.disabled = true
 	_leaving()
-	#_leaving()
 
-func _generate_proportions(ingredient_count: int, increment: float = 0.1) -> Array[float]:
-	var proportions: Array[float] = []
-	if ingredient_count <= 0:
-		return proportions
-	if ingredient_count == 1:
-		proportions.append(1.0)
-		return proportions
-
-	var total_steps: int = maxi(1, int(round(1.0 / increment)))
-	if ingredient_count >= total_steps:
-		var even_prop: float = 1.0 / float(ingredient_count)
-		for i in range(ingredient_count):
-			proportions.append(even_prop)
-		return proportions
-
-	var available_cuts: Array[int] = []
-	for step_idx in range(1, total_steps):
-		available_cuts.append(step_idx)
-	available_cuts.shuffle()
-
-	var cuts: Array[int] = []
-	for i in range(ingredient_count - 1):
-		cuts.append(available_cuts[i])
-	cuts.sort()
-
-	var prev_cut: int = 0
-	for cut in cuts:
-		proportions.append(snappedf(float(cut - prev_cut) * increment, increment))
-		prev_cut = cut
-	proportions.append(snappedf(float(total_steps - prev_cut) * increment, increment))
-	return proportions
-
-# Generates random drink and adds it to order queue
+# Orders
 func _want_drink() -> Array:
-	var drink_list_want = ["beer","gin"]
-
-	for drinks in PlayerStats["unlocks"]["Drinks"]:
-		if(PlayerStats["unlocks"]["Drinks"][drinks]):
-			if not drink_list_want.has(drinks):
-				drink_list_want.push_back(drinks)
-
-
-
 	var race_key: String = npc_resource.race.to_upper() if npc_resource else "HUMAN"
-	var drink_count: int = 1
-	#if race_key == "SLIME":
-		#drink_count = randi_range(1, 2)
-	if(PlayerStats["unlocks"]["Ingredients"]["Blood"] && race_key == "VAMPIRE"):
-		if not drink_list_want.has("blood"):
-			drink_list_want.push_back("blood")
+	var drink_pool := CustomerTraits.get_species_drink_pool(race_key)
+	var drink_count := CustomerTraits.get_order_count(race_key, modifier)
 
 	var total: Array = []
-	if(speaking_title =="tutorial_walk"):
-		var order_item = ["gin", 1.0]
+	if speaking_title == "tutorial_walk":
+		var order_item := ["gin", 1.0]
 		total.append(order_item)
-		drink_list.push_front([order_item])
+		drink_list.push_back([order_item])
 		return total
 
 	for i in range(drink_count):
-		var drink_name = drink_list_want.pick_random()
-		var proportions: Array[float] = _generate_proportions(1)
-		var order_item = [drink_name, proportions[0]]
+		var drink_name = drink_pool.pick_random()
+		var order_item := [drink_name, 1.0]
 		total.append(order_item)
-		drink_list.push_front([order_item])
+		drink_list.push_back([order_item])
 
-	print(drink_list)
 	return total
 
-# Returns identifier of first requested drink in order queue
-func _get_drink() -> String:
-	return drink_list[0][0][0] if drink_list.size() > 0 and drink_list[0].size() > 0 else ""
+func _item_print() -> String:
+	if drink_list.is_empty():
+		return ""
+	var total: String = ""
+	var cup = drink_list[0]
+	if cup is DrinkOrder:
+		var order := cup as DrinkOrder
+		if order.recipe_name != "":
+			total += order.recipe_name + "\n"
+		var ing_dict: Dictionary = order.ingredients
+		for ing_name in ing_dict:
+			var pct: int = int(round(float(ing_dict[ing_name]) * 100.0))
+			total += str(ing_name) + " " + str(pct) + "%\n"
+	elif cup is Array:
+		for item in cup:
+			if item is Array and item.size() >= 2:
+				var pct: int = int(round(float(item[1]) * 100.0))
+				total += str(item[0]) + " " + str(pct) + "%\n"
+	return total
 
-# Tweens customer to exit and frees seat
+func _current_order_text() -> String:
+	return _item_print().strip_edges().replace("\n", ", ")
+
+func _add_recipt() -> void:
+	if has_receipt_spawned or drink_list.is_empty():
+		return
+	has_receipt_spawned = true
+	if is_instance_valid(patient_2d) and patient_2d.has_method("_recipt_hide"):
+		patient_2d._recipt_hide()
+	var race_name: String = npc_resource.race if npc_resource else ""
+	if GameState.seat_manager:
+		GameState.seat_manager.add_receipt(seat_num, str(_item_print()), race_name)
+
 func _leaving() -> void:
+	if is_leaving:
+		return
 	is_leaving = true
 	set_highlight(false)
+	if _bounce_tween and _bounce_tween.is_valid():
+		_bounce_tween.kill()
 	var tween = get_tree().create_tween()
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_property(self,"global_position:x", -7,1.5)
+	tween.tween_property(self, "global_position:x", -7.0, 1.5)
 
 	await tween.finished
-	get_parent()._remove(seat_num)
+	if GameState.seat_manager:
+		GameState.seat_manager.free_seat(seat_num)
 	queue_free()
 
-func _add_recipt() -> void:
-	if has_receipt_spawned:
-		return
-	has_receipt_spawned = true
-	var race_name: String = npc_resource.race if npc_resource else ""
-	if GameState.main_node:
-		GameState.main_node._add_recipt(seat_num, str(_item_print()), race_name)
-
-# Gets drink from overlapping glass area and triggers empty glass state
-func _on_area_Obtain_drink_entered(area: Area3D) -> void:
-	if(area.is_in_group("glass")):
-		if "is_balls_dragging" in area and area.is_balls_dragging:
-			return
-		if "is_being_served" in area and not area.is_being_served:
-			return
-		if "is_consumed" in area and area.is_consumed:
-			return
-		if not can_accept_drink():
-			return
-		_obtain_drink(area._return_drink())
-		area._dranked()
-
-# Formats current drink order list into text
-func _item_print() -> String:
-	var total: String = ""
-	var show_cup_headers: bool = drink_list.size() > 1
-	for drink_idx in range(drink_list.size()):
-		var cup_order = drink_list[drink_idx]
-		if not (cup_order is Array):
-			continue
-		if show_cup_headers:
-			total += "Drink " + str(drink_idx + 1) + ":\n"
-		var items: Array = []
-		var raw_sum: float = 0.0
-		for y in cup_order:
-			if y is Array and y.size() >= 2:
-				var amt: float = maxf(0.0, float(y[1]))
-				items.append([str(y[0]), amt])
-				raw_sum += amt
-		if items.is_empty():
-			continue
-		var percentages: Array[int] = []
-		if raw_sum <= 0.0:
-			for _i in items.size():
-				percentages.append(0)
-		else:
-			var remainders: Array = []
-			var floor_sum: int = 0
-			for i in items.size():
-				var exact_pct: float = (float(items[i][1]) / raw_sum) * 100.0
-				var floored: int = int(floor(exact_pct))
-				percentages.append(floored)
-				floor_sum += floored
-				remainders.append([exact_pct - float(floored), i])
-			remainders.sort_custom(func(a, b): return a[0] > b[0])
-			var leftover: int = 100 - floor_sum
-			for k in range(mini(leftover, remainders.size())):
-				var idx: int = int(remainders[k][1])
-				percentages[idx] += 1
-		for i in items.size():
-			total += items[i][0] + " " + str(percentages[i]) + "%\n"
-	return total
-
-# Customer leaves when patience timer expires paying only base drink cost
 func _on_patience_timer_timeout() -> void:
 	if is_leaving:
 		return
 	patience_timer.stop()
-	var drink_cost: float = BASE_DRINK_PRICE
-	var tip: float = 0.0
-	var payment: float = drink_cost
-	print("[drink_cost]: ", drink_cost)
-	print("[tip]: ", tip)
-	print("[payment]: ", payment)
-	PlayerStats._change_money(PlayerStats.money + payment)
-	GameState.main_node._npc_patience_end(seat_num)
-	if(!unique_talk):
+	PlayerStats._change_money(PlayerStats.money + BASE_DRINK_PRICE)
+	if GameState.seat_manager:
+		GameState.seat_manager.on_patience_ended(seat_num)
+	if not unique_talk:
 		_leaving()
 
-# Changes cursor to interact on hover
+# Dialogue manager hooks
+func _tutorial_enabler(scene_string: String) -> void:
+	if scene_string == "Keys":
+		return
+	var scene_path := "res://UI/Tutorial/" + scene_string + ".tscn"
+	if not ResourceLoader.exists(scene_path):
+		return
+	var tutorial_scene = load(scene_path).instantiate()
+	var canvas = get_node_or_null("CanvasLayer")
+	if canvas:
+		canvas.add_child(tutorial_scene)
+	else:
+		add_child(tutorial_scene)
+
+func _check_tutorial() -> bool:
+	var canvas = get_node_or_null("CanvasLayer")
+	var children = canvas.get_children() if canvas else []
+	if children.is_empty() or children[0].is_queued_for_deletion():
+		return true
+	if children[0].has_method("_tutorial_finished"):
+		var finished: bool = children[0]._tutorial_finished()
+		if finished and children[0].has_method("_bye_bye"):
+			children[0]._bye_bye()
+		return finished
+	return true
+
+func night_popup(_arg = null) -> void:
+	if GameState.gameplay_ui and GameState.gameplay_ui.has_method("_night_title_popup"):
+		GameState.gameplay_ui._night_title_popup()
+
+func hold_night_end(hold: bool = true) -> void:
+	GameState.hold_night_end(hold)
+
+# Input and hover interactions
+func _on_interaction_input_event(camera_node: Node, event: InputEvent, _pos: Vector3, _norm: Vector3, _shape: int) -> void:
+	if Ingredients.active_dragging_item != null:
+		return
+	if not can_talk or speaking_title == "" or speaking_title == null:
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if abs(camera_node.global_position.x - global_position.x) < 2 or unique_talk:
+			talk()
+
 func _on_area_3d_mouse_entered() -> void:
 	if Ingredients.active_dragging_item != null:
 		return
 	if not can_talk or speaking_title == "" or speaking_title == null:
 		return
-	GameState.player._update_hand("interact")
+	if GameState.player:
+		GameState.player._update_hand("interact")
 
-# Changes cursor to idle on unhover
 func _on_area_3d_mouse_exited() -> void:
 	if Ingredients.active_dragging_item != null:
 		return
-	GameState.player._update_hand("idle")
+	if GameState.player:
+		GameState.player._update_hand("idle")
 
-func _tutorial_enabler(scene_string: String) -> void:
-	if scene_string == "Keys":
-		return
-	var tutorial_scene = load("res://UI/Tutorial/" + scene_string + ".tscn").instantiate()
-	$CanvasLayer.add_child(tutorial_scene)
+func _on_area_Obtain_drink_entered(area: Area3D) -> void:
+	if area is Glasses and area.is_in_group("glass"):
+		var glass := area as Glasses
+		if glass.is_balls_dragging or not glass.is_being_served or glass.is_consumed:
+			return
+		if not can_accept_drink():
+			return
+		receive_drink(glass.drink_mix)
+		glass._dranked()
 
-
-func _check_tutorial() -> bool:
-	var tutorial_single = $CanvasLayer.get_children()
-	if tutorial_single.is_empty() or tutorial_single[0].is_queued_for_deletion():
-		return true
-	var truth = tutorial_single[0]._tutorial_finished()
-	if(truth):
-		tutorial_single[0]._bye_bye()
-	return truth
-
-func _talking(open_mouth: bool = false):
-	var frame_check = 0
+func _talking(open_mouth: bool = false) -> void:
+	var frame_check := 0
 	match emo:
-		"netural":
-			frame_check = 0
-		"happy":
-			frame_check = 2
-		#"sad":
-			#frame_check = 0
-		"mad":
-			frame_check = 4
-		_:
-			push_warning("CAN'T FIND EMOTION")
-			frame_check = 0
-	if(open_mouth):
+		"netural": frame_check = 0
+		"happy": frame_check = 2
+		"mad": frame_check = 4
+		_: frame_check = 0
+	if open_mouth:
 		frame_check += 1
-	var total_frames = hframes * vframes
-	if(frame_check >= total_frames):
-		frame_check = 0
-		push_warning("TOO FAR")
-	frame = frame_check
+	var total_frames := hframes * vframes
+	if frame_check < total_frames:
+		frame = frame_check
