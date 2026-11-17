@@ -200,6 +200,9 @@ func _on_shot_glass_button_input_event(_cam: Node, event: InputEvent, _pos: Vect
 
 func _on_beer_glass_button_input_event(_cam: Node, event: InputEvent, _pos: Vector3, _norm: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		var glass_in_scene = get_tree().get_nodes_in_group("glass")
+		if glass_in_scene.size() > 4:
+			return
 		var spawn_pos: Variant = null
 		if counter:
 			var btn := counter.get_node_or_null("BeerGlass Button") as Node3D

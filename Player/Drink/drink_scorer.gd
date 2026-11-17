@@ -64,6 +64,8 @@ static func score_drink(served: DrinkMix, wanted: DrinkOrder) -> Dictionary:
 			drink_score -= PENALTY_MISSING_GARNISH
 
 	drink_score = clampf(drink_score, 0.0, 1.0)
+	print("SCORE: ",drink_score)
+	print("IS_SATISIFACTORY: ",drink_score >= SATISFACTORY_THRESHOLD)
 	return {
 		"score": drink_score,
 		"is_satisfactory": drink_score >= SATISFACTORY_THRESHOLD

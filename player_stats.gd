@@ -44,7 +44,7 @@ var species_marketing : Dictionary = {
 	"Slime": 1.0,
 	"Fish": 0,
 	"Tiny": 0,
-	"Vampire": 0
+	"Vampire": 1.0
 }
 
 var species_banners : Dictionary = {
@@ -58,11 +58,11 @@ var species_banners : Dictionary = {
 var unlocks : Dictionary = {
 	"Drinks" :{
 		"gin" : true,
-		"rum" : true,
-		"vodka" : true,
-		"spirit" : true,
-		"tequila" : true,
-		"whiskey" : true,
+		"rum" : false,
+		"vodka" : false,
+		"spirit" : false,
+		"tequila" : false,
+		"whiskey" : false,
 	},
 	"Ingredients":{
 		"Blood" : true,

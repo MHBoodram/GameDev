@@ -278,6 +278,7 @@ func _update_speaking_title(drink_score: float) -> void:
 			speaking_title = "introduction_mid_bad"
 
 func _give_payment() -> void:
+	print("PAYMENT_GLOBAL: ",payment_global)
 	PlayerStats._change_money(PlayerStats.money + payment_global)
 	payment_global = 0.0
 	var col = get_node_or_null("Area3D/CollisionShape3D")

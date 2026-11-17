@@ -326,6 +326,18 @@ tracks/11/keys = {
 "update": 0,
 "values": [Vector3(0.34101558, 2, -1.574349)]
 }
+tracks/12/type = "value"
+tracks/12/imported = false
+tracks/12/enabled = true
+tracks/12/path = NodePath("Wall:scale")
+tracks/12/interp = 1
+tracks/12/loop_wrap = true
+tracks/12/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0.7611389, 1, 1.4742951)]
+}
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_urscl"]
 _data = {
@@ -492,61 +504,61 @@ shadow_mesh = SubResource("ArrayMesh_wgeq8")
 [node name="new_bar" unique_id=47131528 instance=ExtResource("1_rlfhi")]
 script = ExtResource("2_rlfhi")
 
-[node name="Inner Frame 1_001" parent="." index="16" unique_id=919356480]
+[node name="Inner Frame 1_001" parent="." index="16" unique_id=34646201]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1456814, 1.9784865, -23.531063)
 
-[node name="Pillar_020" parent="." index="39" unique_id=37501148]
+[node name="Pillar_020" parent="." index="39" unique_id=851124071]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2564135, 2, -3.4499998)
 
-[node name="Point_001" parent="." index="65" unique_id=1739246405]
+[node name="Point_001" parent="." index="65" unique_id=698196084]
 light_energy = 0.0
 
-[node name="Point_003" parent="." index="66" unique_id=1355402527]
+[node name="Point_003" parent="." index="66" unique_id=644235574]
 light_energy = 0.0
 
-[node name="Point_004" parent="." index="67" unique_id=629582374]
+[node name="Point_004" parent="." index="67" unique_id=921649604]
 light_energy = 0.0
 
-[node name="Point_005" parent="." index="68" unique_id=2127277908]
+[node name="Point_005" parent="." index="68" unique_id=511383141]
 light_energy = 0.0
 
-[node name="Sofa" parent="." index="85" unique_id=1655545981]
+[node name="Sofa" parent="." index="85" unique_id=1305742136]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.4131675, 0.823902, -5.6000957)
 
-[node name="Sofa_001" parent="." index="86" unique_id=92562174]
+[node name="Sofa_001" parent="." index="86" unique_id=517896677]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1368285, 0.823902, -5.817791)
 
-[node name="Spot" parent="." index="87" unique_id=1363467646]
+[node name="Spot" parent="." index="87" unique_id=1955544033]
 transform = Transform3D(1, 0, 0, 0, 0.52348036, 0.8520377, 0, -0.8520377, 0.52348036, -1.74248, 3.668208, -0.4803155)
 visible = false
 light_color = Color(0.59934425, 0.004293648, 0.9952225, 1)
 
-[node name="Spot_001" parent="." index="88" unique_id=1159023223]
+[node name="Spot_001" parent="." index="88" unique_id=1857865120]
 transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, -5.8461695, 3.668208, -0.3)
 visible = false
 
-[node name="Spot_002" parent="." index="89" unique_id=862465530]
+[node name="Spot_002" parent="." index="89" unique_id=392986204]
 transform = Transform3D(1, 0, 0, 0, 0.407454, 0.9132257, 0, -0.9132257, 0.407454, 1.5690024, 3.668208, -0.60031164)
 visible = false
 light_color = Color(0.6, 0.003921569, 0.99607843, 1)
 
-[node name="Spot_003" parent="." index="90" unique_id=1718343732]
+[node name="Spot_003" parent="." index="90" unique_id=488521497]
 transform = Transform3D(1, 0, 0, 0, 0.29237163, 0.9563048, 0, -0.9563048, 0.29237163, 0, 3.668208, 0.099420905)
 light_energy = 0.0
 
-[node name="stool_002" parent="." index="93" unique_id=1731311078]
+[node name="stool_002" parent="." index="93" unique_id=1611732795]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.0174596, 0, 0)
 
-[node name="Table" parent="." index="95" unique_id=637189151]
+[node name="Table" parent="." index="95" unique_id=1146900259]
 transform = Transform3D(-4.3711385e-08, 0, 2.5855079, 0, 1, 0, -0.99999994, 0, -1.13016135e-07, -0.53692126, 0.72027624, -7.038196)
 
-[node name="Wall" parent="." index="97" unique_id=414330922]
+[node name="Wall" parent="." index="97" unique_id=1015445464]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6097739, 2, 2.5624604)
 
-[node name="Wall_001" parent="." index="98" unique_id=1506813344]
+[node name="Wall_001" parent="." index="98" unique_id=987301542]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6470625, 2, 3.5129783)
 
-[node name="Wall_008" parent="." index="105" unique_id=651215444]
+[node name="Wall_008" parent="." index="105" unique_id=2013123342]
 transform = Transform3D(4.911937, 0, 0, 0, 1, 0, 0, 0, 1, 0.34101558, 2, -2.7200525)
 
 [node name="Shop" type="AnimationPlayer" parent="." index="113" unique_id=1523723590]
