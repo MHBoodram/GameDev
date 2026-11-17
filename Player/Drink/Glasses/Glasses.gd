@@ -508,7 +508,7 @@ func is_mixed() -> bool:
 		return false
 	var layer0 = liquids[0]
 	return (layer0[0] is Array or layer0[0] is Dictionary) and layer0[0].size() >= 2
-	
+
 # collapses separate layers into one blended liquid and tags drink mix as shaken
 func mark_mixed() -> void:
 	if get_unique_liquids_ids().size() < 2 or liquids.is_empty():

@@ -25,6 +25,7 @@ var can_talk: bool = true
 var has_receipt_spawned: bool = false
 var emo: String = "netural"
 var customer_satisfaction: float = 1.0
+var _dialouge_paused_patience : float = -1.0
 var max_patience: float = 90.0
 var payment_global: float = 0.0
 var is_leaving: bool = false
@@ -52,13 +53,36 @@ func _ready() -> void:
 	patient_2d._change_max_progress(max_patience)
 	patient_2d._change_curent(max_patience)
 	camera = get_viewport().get_camera_3d()
+	self.texture = npc_resource.sprite_sheet
+	hframes = npc_resource.hframe
 	_start_bounce()
+	dialogue_resource = npc_resource.dialogue_resource
 
+	if not DialogueManager.dialogue_started.is_connected(_on_dialouge_started):
+		DialogueManager.dialogue_started.connect(_on_dialouge_started)
+
+
+	patience_timer.start()
+	if not DialogueManager.dialogue_ended.is_connected(_on_dialogue_ended):
+		DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
+
+@warning_ignore("unused_parameter")
 func _process(delta: float) -> void:
-	patient_2d._change_curent(patience_timer.time_left)
-	if patience_timer.time_left < (max_patience * 0.25) and max_patience > 0.0:
-		var drain_rate: float = (1.0 - (patience_timer.time_left / (max_patience * 0.25))) * 0.05 * delta
+	var patience_left: float = patience_timer.time_left
+	if _dialouge_paused_patience >= 0.0:
+		patience_left = _dialouge_paused_patience
+
+	patient_2d._change_curent(patience_left)
+
+	if _dialouge_paused_patience >= 0.0:
+		return
+	if max_patience > 0.0 and patience_left < max_patience * 0.25:
+		var drain_rate: float = (1.0 - patience_left / (max_patience * 0.25)) * 0.05 * delta
 		customer_satisfaction = maxf(0.0, customer_satisfaction - drain_rate)
+
+	#if patience_timer.time_left < (max_patience * 0.25) and max_patience > 0.0:
+		#var drain_rate: float = (1.0 - (patience_timer / (max_patience * 0.25))) * 0.05 * delta
+		#customer_satisfaction = maxf(0.0, customer_satisfaction - drain_rate)
 
 func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float = 90.0, starting_dialogue: String = "start") -> void:
 	npc_resource = npc_source
@@ -108,6 +132,16 @@ func talk() -> void:
 	if dialogue_resource:
 		GameState.character_talking = self
 		DialogueManager.show_dialogue_balloon_scene(custom_balloon, dialogue_resource, speaking_title, [self])
+
+func _on_dialouge_started(dialogue_resource : DialogueResource) -> void:
+	if patience_timer.time_left > 0.0:
+		_dialouge_paused_patience = patience_timer.time_left
+		patience_timer.stop()
+
+func _on_dialogue_ended(dialogue_resource : DialogueResource) -> void:
+	if _dialouge_paused_patience >= 0.0 and not is_leaving:
+		patience_timer.start(maxf(0.01, _dialouge_paused_patience))
+		_dialouge_paused_patience = -1.0
 
 func can_accept_drink() -> bool:
 	return not is_leaving and drink_list.size() > 0 and has_receipt_spawned and not GameState.is_dialogue_open
@@ -265,6 +299,21 @@ func _want_drink() -> Array:
 		return total
 
 	for i in range(drink_count):
+		if race_key == "VAMPIRE": # this if statement is if the customer is a vamp,
+			var non_blood_pool : Array[String] = [] #  they always order a shaken drink with blood as an ingredient
+			for candidate in drink_pool:
+				if candidate != "blood":
+					non_blood_pool.append(candidate)
+			var second_drink : String = str(non_blood_pool.pick_random())
+			var order := DrinkOrder.new()
+			order.ingredients["blood"] = 0.5
+			order.ingredients[second_drink] = 0.5
+			order.required_processing.append("shaken")
+
+			drink_list.push_back(order)
+			total.append([["blood",0.5],[second_drink,0.5]])
+			continue
+
 		var drink_name = drink_pool.pick_random()
 		var order_item := [drink_name, 1.0]
 		total.append(order_item)
