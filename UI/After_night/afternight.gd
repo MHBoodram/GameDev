@@ -30,6 +30,7 @@ func _close_light_bar():
 	await $new_bar._close_light()
 
 func _setup_shop_scene() -> void:
+	$CanvasLayer.show()
 	$AnimationPlayer.play_backwards("check_money")
 	await _close_light_bar()
 	$AfternightNpc.queue_free()
@@ -37,7 +38,6 @@ func _setup_shop_scene() -> void:
 	$new_bar._setup_shop_scene()
 	$Player.in_shop = true
 	_open_light()
-	
 
 func _reset_night():
 	if GameState.use_restart():
@@ -48,3 +48,7 @@ func _finished_night():
 	GameState.advance_night()
 	PlayerStats.reset_night_reputation_gains()
 	Transition._changing_scene("res://Main3D.tscn")
+
+
+func _on_button_pressed() -> void:
+	_finished_night()

@@ -370,7 +370,18 @@ transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -0.047801152, 2.9228249
 visible = false
 npc_resource = ExtResource("15_cotfs")
 
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=138677692]
+visible = false
+
+[node name="Button" type="Button" parent="CanvasLayer" unique_id=1293870491]
+offset_left = 490.0
+offset_top = 114.0
+offset_right = 771.0
+offset_bottom = 168.0
+text = "NEXT NIGHT TEMPOARY"
+
 [connection signal="input_event" from="Coutner/BeerGlass Button" to="Player" method="_on_beer_glass_button_input_event"]
 [connection signal="input_event" from="Coutner/BeerKeg" to="Coutner/BeerKeg" method="_on_beer_keg_input_event"]
 [connection signal="area_entered" from="Coutner/BeerKeg/PourArea" to="Coutner/BeerKeg" method="_on_pour_area_area_entered"]
 [connection signal="area_exited" from="Coutner/BeerKeg/PourArea" to="Coutner/BeerKeg" method="_on_pour_area_area_exited"]
+[connection signal="pressed" from="CanvasLayer/Button" to="." method="_on_button_pressed"]
