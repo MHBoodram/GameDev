@@ -55,7 +55,7 @@ func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
 	self.texture = npc_resource.sprite_sheet
 	hframes = npc_resource.hframe
-	_tween_bounce()
+	_start_bounce()
 	dialogue_resource = npc_resource.dialogue_resource
 
 	if not DialogueManager.dialogue_started.is_connected(_on_dialouge_started):
@@ -299,6 +299,21 @@ func _want_drink() -> Array:
 		return total
 
 	for i in range(drink_count):
+		if race_key == "VAMPIRE": # this if statement is if the customer is a vamp,
+			var non_blood_pool : Array[String] = [] #  they always order a shaken drink with blood as an ingredient
+			for candidate in drink_pool:
+				if candidate != "blood":
+					non_blood_pool.append(candidate)
+			var second_drink : String = str(non_blood_pool.pick_random())
+			var order := DrinkOrder.new()
+			order.ingredients["blood"] = 0.5
+			order.ingredients[second_drink] = 0.5
+			order.required_processing.append("shaken")
+
+			drink_list.push_back(order)
+			total.append([["blood",0.5],[second_drink,0.5]])
+			continue
+
 		var drink_name = drink_pool.pick_random()
 		var order_item := [drink_name, 1.0]
 		total.append(order_item)
