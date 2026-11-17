@@ -44,7 +44,7 @@ var species_marketing : Dictionary = {
 	"Slime": 1.0,
 	"Fish": 0,
 	"Tiny": 0,
-	"Vampire": 0
+	"Vampire": 1.0
 }
 
 var species_banners : Dictionary = {

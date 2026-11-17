@@ -65,7 +65,7 @@ var _snap_suppressed: bool = false
 var _snap_locked: bool = false
 var _snap_pull_speed: float = 22.0
 var _snap_release_speed: float = 16.0
-var _snap_break_distance: float = 0.35
+var _snap_break_distance: float = 0.075
 var _inside_base_scale: Vector3 = Vector3.ONE
 
 @onready var highlight = get_node_or_null("Inside/highlight")
