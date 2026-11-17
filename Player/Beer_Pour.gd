@@ -81,4 +81,4 @@ func _on_pour_area_area_exited(area: Area3D) -> void:
 
 func _set_active_glass(glass: Glasses) -> void:
 	in_pour_zone = glass
-	glass.enter_snap_zone(_snap_target(), snap_pull_speed, snap_release_speed, snap_break_distance)
+	glass.enter_snap_zone(_snap_target(), snap_pull_speed, snap_release_speed - 1, snap_break_distance)
