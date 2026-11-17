@@ -45,3 +45,7 @@ do _give_payment()
 ~ TimeWarning1
 Scott: Damn bartender, you making the spirits by hand or something? What's taking so long
 => END
+
+~ afternight_1
+Scott: THIS IS TEMPORARY DIAGOLUE SO IT DOESN"T BRWAK
+=> END

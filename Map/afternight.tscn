@@ -71,6 +71,114 @@ tracks/4/keys = {
 "update": 0,
 "values": [Vector3(-0.38781166, 0.5, -3.1516051)]
 }
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Wall:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(-1.6097739, 2, 2.5624604)]
+}
+tracks/6/type = "value"
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/path = NodePath("Wall:rotation")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+tracks/7/type = "value"
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/path = NodePath("Wall:scale")
+tracks/7/interp = 1
+tracks/7/loop_wrap = true
+tracks/7/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(1, 1, 1)]
+}
+tracks/8/type = "value"
+tracks/8/imported = false
+tracks/8/enabled = true
+tracks/8/path = NodePath("Wall_001:position")
+tracks/8/interp = 1
+tracks/8/loop_wrap = true
+tracks/8/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(1.6470625, 2, 3.5129783)]
+}
+tracks/9/type = "value"
+tracks/9/imported = false
+tracks/9/enabled = true
+tracks/9/path = NodePath("Wall_001:rotation")
+tracks/9/interp = 1
+tracks/9/loop_wrap = true
+tracks/9/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+tracks/10/type = "value"
+tracks/10/imported = false
+tracks/10/enabled = true
+tracks/10/path = NodePath("Wall_001:scale")
+tracks/10/interp = 1
+tracks/10/loop_wrap = true
+tracks/10/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(1, 1, 1)]
+}
+tracks/11/type = "value"
+tracks/11/imported = false
+tracks/11/enabled = true
+tracks/11/path = NodePath("Top_Shop_Shelf:position")
+tracks/11/interp = 1
+tracks/11/loop_wrap = true
+tracks/11/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(2.6284828, 2.8017023, -5.532737)]
+}
+tracks/12/type = "value"
+tracks/12/imported = false
+tracks/12/enabled = true
+tracks/12/path = NodePath("Top_Shop_Shelf/Shop_Shelf:position")
+tracks/12/interp = 1
+tracks/12/loop_wrap = true
+tracks/12/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(-5.153731, 0.01406455, 0)]
+}
+tracks/13/type = "value"
+tracks/13/imported = false
+tracks/13/enabled = true
+tracks/13/path = NodePath("Wall_008:position")
+tracks/13/interp = 1
+tracks/13/loop_wrap = true
+tracks/13/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0.34101558, 2, -2.7200525)]
+}
 
 [sub_resource type="Animation" id="Animation_xojyq"]
 resource_name = "default"
@@ -84,7 +192,7 @@ tracks/0/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Vector3(2.517457, 2.3749998, -1.5911235)]
+"values": [Vector3(2.517457, 1.9945829, -0.6214086)]
 }
 tracks/1/type = "value"
 tracks/1/imported = false
@@ -108,7 +216,7 @@ tracks/2/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Vector3(4.012188, 0.5, -1.5026251)]
+"values": [Vector3(4.012188, 0.5, -1.0501869)]
 }
 tracks/3/type = "value"
 tracks/3/imported = false
@@ -120,7 +228,7 @@ tracks/3/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Vector3(-0.38781166, 1.0622501, -1.4776255)]
+"values": [Vector3(-0.38781166, 1.0622501, -1.0251873)]
 }
 tracks/4/type = "value"
 tracks/4/imported = false
@@ -132,7 +240,91 @@ tracks/4/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Vector3(-0.38781166, 0.5, -1.2526256)]
+"values": [Vector3(-0.38781166, 0.5, -0.80018735)]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Wall:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(-2.6053758, 2, 1.7539485)]
+}
+tracks/6/type = "value"
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/path = NodePath("Wall:rotation")
+tracks/6/interp = 1
+tracks/6/loop_wrap = true
+tracks/6/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0.5235988, 0)]
+}
+tracks/7/type = "value"
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/path = NodePath("Wall_001:position")
+tracks/7/interp = 1
+tracks/7/loop_wrap = true
+tracks/7/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(2.8328886, 2, 1.424135)]
+}
+tracks/8/type = "value"
+tracks/8/imported = false
+tracks/8/enabled = true
+tracks/8/path = NodePath("Wall_001:rotation")
+tracks/8/interp = 1
+tracks/8/loop_wrap = true
+tracks/8/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, -0.5235988, 0)]
+}
+tracks/9/type = "value"
+tracks/9/imported = false
+tracks/9/enabled = true
+tracks/9/path = NodePath("Top_Shop_Shelf:position")
+tracks/9/interp = 1
+tracks/9/loop_wrap = true
+tracks/9/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(2.6284828, 2.8017023, -0.5031592)]
+}
+tracks/10/type = "value"
+tracks/10/imported = false
+tracks/10/enabled = true
+tracks/10/path = NodePath("Top_Shop_Shelf/Shop_Shelf:position")
+tracks/10/interp = 1
+tracks/10/loop_wrap = true
+tracks/10/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(-5.153731, 0.01406455, 0)]
+}
+tracks/11/type = "value"
+tracks/11/imported = false
+tracks/11/enabled = true
+tracks/11/path = NodePath("Wall_008:position")
+tracks/11/interp = 1
+tracks/11/loop_wrap = true
+tracks/11/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0.34101558, 2, -1.574349)]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_urscl"]
@@ -153,38 +345,6 @@ emission_enabled = true
 normal_enabled = true
 normal_texture = ExtResource("5_d43id")
 texture_filter = 2
-
-[sub_resource type="ArrayMesh" id="ArrayMesh_wgeq8"]
-_surfaces = [{
-"aabb": AABB(-1.6000001, -0.025000095, -0.25, 3.2000003, 0.05000019, 0.5),
-"format": 34896613377,
-"index_count": 36,
-"index_data": PackedByteArray("AAABAAIAAAADAAEABAACAAEAAwAEAAEABQAAAAIAAwAAAAUABAAGAAIABQACAAYAAwAHAAQAAwAFAAcABwAGAAQABwAFAAYA"),
-"name": "Furniture Wood",
-"primitive": 3,
-"uv_scale": Vector4(0, 0, 0, 0),
-"vertex_count": 8,
-"vertex_data": PackedByteArray("AAAAAP//AAAAAP//AAAAAAAA/////wAAAAAAAAAAAAD/////AAAAAP//AAD//wAA////////AAD//wAAAAAAAA==")
-}]
-blend_shape_mode = 0
-
-[sub_resource type="ArrayMesh" id="ArrayMesh_y28ti"]
-resource_name = "bar_Cube_036"
-_surfaces = [{
-"aabb": AABB(-1.6000001, -0.025000095, -0.25, 3.2000003, 0.05000019, 0.5),
-"attribute_data": PackedByteArray("SUBV6MdESelJQEnpx0RV6FklFtgVQgvZWSUL2RVCFthULpwm0TKQJ1QukCfRMpwm9jUNsrJSArP2NQKzslINssxRdX4QNQOIEDV1fsxRA4j//3H2Q+P//0Pjcfb/////"),
-"format": 34896613399,
-"index_count": 36,
-"index_data": PackedByteArray("AAABAAIAAAADAAEABAAFAAYABAAHAAUACAAJAAoACAALAAkADAANAA4ADAAPAA0AEAARABIAEAATABEAFAAVABYAFAAXABUA"),
-"material": SubResource("StandardMaterial3D_o4qbk"),
-"name": "Furniture Wood",
-"primitive": 3,
-"uv_scale": Vector4(7.172894, 3.3705866, 0, 0),
-"vertex_count": 24,
-"vertex_data": PackedByteArray("AAAAAP////8AAP//AAD//wAA////////AAAAAAAA//8AAAAAAAD///////8AAP//AAD//wAA/////wAAAAD/////AAAAAP//////////////////AAD/////AAD///////8AAP////8AAP//////////////////AAAAAP////8AAAAAAAD/////AAD///////8AAAAA//8AAAAA//////////8AAP+/AAD//////78AAP//AAD/v/////////+//z//f/8//3//P/9//z//f////3////9/////f////3//v/9//7//f/+//3//v/9//3//f/9//3//f/9//3//f/9//z//f/8//3//P/9//z////9/////f////3////9/")
-}]
-blend_shape_mode = 0
-shadow_mesh = SubResource("ArrayMesh_wgeq8")
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_ui0j2"]
 _surfaces = [{
@@ -297,6 +457,38 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_jby8q")
 
+[sub_resource type="ArrayMesh" id="ArrayMesh_wgeq8"]
+_surfaces = [{
+"aabb": AABB(-1.6000001, -0.025000095, -0.25, 3.2000003, 0.05000019, 0.5),
+"format": 34896613377,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAAADAAEABAACAAEAAwAEAAEABQAAAAIAAwAAAAUABAAGAAIABQACAAYAAwAHAAQAAwAFAAcABwAGAAQABwAFAAYA"),
+"name": "Furniture Wood",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 8,
+"vertex_data": PackedByteArray("AAAAAP//AAAAAP//AAAAAAAA/////wAAAAAAAAAAAAD/////AAAAAP//AAD//wAA////////AAD//wAAAAAAAA==")
+}]
+blend_shape_mode = 0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_y28ti"]
+resource_name = "bar_Cube_036"
+_surfaces = [{
+"aabb": AABB(-1.6000001, -0.025000095, -0.25, 3.2000003, 0.05000019, 0.5),
+"attribute_data": PackedByteArray("SUBV6MdESelJQEnpx0RV6FklFtgVQgvZWSUL2RVCFthULpwm0TKQJ1QukCfRMpwm9jUNsrJSArP2NQKzslINssxRdX4QNQOIEDV1fsxRA4j//3H2Q+P//0Pjcfb/////"),
+"format": 34896613399,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAAADAAEABAAFAAYABAAHAAUACAAJAAoACAALAAkADAANAA4ADAAPAA0AEAARABIAEAATABEAFAAVABYAFAAXABUA"),
+"material": SubResource("StandardMaterial3D_o4qbk"),
+"name": "Furniture Wood",
+"primitive": 3,
+"uv_scale": Vector4(7.172894, 3.3705866, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("AAAAAP////8AAP//AAD//wAA////////AAAAAAAA//8AAAAAAAD///////8AAP//AAD//wAA/////wAAAAD/////AAAAAP//////////////////AAD/////AAD///////8AAP////8AAP//////////////////AAAAAP////8AAAAAAAD/////AAD///////8AAAAA//8AAAAA//////////8AAP+/AAD//////78AAP//AAD/v/////////+//z//f/8//3//P/9//z//f////3////9/////f////3//v/9//7//f/+//3//v/9//3//f/9//3//f/9//3//f/9//z//f/8//3//P/9//z////9/////f////3////9/")
+}]
+blend_shape_mode = 0
+shadow_mesh = SubResource("ArrayMesh_wgeq8")
+
 [node name="new_bar" unique_id=47131528 instance=ExtResource("1_rlfhi")]
 script = ExtResource("2_rlfhi")
 
@@ -325,18 +517,25 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.4131675, 0.823902, -5.6000
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1368285, 0.823902, -5.817791)
 
 [node name="Spot" parent="." index="87" unique_id=1363467646]
+transform = Transform3D(1, 0, 0, 0, 0.52348036, 0.8520377, 0, -0.8520377, 0.52348036, -1.74248, 3.668208, -0.4803155)
 visible = false
+light_color = Color(0.59934425, 0.004293648, 0.9952225, 1)
 
 [node name="Spot_001" parent="." index="88" unique_id=1159023223]
 transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, -5.8461695, 3.668208, -0.3)
 visible = false
 
 [node name="Spot_002" parent="." index="89" unique_id=862465530]
+transform = Transform3D(1, 0, 0, 0, 0.407454, 0.9132257, 0, -0.9132257, 0.407454, 1.5690024, 3.668208, -0.60031164)
 visible = false
+light_color = Color(0.6, 0.003921569, 0.99607843, 1)
 
 [node name="Spot_003" parent="." index="90" unique_id=1718343732]
 transform = Transform3D(1, 0, 0, 0, 0.29237163, 0.9563048, 0, -0.9563048, 0.29237163, 0, 3.668208, 0.099420905)
 light_energy = 0.0
+
+[node name="stool_002" parent="." index="93" unique_id=1731311078]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.0174596, 0, 0)
 
 [node name="Table" parent="." index="95" unique_id=637189151]
 transform = Transform3D(-4.3711385e-08, 0, 2.5855079, 0, 1, 0, -0.99999994, 0, -1.13016135e-07, -0.53692126, 0.72027624, -7.038196)
@@ -353,7 +552,19 @@ transform = Transform3D(4.911937, 0, 0, 0, 1, 0, 0, 0, 1, 0.34101558, 2, -2.7200
 [node name="Shop" type="AnimationPlayer" parent="." index="113" unique_id=1523723590]
 libraries/ = SubResource("AnimationLibrary_urscl")
 
-[node name="Shop_Shelf" type="MeshInstance3D" parent="." index="114" unique_id=360240640]
+[node name="Front counter_005" type="MeshInstance3D" parent="." index="114" unique_id=436196828]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 4.012188, 0.5, -3.4016047)
+mesh = SubResource("ArrayMesh_mmmhy")
+
+[node name="Front counter_009" type="MeshInstance3D" parent="." index="115" unique_id=907488897]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -0.38781166, 1.0622501, -3.376605)
+mesh = SubResource("ArrayMesh_utft2")
+
+[node name="Front counter_010" type="MeshInstance3D" parent="." index="116" unique_id=423118984]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -0.38781166, 0.5, -3.1516051)
+mesh = SubResource("ArrayMesh_nhiea")
+
+[node name="Shop_Shelf" type="MeshInstance3D" parent="." index="117" unique_id=360240640]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.517457, 2.3749998, -3.490103)
 mesh = SubResource("ArrayMesh_y28ti")
 
@@ -361,14 +572,10 @@ mesh = SubResource("ArrayMesh_y28ti")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.153731, 0, 0)
 mesh = SubResource("ArrayMesh_y28ti")
 
-[node name="Front counter_005" type="MeshInstance3D" parent="." index="115" unique_id=436196828]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 4.012188, 0.5, -3.4016047)
-mesh = SubResource("ArrayMesh_mmmhy")
+[node name="Top_Shop_Shelf" type="MeshInstance3D" parent="." index="118" unique_id=597583126]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6284828, 2.8017023, -5.532737)
+mesh = SubResource("ArrayMesh_y28ti")
 
-[node name="Front counter_009" type="MeshInstance3D" parent="." index="116" unique_id=907488897]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -0.38781166, 1.0622501, -3.376605)
-mesh = SubResource("ArrayMesh_utft2")
-
-[node name="Front counter_010" type="MeshInstance3D" parent="." index="117" unique_id=423118984]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -0.38781166, 0.5, -3.1516051)
-mesh = SubResource("ArrayMesh_nhiea")
+[node name="Shop_Shelf" type="MeshInstance3D" parent="Top_Shop_Shelf" index="0" unique_id=1219887723]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.153731, 0.01406455, 0)
+mesh = SubResource("ArrayMesh_y28ti")

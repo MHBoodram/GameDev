@@ -32,7 +32,10 @@ func _close_light_bar():
 func _setup_shop_scene() -> void:
 	$AnimationPlayer.play_backwards("check_money")
 	await _close_light_bar()
+	$AfternightNpc.queue_free()
+	$ShopKeeper.show()
 	$new_bar._setup_shop_scene()
+	$Player.in_shop = true
 	_open_light()
 	
 

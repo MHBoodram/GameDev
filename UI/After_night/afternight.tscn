@@ -14,6 +14,7 @@
 [ext_resource type="Texture2D" uid="uid://dhwy3spw05iwl" path="res://Assets/Items/Drinks/beer.png" id="11_hcxpf"]
 [ext_resource type="PackedScene" uid="uid://dbd3xmclss4bq" path="res://NPC/Afternight/Afternight_NPC.tscn" id="12_sxjop"]
 [ext_resource type="PackedScene" uid="uid://c7e1o70yhke0k" path="res://UI/After_night/after_night_menu.tscn" id="14_22u17"]
+[ext_resource type="Resource" uid="uid://bk0hkcys7plb0" path="res://NPC/Resources/yecott.tres" id="15_cotfs"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_reyg2"]
 load_path = "res://.godot/imported/toposcope_sunset_2k.hdr-9f1a087744ac216565fb09a6d9e764d7.bptc.ctex"
@@ -316,8 +317,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1825604, 3.795, 4.6217227)
 [node name="Seat1" type="Marker3D" parent="." unique_id=72917919]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.057044268, 2.9964743, 1.4164826)
 
-[node name="AfternightNpc" parent="Seat1" unique_id=337568959 instance=ExtResource("12_sxjop")]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -0.10484542, -0.07364941, -0.04365337)
+[node name="AfternightNpc" parent="." unique_id=337568959 instance=ExtResource("12_sxjop")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -0.047801152, 2.9228249, 1.3728292)
 
 [node name="Night_Time" type="Timer" parent="." unique_id=1786118061]
 wait_time = 300.0
@@ -363,6 +364,11 @@ transform = Transform3D(0.9999996, 5.8128005e-09, 4.078676e-08, 5.470248e-08, 0.
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Menu2/Menu3/Quit" unique_id=1933811939]
 transform = Transform3D(1, -8.881784e-16, -3.5527137e-15, -3.5527137e-15, 1, 0, 0, 0, 1, 0, -0.026440382, -0.12814653)
 shape = SubResource("BoxShape3D_bqacp")
+
+[node name="ShopKeeper" parent="." unique_id=1265211487 instance=ExtResource("12_sxjop")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -0.047801152, 2.9228249, 1.3728292)
+visible = false
+npc_resource = ExtResource("15_cotfs")
 
 [connection signal="input_event" from="Coutner/BeerGlass Button" to="Player" method="_on_beer_glass_button_input_event"]
 [connection signal="input_event" from="Coutner/BeerKeg" to="Coutner/BeerKeg" method="_on_beer_keg_input_event"]

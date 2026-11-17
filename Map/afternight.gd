@@ -35,6 +35,11 @@ func _close_light() -> void:
 
 func _setup_shop_scene() -> void:
 	$Shop.play("default")
+	await $Shop.animation_finished
+	$Spot_003.light_color = Color("80fd00")
+	$Spot.show()
+	$Spot_002.show()
+	
 
 func _setup_working_area_walls() -> void:
 	if get_node_or_null("WorkingAreaInvisibleWalls") != null:
