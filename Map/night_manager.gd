@@ -191,4 +191,4 @@ func conclude_night() -> void:
 
 	if is_inside_tree():
 		await get_tree().create_timer(1.5).timeout
-	Transition._changing_scene("res://UI/After_night/after_night_menu.tscn")
+	Transition._changing_scene("res://UI/After_night/afternight.tscn")

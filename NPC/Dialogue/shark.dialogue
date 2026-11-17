@@ -10,6 +10,8 @@ do _add_recipt()
 set speaking_title = "introduction_mid_talk"
 => END
 
+#Tutorial
+
 ~ introduction_game
 Shark: You really wanna start this business huh...
 - Yeah what about it
@@ -49,6 +51,8 @@ Shark: How you liking it
 set speaking_title = "introduction_game"
 => introduction_game
 => END
+
+#Night 2
 
 ~ night_2_introduction
 Shark: Not bad... [wait=0.5] for your first day
@@ -117,4 +121,39 @@ Scott: Finished
 
 ~ finish
 Scott: Finished
+=> END
+
+
+~ afternight_1
+Shark: Yo dude, long time no see
+Shark: Let's see how you did
+do GameState.main_node._check_money()
+=> afternight_1_Win
+
+#if PlayerStats.money - GameState.get_night_quota(GameState.night) < 0:
+#	=> afternight_1_Loss
+#else:
+#	=> afternight_1_Win
+#Method here
+
+=> END
+
+~ afternight_1_Win
+Shark: I knew my money will hit big one day
+Shark: Keep the rest kid
+Shark: Use the money for little something for yourself
+do GameState.main_node._setup_shop_scene()
+#do GameState.main_node._finished_night()
+#Method here
+
+=> END
+
+~ afternight_1_Loss
+Shark: Oooh that's a shame, I thought you would do better
+Shark: Some people aren't built for this kinda of life
+Shark: See you later bud...
+do GameState.main_node._close_light_bar()
+do _reset_night()
+#Method here
+
 => END

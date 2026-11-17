@@ -47,7 +47,7 @@ func _ready() -> void:
 	restart_button.pressed.connect(_on_restart_pressed)
 	next_night_button.pressed.connect(_on_next_night_pressed)
 	_refresh_display()
-	_display_recipt()
+	#_display_recipt()
 
 func _display_recipt() -> void:
 	_top_speicies_check()
@@ -66,14 +66,14 @@ func _display_recipt() -> void:
 	await _display_number(proft_number,(PlayerStats.money - GameState.get_night_quota(GameState.night)),PlayerStats.money)
 	await get_tree().create_timer(1).timeout
 	if(PlayerStats.money - GameState.get_night_quota(GameState.night) < 0):
-		$Animation.play("failed_night")
+		#$Animation.play("failed_night")
 		return
 	else:
 		PlayerStats.money = (PlayerStats.money - GameState.get_night_quota(GameState.night))
-		await get_tree().create_timer(1).timeout
-		_move_to_out($Recipt,false)
-		_move_to_in($Marketing,true)
-		_populate_grid_container_pick_3("Drinks",$Marketing/Marketing/VBoxContainer/HBoxContainer/Drinks/GridContainer)
+		#await get_tree().create_timer(1).timeout
+		#_move_to_out($Recipt,false)
+		#_move_to_in($Marketing,true)
+		#_populate_grid_container_pick_3("Drinks",$Marketing/Marketing/VBoxContainer/HBoxContainer/Drinks/GridContainer)
 	
 
 func _move_to_in(node: ColorRect,big: bool = false):
@@ -288,19 +288,6 @@ func _on_restart_pressed() -> void:
 
 # Cehck quota and mandatory purchases before proceeding to next night
 func _on_next_night_pressed() -> void:
-	#var target_quota: float = GameState.get_night_quota(GameState.night)
-	#if not quota_paid:
-		#if PlayerStats.money < target_quota:
-			#status_label.text = "BANKRUPT! Bar goes out of business"
-			#next_night_button.disabled = true
-			#return
-		#else:
-			#status_label.text = "Pay the quota first"
-			#return
-#
-	#if not ingredient_bought or not marketing_bought:
-		#status_label.text = "Mandatory purchases required: 1 ingredient and 1 marketing"
-		#return
 	print(shopping_cart)
 	for main_key in shopping_cart:
 		for sub_key in shopping_cart[main_key]:
@@ -313,7 +300,6 @@ func _on_next_night_pressed() -> void:
 					match sub_key:
 						"Blood":
 							PlayerStats.species_marketing["Vampire"] = 1.0
-	
 				_:
 					PlayerStats.unlocks[main_key][sub_key] = true
 					print("Main_key ",main_key)

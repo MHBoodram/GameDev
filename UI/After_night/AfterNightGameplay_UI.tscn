@@ -1,0 +1,169 @@
+[gd_scene format=3 uid="uid://bj1r8mex1y0rh"]
+
+[ext_resource type="Script" uid="uid://3dwb4ewabht8" path="res://UI/After_night/after_night_gameplay_ui.gd" id="1_g5x3r"]
+[ext_resource type="Shader" uid="uid://buyonhl3ws40j" path="res://Shader/3dfish.gdshader" id="2_i45nf"]
+[ext_resource type="Texture2D" uid="uid://xk8p6bfsbe0w" path="res://Assets/UI/Coin.png" id="5_qe2p5"]
+[ext_resource type="FontFile" uid="uid://cq83j1cam8lw" path="res://Assets/Font/Merchant Copy.ttf" id="6_tt8sx"]
+[ext_resource type="PackedScene" uid="uid://c4jh4vubhebwg" path="res://UI/Gameplay_ui/tool_circle.tscn" id="9_nng7n"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_dd6x2"]
+shader = ExtResource("2_i45nf")
+shader_parameter/effect_amount = 1.00000016625
+
+[sub_resource type="Gradient" id="Gradient_ea1ie"]
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 0)
+
+[sub_resource type="Animation" id="Animation_bfal7"]
+resource_name = "Night_Animation"
+length = 3.0
+step = 0.05
+
+[sub_resource type="Animation" id="Animation_0kmbd"]
+length = 0.001
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_ybnoy"]
+_data = {
+&"Night_Animation": SubResource("Animation_bfal7"),
+&"RESET": SubResource("Animation_0kmbd")
+}
+
+[node name="GameplayUi" type="CanvasLayer" unique_id=8092202]
+script = ExtResource("1_g5x3r")
+
+[node name="FishEye" type="ColorRect" parent="." unique_id=2143903058]
+z_index = -1
+material = SubResource("ShaderMaterial_dd6x2")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Left_Button" type="Button" parent="." unique_id=1787372622]
+modulate = Color(1, 1, 1, 0)
+offset_left = -7.0
+offset_top = 8.0
+offset_right = 41.0
+offset_bottom = 680.0
+disabled = true
+
+[node name="Right_Button" type="Button" parent="." unique_id=1406125880]
+modulate = Color(1, 1, 1, 0)
+offset_left = 1236.0
+offset_top = 8.0
+offset_right = 1282.0
+offset_bottom = 684.0
+disabled = true
+
+[node name="Bottom_button" type="Button" parent="." unique_id=1517012141]
+modulate = Color(1, 1, 1, 0)
+offset_left = 1287.7384
+offset_top = 679.0
+offset_right = 1328.7384
+offset_bottom = 1975.7433
+rotation = 1.5707964
+
+[node name="Up_button" type="Button" parent="." unique_id=1319049737]
+modulate = Color(1, 1, 1, 0)
+offset_left = 1287.7384
+offset_right = 1328.7384
+offset_bottom = 1296.7433
+rotation = 1.5707964
+
+[node name="Left Container" type="VBoxContainer" parent="." unique_id=1974922797]
+offset_left = 27.0
+offset_top = 23.0
+offset_right = 177.0
+offset_bottom = 200.0
+mouse_filter = 2
+
+[node name="Right Container" type="VBoxContainer" parent="." unique_id=2077872928]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -203.0
+offset_top = 25.0
+offset_right = -29.0
+offset_bottom = 93.0
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="Money" type="HBoxContainer" parent="Right Container" unique_id=965083668]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="Right Container/Money" unique_id=877871733]
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("5_qe2p5")
+
+[node name="Label" type="Label" parent="Right Container/Money" unique_id=2003636857]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("6_tt8sx")
+theme_override_font_sizes/font_size = 100
+text = "500"
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="Right Container/Money" unique_id=189273426]
+position = Vector2(32, 30)
+emitting = false
+amount = 6
+texture = ExtResource("5_qe2p5")
+direction = Vector2(1, 10)
+spread = 57.48
+gravity = Vector2(0, 941.235)
+initial_velocity_min = 148.52
+initial_velocity_max = 148.52
+color_ramp = SubResource("Gradient_ea1ie")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1530023701]
+libraries/ = SubResource("AnimationLibrary_ybnoy")
+
+[node name="Mid Container" type="VBoxContainer" parent="." unique_id=1882053583]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 414.0
+offset_top = 133.0
+offset_right = 626.0
+offset_bottom = 272.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="Money" type="HBoxContainer" parent="Mid Container" unique_id=1160834503]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ToolCircle" parent="." unique_id=714600700 instance=ExtResource("9_nng7n")]
+mouse_filter = 2
+
+[node name="Tutorial Label" type="Label" parent="." unique_id=1547912301]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -57.5
+offset_top = 44.0
+offset_right = 57.5
+offset_bottom = 67.0
+grow_horizontal = 2
+theme_override_fonts/font = ExtResource("6_tt8sx")
+theme_override_font_sizes/font_size = 50
+text = "Tutorial"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[connection signal="mouse_entered" from="Left_Button" to="." method="_on_left_button_mouse_entered"]
+[connection signal="mouse_exited" from="Left_Button" to="." method="_on_mouse_exited"]
+[connection signal="pressed" from="Left_Button" to="." method="_on_left_button_pressed"]
+[connection signal="mouse_entered" from="Right_Button" to="." method="_on_right_button_mouse_entered"]
+[connection signal="mouse_exited" from="Right_Button" to="." method="_on_mouse_exited"]
+[connection signal="pressed" from="Right_Button" to="." method="_on_right_button_pressed"]
+[connection signal="mouse_entered" from="Bottom_button" to="." method="_on_bottom_button_mouse_entered"]
+[connection signal="mouse_exited" from="Bottom_button" to="." method="_on_mouse_exited"]
+[connection signal="pressed" from="Bottom_button" to="." method="_on_bottom_button_pressed"]
+[connection signal="mouse_entered" from="Up_button" to="." method="_on_up_button_mouse_entered"]
+[connection signal="mouse_exited" from="Up_button" to="." method="_on_mouse_exited"]
+[connection signal="pressed" from="Up_button" to="." method="_on_up_button_pressed"]

@@ -35,23 +35,23 @@ section_length = 0.02
 [sub_resource type="BoxShape3D" id="BoxShape3D_2tkpp"]
 size = Vector3(0.45, 0.25, 0.45)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_trash_red"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nmhfw"]
 albedo_color = Color(0.9, 0.15, 0.15, 0.85)
 
 [sub_resource type="BoxMesh" id="BoxMesh_trash_square"]
-material = SubResource("StandardMaterial3D_trash_red")
+material = SubResource("StandardMaterial3D_nmhfw")
 size = Vector3(0.45, 0.015, 0.45)
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_2tkpp"]
 panorama = ExtResource("14_pka58")
 
-[sub_resource type="Sky" id="Sky_pka58"]
+[sub_resource type="Sky" id="Sky_0b814"]
 sky_material = SubResource("PanoramaSkyMaterial_2tkpp")
 
 [sub_resource type="Environment" id="Environment_ris41"]
 background_mode = 2
 background_energy_multiplier = 0.25
-sky = SubResource("Sky_pka58")
+sky = SubResource("Sky_0b814")
 sky_rotation = Vector3(0, -2.120575, 0)
 
 [sub_resource type="Animation" id="Animation_2tkpp"]
@@ -117,7 +117,6 @@ _data = {
 
 [node name="Main3d" type="Node3D" unique_id=692509091]
 script = ExtResource("1_8iyjh")
-dusk_end_seconds = 60.0
 
 [node name="BarSetting" parent="." unique_id=1770039662 instance=ExtResource("2_qgfr0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.004, 1.17, 1.426)
