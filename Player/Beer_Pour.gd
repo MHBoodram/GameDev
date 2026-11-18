@@ -16,31 +16,63 @@ const LOCKED_COLOR := Color(0.3, 1.0, 0.3, .9)
 
 var in_pour_zone: Glasses = null
 var _glasses_in_area: Array[Glasses] = []
+var _is_pouring: bool = false
 
 func _snap_target() -> Node3D:
 	return snap_point if snap_point else pour_zone
 
+func _get_camera_rig() -> Camera3D:
+	var cam: Camera3D = get_viewport().get_camera_3d()
+	if cam and cam.has_method("focus_on_marker") and cam.has_method("return_from_marker"):
+		return cam
+	return null
+
+func _get_beer_camera_marker() -> Node3D:
+	var scene_root := get_tree().current_scene
+	if is_instance_valid(scene_root):
+		var marker := scene_root.get_node_or_null("beer_camera_marker") as Node3D
+		if marker:
+			return marker
+	if is_instance_valid(GameState.main_node):
+		return GameState.main_node.get_node_or_null("beer_camera_marker") as Node3D
+	return null
+
+func _is_pour_button_held() -> bool:
+	return Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.get_action_strength("Left_click") > 0.0
+
 @warning_ignore("unused_parameter")
 func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		#var glass_array : Array = []
-		keg_sprite.rotation_degrees.x = -64.5
-		#var areas = $Coutner/PourArea.get_overlapping_areas()
-		keg_water_particle.emitting = true
-		while(Input.get_action_strength("Left_click")):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and not _is_pouring:
+		_is_pouring = true
+		var cam_rig: Camera3D = _get_camera_rig()
+		var marker := _get_beer_camera_marker()
+		if cam_rig and marker:
+			if GameState.gameplay_ui and GameState.gameplay_ui.has_method("_in_down_minigame"):
+				GameState.gameplay_ui._in_down_minigame()
+			cam_rig.call("focus_on_marker", marker, 0.5)
 
-			#for x in areas:
-				#print(x.is_in_group("glass"))
-				#if(x.is_in_group("glass")):
-					#glass_array.append(x)
-			if(in_pour_zone):
+		keg_sprite.rotation_degrees.x = -64.5
+		keg_water_particle.emitting = true
+		while _is_pour_button_held() and is_inside_tree():
+			if in_pour_zone and is_instance_valid(in_pour_zone):
 				in_pour_zone._pouring("beer", 0.25)
 				SFXAudio.play_liquidpour()
-			#for glasses in glass_array:
-				#glasses.get_parent()._pouring("beer", 0.05)
 			await get_tree().create_timer(0.1).timeout
+			if not is_inside_tree():
+				_is_pouring = false
+				return
 		keg_sprite.rotation_degrees.x = -131.5
 		keg_water_particle.emitting = false
+
+		if cam_rig and marker:
+			await get_tree().create_timer(0.15).timeout
+			if not is_inside_tree():
+				_is_pouring = false
+				return
+			cam_rig.call("return_from_marker", 0.5)
+			if GameState.gameplay_ui and GameState.gameplay_ui.has_method("_out_down_minigame"):
+				GameState.gameplay_ui._out_down_minigame()
+		_is_pouring = false
 
 func _process(_delta: float) -> void:
 	if in_pour_zone and is_instance_valid(in_pour_zone):
@@ -82,3 +114,4 @@ func _on_pour_area_area_exited(area: Area3D) -> void:
 func _set_active_glass(glass: Glasses) -> void:
 	in_pour_zone = glass
 	glass.enter_snap_zone(_snap_target(), snap_pull_speed, snap_release_speed - 1, snap_break_distance)
+	
