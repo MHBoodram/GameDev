@@ -68,6 +68,16 @@ popup/item_1/id = 1
 popup/item_2/text = "Slime"
 popup/item_2/id = 2
 
+[node name="HBoxContainer2" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1892341021]
+layout_mode = 2
+
+[node name="Add_NPC_Modifier" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/HBoxContainer2" unique_id=1892341022]
+layout_mode = 2
+text = "Spawn Modifier"
+
+[node name="ModifierOptionButton" type="OptionButton" parent="TextureRect/VBoxContainer/HBoxContainer/HBoxContainer2" unique_id=1892341023]
+layout_mode = 2
+
 [node name="Add_Money" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1948123910]
 layout_mode = 2
 text = "Add 1000 Money"
@@ -86,6 +96,7 @@ text = "Camera Shake"
 [connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/End_Night" to="." method="_on_end_night_pressed"]
 [connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/Add_NPC" to="." method="_on_add_npc_pressed"]
 [connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/HBoxContainer/Add_NPC_Specific" to="." method="_on_add_npc_specific_pressed"]
+[connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/HBoxContainer2/Add_NPC_Modifier" to="." method="_on_add_npc_modifier_pressed"]
 [connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/Add_Money" to="." method="_on_add_money_pressed"]
 [connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/Remove_NPC" to="." method="_on_remove_npc_pressed"]
 [connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/Camera Shake" to="." method="_on_camera_shake_pressed"]

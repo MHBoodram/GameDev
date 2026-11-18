@@ -1,5 +1,5 @@
 # Tracks active tool held in hand ("hand", "knife", etc.)
-# Loops through SpeciesRegistry to dispatch tool actions without species-specific branches
+# Loops through SpeciesRegistry and ModifierRegistry to dispatch tool actions without branching
 # Updates player hand animation states
 class_name ToolController
 extends RefCounted
@@ -12,17 +12,23 @@ func set_tool(new_tool: String) -> void:
 func get_tool() -> String:
 	return tool_in_hand
 
-# triggers species-registered tool actions when clicking bottom screen edge
+# triggers species/modifier-registered tool actions when clicking bottom screen edge
 func handle_counter_edge_click(player: Node3D, main_node: Node3D = null) -> bool:
-	return SpeciesRegistry.handle_counter_edge_tool(tool_in_hand, player, main_node)
+	if SpeciesRegistry.handle_counter_edge_tool(tool_in_hand, player, main_node):
+		return true
+	return ModifierRegistry.handle_counter_edge_tool(tool_in_hand, player, main_node)
 
-# triggers species-registered tool actions when clicking a glass without dragging
+# triggers species/modifier-registered tool actions when clicking a glass
 func handle_glass_click(glass: Area3D, player: Node3D = null) -> bool:
-	return SpeciesRegistry.handle_glass_tool_click(tool_in_hand, glass, player)
+	if SpeciesRegistry.handle_glass_tool_click(tool_in_hand, glass, player):
+		return true
+	return ModifierRegistry.handle_glass_tool_click(tool_in_hand, glass, player)
 
-# triggers species-registered tool actions when clicking a customer NPC
+# triggers species/modifier-registered tool actions when clicking a customer NPC
 func handle_npc_click(npc: Sprite3D, player: Node3D = null) -> bool:
-	return SpeciesRegistry.handle_npc_tool_click(npc, tool_in_hand, player)
+	if SpeciesRegistry.handle_npc_tool_click(npc, tool_in_hand, player):
+		return true
+	return ModifierRegistry.handle_npc_tool_click(npc, tool_in_hand, player)
 
 # updates the hand sprite animation based on selected tool and hovering state
 func update_hand_visual(anim_player: AnimationPlayer, action_state: String) -> void:

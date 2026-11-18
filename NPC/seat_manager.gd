@@ -74,7 +74,7 @@ func set_all_patience_paused(paused: bool) -> void:
 		if npc and is_instance_valid(npc) and npc.patience_timer:
 			npc.patience_timer.paused = paused
 
-func spawn_customer(npc_source: Variant, patience: float = 90.0, dialogue_title: String = "start") -> Base_NPC:
+func spawn_customer(npc_source: Variant, patience: float = 90.0, dialogue_title: String = "start", forced_modifier: String = "") -> Base_NPC:
 	var free_seat := seats.find(null)
 	if free_seat == -1 or not main_root:
 		return null
@@ -96,7 +96,7 @@ func spawn_customer(npc_source: Variant, patience: float = 90.0, dialogue_title:
 	npc.name = "seat%d_npc" % (free_seat + 1)
 
 	var rec_marker := main_root.get_node_or_null("Recipt%d" % (free_seat + 1)) as Marker3D
-	npc.setup_npc(resolved_resource, free_seat + 1, rec_marker, patience, dialogue_title)
+	npc.setup_npc(resolved_resource, free_seat + 1, rec_marker, patience, dialogue_title, forced_modifier)
 
 	var target_seat := main_root.get_node_or_null("Seat%d" % (free_seat + 1)) as Marker3D
 	if target_seat:
@@ -110,11 +110,11 @@ func spawn_customer(npc_source: Variant, patience: float = 90.0, dialogue_title:
 
 	return npc
 
-func spawn_customer_by_species(sp: SpeciesBase, patience: float = -1.0, dialogue_title: String = "start") -> Base_NPC:
+func spawn_customer_by_species(sp: SpeciesBase, patience: float = -1.0, dialogue_title: String = "start", forced_modifier: String = "") -> Base_NPC:
 	if sp == null:
 		return null
 	var effective_patience := patience if patience > 0.0 else sp.default_patience
-	return spawn_customer(sp.get_npc_resource(), effective_patience, dialogue_title)
+	return spawn_customer(sp.get_npc_resource(), effective_patience, dialogue_title, forced_modifier)
 
 func spawn_random_customer() -> Base_NPC:
 	var weighted_entries := SpeciesRegistry.get_spawnable_species_weights(PlayerStats)
@@ -140,6 +140,45 @@ func spawn_random_customer() -> Base_NPC:
 func spawn_specific_species(species_name: String) -> Base_NPC:
 	var sp := SpeciesRegistry.get_species_or_default(species_name)
 	return spawn_customer_by_species(sp)
+
+func spawn_specific_with_modifier(modifier_name: String, species_name: String = "") -> Base_NPC:
+	var mod_proto := ModifierRegistry.get_modifier(modifier_name)
+	var chosen: SpeciesBase = null
+
+	if species_name != "":
+		var candidate := SpeciesRegistry.get_species_or_default(species_name)
+		if candidate and (mod_proto == null or mod_proto.can_apply_to_species(candidate.species_id, false, PlayerStats)):
+			chosen = candidate
+
+	if chosen == null:
+		var eligible_entries: Array[Dictionary] = []
+		var total_weight: float = 0.0
+		for entry in SpeciesRegistry.get_spawnable_species_weights(PlayerStats):
+			var sp: SpeciesBase = entry["species"]
+			if sp and (mod_proto == null or mod_proto.can_apply_to_species(sp.species_id, false, PlayerStats)):
+				eligible_entries.append(entry)
+				total_weight += float(entry["weight"])
+
+		if not eligible_entries.is_empty():
+			var roll := randf_range(0.0, total_weight)
+			var acc: float = 0.0
+			chosen = eligible_entries[0]["species"]
+			for entry in eligible_entries:
+				acc += float(entry["weight"])
+				if roll <= acc:
+					chosen = entry["species"]
+					break
+
+	if chosen == null:
+		for sp in SpeciesRegistry.get_all_species():
+			if mod_proto == null or mod_proto.can_apply_to_species(sp.species_id, false, PlayerStats):
+				chosen = sp
+				break
+
+	if chosen == null:
+		chosen = SpeciesRegistry.get_species_or_default("HUMAN")
+
+	return spawn_customer_by_species(chosen, -1.0, "start", modifier_name)
 
 func remove_customer_at_seat(seat_number: int) -> void:
 	var idx := seat_number - 1
@@ -188,13 +227,16 @@ func add_receipt(seat: int, order_text: String, customer_race: String = "", cust
 		recipt_node.counter_origin = main_root.get_node_or_null("Coutner")
 		main_root.add_child(recipt_node)
 
-	if customer_race == "" and seat >= 1 and seat <= seats.size():
-		var npc := seats[seat - 1]
-		if npc and is_instance_valid(npc) and npc.npc_resource:
+	var npc: Base_NPC = null
+	if seat >= 1 and seat <= seats.size():
+		npc = seats[seat - 1]
+		if npc and is_instance_valid(npc) and customer_race == "" and npc.npc_resource:
 			customer_race = npc.npc_resource.race
 
 	if recipt_node.has_method("_set_customer_info"):
 		recipt_node._set_customer_info(seat, customer_race, customer_icon)
+	if recipt_node.has_method("apply_modifier_visuals"):
+		recipt_node.apply_modifier_visuals(npc.modifier if is_instance_valid(npc) else null)
 	recipt_node._write(order_text)
 	recipt_node.ordered = true
 
@@ -223,19 +265,26 @@ func serve_cup_to_npc(drink: Glasses, npc: Base_NPC) -> void:
 	clear_receipt_for_seat(seat)
 	var seat_marker := main_root.get_node_or_null("SeatDrink" + str(seat)) as Node3D
 	var target_pos := seat_marker.global_position if seat_marker else npc.global_position
+	if npc.modifier:
+		target_pos = npc.modifier.prepare_cup_delivery(npc, drink, target_pos)
 
+	drink.is_delivering = true
 	var tween := main_root.get_tree().create_tween().set_parallel(true)
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
 	tween.tween_property(drink, "global_position", target_pos, 0.25)
 	await tween.finished
 
+	if is_instance_valid(drink):
+		drink.is_delivering = false
+
 	if is_instance_valid(drink) and not drink.is_consumed and is_instance_valid(npc):
 		if npc.has_method("receive_drink"):
 			npc.receive_drink(drink.drink_mix)
 		else:
 			npc._obtain_drink(drink._return_drink())
-		drink._dranked()
+		if not (npc.modifier and npc.modifier.consume_delivered_cup(npc, drink)):
+			drink._dranked()
 
 func on_patience_ended(seat_num: int) -> void:
 	if not main_root:

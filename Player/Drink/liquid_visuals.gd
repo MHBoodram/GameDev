@@ -16,6 +16,7 @@ var last_velocity: Vector3 = Vector3.ZERO
 var liquid_shader_mat: ShaderMaterial
 var gradient_texture: GradientTexture2D
 var liquid_gradient: Gradient
+var _visual_override: Dictionary = {}
 
 const LIQUID_COLOR = {
 	"gin": Color(0.0, 0.953, 0.0, 1.0),
@@ -27,6 +28,9 @@ const LIQUID_COLOR = {
 	"whiskey": Color(0.78, 0.42, 0.1, 1.0),
 	"blood": Color(0.85, 0.05, 0.05, 1.0)
 }
+
+func set_visual_override(override_data: Dictionary) -> void:
+	_visual_override = override_data.duplicate()
 
 func setup_shader(outside_sprite: Node) -> ShaderMaterial:
 	if not outside_sprite:
@@ -108,7 +112,8 @@ func sync_shader_uniforms(fill_ratio: float, config: Dictionary) -> void:
 	liquid_shader_mat.set_shader_parameter("wave_phase", wave_phase)
 	liquid_shader_mat.set_shader_parameter("wave_amplitude", wave_amplitude)
 	for uniform_name in config.keys():
-		liquid_shader_mat.set_shader_parameter(uniform_name, config[uniform_name])
+		var val = _visual_override.get(uniform_name, config[uniform_name])
+		liquid_shader_mat.set_shader_parameter(uniform_name, val)
 
 func rebuild_gradient(liquids: Array, total_liquids: float, glass_size: float, liquid_box: VBoxContainer, label_scene: PackedScene) -> Label:
 	var last_label: Label = null
@@ -119,6 +124,10 @@ func rebuild_gradient(liquids: Array, total_liquids: float, glass_size: float, l
 		liquid_gradient.offsets = PackedFloat32Array([0.0, 1.0])
 		liquid_gradient.colors = PackedColorArray([Color(0, 0, 0, 0), Color(0, 0, 0, 0)])
 		return last_label
+
+	var has_tint := _visual_override.has("liquid_tint_color")
+	var tint_col: Color = _visual_override.get("liquid_tint_color", Color.WHITE)
+	var tint_mix: float = float(_visual_override.get("liquid_tint_strength", 0.35))
 
 	# updates liquid layer floating UI label texts
 	if liquid_box and label_scene:
@@ -133,6 +142,8 @@ func rebuild_gradient(liquids: Array, total_liquids: float, glass_size: float, l
 			var lbl = children[i]
 			var layer: Array = liquids[i]
 			var col := get_layer_color(layer)
+			if has_tint:
+				col = col.lerp(tint_col, tint_mix)
 			if lbl.material:
 				lbl.material.set_shader_parameter("base_color", col)
 			var layer_name := format_layer_name(layer[0])
@@ -155,7 +166,10 @@ func rebuild_gradient(liquids: Array, total_liquids: float, glass_size: float, l
 		var amount: float = float(layer[1])
 		if amount <= 0.0:
 			continue
-		colors.append(get_layer_color(layer))
+		var layer_col := get_layer_color(layer)
+		if has_tint:
+			layer_col = layer_col.lerp(Color(tint_col.r, tint_col.g, tint_col.b, layer_col.a), tint_mix)
+		colors.append(layer_col)
 		current_pos += amount / total_liquids
 		if i > 0 and current_pos < 1.0:
 			offsets.append(clampf(current_pos, 0.001, 0.999))

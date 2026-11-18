@@ -1,7 +1,7 @@
 class_name DrinkScorer
 extends RefCounted
 
-# handles base drink scoring and gives species-specific drink rules to SpeciesRegistry
+# handles base drink scoring and delegates species and modifier drink rules to their registries
 
 const SATISFACTORY_THRESHOLD := 0.6
 const MAX_DIFF := 0.15
@@ -69,6 +69,7 @@ static func score_drink(served: DrinkMix, wanted: DrinkOrder) -> Dictionary:
 	}
 
 	SpeciesRegistry.apply_drink_scoring_hooks(served, wanted, result)
+	ModifierRegistry.apply_drink_scoring_hooks(served, wanted, result)
 
 	result["score"] = clampf(float(result["score"]), 0.0, 1.0)
 	result["is_satisfactory"] = float(result["score"]) >= SATISFACTORY_THRESHOLD

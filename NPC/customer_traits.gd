@@ -3,11 +3,11 @@ class_name CustomerTraits
 extends RefCounted
 
 # determines how many drinks a customer will order in sequence
-static func get_order_count(species: String, modifier: CustomerModifier) -> int:
+static func get_order_count(species: String, modifier: RefCounted) -> int:
 	var sp := SpeciesRegistry.get_species_or_default(species)
 	if sp:
 		return sp.get_order_count(null, modifier)
-	if modifier and modifier.is_wanted:
+	if modifier and "is_wanted" in modifier and modifier.is_wanted:
 		return randi_range(2, 3)
 	return 1
 

@@ -33,7 +33,7 @@ var is_leaving: bool = false
 var _is_highlighted: bool = false
 var _original_modulate: Color = Color.WHITE
 
-var modifier: CustomerModifier = CustomerModifier.new()
+var modifier: ModifierBase = ModifierBase.new()
 var species_def: SpeciesBase = null
 var species_state: Dictionary = {}
 var base_scale: Vector3 = Vector3(0.5, 0.5, 0.5)
@@ -94,8 +94,11 @@ func _get_active_tool() -> String:
 	return "hand"
 
 func _process(delta: float) -> void:
+	var active_tool := _get_active_tool()
 	if species_def:
-		species_def.on_npc_process(self, delta, _get_active_tool())
+		species_def.on_npc_process(self, delta, active_tool)
+	if modifier:
+		modifier.on_npc_process(self, delta, active_tool)
 
 	var patience_left: float = patience_timer.time_left
 	if _dialouge_paused_patience >= 0.0:
@@ -109,13 +112,17 @@ func _process(delta: float) -> void:
 		var drain_rate: float = (1.0 - patience_left / (max_patience * 0.25)) * 0.05 * delta
 		customer_satisfaction = maxf(0.0, customer_satisfaction - drain_rate)
 
-func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float = 90.0, starting_dialogue: String = "start") -> void:
+func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float = 90.0, starting_dialogue: String = "start", forced_modifier: String = "") -> void:
 	npc_resource = npc_source
 	seat_num = seat
 	recipt_marker = rec_marker
 	has_receipt_spawned = false
 	species_state.clear()
 	pixel_size = 0.01
+	modulate = Color.WHITE
+	_original_modulate = Color.WHITE
+	_is_highlighted = false
+	ModifierRegistry.clear_npc_visuals(self)
 	GameState.play_sfx("play_entranto")
 
 	if patience > 0.0:
@@ -148,8 +155,15 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 	if is_instance_valid(patient_2d) and patient_2d.has_method("_recipt_hide"):
 		patient_2d._recipt_hide()
 	customer_satisfaction = 1.0
-	modifier = CustomerModifier.roll_modifier(npc_resource.race if npc_resource else "HUMAN", unique_talk)
-	modifier.apply_visuals(self)
+
+	var race_id := npc_resource.race if npc_resource else "HUMAN"
+	if forced_modifier != "":
+		modifier = ModifierRegistry.create_modifier_for_species(forced_modifier, race_id, unique_talk, PlayerStats)
+	else:
+		modifier = ModifierRegistry.roll_modifier(race_id, unique_talk, PlayerStats)
+
+	if modifier:
+		modifier.on_npc_setup(self)
 	if species_def:
 		species_def.on_npc_setup(self)
 
@@ -240,11 +254,31 @@ func receive_drink(mix: DrinkMix) -> float:
 		return 0.0
 
 	var wanted_order: DrinkOrder = want if want is DrinkOrder else DrinkOrder.from_legacy_want(want)
+	var attempt_override := modifier.evaluate_drink_attempt(self, mix, wanted_order) if modifier else {}
+	if attempt_override.get("rejected", false):
+		var override_score: float = float(attempt_override.get("score", 0.0))
+		if attempt_override.get("zero_satisfaction", false):
+			customer_satisfaction = 0.0
+		if attempt_override.get("clear_orders", false):
+			drink_list.clear()
+		_apply_reputation_impact(false, override_score)
+		_calculate_payout(override_score, false)
+		has_receipt_spawned = false
+		if attempt_override.has("emo"):
+			emo = str(attempt_override["emo"])
+			_talking(false)
+		if attempt_override.has("feedback") and str(attempt_override["feedback"]) != "":
+			show_floating_feedback(str(attempt_override["feedback"]))
+		_on_all_orders_completed(override_score)
+		return override_score
+
 	var score_data := DrinkScorer.score_drink(mix, wanted_order)
 	var drink_score: float = score_data["score"]
 
 	if species_def:
 		species_def.on_drink_served(self, mix, wanted_order, score_data)
+	if modifier:
+		modifier.on_drink_served(self, mix, wanted_order, score_data)
 
 	var is_satisfactory: bool = drink_score >= SATISFACTORY_THRESHOLD
 	if not is_satisfactory:
@@ -292,10 +326,17 @@ func _replenish_patience(drink_score: float) -> void:
 func _apply_reputation_impact(is_satisfactory: bool, drink_score: float) -> void:
 	var race_name: String = species_def.display_name if species_def else (npc_resource.race if npc_resource else "Human")
 	if is_satisfactory:
-		PlayerStats.add_overall_reputation(1.0)
-		PlayerStats.change_species_reputation(race_name, 1.0)
+		var overall_delta: float = 1.0
+		var species_delta: float = 1.0
+		if modifier:
+			overall_delta = modifier.modify_overall_reputation_delta(self, overall_delta, true, drink_score)
+			species_delta = modifier.modify_species_reputation_delta(self, race_name, species_delta, true, drink_score)
+		PlayerStats.add_overall_reputation(overall_delta)
+		PlayerStats.change_species_reputation(race_name, species_delta)
 	else:
 		var penalty: float = (1.0 - drink_score) * 2.0
+		if modifier:
+			penalty = -modifier.modify_species_reputation_delta(self, race_name, -penalty, false, drink_score)
 		PlayerStats.change_species_reputation(race_name, -penalty)
 
 func _calculate_payout(drink_score: float, is_satisfactory: bool) -> void:
@@ -307,7 +348,8 @@ func _calculate_payout(drink_score: float, is_satisfactory: bool) -> void:
 
 	if drink_list.size() <= 0:
 		var tip := (PlayerStats.overall_reputation + group_rep) * customer_satisfaction
-		tip = modifier.calculate_tip_modifier(tip)
+		if modifier:
+			tip = modifier.modify_tip(self, tip, is_satisfactory, drink_score)
 		if species_def:
 			tip = species_def.modify_tip(self, tip, is_satisfactory, drink_score)
 		payment += tip
@@ -361,12 +403,17 @@ func _want_drink() -> Array:
 
 	if species_def:
 		var generated := species_def.generate_orders(self, modifier, PlayerStats)
+		if modifier:
+			modifier.on_generate_orders(self, generated)
 		for order in generated:
 			drink_list.push_back(order)
 	else:
 		var fallback_order := DrinkOrder.new()
 		fallback_order.species_id = "HUMAN"
 		fallback_order.ingredients["gin"] = 1.0
+		var fallback_orders: Array[DrinkOrder] = [fallback_order]
+		if modifier:
+			modifier.on_generate_orders(self, fallback_orders)
 		drink_list.push_back(fallback_order)
 
 	return drink_list.duplicate()
@@ -503,12 +550,13 @@ func _on_area_3d_mouse_exited() -> void:
 func _on_area_Obtain_drink_entered(area: Area3D) -> void:
 	if area is Glasses and area.is_in_group("glass"):
 		var glass := area as Glasses
-		if glass.is_balls_dragging or not glass.is_being_served or glass.is_consumed:
+		if glass.is_balls_dragging or not glass.is_being_served or glass.is_delivering or glass.is_consumed:
 			return
 		if not can_accept_drink():
 			return
 		receive_drink(glass.drink_mix)
-		glass._dranked()
+		if not (modifier and modifier.consume_delivered_cup(self, glass)):
+			glass._dranked()
 
 func _talking(open_mouth: bool = false) -> void:
 	var frame_check := 0

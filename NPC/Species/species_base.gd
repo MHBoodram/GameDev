@@ -109,12 +109,15 @@ func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = n
 	if pool.is_empty():
 		pool.append("gin")
 
+	var is_ghost_mod: bool = modifier != null and "is_ghost" in modifier and modifier.is_ghost
 	var count := maxi(1, get_order_count(npc, modifier))
 	for i in range(count):
 		var drink_name := str(pool.pick_random())
 		var order := DrinkOrder.new()
 		order.species_id = species_id
 		order.ingredients[drink_name] = 1.0
+		if is_ghost_mod and not order.required_processing.has("spectral"):
+			order.required_processing.append("spectral")
 		orders.append(order)
 	return orders
 

@@ -32,6 +32,10 @@ func _set_customer_icon(icon_texture: Texture2D) -> void:
 	if placeholder_label:
 		placeholder_label.visible = (icon_texture == null)
 
+func _set_customer_icon_modulate(color: Color) -> void:
+	if customer_icon:
+		customer_icon.modulate = color
+
 func _set_placeholder_frame(frame_idx: int) -> void:
 	if not customer_icon:
 		return

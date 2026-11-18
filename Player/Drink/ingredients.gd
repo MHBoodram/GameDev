@@ -107,6 +107,12 @@ func _get_drag_follow_speed() -> float:
 func _get_drag_hold_lift() -> float:
 	return _drag_hold_lift
 
+func can_highlight_on_hover() -> bool:
+	return true
+
+func handle_immediate_tool_click() -> bool:
+	return false
+
 func _begin_mode_transition(new_mode: DragMode) -> void:
 	_active_drag_mode = new_mode
 	_is_mode_transitioning = true
@@ -500,6 +506,10 @@ func _on_area_3d_input_event(_cam: Node, event: InputEvent, _pos: Vector3, _norm
 	if _is_drag_blocked():
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		if handle_immediate_tool_click():
+			get_viewport().set_input_as_handled()
+			return
+
 		if active_selected_item != null and active_selected_item != self:
 			if active_selected_item.can_interact_with(self):
 				var actor := active_selected_item
@@ -541,9 +551,9 @@ func _on_area_3d_mouse_entered() -> void:
 	if not is_balls_dragging:
 		current_hovered_target = self
 		if active_selected_item != null and active_selected_item != self:
-			if active_selected_item.can_interact_with(self):
+			if active_selected_item.can_interact_with(self) and can_highlight_on_hover():
 				set_highlight(true)
-		else:
+		elif can_highlight_on_hover():
 			set_highlight(true)
 			if GameState.player:
 				GameState.player._update_hand("interact")

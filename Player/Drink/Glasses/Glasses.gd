@@ -18,6 +18,7 @@ var drink_list_label: Label
 var total_liquids: float = 0.0
 var in_game: bool = false
 var is_being_served: bool = false
+var is_delivering: bool = false
 var is_consumed: bool = false
 var _last_counter_position: Vector3 = Vector3.ZERO
 var _skip_initial_snap: bool = false
@@ -67,6 +68,7 @@ var _snap_pull_speed: float = 22.0
 var _snap_release_speed: float = 16.0
 var _snap_break_distance: float = 0.075
 var _inside_base_scale: Vector3 = Vector3.ONE
+var _inside_base_pos: Vector3 = Vector3.ZERO
 
 @onready var highlight = get_node_or_null("Inside/highlight")
 
@@ -81,6 +83,24 @@ func get_drink_mix() -> DrinkMix:
 
 func get_resource_usage_multiplier(liquid_id: String = "") -> float:
 	return SpeciesRegistry.get_glass_resource_multiplier(self, liquid_id)
+
+func can_highlight_on_hover() -> bool:
+	if _is_drag_blocked():
+		return false
+	var active_tool: String = GameState.player.return_tool() if GameState.player and GameState.player.has_method("return_tool") else "hand"
+	return ModifierRegistry.can_highlight_glass(active_tool, self)
+
+func handle_immediate_tool_click() -> bool:
+	if GameState.is_dialogue_open or ShakerMinigame.active or _is_drag_blocked():
+		return false
+	if GameState.player and "tool_controller" in GameState.player and GameState.player.tool_controller:
+		var active_tool: String = GameState.player.tool_controller.get_tool()
+		if active_tool != "hand":
+			if GameState.player.tool_controller.handle_glass_click(self, GameState.player):
+				return true
+			if ModifierRegistry.should_consume_glass_click(active_tool, self):
+				return true
+	return false
 
 func handle_non_drag_click() -> bool:
 	if GameState.player and "tool_controller" in GameState.player and GameState.player.tool_controller:
@@ -99,6 +119,7 @@ func ready() -> void:
 	rotation = Vector3.ZERO
 	if sprite:
 		_inside_base_scale = sprite.scale
+		_inside_base_pos = sprite.position
 	_setup_liquid_shader()
 	if highlight:
 		highlight.modulate = Color(1.5, 1.5, 0.0, 5.0)
@@ -152,7 +173,8 @@ func _update_hand_position(delta: float) -> void:
 func _process(delta: float) -> void:
 	super._process(delta)
 	visual_helper.update_physics(delta, global_position, camera, viscosity, spring_stiffness, base_damping, slosh_sensitivity, max_slosh_angle, wave_frequency, vertical_spring, vertical_damping, vertical_sensitivity)
-	_update_shader_parameters()
+	if not is_consumed:
+		_update_shader_parameters()
 	_update_snap(delta)
 
 	if camera and not is_balls_dragging:
