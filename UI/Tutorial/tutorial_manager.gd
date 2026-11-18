@@ -6,6 +6,7 @@ extends Node
 var hint_hand: TextureRect = null
 var _tutorial_running: bool = false
 var _intro_tutorial_running: bool = false
+var _cancel_requested: bool = false
 
 func is_dialogue_active() -> bool:
 	if GameState.is_dialogue_open:
@@ -22,10 +23,40 @@ func is_dialogue_active() -> bool:
 			return true
 	return false
 
+func cancel_tutorial(ui_node: CanvasLayer = null) -> void:
+	_cancel_requested = true
+	_tutorial_running = false
+	_intro_tutorial_running = false
+
+	if is_instance_valid(hint_hand):
+		hint_hand.queue_free()
+	hint_hand = null
+
+	var target_ui: CanvasLayer = ui_node if is_instance_valid(ui_node) else GameState.gameplay_ui
+	if is_instance_valid(target_ui):
+		var label := target_ui.get_node_or_null("Tutorial Label") as Label
+		if is_instance_valid(label):
+			label.hide()
+		var ui_keys := target_ui.get_node_or_null("Keys") as Control
+		if is_instance_valid(ui_keys) and not ui_keys.is_queued_for_deletion():
+			if ui_keys.has_signal("tutorial_completed"):
+				ui_keys.tutorial_completed.emit()
+			ui_keys.hide()
+			ui_keys.queue_free()
+
+	if is_instance_valid(GameState.main_node):
+		var main_keys := GameState.main_node.get_node_or_null("Keys") as Control
+		if is_instance_valid(main_keys) and not main_keys.is_queued_for_deletion():
+			if main_keys.has_signal("tutorial_completed"):
+				main_keys.tutorial_completed.emit()
+			main_keys.hide()
+			main_keys.queue_free()
+
 # starts night 1 tutorial steps
 func start_tutorial(ui_node: CanvasLayer, keys_node: Control = null) -> void:
 	if _intro_tutorial_running:
 		return
+	_cancel_requested = false
 	_intro_tutorial_running = true
 	_run_tutorial_intro(ui_node, keys_node)
 
@@ -39,14 +70,14 @@ func _run_tutorial_intro(ui_node: CanvasLayer, keys_node: Control = null) -> voi
 			keys = keys_scene.instantiate() as Control
 			ui_node.add_child(keys)
 
-	if is_instance_valid(keys):
+	if is_instance_valid(keys) and not _cancel_requested:
 		if keys.has_method("popup"):
 			keys.popup()
 		else:
 			keys.show()
 
 		# wait for wasd panel inputs to be pressed
-		while is_inside_tree() and is_instance_valid(keys) and not keys.is_queued_for_deletion():
+		while is_inside_tree() and not _cancel_requested and is_instance_valid(keys) and not keys.is_queued_for_deletion():
 			if is_dialogue_active():
 				if keys.has_method("_bye_bye"):
 					keys._bye_bye()
@@ -55,11 +86,19 @@ func _run_tutorial_intro(ui_node: CanvasLayer, keys_node: Control = null) -> voi
 				break
 			await get_tree().process_frame
 
+		if _cancel_requested:
+			_intro_tutorial_running = false
+			return
+
 		if is_instance_valid(keys) and not keys.is_queued_for_deletion():
 			if keys.has_signal("tutorial_completed"):
 				await keys.tutorial_completed
 			elif keys.has_method("_bye_bye"):
 				keys._bye_bye()
+
+	if _cancel_requested:
+		_intro_tutorial_running = false
+		return
 
 	var shark := find_shark()
 	if shark:
@@ -73,7 +112,7 @@ func _run_tutorial_intro(ui_node: CanvasLayer, keys_node: Control = null) -> voi
 	_create_hint_hand(ui_node)
 
 	var camera: Camera3D = ui_node.get_viewport().get_camera_3d()
-	while is_inside_tree():
+	while is_inside_tree() and not _cancel_requested:
 		shark = find_shark()
 		if is_dialogue_active() or shark == null or shark.is_leaving:
 			break
@@ -107,10 +146,13 @@ func _run_tutorial_intro(ui_node: CanvasLayer, keys_node: Control = null) -> voi
 	if is_instance_valid(label):
 		label.hide()
 
-	while is_inside_tree() and is_dialogue_active():
+	while is_inside_tree() and not _cancel_requested and is_dialogue_active():
 		await get_tree().process_frame
 
 	_intro_tutorial_running = false
+
+	if _cancel_requested:
+		return
 
 	if is_inside_tree():
 		shark = find_shark()
@@ -120,6 +162,7 @@ func _run_tutorial_intro(ui_node: CanvasLayer, keys_node: Control = null) -> voi
 func start_drink_tutorial(ui_node: CanvasLayer) -> void:
 	if _tutorial_running:
 		return
+	_cancel_requested = false
 	_run_drink_steps(ui_node)
 
 func _create_hint_hand(parent_node: Node) -> void:
@@ -200,8 +243,12 @@ func update_hint_drag(camera: Camera3D, from_world: Variant, to_world: Variant, 
 
 func _run_drink_steps(ui_node: CanvasLayer) -> void:
 	_tutorial_running = true
-	while is_inside_tree() and is_dialogue_active():
+	while is_inside_tree() and not _cancel_requested and is_dialogue_active():
 		await get_tree().process_frame
+
+	if _cancel_requested:
+		_tutorial_running = false
+		return
 
 	_create_hint_hand(ui_node)
 	var label := ui_node.get_node_or_null("Tutorial Label") as Label
@@ -211,7 +258,7 @@ func _run_drink_steps(ui_node: CanvasLayer) -> void:
 	var hint_elapsed: float = 0.0
 	var camera: Camera3D = ui_node.get_viewport().get_camera_3d()
 
-	while is_inside_tree():
+	while is_inside_tree() and not _cancel_requested:
 		var delta := get_process_delta_time()
 		hint_elapsed += delta
 
@@ -316,3 +363,4 @@ func _run_drink_steps(ui_node: CanvasLayer) -> void:
 	if is_instance_valid(label):
 		label.hide()
 	_tutorial_running = false
+	

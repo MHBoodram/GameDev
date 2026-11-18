@@ -26,5 +26,5 @@ func toggle_debug_menu() -> void:
 		return
 	if debug_menu.visible:
 		debug_menu.visible = false
-	elif not get_tree().paused and not GameState.is_dialogue_open:
+	elif not get_tree().paused:
 		debug_menu.visible = true

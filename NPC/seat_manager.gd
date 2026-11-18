@@ -180,6 +180,58 @@ func spawn_specific_with_modifier(modifier_name: String, species_name: String = 
 
 	return spawn_customer_by_species(chosen, -1.0, "start", modifier_name)
 
+func spawn_custom_customer(species_id: String = "", modifier_id: String = "__NATURAL__") -> Base_NPC:
+	if get_empty_seat_count() <= 0:
+		return null
+	var clean_sp := species_id.strip_edges()
+	var clean_mod := modifier_id.strip_edges()
+
+	if clean_mod == "" or clean_mod == "__NATURAL__":
+		if clean_sp == "":
+			return spawn_random_customer()
+		return spawn_specific_species(clean_sp)
+
+	if clean_mod == "__NONE__" or clean_mod.to_upper() == "NONE":
+		var chosen: SpeciesBase = null
+		if clean_sp != "":
+			chosen = SpeciesRegistry.get_species_or_default(clean_sp)
+		else:
+			var weighted_entries := SpeciesRegistry.get_spawnable_species_weights(PlayerStats)
+			if not weighted_entries.is_empty():
+				var total_weight: float = 0.0
+				for entry in weighted_entries:
+					total_weight += float(entry["weight"])
+				var roll := randf_range(0.0, total_weight)
+				var acc: float = 0.0
+				chosen = weighted_entries[0]["species"]
+				for entry in weighted_entries:
+					acc += float(entry["weight"])
+					if roll <= acc:
+						chosen = entry["species"]
+						break
+			else:
+				chosen = SpeciesRegistry.get_species_or_default("HUMAN")
+		return spawn_customer_by_species(chosen, -1.0, "start", "NONE")
+
+	return spawn_specific_with_modifier(clean_mod, clean_sp)
+
+func take_all_pending_orders() -> int:
+	var count := 0
+	for npc in seats:
+		if not is_instance_valid(npc) or npc.is_leaving:
+			continue
+		if npc.has_receipt_spawned or npc.drink_list.is_empty():
+			continue
+		if npc.unique_talk:
+			if npc.speaking_title == "tutorial_walk" or npc.speaking_title == "tutorial_walk_finished":
+				npc.can_talk = true
+				npc.speaking_title = "introduction_mid_talk"
+		else:
+			npc.speaking_title = "mid"
+		npc._add_recipt()
+		count += 1
+	return count
+
 func remove_customer_at_seat(seat_number: int) -> void:
 	var idx := seat_number - 1
 	if idx >= 0 and idx < seats.size():
@@ -317,8 +369,12 @@ func on_patience_ended(seat_num: int) -> void:
 func debug_serve_all(score_type: String = "good") -> void:
 	for seat_idx in seats.size():
 		var npc := seats[seat_idx]
-		if not npc:
+		if not is_instance_valid(npc) or npc.is_leaving:
 			continue
+		if npc.unique_talk and GameState.gameplay_ui and "tutorial_director" in GameState.gameplay_ui:
+			var td = GameState.gameplay_ui.tutorial_director
+			if td and td.has_method("cancel_tutorial"):
+				td.cancel_tutorial(GameState.gameplay_ui)
 		while npc.drink_list.size() > 0:
 			var want = npc.drink_list[0]
 			clear_receipt_for_seat(seat_idx + 1)
@@ -341,5 +397,7 @@ func debug_serve_all(score_type: String = "good") -> void:
 				var bad_mix := DrinkMix.new()
 				bad_mix.add_liquid("wrong_spirit", 1.0)
 				npc.receive_drink(bad_mix)
-			if npc.unique_talk:
-				npc._leaving()
+		if is_instance_valid(npc) and not npc.is_leaving:
+			if npc.unique_talk and npc.has_method("night_popup"):
+				npc.night_popup()
+			npc._give_payment()

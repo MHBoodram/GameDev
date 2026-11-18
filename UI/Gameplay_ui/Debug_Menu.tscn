@@ -30,65 +30,162 @@ theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
 theme_override_constants/outline_size = 5
 text = "FPS:"
 
-[node name="Serve_Good" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=981240182]
+[node name="Skip_Tutorial" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498686]
 layout_mode = 2
-text = "Serve Good Drinks (Score 1.0)"
+text = "Skip Tutorial"
 
-[node name="Serve_Bad" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1984210291]
+[node name="FlowRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498685]
 layout_mode = 2
-text = "Serve Bad Drinks (Score 0.0)"
 
-[node name="Add_Rep" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=-1445864449]
+[node name="Speed" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/FlowRow" unique_id=1210498687]
 layout_mode = 2
-text = "Add 10 Overall Rep"
+size_flags_horizontal = 3
+text = "Speed: 1x"
 
-[node name="End_Night" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=-475765348]
+[node name="Skip_Time" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/FlowRow" unique_id=1210498688]
 layout_mode = 2
+size_flags_horizontal = 3
+text = "-60s"
+
+[node name="NightEndRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498689]
+layout_mode = 2
+
+[node name="End_Shift" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/NightEndRow" unique_id=1210498690]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "End Shift"
+
+[node name="End_Night" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/NightEndRow" unique_id=-475765348]
+layout_mode = 2
+size_flags_horizontal = 3
 text = "End Night"
 
-[node name="Add_NPC" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1510861576]
+[node name="JumpNightRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498691]
 layout_mode = 2
-text = "Spawn Random Customer"
+
+[node name="Jump_Night" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/JumpNightRow" unique_id=1210498692]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Jump Night"
+
+[node name="NightOption" type="OptionButton" parent="TextureRect/VBoxContainer/HBoxContainer/JumpNightRow" unique_id=1210498693]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ServeRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498702]
+layout_mode = 2
+
+[node name="Serve_Good" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/ServeRow" unique_id=981240182]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Serve Good (1.0)"
+
+[node name="Serve_Bad" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/ServeRow" unique_id=1984210291]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Serve Bad (0.0)"
+
+[node name="CupRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498699]
+layout_mode = 2
+
+[node name="Spawn_Order_Cup" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/CupRow" unique_id=1210498700]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Spawn Order Cup"
+
+[node name="Ready_Check" type="CheckBox" parent="TextureRect/VBoxContainer/HBoxContainer/CupRow" unique_id=1210498701]
+layout_mode = 2
+text = "Ready"
+
+[node name="OrderRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498696]
+layout_mode = 2
+
+[node name="Take_Orders" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/OrderRow" unique_id=1210498697]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Take Orders"
+
+[node name="Low_Patience" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/OrderRow" unique_id=1210498698]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "5s Patience"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1736779845]
 layout_mode = 2
 
 [node name="Add_NPC_Specific" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/HBoxContainer" unique_id=816879133]
 layout_mode = 2
-text = "Spawn Random Customer"
+size_flags_horizontal = 3
+text = "Spawn"
 
 [node name="OptionButton" type="OptionButton" parent="TextureRect/VBoxContainer/HBoxContainer/HBoxContainer" unique_id=1935069102]
 layout_mode = 2
+size_flags_horizontal = 3
+clip_text = true
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1892341021]
+[node name="ModifierOptionButton" type="OptionButton" parent="TextureRect/VBoxContainer/HBoxContainer/HBoxContainer" unique_id=1892341023]
+layout_mode = 2
+size_flags_horizontal = 3
+clip_text = true
+
+[node name="ItemsRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498705]
 layout_mode = 2
 
-[node name="Add_NPC_Modifier" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/HBoxContainer2" unique_id=1892341022]
+[node name="Unlock_All" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/ItemsRow" unique_id=1210498706]
 layout_mode = 2
-text = "Spawn Modifier"
+size_flags_horizontal = 3
+text = "Unlock All"
 
-[node name="ModifierOptionButton" type="OptionButton" parent="TextureRect/VBoxContainer/HBoxContainer/HBoxContainer2" unique_id=1892341023]
+[node name="Refill_Bottles" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/ItemsRow" unique_id=1210498707]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Refill"
+
+[node name="Blood_Game" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/ItemsRow" unique_id=1210498708]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Blood Game"
+
+[node name="MoneyRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498709]
 layout_mode = 2
 
-[node name="Add_Money" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1948123910]
+[node name="Add_Money" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/MoneyRow" unique_id=1948123910]
 layout_mode = 2
-text = "Add 1000 Money"
+size_flags_horizontal = 3
+text = "+1000$"
 
-[node name="Remove_NPC" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=546257271]
+[node name="Add_Quota" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/MoneyRow" unique_id=1210498710]
 layout_mode = 2
-text = "Order Remove NPC"
+size_flags_horizontal = 3
+text = "+Quota"
 
-[node name="Camera Shake" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=488105334]
+[node name="Zero_Money" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/MoneyRow" unique_id=1210498711]
 layout_mode = 2
+size_flags_horizontal = 3
+text = "$0"
+
+[node name="RepRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498712]
+layout_mode = 2
+
+[node name="Add_Rep" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/RepRow" unique_id=-1445864449]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "+10 Rep"
+
+[node name="Add_Species_Rep" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/RepRow" unique_id=1210498713]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "+5 Sp. Rep"
+
+[node name="MiscRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498714]
+layout_mode = 2
+
+[node name="Remove_NPC" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/MiscRow" unique_id=546257271]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Remove NPC"
+
+[node name="Camera Shake" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/MiscRow" unique_id=488105334]
+layout_mode = 2
+size_flags_horizontal = 3
 text = "Camera Shake"
-
-[connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/Serve_Good" to="." method="_on_serve_good_pressed"]
-[connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/Serve_Bad" to="." method="_on_serve_bad_pressed"]
-[connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/Add_Rep" to="." method="_on_add_rep_pressed"]
-[connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/End_Night" to="." method="_on_end_night_pressed"]
-[connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/Add_NPC" to="." method="_on_add_npc_pressed"]
-[connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/HBoxContainer/Add_NPC_Specific" to="." method="_on_add_npc_specific_pressed"]
-[connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/HBoxContainer2/Add_NPC_Modifier" to="." method="_on_add_npc_modifier_pressed"]
-[connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/Add_Money" to="." method="_on_add_money_pressed"]
-[connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/Remove_NPC" to="." method="_on_remove_npc_pressed"]
-[connection signal="pressed" from="TextureRect/VBoxContainer/HBoxContainer/Camera Shake" to="." method="_on_camera_shake_pressed"]
