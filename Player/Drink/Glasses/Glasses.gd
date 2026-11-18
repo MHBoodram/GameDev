@@ -61,12 +61,12 @@ signal snappedOut(point: Node3D)
 
 var _snap_point: Node3D = null
 var _snap_pos: Vector3 = Vector3.ZERO
-var _snap_blend: float = 1.0
+var _snap_blend: float = 0.0
 var _snap_suppressed: bool = false
 var _snap_locked: bool = false
 var _snap_pull_speed: float = 22.0
 var _snap_release_speed: float = 16.0
-var _snap_break_distance: float = 0.075
+var _snap_break_distance: float = 0.25
 var _inside_base_scale: Vector3 = Vector3.ONE
 var _inside_base_pos: Vector3 = Vector3.ZERO
 
@@ -184,10 +184,10 @@ func _update_hand_position(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	super._process(delta)
+	_update_snap(delta)
 	visual_helper.update_physics(delta, global_position, camera, viscosity, spring_stiffness, base_damping, slosh_sensitivity, max_slosh_angle, wave_frequency, vertical_spring, vertical_damping, vertical_sensitivity)
 	if not is_consumed:
 		_update_shader_parameters()
-	_update_snap(delta)
 
 	if camera and not is_balls_dragging:
 		_look_at_sprite(camera.global_position)
@@ -209,7 +209,15 @@ func _process(delta: float) -> void:
 					global_position.y = lerpf(global_position.y, target_y, 1.0 - exp(-20.0 * delta))
 			_last_counter_position = global_position
 
-func enter_snap_zone(point: Node3D, pull_speed: float = 22.0, release_speed: float = 16.0, break_distance: float = 0.35) -> void:
+func _post_process_counter_constraints() -> void:
+	if _snap_point and is_instance_valid(_snap_point) and not _snap_suppressed and _snap_blend > 0.0:
+		return
+	super._post_process_counter_constraints()
+
+func enter_snap_zone(point: Node3D, pull_speed: float = 22.0, release_speed: float = 16.0, break_distance: float = 0.25) -> void:
+	if _snap_point != point:
+		_snap_blend = 0.0
+		_snap_locked = false
 	_snap_point = point
 	_snap_pull_speed = pull_speed
 	_snap_release_speed = release_speed
@@ -220,45 +228,64 @@ func exit_snap_zone(point: Node3D) -> void:
 	if _snap_point == point:
 		_snap_point = null
 		_snap_suppressed = false
+		_snap_blend = 0.0
+		if _snap_locked:
+			_snap_locked = false
+			snappedOut.emit(point)
 
 func is_snapped() -> bool:
 	return _snap_locked
 
 # snaps glass into keg pour zone when dragging nearby and releases when pulled beyond break distance
 func _update_snap(delta: float) -> void:
-	var want: float = 0.0
-	if _snap_point and is_instance_valid(_snap_point):
-		_snap_pos = _snap_point.global_position
-		if is_balls_dragging:
-			var flat := Vector2(global_position.x - _snap_pos.x, global_position.z - _snap_pos.z)
-			_snap_suppressed = flat.length() > _snap_break_distance
-			if not _snap_suppressed:
-				want = 1.0
-		elif not is_balls_dragging:
-			_snap_blend = 0.0
-
-		var speed := _snap_pull_speed if want > _snap_blend else _snap_release_speed
-		# exponential ease
-		_snap_blend = lerpf(_snap_blend, want, 1.0 - exp(-speed * delta))
-		if absf(_snap_blend - want) < 0.01:
-			_snap_blend = want
-
-		if _snap_blend > 0.0:
-			var target := Vector3(_snap_pos.x, global_position.y, _snap_pos.z)
-			global_position = global_position.lerp(target, _snap_blend)
-			if _snap_blend >= 1.0:
-				push_velocity = Vector3.ZERO
-			if camera:
-				_look_at_sprite(camera.global_position)
-
-		var locked_now: bool = _snap_blend >= 0.95 and want >= 1.0
-		if locked_now and not _snap_locked:
-			_snap_locked = true
-			_play_snap_bounce()
-			snappedIn.emit(_snap_point)
-		elif not locked_now and _snap_locked:
+	if not _snap_point or not is_instance_valid(_snap_point):
+		if _snap_point != null:
+			_snap_point = null
+		_snap_suppressed = false
+		_snap_blend = 0.0
+		if _snap_locked:
 			_snap_locked = false
-			snappedOut.emit(_snap_point)
+			snappedOut.emit(null)
+		return
+
+	_snap_pos = _snap_point.global_position
+	var want: float = 0.0
+	if is_balls_dragging:
+		var drag_target := _get_counter_drag_target()
+		var flat := Vector2(drag_target.x - _snap_pos.x, drag_target.z - _snap_pos.z)
+		var dist := flat.length()
+		if _snap_suppressed:
+			if dist <= _snap_break_distance * 0.6:
+				_snap_suppressed = false
+		elif dist > _snap_break_distance:
+			_snap_suppressed = true
+		if not _snap_suppressed:
+			want = 1.0
+	elif not _snap_suppressed:
+		want = 1.0
+
+	var speed := _snap_pull_speed if want > _snap_blend else _snap_release_speed
+	# exponential ease
+	_snap_blend = lerpf(_snap_blend, want, 1.0 - exp(-speed * delta))
+	if absf(_snap_blend - want) < 0.01:
+		_snap_blend = want
+
+	if _snap_blend > 0.0:
+		var target := Vector3(_snap_pos.x, global_position.y, _snap_pos.z)
+		global_position = global_position.lerp(target, _snap_blend)
+		if _snap_blend >= 0.99:
+			push_velocity = Vector3.ZERO
+		if camera:
+			_look_at_sprite(camera.global_position)
+
+	var locked_now: bool = _snap_blend >= 0.95 and want >= 1.0
+	if locked_now and not _snap_locked:
+		_snap_locked = true
+		_play_snap_bounce()
+		snappedIn.emit(_snap_point)
+	elif not locked_now and _snap_locked:
+		_snap_locked = false
+		snappedOut.emit(_snap_point)
 
 func _play_snap_bounce() -> void:
 	if not sprite:
@@ -523,6 +550,10 @@ func execute_npc_interaction(npc: Base_NPC) -> void:
 		GameState.seat_manager.serve_cup_to_npc(self, npc)
 
 func on_drop_failed() -> void:
+	if _snap_point and is_instance_valid(_snap_point) and not _snap_suppressed:
+		_last_counter_position = Vector3(_snap_point.global_position.x, get_working_area_surface_y(), _snap_point.global_position.z)
+		base_y_position = _last_counter_position.y
+		return
 	var target_pos := _get_counter_drop_position(_last_counter_position) if _has_dragged else _get_saved_counter_position(_last_counter_position)
 	_return_to_counter_smoothly(target_pos)
 

@@ -8,7 +8,7 @@ extends Area3D
 @export_group("Glass Snapping")
 @export var snap_pull_speed: float = 22.0
 @export var snap_release_speed: float = 16.0
-@export var snap_break_distance: float = 0.35
+@export var snap_break_distance: float = 0.25
 
 const IDLE_COLOR := Color(1.0, 1.0, 1.0, 1.0)
 const HOVER_COLOR := Color(1.0, 0.0, 0.0, 0.9)
@@ -49,7 +49,7 @@ func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: V
 		if cam_rig and marker:
 			if GameState.gameplay_ui and GameState.gameplay_ui.has_method("_in_down_minigame"):
 				GameState.gameplay_ui._in_down_minigame()
-			cam_rig.call("focus_on_marker", marker, 0.5)
+			cam_rig.call("focus_on_marker", marker, 0.55)
 
 		keg_sprite.rotation_degrees.x = -64.5
 		keg_water_particle.emitting = true
@@ -69,7 +69,12 @@ func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: V
 			if not is_inside_tree():
 				_is_pouring = false
 				return
-			cam_rig.call("return_from_marker", 0.5)
+			cam_rig.call("return_from_marker", 0.55)
+			if cam_rig.has_signal("marker_returned"):
+				await cam_rig.marker_returned
+			if not is_inside_tree():
+				_is_pouring = false
+				return
 			if GameState.gameplay_ui and GameState.gameplay_ui.has_method("_out_down_minigame"):
 				GameState.gameplay_ui._out_down_minigame()
 		_is_pouring = false
@@ -113,5 +118,5 @@ func _on_pour_area_area_exited(area: Area3D) -> void:
 
 func _set_active_glass(glass: Glasses) -> void:
 	in_pour_zone = glass
-	glass.enter_snap_zone(_snap_target(), snap_pull_speed, snap_release_speed - 1, snap_break_distance)
+	glass.enter_snap_zone(_snap_target(), snap_pull_speed, snap_release_speed, snap_break_distance)
 	

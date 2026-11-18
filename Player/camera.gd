@@ -3,6 +3,8 @@ extends Camera3D
 
 # handles camera movement
 
+signal marker_returned
+
 @export var max_offset := Vector2(0.15, 0.15)
 @export var max_roll := 0.05
 @export var decay := 1.5
@@ -23,6 +25,7 @@ var _marker_tween: Tween = null
 var _is_at_marker: bool = false
 var _has_saved_marker_return: bool = false
 var _saved_marker_return_pos: Vector3 = Vector3.ZERO
+var _saved_marker_return_rot: Vector3 = Vector3.ZERO
 
 const CAMERA_Y_OFFSET: float = 0.3
 const CAMERA_TILT_OFFSET: float = 5.0
@@ -175,28 +178,33 @@ func focus_on_marker(marker: Node3D, duration: float = 0.5) -> void:
 		_marker_tween.kill()
 	if not _has_saved_marker_return:
 		_saved_marker_return_pos = global_position
+		_saved_marker_return_rot = base_camera_rotation
 		_has_saved_marker_return = true
 	_is_at_marker = true
 
 	var target_rot := BASE_BACK_CAMERA_ROTATION + Vector3(CAMERA_TILT_OFFSET, 0.0, 0.0)
 	_marker_tween = get_tree().create_tween().set_parallel(true)
-	_marker_tween.set_trans(Tween.TRANS_SINE)
-	_marker_tween.set_ease(Tween.EASE_OUT)
+	_marker_tween.set_trans(Tween.TRANS_CUBIC)
+	_marker_tween.set_ease(Tween.EASE_IN_OUT)
 	_marker_tween.tween_property(self, "global_position", marker.global_position, duration)
 	_marker_tween.tween_property(self, "base_camera_rotation", target_rot, duration)
 
 func return_from_marker(duration: float = 0.5) -> void:
 	if not _is_at_marker:
+		marker_returned.emit()
 		return
 	if _marker_tween and _marker_tween.is_valid():
 		_marker_tween.kill()
 	var target_pos := _saved_marker_return_pos
+	var target_rot := _saved_marker_return_rot
 	_marker_tween = get_tree().create_tween().set_parallel(true)
-	_marker_tween.set_trans(Tween.TRANS_SINE)
-	_marker_tween.set_ease(Tween.EASE_OUT)
+	_marker_tween.set_trans(Tween.TRANS_CUBIC)
+	_marker_tween.set_ease(Tween.EASE_IN_OUT)
 	_marker_tween.tween_property(self, "global_position", target_pos, duration)
+	_marker_tween.tween_property(self, "base_camera_rotation", target_rot, duration)
 	_marker_tween.chain().tween_callback(_on_marker_return_finished)
 
 func _on_marker_return_finished() -> void:
 	_is_at_marker = false
 	_has_saved_marker_return = false
+	marker_returned.emit()
