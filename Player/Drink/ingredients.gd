@@ -428,6 +428,9 @@ func _face_camera() -> void:
 		if target_flat.distance_squared_to(visual.global_position) > 0.0001:
 			visual.look_at(target_flat, Vector3.UP)
 
+func handle_non_drag_click() -> bool:
+	return false
+
 # finishes drag drop double dispatch check on mouse release
 func _finish_drag_or_click() -> void:
 	_is_pointer_pressed = false
@@ -436,6 +439,16 @@ func _finish_drag_or_click() -> void:
 	_waiting_for_working_area = false
 	if GameState.player:
 		GameState.player._update_hand("idle")
+
+	if not _has_dragged and handle_non_drag_click():
+		if is_instance_valid(current_hovered_npc):
+			current_hovered_npc.set_highlight(false)
+		current_hovered_npc = null
+		if is_instance_valid(current_hovered_target):
+			current_hovered_target.set_highlight(false)
+		current_hovered_target = null
+		_has_dragged = false
+		return
 
 	var collider: Object = _get_ray_collider_under_mouse(get_viewport(), get_rid())
 	var npc: Base_NPC = current_hovered_npc if is_instance_valid(current_hovered_npc) else null
@@ -592,5 +605,3 @@ func execute_npc_interaction(_npc: Base_NPC) -> void:
 
 func on_drop_failed() -> void:
 	pass
-
-	

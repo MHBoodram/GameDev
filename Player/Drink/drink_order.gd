@@ -2,12 +2,14 @@ class_name DrinkOrder
 extends RefCounted
 
 # what the customer actually asked for
+var species_id: String = ""
 var recipe_name: String = ""
 var ingredients: Dictionary = {} # name -> desired proportion (0.0 to 1.0)
 var garnishes: Array[String] = []
 var required_processing: Array[String] = [] # "shaken", "spectral", etc
 var required_glass: String = ""
 var is_tiny: bool = false
+var extra_requirements: Dictionary = {}
 
 func get_normalized_ingredients() -> Dictionary:
 	var total: float = 0.0

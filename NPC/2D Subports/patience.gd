@@ -6,17 +6,9 @@ extends Control
 
 func _setup(max_value: float, type: String) -> void:
 	_change_max_progress(max_value)
-	match type:
-		"HUMAN":
-			race_face.frame = 10
-		"SLIME":
-			race_face.frame = 7
-		"VAMPIRE":
-			race_face.frame = 9
-		"FISH":
-			race_face.frame = 8
-		"TINY":
-			race_face.frame = 11
+	var sp := SpeciesRegistry.get_species_or_default(type)
+	if sp and race_face:
+		race_face.frame = sp.logo_frame
 
 func _recipt_obtain() -> void:
 	$HBoxContainer/TextureRect.show()
@@ -55,3 +47,4 @@ func _change_curent(change: float) -> void:
 		fill.bg_color = Color("00ae2e")
 		timer.add_theme_stylebox_override("fill", fill)
 		patience_face.frame = 2
+		

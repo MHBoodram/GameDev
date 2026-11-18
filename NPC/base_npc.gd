@@ -2,6 +2,7 @@
 #Provides DialogueManager mutation hooks (_tutorial_enabler, _check_tutorial, night_popup)
 # Consumes DrinkMix instances from Glasses and
 # Gives receipt and seat events to GameState.seat_manager.
+
 extends Sprite3D
 class_name Base_NPC
 
@@ -33,6 +34,11 @@ var _is_highlighted: bool = false
 var _original_modulate: Color = Color.WHITE
 
 var modifier: CustomerModifier = CustomerModifier.new()
+var species_def: SpeciesBase = null
+var species_state: Dictionary = {}
+var base_scale: Vector3 = Vector3(0.5, 0.5, 0.5)
+var visual_scale_multiplier: float = 1.0
+var _bounce_factor: float = 1.0
 
 const SATISFACTORY_THRESHOLD := 0.6
 const REPLENISH_BASE_TIME := 30.0
@@ -46,6 +52,9 @@ func _ready() -> void:
 		texture = npc_resource.sprite_sheet
 		hframes = npc_resource.hframe
 		dialogue_resource = npc_resource.dialogue_resource
+		species_def = SpeciesRegistry.get_species_or_default(npc_resource.race)
+	else:
+		species_def = SpeciesRegistry.get_species_or_default("HUMAN")
 
 	patience_timer.wait_time = max_patience
 	patience_timer.start(max_patience)
@@ -53,21 +62,41 @@ func _ready() -> void:
 	patient_2d._change_max_progress(max_patience)
 	patient_2d._change_curent(max_patience)
 	camera = get_viewport().get_camera_3d()
-	self.texture = npc_resource.sprite_sheet
-	hframes = npc_resource.hframe
+	_apply_species_scale()
 	_start_bounce()
-	dialogue_resource = npc_resource.dialogue_resource
 
 	if not DialogueManager.dialogue_started.is_connected(_on_dialouge_started):
 		DialogueManager.dialogue_started.connect(_on_dialouge_started)
-
 
 	patience_timer.start()
 	if not DialogueManager.dialogue_ended.is_connected(_on_dialogue_ended):
 		DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
 
-@warning_ignore("unused_parameter")
+func _apply_species_scale() -> void:
+	base_scale = species_def.npc_scale if species_def else Vector3(0.5, 0.5, 0.5)
+	visual_scale_multiplier = 1.0
+	_refresh_visual_scale()
+	var patience_sprite := get_node_or_null("Sprite3D") as Sprite3D
+	if patience_sprite and base_scale.x > 0.01:
+		var inv_factor := minf(1.8, 0.5 / base_scale.x)
+		patience_sprite.scale = Vector3.ONE * inv_factor
+
+func _apply_bounce_scale(factor: float) -> void:
+	_bounce_factor = factor
+	_refresh_visual_scale()
+
+func _refresh_visual_scale() -> void:
+	scale = base_scale * visual_scale_multiplier * Vector3(_bounce_factor, _bounce_factor * 0.998, 1.0)
+
+func _get_active_tool() -> String:
+	if GameState.player and GameState.player.has_method("return_tool"):
+		return str(GameState.player.return_tool()).to_lower().strip_edges()
+	return "hand"
+
 func _process(delta: float) -> void:
+	if species_def:
+		species_def.on_npc_process(self, delta, _get_active_tool())
+
 	var patience_left: float = patience_timer.time_left
 	if _dialouge_paused_patience >= 0.0:
 		patience_left = _dialouge_paused_patience
@@ -80,15 +109,13 @@ func _process(delta: float) -> void:
 		var drain_rate: float = (1.0 - patience_left / (max_patience * 0.25)) * 0.05 * delta
 		customer_satisfaction = maxf(0.0, customer_satisfaction - drain_rate)
 
-	#if patience_timer.time_left < (max_patience * 0.25) and max_patience > 0.0:
-		#var drain_rate: float = (1.0 - (patience_timer / (max_patience * 0.25))) * 0.05 * delta
-		#customer_satisfaction = maxf(0.0, customer_satisfaction - drain_rate)
-
 func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float = 90.0, starting_dialogue: String = "start") -> void:
 	npc_resource = npc_source
 	seat_num = seat
 	recipt_marker = rec_marker
 	has_receipt_spawned = false
+	species_state.clear()
+	pixel_size = 0.01
 	GameState.play_sfx("play_entranto")
 
 	if patience > 0.0:
@@ -107,12 +134,15 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 		if starting_dialogue == "tutorial_walk":
 			can_talk = false
 
+	species_def = SpeciesRegistry.get_species_or_default(npc_resource.race if npc_resource else "HUMAN")
+
 	if npc_resource:
 		texture = npc_resource.sprite_sheet
 		hframes = npc_resource.hframe
 		dialogue_resource = npc_resource.dialogue_resource
 		patient_2d._setup(max_patience, npc_resource.race)
 
+	_apply_species_scale()
 	patient_2d._change_max_progress(max_patience)
 	patient_2d._change_curent(max_patience)
 	if is_instance_valid(patient_2d) and patient_2d.has_method("_recipt_hide"):
@@ -120,6 +150,8 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 	customer_satisfaction = 1.0
 	modifier = CustomerModifier.roll_modifier(npc_resource.race if npc_resource else "HUMAN", unique_talk)
 	modifier.apply_visuals(self)
+	if species_def:
+		species_def.on_npc_setup(self)
 
 func _institate(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float = 90.0, starting_dialogue: String = "start") -> void:
 	setup_npc(npc_source, seat, rec_marker, patience, starting_dialogue)
@@ -129,22 +161,31 @@ func talk() -> void:
 		return
 	if not can_talk or speaking_title == "" or speaking_title == null:
 		return
+	var active_tool := _get_active_tool()
+	if not unique_talk and species_def and not species_def.can_interact_with_tool(self, active_tool, "talk"):
+		species_def.on_npc_tool_click(self, active_tool, GameState.player)
+		return
 	if dialogue_resource:
 		GameState.character_talking = self
 		DialogueManager.show_dialogue_balloon_scene(custom_balloon, dialogue_resource, speaking_title, [self])
 
-func _on_dialouge_started(dialogue_resource : DialogueResource) -> void:
+func _on_dialouge_started(_dialogue_resource: DialogueResource) -> void:
 	if patience_timer.time_left > 0.0:
 		_dialouge_paused_patience = patience_timer.time_left
 		patience_timer.stop()
 
-func _on_dialogue_ended(dialogue_resource : DialogueResource) -> void:
+func _on_dialogue_ended(_dialogue_resource: DialogueResource) -> void:
 	if _dialouge_paused_patience >= 0.0 and not is_leaving:
 		patience_timer.start(maxf(0.01, _dialouge_paused_patience))
 		_dialouge_paused_patience = -1.0
 
 func can_accept_drink() -> bool:
-	return not is_leaving and drink_list.size() > 0 and has_receipt_spawned and not GameState.is_dialogue_open
+	var base_ok := not is_leaving and drink_list.size() > 0 and has_receipt_spawned and not GameState.is_dialogue_open
+	if not base_ok:
+		return false
+	if species_def:
+		return species_def.can_accept_drink(self)
+	return true
 
 func set_highlight(enabled: bool) -> void:
 	if _is_highlighted == enabled:
@@ -156,19 +197,40 @@ func set_highlight(enabled: bool) -> void:
 	else:
 		modulate = _original_modulate
 
+func show_floating_feedback(message: String) -> void:
+	if not is_inside_tree():
+		return
+	var label3d := Label3D.new()
+	label3d.text = message
+	label3d.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label3d.no_depth_test = true
+	label3d.font_size = 48
+	label3d.outline_size = 12
+	label3d.modulate = Color(1.0, 0.9, 0.35, 1.0)
+	var inv := 0.5 / maxf(base_scale.x, 0.1)
+	label3d.scale = Vector3.ONE * minf(1.8, inv)
+	label3d.position = Vector3(0.0, 1.35, 0.1)
+	add_child(label3d)
+
+	var tween := create_tween().set_parallel(true)
+	tween.tween_property(label3d, "position:y", label3d.position.y + 0.55, 1.0)
+	tween.tween_property(label3d, "modulate:a", 0.0, 1.0)
+	tween.chain().tween_callback(label3d.queue_free)
+
 func _moving_to(to: Marker3D) -> void:
 	var tween = get_tree().create_tween()
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_property(self, "position", to.position, 0.8)
+	var offset := Vector3(0.0, species_def.seat_y_offset, 0.0) if species_def else Vector3.ZERO
+	tween.tween_property(self, "position", to.position + offset, 0.8)
 	current_state = State.SIT
 
 func _start_bounce() -> void:
 	if _bounce_tween and _bounce_tween.is_valid():
 		_bounce_tween.kill()
 	_bounce_tween = get_tree().create_tween().set_loops()
-	_bounce_tween.tween_property(self, "scale", Vector3(0.505, 0.504, 0.5), 0.5)
-	_bounce_tween.tween_property(self, "scale", Vector3(0.5, 0.5, 0.5), 0.4)
+	_bounce_tween.tween_method(_apply_bounce_scale, 1.0, 1.01, 0.5)
+	_bounce_tween.tween_method(_apply_bounce_scale, 1.01, 1.0, 0.4)
 	_bounce_tween.tween_interval(0.1)
 
 # Serving and payouts
@@ -181,9 +243,8 @@ func receive_drink(mix: DrinkMix) -> float:
 	var score_data := DrinkScorer.score_drink(mix, wanted_order)
 	var drink_score: float = score_data["score"]
 
-	#if modifier.is_ghost and not modifier.check_ghost_drink(mix):
-	#	drink_score = 0.0
-	#	customer_satisfaction = 0.0
+	if species_def:
+		species_def.on_drink_served(self, mix, wanted_order, score_data)
 
 	var is_satisfactory: bool = drink_score >= SATISFACTORY_THRESHOLD
 	if not is_satisfactory:
@@ -222,12 +283,14 @@ func _obtain_drink(drink: Variant) -> float:
 
 func _replenish_patience(drink_score: float) -> void:
 	var replenish_time := REPLENISH_BASE_TIME * drink_score
+	if species_def:
+		replenish_time = species_def.modify_patience_replenish(self, replenish_time, drink_score)
 	if replenish_time > 0.0:
 		var new_patience := minf(max_patience, patience_timer.time_left + replenish_time)
 		patience_timer.start(maxf(0.01, new_patience))
 
 func _apply_reputation_impact(is_satisfactory: bool, drink_score: float) -> void:
-	var race_name: String = npc_resource.race if npc_resource else "Human"
+	var race_name: String = species_def.display_name if species_def else (npc_resource.race if npc_resource else "Human")
 	if is_satisfactory:
 		PlayerStats.add_overall_reputation(1.0)
 		PlayerStats.change_species_reputation(race_name, 1.0)
@@ -236,16 +299,17 @@ func _apply_reputation_impact(is_satisfactory: bool, drink_score: float) -> void
 		PlayerStats.change_species_reputation(race_name, -penalty)
 
 func _calculate_payout(drink_score: float, is_satisfactory: bool) -> void:
-	var race_name: String = npc_resource.race if npc_resource else "Human"
+	var race_name: String = species_def.display_name if species_def else (npc_resource.race if npc_resource else "Human")
 	var group_rep: float = PlayerStats.get_species_reputation(race_name)
 	var payment: float = BASE_DRINK_PRICE
-
-	if race_name.to_upper() == "SLIME" and is_satisfactory:
-		payment += BASE_DRINK_PRICE
+	if species_def:
+		payment = species_def.modify_payout(self, BASE_DRINK_PRICE, is_satisfactory, drink_score, payment)
 
 	if drink_list.size() <= 0:
 		var tip := (PlayerStats.overall_reputation + group_rep) * customer_satisfaction
 		tip = modifier.calculate_tip_modifier(tip)
+		if species_def:
+			tip = species_def.modify_tip(self, tip, is_satisfactory, drink_score)
 		payment += tip
 
 	payment_global += payment
@@ -278,7 +342,7 @@ func _update_speaking_title(drink_score: float) -> void:
 			speaking_title = "introduction_mid_bad"
 
 func _give_payment() -> void:
-	print("PAYMENT_GLOBAL: ",payment_global)
+	print("PAYMENT_GLOBAL: ", payment_global)
 	PlayerStats._change_money(PlayerStats.money + payment_global)
 	payment_global = 0.0
 	var col = get_node_or_null("Area3D/CollisionShape3D")
@@ -288,39 +352,24 @@ func _give_payment() -> void:
 
 # Orders
 func _want_drink() -> Array:
-	var race_key: String = npc_resource.race.to_upper() if npc_resource else "HUMAN"
-	var drink_pool := CustomerTraits.get_species_drink_pool(race_key)
-	var drink_count := CustomerTraits.get_order_count(race_key, modifier)
-
-	var total: Array = []
 	if speaking_title == "tutorial_walk":
-		var order_item := ["gin", 1.0]
-		total.append(order_item)
-		drink_list.push_back([order_item])
-		return total
+		var tutorial_order := DrinkOrder.new()
+		tutorial_order.species_id = species_def.species_id if species_def else "HUMAN"
+		tutorial_order.ingredients["gin"] = 1.0
+		drink_list.push_back(tutorial_order)
+		return drink_list.duplicate()
 
-	for i in range(drink_count):
-		if race_key == "VAMPIRE": # this if statement is if the customer is a vamp,
-			var non_blood_pool : Array[String] = [] #  they always order a shaken drink with blood as an ingredient
-			for candidate in drink_pool:
-				if candidate != "blood":
-					non_blood_pool.append(candidate)
-			var second_drink : String = str(non_blood_pool.pick_random())
-			var order := DrinkOrder.new()
-			order.ingredients["blood"] = 0.5
-			order.ingredients[second_drink] = 0.5
-			order.required_processing.append("shaken")
-
+	if species_def:
+		var generated := species_def.generate_orders(self, modifier, PlayerStats)
+		for order in generated:
 			drink_list.push_back(order)
-			total.append([["blood",0.5],[second_drink,0.5]])
-			continue
+	else:
+		var fallback_order := DrinkOrder.new()
+		fallback_order.species_id = "HUMAN"
+		fallback_order.ingredients["gin"] = 1.0
+		drink_list.push_back(fallback_order)
 
-		var drink_name = drink_pool.pick_random()
-		var order_item := [drink_name, 1.0]
-		total.append(order_item)
-		drink_list.push_back([order_item])
-
-	return total
+	return drink_list.duplicate()
 
 func _item_print() -> String:
 	if drink_list.is_empty():
@@ -335,6 +384,8 @@ func _item_print() -> String:
 		for ing_name in ing_dict:
 			var pct: int = int(round(float(ing_dict[ing_name]) * 100.0))
 			total += str(ing_name) + " " + str(pct) + "%\n"
+		if species_def:
+			total = species_def.format_order_text(order, total)
 	elif cup is Array:
 		for item in cup:
 			if item is Array and item.size() >= 2:
@@ -351,7 +402,7 @@ func _add_recipt() -> void:
 	has_receipt_spawned = true
 	if is_instance_valid(patient_2d) and patient_2d.has_method("_recipt_hide"):
 		patient_2d._recipt_hide()
-	var race_name: String = npc_resource.race if npc_resource else ""
+	var race_name: String = species_def.species_id if species_def else (npc_resource.race if npc_resource else "")
 	if GameState.seat_manager:
 		GameState.seat_manager.add_receipt(seat_num, str(_item_print()), race_name)
 
@@ -419,16 +470,23 @@ func hold_night_end(hold: bool = true) -> void:
 func _on_interaction_input_event(camera_node: Node, event: InputEvent, _pos: Vector3, _norm: Vector3, _shape: int) -> void:
 	if Ingredients.active_dragging_item != null:
 		return
-	if not can_talk or speaking_title == "" or speaking_title == null:
-		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if abs(camera_node.global_position.x - global_position.x) < 2 or unique_talk:
-			talk()
+			if not unique_talk and GameState.player and "tool_controller" in GameState.player and GameState.player.tool_controller:
+				if GameState.player.tool_controller.handle_npc_click(self, GameState.player):
+					return
+			if can_talk and speaking_title != "" and speaking_title != null:
+				talk()
 
 func _on_area_3d_mouse_entered() -> void:
 	if Ingredients.active_dragging_item != null:
 		return
+	var active_tool := _get_active_tool()
+	if species_def:
+		species_def.on_npc_tool_hover(self, active_tool, true)
 	if not can_talk or speaking_title == "" or speaking_title == null:
+		return
+	if not unique_talk and species_def and not species_def.can_interact_with_tool(self, active_tool, "hover"):
 		return
 	if GameState.player:
 		GameState.player._update_hand("interact")
@@ -436,6 +494,9 @@ func _on_area_3d_mouse_entered() -> void:
 func _on_area_3d_mouse_exited() -> void:
 	if Ingredients.active_dragging_item != null:
 		return
+	var active_tool := _get_active_tool()
+	if species_def:
+		species_def.on_npc_tool_hover(self, active_tool, false)
 	if GameState.player:
 		GameState.player._update_hand("idle")
 
@@ -461,3 +522,4 @@ func _talking(open_mouth: bool = false) -> void:
 	var total_frames := hframes * vframes
 	if frame_check < total_frames:
 		frame = frame_check
+		

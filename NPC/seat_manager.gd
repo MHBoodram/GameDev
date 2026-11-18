@@ -1,4 +1,4 @@
-# Spawns random weighted cusotomers and story patrons
+# Spawns random weighted customers and story patrons via SpeciesRegistry
 # Does order receipts on the ReceiptBoard
 # Cup delivery tweening and drink serving
 class_name SeatManager
@@ -74,10 +74,16 @@ func set_all_patience_paused(paused: bool) -> void:
 		if npc and is_instance_valid(npc) and npc.patience_timer:
 			npc.patience_timer.paused = paused
 
-func spawn_customer(res_path: String, patience: float = 90.0, dialogue_title: String = "start") -> Base_NPC:
+func spawn_customer(npc_source: Variant, patience: float = 90.0, dialogue_title: String = "start") -> Base_NPC:
 	var free_seat := seats.find(null)
 	if free_seat == -1 or not main_root:
 		return null
+
+	var resolved_resource: NPC = null
+	if npc_source is NPC:
+		resolved_resource = npc_source as NPC
+	elif npc_source is String:
+		resolved_resource = load(npc_source) as NPC
 
 	var npc: Base_NPC = BASE_NPC_SCENE.instantiate()
 	main_root.add_child(npc)
@@ -89,12 +95,12 @@ func spawn_customer(res_path: String, patience: float = 90.0, dialogue_title: St
 	seats[free_seat] = npc
 	npc.name = "seat%d_npc" % (free_seat + 1)
 
+	var rec_marker := main_root.get_node_or_null("Recipt%d" % (free_seat + 1)) as Marker3D
+	npc.setup_npc(resolved_resource, free_seat + 1, rec_marker, patience, dialogue_title)
+
 	var target_seat := main_root.get_node_or_null("Seat%d" % (free_seat + 1)) as Marker3D
 	if target_seat:
 		npc._moving_to(target_seat)
-
-	var rec_marker := main_root.get_node_or_null("Recipt%d" % (free_seat + 1)) as Marker3D
-	npc.setup_npc(load(res_path), free_seat + 1, rec_marker, patience, dialogue_title)
 
 	var order := npc._want_drink()
 	match free_seat:
@@ -104,31 +110,36 @@ func spawn_customer(res_path: String, patience: float = 90.0, dialogue_title: St
 
 	return npc
 
+func spawn_customer_by_species(sp: SpeciesBase, patience: float = -1.0, dialogue_title: String = "start") -> Base_NPC:
+	if sp == null:
+		return null
+	var effective_patience := patience if patience > 0.0 else sp.default_patience
+	return spawn_customer(sp.get_npc_resource(), effective_patience, dialogue_title)
+
 func spawn_random_customer() -> Base_NPC:
-	var human_weight := PlayerStats.get_species_spawn_weight("Human")
-	var slime_weight := PlayerStats.get_species_spawn_weight("Slime")
-	var vampire_weight := PlayerStats.get_species_spawn_weight("Vampire")
-	var total_weight := human_weight + slime_weight + vampire_weight
+	var weighted_entries := SpeciesRegistry.get_spawnable_species_weights(PlayerStats)
+	if weighted_entries.is_empty():
+		var fallback := SpeciesRegistry.get_species_or_default("HUMAN")
+		return spawn_customer_by_species(fallback)
+
+	var total_weight: float = 0.0
+	for entry in weighted_entries:
+		total_weight += float(entry["weight"])
+
 	var roll := randf_range(0.0, total_weight)
+	var acc: float = 0.0
+	var chosen: SpeciesBase = weighted_entries[0]["species"]
+	for entry in weighted_entries:
+		acc += float(entry["weight"])
+		if roll <= acc:
+			chosen = entry["species"]
+			break
 
-	var path := "res://NPC/Resources/scott.tres"
-	if roll < slime_weight:
-		path = "res://NPC/Resources/slime.tres"
-	elif roll < slime_weight + vampire_weight:
-		path = "res://NPC/Resources/cesti.tres"
-
-	return spawn_customer(path)
+	return spawn_customer_by_species(chosen)
 
 func spawn_specific_species(species_name: String) -> Base_NPC:
-	var path := "res://NPC/Resources/scott.tres"
-	match species_name.capitalize():
-		"Slime":
-			path = "res://NPC/Resources/slime.tres"
-		"Vampire":
-			path = "res://NPC/Resources/cesti.tres"
-		_:
-			path = "res://NPC/Resources/scott.tres"
-	return spawn_customer(path)
+	var sp := SpeciesRegistry.get_species_or_default(species_name)
+	return spawn_customer_by_species(sp)
 
 func remove_customer_at_seat(seat_number: int) -> void:
 	var idx := seat_number - 1
@@ -248,8 +259,26 @@ func debug_serve_all(score_type: String = "good") -> void:
 		if not npc:
 			continue
 		while npc.drink_list.size() > 0:
-			var drink_data: Array = npc.drink_list[0].duplicate(true) if score_type == "good" else [["wrong_spirit", 0]]
+			var want = npc.drink_list[0]
 			clear_receipt_for_seat(seat_idx + 1)
-			npc._obtain_drink(drink_data)
+			if score_type == "good":
+				if want is DrinkOrder:
+					var order := want as DrinkOrder
+					var mix := DrinkMix.new()
+					for ing_id in order.ingredients:
+						mix.add_liquid(str(ing_id), float(order.ingredients[ing_id]))
+					for tag in order.required_processing:
+						mix.add_processing(str(tag))
+					for g in order.garnishes:
+						mix.add_garnish(str(g))
+					mix.glass_type = order.required_glass
+					mix.is_tiny = order.is_tiny
+					npc.receive_drink(mix)
+				elif want is Array:
+					npc._obtain_drink((want as Array).duplicate(true))
+			else:
+				var bad_mix := DrinkMix.new()
+				bad_mix.add_liquid("wrong_spirit", 1.0)
+				npc.receive_drink(bad_mix)
 			if npc.unique_talk:
 				npc._leaving()

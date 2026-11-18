@@ -10,14 +10,15 @@ var is_ghost: bool = false
 var is_wanted: bool = false
 var ghost_fell_through: bool = false
 
-# vampires and slimes cannot be ghosts
+# species comes from each species file via SpeciesRegistry
 static func roll_modifier(species: String, is_unique: bool = false) -> CustomerModifier:
 	var mod := CustomerModifier.new()
 	if is_unique:
 		return mod
 
-	var s := species.to_upper()
-	var can_be_ghost := (s != "VAMPIRE" and s != "SLIME")
+	var sp := SpeciesRegistry.get_species(species)
+	var can_be_ghost := sp.can_be_ghost if sp else true
+	var can_be_wanted := sp.can_be_wanted if sp else true
 
 	# 10 percent chance for ghost modifier if eligible
 	#if can_be_ghost and randf() < 0.10:
@@ -26,7 +27,7 @@ static func roll_modifier(species: String, is_unique: bool = false) -> CustomerM
 	#	return mod
 
 	# 5 percent chance for wanted criminal modifier
-	if randf() < 0.05:
+	if can_be_wanted and randf() < 0.05:
 		mod.modifier_type = ModifierType.WANTED
 		mod.is_wanted = true
 		return mod
@@ -41,7 +42,7 @@ func apply_visuals(npc: Sprite3D) -> void:
 	#	npc.modulate.a = 0.55
 
 # checks if a drink given to a ghost is spectral or falls through
-func check_ghost_drink(served_mix: DrinkMix) -> bool:
+func check_ghost_drink(_served_mix: DrinkMix) -> bool:
 	#if not is_ghost:
 	#	return true
 	#if served_mix and served_mix.has_processing("spectral"):

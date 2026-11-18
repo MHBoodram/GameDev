@@ -22,15 +22,15 @@ extends Control
 var shopping_cart: Dictionary = {
 	"Drinks":
 		{
-			
+
 		},
 	"Marketing":
 		{
-			
+
 		},
 	"Ingredients":
 		{
-			
+
 		}
 }
 var quota_paid: bool = false
@@ -74,7 +74,7 @@ func _display_recipt() -> void:
 		#_move_to_out($Recipt,false)
 		#_move_to_in($Marketing,true)
 		#_populate_grid_container_pick_3("Drinks",$Marketing/Marketing/VBoxContainer/HBoxContainer/Drinks/GridContainer)
-	
+
 
 func _move_to_in(node: ColorRect,big: bool = false):
 	var tween = get_tree().create_tween()
@@ -82,14 +82,14 @@ func _move_to_in(node: ColorRect,big: bool = false):
 		tween.tween_property(node,"global_position",Vector2(11.0,4),1)
 	else:
 		tween.tween_property(node,"global_position",Vector2(400.0,4),1)
-	
+
 func _move_to_out(node: ColorRect,big: bool = false):
 	var tween = get_tree().create_tween()
 	if(big):
 		tween.tween_property(node,"global_position",Vector2(-1309.0,4),1)
 	else:
 		tween.tween_property(node,"global_position",Vector2(-906,4),1)
-		
+
 func _add_or_remove_from_shopping_cart(node: Button):
 	var node_type = node._get_type()
 	var node_name = node._get_name()
@@ -169,12 +169,10 @@ func _produce_unlocks_pick_3_ingrediants() -> Array:
 	return temp_array
 
 func _produce_unlocks_marketing() -> Array:
-	var temp_array = ["human"]
-	if(PlayerStats.unlocks["Ingredients"]["Blood"]):
-		temp_array.push_back("vampire")
-	if(PlayerStats.unlocks["Ingredients"]["Fishing_Rod"]):
-		temp_array.push_back("fish")
-	return temp_array
+	var ids: Array = []
+	for sp_id in SpeciesRegistry.get_marketing_unlock_ids(PlayerStats):
+		ids.push_back(sp_id)
+	return ids
 
 func _populate_grid_container(type: String, container: GridContainer):
 	while(container.get_children()):
@@ -189,9 +187,9 @@ func _populate_grid_container(type: String, container: GridContainer):
 
 func _display_container(container: Control) -> void:
 	container.show()
-	await get_tree().process_frame          
-	container.pivot_offset = container.size / 2       
-	container.scale = Vector2(2.0, 2.0)        
+	await get_tree().process_frame
+	container.pivot_offset = container.size / 2
+	container.scale = Vector2(2.0, 2.0)
 	container.rotation_degrees = 0.0
 	var tween := create_tween().set_parallel(true)
 	tween.tween_property(container, "scale", Vector2.ONE, 1.0)
@@ -212,18 +210,9 @@ func _display_number(label: Label, to: float,from: float = 0) -> void:
 		#await get_tree().process_frame
 
 func _top_speicies_check() -> void:
-	var temp_type = PlayerStats.get_highest_gaining_species().to_lower()
-	match temp_type:
-		"human":
-			top_species_sprite.frame = 10
-		"slime":
-			top_species_sprite.frame = 7
-		"vampire":
-			top_species_sprite.frame = 9
-		"fish":
-			top_species_sprite.frame = 8
-		"tiny":
-			top_species_sprite.frame = 11
+	var sp := SpeciesRegistry.get_species_or_default(PlayerStats.get_highest_gaining_species())
+	if sp and top_species_sprite:
+		top_species_sprite.frame = sp.logo_frame
 
 func _refresh_display() -> void:
 	var top_species: String = PlayerStats.get_highest_gaining_species()
@@ -297,9 +286,7 @@ func _on_next_night_pressed() -> void:
 					#PlayerStats.species_marketing[]
 				"Ingredients":
 					PlayerStats.unlocks[main_key][sub_key] = true
-					match sub_key:
-						"Blood":
-							PlayerStats.species_marketing["Vampire"] = 1.0
+					SpeciesRegistry.on_ingredient_unlocked(str(sub_key), PlayerStats)
 				_:
 					PlayerStats.unlocks[main_key][sub_key] = true
 					print("Main_key ",main_key)

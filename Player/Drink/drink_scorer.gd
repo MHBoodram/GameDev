@@ -1,7 +1,7 @@
 class_name DrinkScorer
 extends RefCounted
 
-# pulled all the scoring math out of base_npc into here
+# handles base drink scoring and gives species-specific drink rules to SpeciesRegistry
 
 const SATISFACTORY_THRESHOLD := 0.6
 const MAX_DIFF := 0.15
@@ -63,16 +63,22 @@ static func score_drink(served: DrinkMix, wanted: DrinkOrder) -> Dictionary:
 		if not served.garnishes.has(g):
 			drink_score -= PENALTY_MISSING_GARNISH
 
-	drink_score = clampf(drink_score, 0.0, 1.0)
-	print("SCORE: ",drink_score)
-	print("IS_SATISIFACTORY: ",drink_score >= SATISFACTORY_THRESHOLD)
-	return {
-		"score": drink_score,
-		"is_satisfactory": drink_score >= SATISFACTORY_THRESHOLD
+	var result := {
+		"score": clampf(drink_score, 0.0, 1.0),
+		"is_satisfactory": false
 	}
+
+	SpeciesRegistry.apply_drink_scoring_hooks(served, wanted, result)
+
+	result["score"] = clampf(float(result["score"]), 0.0, 1.0)
+	result["is_satisfactory"] = float(result["score"]) >= SATISFACTORY_THRESHOLD
+	print("SCORE: ", result["score"])
+	print("IS_SATISIFACTORY: ", result["is_satisfactory"])
+	return result
 
 # bridge for the old nested arrays so we don't break anything right now
 static func score_legacy(drink_layers: Array, want_array: Array) -> Dictionary:
 	var served := DrinkMix.from_legacy_layers(drink_layers)
 	var wanted := DrinkOrder.from_legacy_want(want_array)
 	return score_drink(served, wanted)
+	

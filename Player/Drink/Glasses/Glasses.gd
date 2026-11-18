@@ -79,6 +79,14 @@ func _is_drag_blocked() -> bool:
 func get_drink_mix() -> DrinkMix:
 	return drink_mix
 
+func get_resource_usage_multiplier(liquid_id: String = "") -> float:
+	return SpeciesRegistry.get_glass_resource_multiplier(self, liquid_id)
+
+func handle_non_drag_click() -> bool:
+	if GameState.player and "tool_controller" in GameState.player and GameState.player.tool_controller:
+		return GameState.player.tool_controller.handle_glass_click(self, GameState.player)
+	return false
+
 func _get_free_drag_target(delta: float) -> Vector3:
 	if _waiting_for_working_area:
 		return super._get_free_drag_target(delta)
@@ -89,6 +97,8 @@ func _get_free_drag_target(delta: float) -> Vector3:
 
 func ready() -> void:
 	rotation = Vector3.ZERO
+	if sprite:
+		_inside_base_scale = sprite.scale
 	_setup_liquid_shader()
 	if highlight:
 		highlight.modulate = Color(1.5, 1.5, 0.0, 5.0)
@@ -169,6 +179,7 @@ func enter_snap_zone(point: Node3D, pull_speed: float = 22.0, release_speed: flo
 	_snap_point = point
 	_snap_pull_speed = pull_speed
 	_snap_release_speed = release_speed
+	_snap_break_distance = break_distance
 	_snap_suppressed = false
 
 func exit_snap_zone(point: Node3D) -> void:
@@ -300,18 +311,18 @@ func _rebuild_liquid_gradient() -> void:
 		total_liquids += float(l[1])
 	drink_list_label = visual_helper.rebuild_gradient(liquids, total_liquids, size, liquid_box, tcmtd)
 
-func _pouring(id: String, liquids_num: float) -> void:
+func _pouring(id: String, liquids_num: float) -> float:
 	var current_total: float = 0.0
 	for l in liquids:
 		current_total += float(l[1])
 
 	var available_space := size - current_total
 	if available_space <= 0.0:
-		return
+		return 0.0
 
 	liquids_num = minf(liquids_num, available_space)
 	if liquids_num <= 0.0:
-		return
+		return 0.0
 
 	var col: Color = visual_helper.LIQUID_COLOR.get(id, Color.WHITE)
 
@@ -334,6 +345,7 @@ func _pouring(id: String, liquids_num: float) -> void:
 	visual_helper.slosh_vertical_velocity += randf_range(-0.15, 0.05)
 	visual_helper.wave_amplitude = minf(visual_helper.wave_amplitude + 0.035, 0.07)
 	_rebuild_liquid_gradient()
+	return liquids_num
 
 func is_full() -> bool:
 	var current_total: float = 0.0

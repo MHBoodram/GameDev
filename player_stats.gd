@@ -72,6 +72,39 @@ var unlocks : Dictionary = {
 	},
 }
 
+func _ready() -> void:
+	sync_species_registry()
+
+func sync_species_registry() -> void:
+	for sp in SpeciesRegistry.get_all_species():
+		_ensure_species_entry(sp.display_name, sp.default_marketing_weight)
+
+func _ensure_species_entry(key: String, default_marketing: float = 0.0) -> void:
+	if not reputation_species.has(key):
+		reputation_species[key] = 0.0
+	if not night_species_delta.has(key):
+		night_species_delta[key] = 0.0
+	if not species_marketing.has(key):
+		species_marketing[key] = default_marketing
+	if not species_banners.has(key):
+		species_banners[key] = false
+
+func has_unlock(category: String, key: String) -> bool:
+	if not unlocks.has(category):
+		return false
+	var cat_dict: Dictionary = unlocks[category]
+	if cat_dict.has(key):
+		return bool(cat_dict[key])
+	var target_lower := key.to_lower()
+	for k in cat_dict.keys():
+		if str(k).to_lower() == target_lower:
+			return bool(cat_dict[k])
+	return false
+
+func set_species_marketing(species: String, value: float) -> void:
+	var key := _find_species_key(species)
+	species_marketing[key] = value
+
 func _change_money(new_value: float) -> void:
 	money = new_value
 	print("[money]: ", money)
@@ -79,6 +112,10 @@ func _change_money(new_value: float) -> void:
 		GameState.gameplay_ui._change_money(new_value)
 
 func _find_species_key(species: String) -> String:
+	var sp := SpeciesRegistry.get_species(species)
+	if sp:
+		_ensure_species_entry(sp.display_name, sp.default_marketing_weight)
+		return sp.display_name
 	for key: String in reputation_species.keys():
 		if key.to_lower() == species.to_lower():
 			return key
@@ -120,21 +157,14 @@ func reset_night_reputation_gains() -> void:
 
 func get_spawn_rate() -> float:
 	var rate: float = 1.0 * overall_marketing
-	#print("[spawn_rate]: ", rate)
 	return rate
 
 func get_species_spawn_weight(species: String) -> float:
-	var key: String = _find_species_key(species)
-	var base_weight: float = 5.0
-	match key:
-		"Slime":
-			base_weight = 2.0
-		"Vampire":
-			base_weight = 2.0
-		_:
-			base_weight = 5.0
+	var sp := SpeciesRegistry.get_species(species)
+	var key: String = sp.display_name if sp else _find_species_key(species)
+	var base_weight: float = sp.base_spawn_weight if sp else 5.0
 
-	var marketing_multiplier: float = species_marketing.get(key, 1.0)
+	var marketing_multiplier: float = float(species_marketing.get(key, 1.0))
 	var banner_multiplier: float = 2.0 if species_banners.get(key, false) else 1.0
 	var final_weight: float = base_weight * marketing_multiplier * banner_multiplier
 	print("[species_weight]: ", key, " = ", final_weight)

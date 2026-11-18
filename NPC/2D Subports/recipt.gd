@@ -1,13 +1,6 @@
 extends Control
 
 const LOGOS_SHEET := preload("res://Assets/NPC/UI/Logos-Sheet.png")
-const RACE_FRAME_MAP := {
-	"HUMAN": 10,
-	"SLIME": 7,
-	"VAMPIRE": 9,
-	"FISH": 8,
-	"TINY": 11,
-}
 
 @onready var seat_label: Label = $VBoxContainer/Header/SeatLabel
 @onready var customer_icon: TextureRect = $VBoxContainer/Header/CustomerIconFrame/CustomerIcon
@@ -16,7 +9,8 @@ const RACE_FRAME_MAP := {
 
 func _ready() -> void:
 	if customer_icon and customer_icon.texture == null:
-		_set_placeholder_frame(RACE_FRAME_MAP["HUMAN"])
+		var default_sp := SpeciesRegistry.get_species_or_default("HUMAN")
+		_set_placeholder_frame(default_sp.logo_frame if default_sp else 10)
 
 func _label_change(change: String) -> void:
 	if order_label:
@@ -27,7 +21,8 @@ func _set_seat_number(seat_num: int) -> void:
 		seat_label.text = "#" + str(seat_num)
 
 func _set_customer_race(race: String) -> void:
-	var frame_idx: int = RACE_FRAME_MAP.get(race.to_upper(), RACE_FRAME_MAP["HUMAN"])
+	var sp := SpeciesRegistry.get_species_or_default(race)
+	var frame_idx: int = sp.logo_frame if sp else 10
 	_set_placeholder_frame(frame_idx)
 
 func _set_customer_icon(icon_texture: Texture2D) -> void:
@@ -54,3 +49,4 @@ func _set_placeholder_frame(frame_idx: int) -> void:
 	customer_icon.texture = atlas
 	if placeholder_label:
 		placeholder_label.visible = false
+		

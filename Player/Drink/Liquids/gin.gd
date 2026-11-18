@@ -112,9 +112,12 @@ func _pour() -> void:
 	if pouring_into:
 		$CPUParticles3D.emitting = true
 		while _is_pour_button_held() and in_game and GameState.player and GameState.player.in_game and current_liquid > 0.0 and is_instance_valid(pouring_into):
-			var amount := minf(POUR_AMOUNT, current_liquid)
-			pouring_into._pouring(liquid_resource.id, amount)
-			set_liquid_amount(current_liquid - amount)
+			var cost_mult: float = pouring_into.get_resource_usage_multiplier(liquid_resource.id) if pouring_into.has_method("get_resource_usage_multiplier") else 1.0
+			var max_bottle_pour: float = current_liquid / maxf(cost_mult, 0.001)
+			var amount := minf(POUR_AMOUNT, max_bottle_pour)
+			var poured_variant = pouring_into._pouring(liquid_resource.id, amount)
+			var actual_poured: float = float(poured_variant) if (poured_variant is float or poured_variant is int) else amount
+			set_liquid_amount(current_liquid - actual_poured * cost_mult)
 			await get_tree().create_timer(POUR_INTERVAL).timeout
 			if not is_inside_tree():
 				return
