@@ -13,6 +13,7 @@ func _init() -> void:
 	default_marketing_weight = 1.0
 	spawn_randomly = true
 	can_be_ghost = false
+	disallowed_modifiers = ["GHOST"]
 
 func is_unlocked(stats: Node = null) -> bool:
 	if stats == null:
@@ -49,6 +50,8 @@ func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = n
 			non_blood_pool.append(candidate)
 
 	var count := maxi(1, get_order_count(npc, modifier))
+	if modifier and modifier.has_method("modify_order_count"):
+		count = maxi(1, int(modifier.modify_order_count(npc, count)))
 	for i in range(count):
 		var order := DrinkOrder.new()
 		order.species_id = species_id

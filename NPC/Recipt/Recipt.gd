@@ -107,11 +107,16 @@ func _set_customer_info(seat: int, race: String = "", icon_texture: Texture2D = 
 		elif race != "":
 			recipt_2d._set_customer_race(race)
 
-func apply_modifier_visuals(mod: ModifierBase) -> void:
+func apply_customer_visuals(sp: SpeciesBase, mod: ModifierBase) -> void:
 	if recipt_2d and recipt_2d.has_method("_set_customer_icon_modulate"):
 		recipt_2d._set_customer_icon_modulate(Color.WHITE)
+	if sp and recipt_2d:
+		sp.modify_receipt_appearance(self, recipt_2d)
 	if mod and recipt_2d:
 		mod.modify_receipt_appearance(self, recipt_2d)
+
+func apply_modifier_visuals(mod: ModifierBase) -> void:
+	apply_customer_visuals(null, mod)
 
 func _get_npc() -> Base_NPC:
 	if GameState.seat_manager:

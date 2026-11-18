@@ -235,7 +235,12 @@ func add_receipt(seat: int, order_text: String, customer_race: String = "", cust
 
 	if recipt_node.has_method("_set_customer_info"):
 		recipt_node._set_customer_info(seat, customer_race, customer_icon)
-	if recipt_node.has_method("apply_modifier_visuals"):
+	if recipt_node.has_method("apply_customer_visuals"):
+		recipt_node.apply_customer_visuals(
+			npc.species_def if is_instance_valid(npc) else null,
+			npc.modifier if is_instance_valid(npc) else null
+		)
+	elif recipt_node.has_method("apply_modifier_visuals"):
 		recipt_node.apply_modifier_visuals(npc.modifier if is_instance_valid(npc) else null)
 	recipt_node._write(order_text)
 	recipt_node.ordered = true
@@ -265,6 +270,8 @@ func serve_cup_to_npc(drink: Glasses, npc: Base_NPC) -> void:
 	clear_receipt_for_seat(seat)
 	var seat_marker := main_root.get_node_or_null("SeatDrink" + str(seat)) as Node3D
 	var target_pos := seat_marker.global_position if seat_marker else npc.global_position
+	if npc.species_def:
+		target_pos = npc.species_def.prepare_cup_delivery(npc, drink, target_pos)
 	if npc.modifier:
 		target_pos = npc.modifier.prepare_cup_delivery(npc, drink, target_pos)
 
@@ -283,7 +290,12 @@ func serve_cup_to_npc(drink: Glasses, npc: Base_NPC) -> void:
 			npc.receive_drink(drink.drink_mix)
 		else:
 			npc._obtain_drink(drink._return_drink())
-		if not (npc.modifier and npc.modifier.consume_delivered_cup(npc, drink)):
+		var handled := false
+		if npc.modifier and npc.modifier.consume_delivered_cup(npc, drink):
+			handled = true
+		elif npc.species_def and npc.species_def.consume_delivered_cup(npc, drink):
+			handled = true
+		if not handled:
 			drink._dranked()
 
 func on_patience_ended(seat_num: int) -> void:

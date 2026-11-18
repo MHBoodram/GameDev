@@ -13,6 +13,7 @@ func _populate_species_dropdown() -> void:
 	opt.clear()
 	for sp in SpeciesRegistry.get_all_species():
 		opt.add_item(sp.display_name)
+		opt.set_item_metadata(opt.item_count - 1, sp.species_id)
 	if opt.item_count > 0:
 		opt.select(0)
 
@@ -23,6 +24,7 @@ func _populate_modifier_dropdown() -> void:
 	opt.clear()
 	for mod in ModifierRegistry.get_all_modifiers():
 		opt.add_item(mod.display_name)
+		opt.set_item_metadata(opt.item_count - 1, mod.modifier_id)
 	if opt.item_count > 0:
 		opt.select(0)
 
@@ -66,12 +68,14 @@ func _on_add_npc_specific_pressed() -> void:
 	if GameState.seat_manager:
 		var opt := $TextureRect/VBoxContainer/HBoxContainer/HBoxContainer/OptionButton as OptionButton
 		if opt and opt.selected >= 0:
-			var species_name: String = opt.get_item_text(opt.selected)
+			var meta = opt.get_item_metadata(opt.selected)
+			var species_name: String = str(meta) if meta != null else opt.get_item_text(opt.selected)
 			GameState.seat_manager.spawn_specific_species(species_name)
 
 func _on_add_npc_modifier_pressed() -> void:
 	if GameState.seat_manager:
 		var mod_opt := $TextureRect/VBoxContainer/HBoxContainer/HBoxContainer2/ModifierOptionButton as OptionButton
 		if mod_opt and mod_opt.selected >= 0:
-			var mod_name: String = mod_opt.get_item_text(mod_opt.selected)
+			var meta = mod_opt.get_item_metadata(mod_opt.selected)
+			var mod_name: String = str(meta) if meta != null else mod_opt.get_item_text(mod_opt.selected)
 			GameState.seat_manager.spawn_specific_with_modifier(mod_name)

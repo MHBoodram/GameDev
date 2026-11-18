@@ -20,6 +20,7 @@ var default_marketing_weight: float = 0.0
 var spawn_randomly: bool = true
 var can_be_ghost: bool = true
 var can_be_wanted: bool = true
+var disallowed_modifiers: Array[String] = []
 
 func get_npc_resource() -> NPC:
 	if npc_resource_path != "" and ResourceLoader.exists(npc_resource_path):
@@ -72,6 +73,17 @@ do _give_payment()
 => END
 """ % [display_name, display_name, display_name, display_name, display_name, display_name]
 
+func can_accept_modifier(modifier_id: String) -> bool:
+	var normalized := modifier_id.to_upper().strip_edges()
+	for blocked in disallowed_modifiers:
+		if blocked.to_upper().strip_edges() == normalized:
+			return false
+	if normalized == "GHOST" and not can_be_ghost:
+		return false
+	if normalized == "WANTED" and not can_be_wanted:
+		return false
+	return true
+
 func is_unlocked(_stats: Node = null) -> bool:
 	return true
 
@@ -98,9 +110,7 @@ func get_drink_pool(stats: Node = null) -> Array[String]:
 				pool.append(key)
 	return pool
 
-func get_order_count(_npc: Sprite3D, modifier: RefCounted = null) -> int:
-	if modifier and "is_wanted" in modifier and modifier.is_wanted:
-		return randi_range(2, 3)
+func get_order_count(_npc: Sprite3D, _modifier: RefCounted = null) -> int:
 	return 1
 
 func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = null) -> Array[DrinkOrder]:
@@ -109,15 +119,14 @@ func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = n
 	if pool.is_empty():
 		pool.append("gin")
 
-	var is_ghost_mod: bool = modifier != null and "is_ghost" in modifier and modifier.is_ghost
 	var count := maxi(1, get_order_count(npc, modifier))
+	if modifier and modifier.has_method("modify_order_count"):
+		count = maxi(1, int(modifier.modify_order_count(npc, count)))
 	for i in range(count):
 		var drink_name := str(pool.pick_random())
 		var order := DrinkOrder.new()
 		order.species_id = species_id
 		order.ingredients[drink_name] = 1.0
-		if is_ghost_mod and not order.required_processing.has("spectral"):
-			order.required_processing.append("spectral")
 		orders.append(order)
 	return orders
 
@@ -128,6 +137,9 @@ func format_order_text(order: DrinkOrder, base_text: String) -> String:
 			tags.append(str(tag).capitalize())
 		return base_text + "(" + ", ".join(tags) + ")\n"
 	return base_text
+
+func modify_receipt_appearance(_receipt: Node, _receipt_2d: Control) -> void:
+	pass
 
 func on_score_drink(_served: DrinkMix, _wanted: DrinkOrder, _score_data: Dictionary) -> void:
 	pass
@@ -141,8 +153,23 @@ func get_glass_resource_multiplier(_glass: Area3D, _liquid_id: String = "") -> f
 func can_accept_drink(_npc: Sprite3D) -> bool:
 	return true
 
+func prepare_cup_delivery(_npc: Sprite3D, _drink: Area3D, default_target_pos: Vector3) -> Vector3:
+	return default_target_pos
+
+func evaluate_drink_attempt(_npc: Sprite3D, _mix: DrinkMix, _wanted: DrinkOrder) -> Dictionary:
+	return {}
+
+func consume_delivered_cup(_npc: Sprite3D, _drink: Area3D) -> bool:
+	return false
+
 func on_drink_served(_npc: Sprite3D, _mix: DrinkMix, _wanted: DrinkOrder, _score_data: Dictionary) -> void:
 	pass
+
+func modify_overall_reputation_delta(_npc: Sprite3D, base_delta: float, _is_satisfactory: bool, _drink_score: float) -> float:
+	return base_delta
+
+func modify_species_reputation_delta(_npc: Sprite3D, _race_name: String, base_delta: float, _is_satisfactory: bool, _drink_score: float) -> float:
+	return base_delta
 
 func modify_payout(_npc: Sprite3D, _base_price: float, _is_satisfactory: bool, _drink_score: float, current_payment: float) -> float:
 	return current_payment
@@ -154,6 +181,9 @@ func modify_patience_replenish(_npc: Sprite3D, base_replenish: float, _drink_sco
 	return base_replenish
 
 func on_npc_setup(_npc: Sprite3D) -> void:
+	pass
+
+func on_npc_clear(_npc: Sprite3D) -> void:
 	pass
 
 func on_npc_process(_npc: Sprite3D, _delta: float, _active_tool: String) -> void:
@@ -170,6 +200,13 @@ func on_npc_tool_hover(_npc: Sprite3D, _tool_id: String, _is_hovered: bool) -> v
 
 func on_tool_interact_glass(_tool_id: String, _glass: Area3D, _player: Node3D) -> bool:
 	return false
+
+func should_consume_glass_click(_tool_id: String, _glass: Area3D) -> bool:
+	return false
+
+func can_highlight_glass(_tool_id: String, _glass: Area3D) -> int:
+	# -1 = no opinion, 0 = force false, 1 = force true
+	return -1
 
 func on_tool_counter_action(_tool_id: String, _player: Node3D, _main_node: Node3D) -> bool:
 	return false

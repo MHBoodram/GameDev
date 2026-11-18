@@ -282,8 +282,10 @@ func _on_next_night_pressed() -> void:
 		for sub_key in shopping_cart[main_key]:
 			match main_key:
 				"Marketing":
-					pass
-					#PlayerStats.species_marketing[]
+					var sp := SpeciesRegistry.get_species(str(sub_key))
+					if sp:
+						var current_weight: float = float(PlayerStats.species_marketing.get(sp.display_name, sp.default_marketing_weight))
+						PlayerStats.set_species_marketing(sp.display_name, current_weight + 1.0)
 				"Ingredients":
 					PlayerStats.unlocks[main_key][sub_key] = true
 					SpeciesRegistry.on_ingredient_unlocked(str(sub_key), PlayerStats)
@@ -300,3 +302,4 @@ func _on_next_night_pressed() -> void:
 	GameState.advance_night()
 	PlayerStats.reset_night_reputation_gains()
 	Transition._changing_scene("res://Main3D.tscn")
+	

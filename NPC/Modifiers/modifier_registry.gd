@@ -115,6 +115,13 @@ static func apply_drink_scoring_hooks(served: DrinkMix, wanted: DrinkOrder, scor
 	for proto in _ordered_modifiers:
 		proto.on_score_drink_global(served, wanted, score_data)
 
+static func get_glass_resource_multiplier(glass: Area3D, liquid_id: String = "") -> float:
+	ensure_loaded()
+	var mult := 1.0
+	for proto in _ordered_modifiers:
+		mult *= proto.get_glass_resource_multiplier(glass, liquid_id)
+	return maxf(0.05, mult)
+
 static func handle_counter_edge_tool(tool_id: String, player: Node3D, main_node: Node3D) -> bool:
 	ensure_loaded()
 	var normalized_tool := tool_id.to_lower().strip_edges()
@@ -155,6 +162,8 @@ static func handle_npc_tool_click(npc: Sprite3D, tool_id: String, player: Node3D
 	if npc_mod and npc_mod.on_npc_tool_click(npc, normalized_tool, player):
 		return true
 	for proto in _ordered_modifiers:
+		if npc_mod and proto.get_script() == npc_mod.get_script():
+			continue
 		if proto.on_npc_tool_click(npc, normalized_tool, player):
 			return true
 	return false

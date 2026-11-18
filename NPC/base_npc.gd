@@ -93,6 +93,17 @@ func _get_active_tool() -> String:
 		return str(GameState.player.return_tool()).to_lower().strip_edges()
 	return "hand"
 
+func _get_tool_controller() -> ToolController:
+	if GameState.player:
+		return GameState.player.get("tool_controller") as ToolController
+	return null
+
+func _get_race_display_name() -> String:
+	if species_def:
+		return species_def.display_name
+	var fallback_sp := SpeciesRegistry.get_species_or_default(npc_resource.race if npc_resource else "")
+	return fallback_sp.display_name if fallback_sp else "Human"
+
 func _process(delta: float) -> void:
 	var active_tool := _get_active_tool()
 	if species_def:
@@ -123,6 +134,7 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 	_original_modulate = Color.WHITE
 	_is_highlighted = false
 	ModifierRegistry.clear_npc_visuals(self)
+	SpeciesRegistry.clear_npc_visuals(self)
 	GameState.play_sfx("play_entranto")
 
 	if patience > 0.0:
@@ -136,10 +148,8 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 	patience_timer.start(max_patience)
 
 	speaking_title = starting_dialogue
-	if starting_dialogue != "start":
-		unique_talk = true
-		if starting_dialogue == "tutorial_walk":
-			can_talk = false
+	unique_talk = (starting_dialogue != "start")
+	can_talk = (starting_dialogue != "tutorial_walk")
 
 	species_def = SpeciesRegistry.get_species_or_default(npc_resource.race if npc_resource else "HUMAN")
 
@@ -156,7 +166,7 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 		patient_2d._recipt_hide()
 	customer_satisfaction = 1.0
 
-	var race_id := npc_resource.race if npc_resource else "HUMAN"
+	var race_id := species_def.species_id if species_def else (npc_resource.race if npc_resource else "HUMAN")
 	if forced_modifier != "":
 		modifier = ModifierRegistry.create_modifier_for_species(forced_modifier, race_id, unique_talk, PlayerStats)
 	else:
@@ -175,10 +185,14 @@ func talk() -> void:
 		return
 	if not can_talk or speaking_title == "" or speaking_title == null:
 		return
-	var active_tool := _get_active_tool()
-	if not unique_talk and species_def and not species_def.can_interact_with_tool(self, active_tool, "talk"):
-		species_def.on_npc_tool_click(self, active_tool, GameState.player)
-		return
+	if not unique_talk:
+		var tool_ctrl := _get_tool_controller()
+		var active_tool := _get_active_tool()
+		var can_talk_with_tool: bool = tool_ctrl.can_npc_interact_with_tool(self, "talk") if tool_ctrl else ((not species_def or species_def.can_interact_with_tool(self, active_tool, "talk")) and (not modifier or modifier.can_interact_with_tool(self, active_tool, "talk")))
+		if not can_talk_with_tool:
+			if tool_ctrl:
+				tool_ctrl.handle_npc_click(self, GameState.player)
+			return
 	if dialogue_resource:
 		GameState.character_talking = self
 		DialogueManager.show_dialogue_balloon_scene(custom_balloon, dialogue_resource, speaking_title, [self])
@@ -197,8 +211,10 @@ func can_accept_drink() -> bool:
 	var base_ok := not is_leaving and drink_list.size() > 0 and has_receipt_spawned and not GameState.is_dialogue_open
 	if not base_ok:
 		return false
-	if species_def:
-		return species_def.can_accept_drink(self)
+	if species_def and not species_def.can_accept_drink(self):
+		return false
+	if modifier and not modifier.can_accept_drink(self):
+		return false
 	return true
 
 func set_highlight(enabled: bool) -> void:
@@ -254,7 +270,12 @@ func receive_drink(mix: DrinkMix) -> float:
 		return 0.0
 
 	var wanted_order: DrinkOrder = want if want is DrinkOrder else DrinkOrder.from_legacy_want(want)
-	var attempt_override := modifier.evaluate_drink_attempt(self, mix, wanted_order) if modifier else {}
+	var attempt_override: Dictionary = modifier.evaluate_drink_attempt(self, mix, wanted_order) if modifier else {}
+	if not attempt_override.get("rejected", false) and species_def:
+		var species_override := species_def.evaluate_drink_attempt(self, mix, wanted_order)
+		if not species_override.is_empty():
+			attempt_override = species_override
+
 	if attempt_override.get("rejected", false):
 		var override_score: float = float(attempt_override.get("score", 0.0))
 		if attempt_override.get("zero_satisfaction", false):
@@ -273,6 +294,10 @@ func receive_drink(mix: DrinkMix) -> float:
 		return override_score
 
 	var score_data := DrinkScorer.score_drink(mix, wanted_order)
+	if modifier:
+		modifier.on_score_drink(self, mix, wanted_order, score_data)
+		score_data["score"] = clampf(float(score_data["score"]), 0.0, 1.0)
+		score_data["is_satisfactory"] = float(score_data["score"]) >= DrinkScorer.SATISFACTORY_THRESHOLD
 	var drink_score: float = score_data["score"]
 
 	if species_def:
@@ -319,32 +344,41 @@ func _replenish_patience(drink_score: float) -> void:
 	var replenish_time := REPLENISH_BASE_TIME * drink_score
 	if species_def:
 		replenish_time = species_def.modify_patience_replenish(self, replenish_time, drink_score)
+	if modifier:
+		replenish_time = modifier.modify_patience_replenish(self, replenish_time, drink_score)
 	if replenish_time > 0.0:
 		var new_patience := minf(max_patience, patience_timer.time_left + replenish_time)
 		patience_timer.start(maxf(0.01, new_patience))
 
 func _apply_reputation_impact(is_satisfactory: bool, drink_score: float) -> void:
-	var race_name: String = species_def.display_name if species_def else (npc_resource.race if npc_resource else "Human")
+	var race_name := _get_race_display_name()
 	if is_satisfactory:
 		var overall_delta: float = 1.0
 		var species_delta: float = 1.0
+		if species_def:
+			overall_delta = species_def.modify_overall_reputation_delta(self, overall_delta, true, drink_score)
+			species_delta = species_def.modify_species_reputation_delta(self, race_name, species_delta, true, drink_score)
 		if modifier:
 			overall_delta = modifier.modify_overall_reputation_delta(self, overall_delta, true, drink_score)
 			species_delta = modifier.modify_species_reputation_delta(self, race_name, species_delta, true, drink_score)
 		PlayerStats.add_overall_reputation(overall_delta)
 		PlayerStats.change_species_reputation(race_name, species_delta)
 	else:
-		var penalty: float = (1.0 - drink_score) * 2.0
+		var species_delta: float = -((1.0 - drink_score) * 2.0)
+		if species_def:
+			species_delta = species_def.modify_species_reputation_delta(self, race_name, species_delta, false, drink_score)
 		if modifier:
-			penalty = -modifier.modify_species_reputation_delta(self, race_name, -penalty, false, drink_score)
-		PlayerStats.change_species_reputation(race_name, -penalty)
+			species_delta = modifier.modify_species_reputation_delta(self, race_name, species_delta, false, drink_score)
+		PlayerStats.change_species_reputation(race_name, species_delta)
 
 func _calculate_payout(drink_score: float, is_satisfactory: bool) -> void:
-	var race_name: String = species_def.display_name if species_def else (npc_resource.race if npc_resource else "Human")
+	var race_name := _get_race_display_name()
 	var group_rep: float = PlayerStats.get_species_reputation(race_name)
 	var payment: float = BASE_DRINK_PRICE
 	if species_def:
 		payment = species_def.modify_payout(self, BASE_DRINK_PRICE, is_satisfactory, drink_score, payment)
+	if modifier:
+		payment = modifier.modify_payout(self, BASE_DRINK_PRICE, is_satisfactory, drink_score, payment)
 
 	if drink_list.size() <= 0:
 		var tip := (PlayerStats.overall_reputation + group_rep) * customer_satisfaction
@@ -433,6 +467,8 @@ func _item_print() -> String:
 			total += str(ing_name) + " " + str(pct) + "%\n"
 		if species_def:
 			total = species_def.format_order_text(order, total)
+		if modifier:
+			total = modifier.format_order_text(order, total)
 	elif cup is Array:
 		for item in cup:
 			if item is Array and item.size() >= 2:
@@ -519,8 +555,9 @@ func _on_interaction_input_event(camera_node: Node, event: InputEvent, _pos: Vec
 		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if abs(camera_node.global_position.x - global_position.x) < 2 or unique_talk:
-			if not unique_talk and GameState.player and "tool_controller" in GameState.player and GameState.player.tool_controller:
-				if GameState.player.tool_controller.handle_npc_click(self, GameState.player):
+			var tool_ctrl := _get_tool_controller()
+			if not unique_talk and tool_ctrl:
+				if tool_ctrl.handle_npc_click(self, GameState.player):
 					return
 			if can_talk and speaking_title != "" and speaking_title != null:
 				talk()
@@ -528,22 +565,36 @@ func _on_interaction_input_event(camera_node: Node, event: InputEvent, _pos: Vec
 func _on_area_3d_mouse_entered() -> void:
 	if Ingredients.active_dragging_item != null:
 		return
+	var tool_ctrl := _get_tool_controller()
 	var active_tool := _get_active_tool()
-	if species_def:
-		species_def.on_npc_tool_hover(self, active_tool, true)
+	if tool_ctrl:
+		tool_ctrl.handle_npc_hover(self, true)
+	else:
+		if species_def:
+			species_def.on_npc_tool_hover(self, active_tool, true)
+		if modifier:
+			modifier.on_npc_tool_hover(self, active_tool, true)
 	if not can_talk or speaking_title == "" or speaking_title == null:
 		return
-	if not unique_talk and species_def and not species_def.can_interact_with_tool(self, active_tool, "hover"):
-		return
+	if not unique_talk:
+		var can_hover: bool = tool_ctrl.can_npc_interact_with_tool(self, "hover") if tool_ctrl else ((not species_def or species_def.can_interact_with_tool(self, active_tool, "hover")) and (not modifier or modifier.can_interact_with_tool(self, active_tool, "hover")))
+		if not can_hover:
+			return
 	if GameState.player:
 		GameState.player._update_hand("interact")
 
 func _on_area_3d_mouse_exited() -> void:
 	if Ingredients.active_dragging_item != null:
 		return
+	var tool_ctrl := _get_tool_controller()
 	var active_tool := _get_active_tool()
-	if species_def:
-		species_def.on_npc_tool_hover(self, active_tool, false)
+	if tool_ctrl:
+		tool_ctrl.handle_npc_hover(self, false)
+	else:
+		if species_def:
+			species_def.on_npc_tool_hover(self, active_tool, false)
+		if modifier:
+			modifier.on_npc_tool_hover(self, active_tool, false)
 	if GameState.player:
 		GameState.player._update_hand("idle")
 
@@ -555,7 +606,12 @@ func _on_area_Obtain_drink_entered(area: Area3D) -> void:
 		if not can_accept_drink():
 			return
 		receive_drink(glass.drink_mix)
-		if not (modifier and modifier.consume_delivered_cup(self, glass)):
+		var handled := false
+		if modifier and modifier.consume_delivered_cup(self, glass):
+			handled = true
+		elif species_def and species_def.consume_delivered_cup(self, glass):
+			handled = true
+		if not handled:
 			glass._dranked()
 
 func _talking(open_mouth: bool = false) -> void:

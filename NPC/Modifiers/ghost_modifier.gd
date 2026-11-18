@@ -8,13 +8,12 @@ func _init() -> void:
 	display_name = "Ghost"
 	sort_order = 1
 	spawn_chance = 0.10
-	is_ghost = true
 
 func can_apply_to_species(species_id: String, is_unique: bool = false, stats: Node = null) -> bool:
 	if is_unique:
 		return false
 	var sp := SpeciesRegistry.get_species(species_id)
-	if sp == null or not sp.can_be_ghost:
+	if sp == null or not sp.can_accept_modifier(modifier_id):
 		return false
 	if stats and "unlocks" in stats:
 		if stats.unlocks.has("Ingredients") and stats.unlocks["Ingredients"].has("Knife"):

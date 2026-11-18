@@ -2,7 +2,7 @@ class_name SpeciesRegistry
 extends RefCounted
 
 # Auto-discovers every SpeciesBase subclass in /species
-# Hooks in many files by looping through the loaded species lis
+# Hooks in many files by looping through the loaded species list
 
 const SPECIES_DIR := "res://NPC/Species"
 
@@ -97,6 +97,11 @@ static func get_species_or_default(species_name: String) -> SpeciesBase:
 		return sp
 	return _ordered_species[0] if not _ordered_species.is_empty() else null
 
+static func clear_npc_visuals(npc: Sprite3D) -> void:
+	ensure_loaded()
+	for sp in _ordered_species:
+		sp.on_npc_clear(npc)
+
 static func get_spawnable_species_weights(stats: Node = null) -> Array[Dictionary]:
 	ensure_loaded()
 	var entries: Array[Dictionary] = []
@@ -154,6 +159,23 @@ static func handle_glass_tool_click(tool_id: String, glass: Area3D, player: Node
 		if sp.on_tool_interact_glass(normalized_tool, glass, player):
 			return true
 	return false
+
+static func should_consume_glass_click(tool_id: String, glass: Area3D) -> bool:
+	ensure_loaded()
+	var normalized_tool := tool_id.to_lower().strip_edges()
+	for sp in _ordered_species:
+		if sp.should_consume_glass_click(normalized_tool, glass):
+			return true
+	return false
+
+static func can_highlight_glass(tool_id: String, glass: Area3D) -> bool:
+	ensure_loaded()
+	var normalized_tool := tool_id.to_lower().strip_edges()
+	for sp in _ordered_species:
+		var verdict := sp.can_highlight_glass(normalized_tool, glass)
+		if verdict != -1:
+			return verdict == 1
+	return true
 
 static func handle_npc_tool_click(npc: Sprite3D, tool_id: String, player: Node3D) -> bool:
 	ensure_loaded()

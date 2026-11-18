@@ -59,14 +59,6 @@ text = "Spawn Random Customer"
 
 [node name="OptionButton" type="OptionButton" parent="TextureRect/VBoxContainer/HBoxContainer/HBoxContainer" unique_id=1935069102]
 layout_mode = 2
-selected = 0
-item_count = 3
-popup/item_0/text = "Human"
-popup/item_0/id = 0
-popup/item_1/text = "Vampire"
-popup/item_1/id = 1
-popup/item_2/text = "Slime"
-popup/item_2/id = 2
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1892341021]
 layout_mode = 2

@@ -16,6 +16,7 @@ func _init() -> void:
 	default_marketing_weight = 1.0
 	spawn_randomly = true
 	can_be_ghost = false
+	disallowed_modifiers = ["GHOST"]
 
 func is_unlocked(stats: Node = null) -> bool:
 	# Appears rarely once another random-spawning species besides Human is unlocked
@@ -26,9 +27,7 @@ func is_unlocked(stats: Node = null) -> bool:
 			return true
 	return false
 
-func get_order_count(_npc: Sprite3D, modifier: RefCounted = null) -> int:
-	if modifier and "is_wanted" in modifier and modifier.is_wanted:
-		return randi_range(2, 3)
+func get_order_count(_npc: Sprite3D, _modifier: RefCounted = null) -> int:
 	return randi_range(1, 3)
 
 func get_drink_pool(stats: Node = null) -> Array[String]:

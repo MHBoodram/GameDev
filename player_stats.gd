@@ -3,20 +3,8 @@ extends Node
 var previous_money : float
 var money : float = 0
 var overall_reputation : float = 0.0
-var reputation_species : Dictionary = {
-	"Slime" : 0.0,
-	"Human" : 0.0,
-	"Vampire" : 0.0,
-	"Fish" : 0.0,
-	"Tiny" : 0.0,
-}
-var night_species_delta : Dictionary = {
-	"Slime" : 0.0,
-	"Human" : 0.0,
-	"Vampire" : 0.0,
-	"Fish" : 0.0,
-	"Tiny" : 0.0,
-}
+var reputation_species : Dictionary = {}
+var night_species_delta : Dictionary = {}
 
 var upgrades : Dictionary = {
 	"Drinks":
@@ -38,22 +26,8 @@ var upgrades : Dictionary = {
 }
 
 var overall_marketing : float = 1.0
-
-var species_marketing : Dictionary = {
-	"Human": 1.0,
-	"Slime": 1.0,
-	"Fish": 0,
-	"Tiny": 0,
-	"Vampire": 1.0
-}
-
-var species_banners : Dictionary = {
-	"Human": false,
-	"Slime": false,
-	"Fish": false,
-	"Tiny": false,
-	"Vampire": false
-}
+var species_marketing : Dictionary = {}
+var species_banners : Dictionary = {}
 
 var unlocks : Dictionary = {
 	"Drinks" :{
@@ -119,6 +93,10 @@ func _find_species_key(species: String) -> String:
 	for key: String in reputation_species.keys():
 		if key.to_lower() == species.to_lower():
 			return key
+	var fallback_sp := SpeciesRegistry.get_species_or_default("")
+	if fallback_sp:
+		_ensure_species_entry(fallback_sp.display_name, fallback_sp.default_marketing_weight)
+		return fallback_sp.display_name
 	return "Human"
 
 func add_overall_reputation(amount: float) -> void:
@@ -142,7 +120,9 @@ func change_species_reputation(species: String, delta: float) -> void:
 
 # Returns species with largest reputation gain during current night
 func get_highest_gaining_species() -> String:
-	var highest_species: String = "Human"
+	sync_species_registry()
+	var default_sp := SpeciesRegistry.get_species_or_default("")
+	var highest_species: String = default_sp.display_name if default_sp else "Human"
 	var highest_gain: float = -INF
 	for species_key: String in night_species_delta.keys():
 		var gain: float = night_species_delta[species_key]
@@ -162,6 +142,8 @@ func get_spawn_rate() -> float:
 func get_species_spawn_weight(species: String) -> float:
 	var sp := SpeciesRegistry.get_species(species)
 	var key: String = sp.display_name if sp else _find_species_key(species)
+	if sp:
+		_ensure_species_entry(sp.display_name, sp.default_marketing_weight)
 	var base_weight: float = sp.base_spawn_weight if sp else 5.0
 
 	var marketing_multiplier: float = float(species_marketing.get(key, 1.0))

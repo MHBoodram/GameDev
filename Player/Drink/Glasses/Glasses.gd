@@ -82,29 +82,41 @@ func get_drink_mix() -> DrinkMix:
 	return drink_mix
 
 func get_resource_usage_multiplier(liquid_id: String = "") -> float:
-	return SpeciesRegistry.get_glass_resource_multiplier(self, liquid_id)
+	var sp_mult := SpeciesRegistry.get_glass_resource_multiplier(self, liquid_id)
+	var mod_mult := ModifierRegistry.get_glass_resource_multiplier(self, liquid_id)
+	return maxf(0.05, sp_mult * mod_mult)
+
+func _get_tool_controller() -> ToolController:
+	if GameState.player:
+		return GameState.player.get("tool_controller") as ToolController
+	return null
 
 func can_highlight_on_hover() -> bool:
 	if _is_drag_blocked():
 		return false
+	var tool_ctrl := _get_tool_controller()
+	if tool_ctrl:
+		return tool_ctrl.can_highlight_glass(self)
 	var active_tool: String = GameState.player.return_tool() if GameState.player and GameState.player.has_method("return_tool") else "hand"
-	return ModifierRegistry.can_highlight_glass(active_tool, self)
+	return ModifierRegistry.can_highlight_glass(active_tool, self) and SpeciesRegistry.can_highlight_glass(active_tool, self)
 
 func handle_immediate_tool_click() -> bool:
 	if GameState.is_dialogue_open or ShakerMinigame.active or _is_drag_blocked():
 		return false
-	if GameState.player and "tool_controller" in GameState.player and GameState.player.tool_controller:
-		var active_tool: String = GameState.player.tool_controller.get_tool()
+	var tool_ctrl := _get_tool_controller()
+	if tool_ctrl:
+		var active_tool: String = tool_ctrl.get_tool()
 		if active_tool != "hand":
-			if GameState.player.tool_controller.handle_glass_click(self, GameState.player):
+			if tool_ctrl.handle_glass_click(self, GameState.player):
 				return true
-			if ModifierRegistry.should_consume_glass_click(active_tool, self):
+			if tool_ctrl.should_consume_glass_click(self):
 				return true
 	return false
 
 func handle_non_drag_click() -> bool:
-	if GameState.player and "tool_controller" in GameState.player and GameState.player.tool_controller:
-		return GameState.player.tool_controller.handle_glass_click(self, GameState.player)
+	var tool_ctrl := _get_tool_controller()
+	if tool_ctrl:
+		return tool_ctrl.handle_glass_click(self, GameState.player)
 	return false
 
 func _get_free_drag_target(delta: float) -> Vector3:
