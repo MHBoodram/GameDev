@@ -13,6 +13,8 @@ extends Area3D
 const IDLE_COLOR := Color(1.0, 1.0, 1.0, 1.0)
 const HOVER_COLOR := Color(1.0, 0.0, 0.0, 0.9)
 const LOCKED_COLOR := Color(0.3, 1.0, 0.3, .9)
+const KEG_IDLE_ROT_X := -131.5
+const KEG_MAX_POUR_ROT_X := 2.5
 
 var in_pour_zone: Glasses = null
 var _glasses_in_area: Array[Glasses] = []
@@ -40,6 +42,23 @@ func _get_beer_camera_marker() -> Node3D:
 func _is_pour_button_held() -> bool:
 	return Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.get_action_strength("Left_click") > 0.0
 
+func _get_pour_height_ratio() -> float:
+	var viewport := get_viewport()
+	if not viewport:
+		return 0.5
+	var vp_height: float = viewport.get_visible_rect().size.y
+	if vp_height <= 1.0:
+		return 0.5
+	var mouse_y: float = viewport.get_mouse_position().y
+	var raw_height: float = 1.0 - clampf(mouse_y / vp_height, 0.0, 1.0)
+	return clampf((raw_height - 0.1) / 0.8, 0.0, 1.0)
+
+func _get_pour_rate_multiplier() -> float:
+	return _get_pour_height_ratio() * 2.0
+
+func _get_keg_pour_angle() -> float:
+	return lerpf(KEG_IDLE_ROT_X, KEG_MAX_POUR_ROT_X, _get_pour_height_ratio())
+
 @warning_ignore("unused_parameter")
 func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and not _is_pouring:
@@ -51,35 +70,37 @@ func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: V
 				GameState.gameplay_ui._in_down_minigame()
 			cam_rig.call("focus_on_marker", marker, 0.55)
 
-		keg_sprite.rotation_degrees.x = -64.5
-		keg_water_particle.emitting = true
 		while _is_pour_button_held() and is_inside_tree():
-			if in_pour_zone and is_instance_valid(in_pour_zone):
-				in_pour_zone._pouring("beer", 0.25)
+			var rate_mult: float = _get_pour_rate_multiplier()
+			if rate_mult > 0.0 and in_pour_zone and is_instance_valid(in_pour_zone):
+				in_pour_zone._pouring("beer", 0.25 * rate_mult)
 				SFXAudio.play_liquidpour()
 			await get_tree().create_timer(0.1).timeout
 			if not is_inside_tree():
 				_is_pouring = false
 				return
-		keg_sprite.rotation_degrees.x = -131.5
+		keg_sprite.rotation_degrees.x = KEG_IDLE_ROT_X
 		keg_water_particle.emitting = false
+		_is_pouring = false
 
 		if cam_rig and marker:
 			await get_tree().create_timer(0.15).timeout
 			if not is_inside_tree():
-				_is_pouring = false
 				return
 			cam_rig.call("return_from_marker", 0.55)
 			if cam_rig.has_signal("marker_returned"):
 				await cam_rig.marker_returned
 			if not is_inside_tree():
-				_is_pouring = false
 				return
 			if GameState.gameplay_ui and GameState.gameplay_ui.has_method("_out_down_minigame"):
 				GameState.gameplay_ui._out_down_minigame()
-		_is_pouring = false
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if _is_pouring:
+		var target_rot: float = _get_keg_pour_angle()
+		keg_sprite.rotation_degrees.x = lerpf(keg_sprite.rotation_degrees.x, target_rot, 1.0 - exp(-18.0 * delta))
+		keg_water_particle.emitting = _get_pour_rate_multiplier() > 0.0
+
 	if in_pour_zone and is_instance_valid(in_pour_zone):
 		pour_zone.modulate = LOCKED_COLOR if in_pour_zone.is_snapped() else HOVER_COLOR
 	else:

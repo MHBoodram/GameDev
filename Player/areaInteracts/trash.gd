@@ -1,6 +1,8 @@
 @tool
 extends Area3D
 
+const MAX_POUR_TILT_DEGREES: float = 120.0
+
 @export var indicator_path: NodePath = NodePath("TrashIndicator")
 @export var collision_shape_path: NodePath = NodePath("CollisionShape3D")
 @export var min_collision_height: float = 0.25
@@ -16,6 +18,7 @@ extends Area3D
 var in_pour_zone: Glasses = null
 var _glasses_in_area: Array[Glasses] = []
 var _is_pouring: bool = false
+var _active_pouring_glass: Glasses = null
 
 func _ready() -> void:
 	sync_bounds_from_indicator()
@@ -31,6 +34,30 @@ func _ready() -> void:
 		mouse_entered.connect(_on_mouse_entered)
 	if not mouse_exited.is_connected(_on_mouse_exited):
 		mouse_exited.connect(_on_mouse_exited)
+
+func _process(_delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
+	if _is_pouring and is_instance_valid(_active_pouring_glass):
+		if _active_pouring_glass.has_method("set_pour_out_tilt"):
+			_active_pouring_glass.set_pour_out_tilt(_get_pour_tilt_degrees())
+
+func _get_pour_height_ratio() -> float:
+	var viewport := get_viewport()
+	if not viewport:
+		return 0.5
+	var vp_height: float = viewport.get_visible_rect().size.y
+	if vp_height <= 1.0:
+		return 0.5
+	var mouse_y: float = viewport.get_mouse_position().y
+	var raw_height: float = 1.0 - clampf(mouse_y / vp_height, 0.0, 1.0)
+	return clampf((raw_height - 0.1) / 0.8, 0.0, 1.0)
+
+func _get_pour_rate_multiplier() -> float:
+	return _get_pour_height_ratio() * 2.0
+
+func _get_pour_tilt_degrees() -> float:
+	return _get_pour_height_ratio() * MAX_POUR_TILT_DEGREES
 
 func _snap_target() -> Node3D:
 	var indicator := get_node_or_null(indicator_path) as Node3D
@@ -80,6 +107,7 @@ func start_pour() -> void:
 
 	_is_pouring = true
 	var active_glass := in_pour_zone
+	_active_pouring_glass = active_glass
 	var cam_rig: Camera3D = _get_camera_rig()
 	var marker := _get_sink_camera_marker()
 	if cam_rig and marker:
@@ -88,17 +116,20 @@ func start_pour() -> void:
 		cam_rig.call("focus_on_marker", marker, 0.55)
 
 	if active_glass.has_method("start_pour_out"):
-		active_glass.start_pour_out(80.0)
+		active_glass.start_pour_out(_get_pour_tilt_degrees())
 
 	while _is_pour_button_held() and is_inside_tree():
-		if is_instance_valid(active_glass) and active_glass.total_liquids > 0.0:
-			active_glass._pour_out(pour_out_amount)
+		var rate_mult: float = _get_pour_rate_multiplier()
+		if rate_mult > 0.0 and is_instance_valid(active_glass) and active_glass.total_liquids > 0.0:
+			active_glass._pour_out(pour_out_amount * rate_mult)
 			SFXAudio.play_liquidpour()
 		await get_tree().create_timer(0.1).timeout
 		if not is_inside_tree():
 			_is_pouring = false
+			_active_pouring_glass = null
 			return
 
+	_active_pouring_glass = null
 	if is_instance_valid(active_glass) and active_glass.has_method("stop_pour_out"):
 		active_glass.stop_pour_out()
 

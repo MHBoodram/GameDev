@@ -22,6 +22,7 @@ var is_delivering: bool = false
 var is_consumed: bool = false
 var is_pouring_out: bool = false
 var pour_tilt_degrees: float = 0.0
+var _target_pour_tilt_degrees: float = 0.0
 var _pour_tilt_tween: Tween = null
 var _active_trash: Area3D = null
 var _last_counter_position: Vector3 = Vector3.ZERO
@@ -207,6 +208,9 @@ func _process(delta: float) -> void:
 	visual_helper.update_physics(delta, global_position, camera, viscosity, spring_stiffness, base_damping, slosh_sensitivity, max_slosh_angle, wave_frequency, vertical_spring, vertical_damping, vertical_sensitivity)
 	if not is_consumed:
 		_update_shader_parameters()
+
+	if is_pouring_out and not (_pour_tilt_tween and _pour_tilt_tween.is_valid()):
+		pour_tilt_degrees = lerpf(pour_tilt_degrees, _target_pour_tilt_degrees, 1.0 - exp(-18.0 * delta))
 
 	if camera and not is_balls_dragging:
 		_look_at_sprite(camera.global_position)
@@ -518,14 +522,15 @@ func start_pour_out(tilt_degrees: float = 80.0) -> void:
 	_is_pointer_pressed = false
 	is_balls_dragging = false
 	push_velocity = Vector3.ZERO
+	_target_pour_tilt_degrees = tilt_degrees
 	if _pour_tilt_tween and _pour_tilt_tween.is_valid():
 		_pour_tilt_tween.kill()
-	_pour_tilt_tween = create_tween()
-	_pour_tilt_tween.set_trans(Tween.TRANS_SINE)
-	_pour_tilt_tween.set_ease(Tween.EASE_OUT)
-	_pour_tilt_tween.tween_property(self, "pour_tilt_degrees", tilt_degrees, 0.15)
+
+func set_pour_out_tilt(tilt_degrees: float) -> void:
+	_target_pour_tilt_degrees = tilt_degrees
 
 func stop_pour_out() -> void:
+	_target_pour_tilt_degrees = 0.0
 	if _pour_tilt_tween and _pour_tilt_tween.is_valid():
 		_pour_tilt_tween.kill()
 	_pour_tilt_tween = create_tween()
@@ -759,3 +764,4 @@ func mark_mixed() -> void:
 
 func get_mixed_ingredients() -> Array[String]:
 	return get_unique_liquids_ids()
+	

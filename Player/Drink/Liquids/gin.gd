@@ -5,6 +5,7 @@ class_name Drinks
 
 const POUR_AMOUNT: float = 0.25
 const POUR_INTERVAL: float = 0.1
+const MAX_POUR_ANGLE_DEGREES: float = 120.0
 
 @onready var liquid_refresh: Timer = get_node("Liquid_refresh")
 @export var liquid_resource: Liquid
@@ -88,6 +89,9 @@ func _apply_outside_texture() -> void:
 
 func _process(delta: float) -> void:
 	if in_game:
+		if is_pouring:
+			var target_angle := _get_pour_angle_degrees()
+			rotation_degrees.z = lerpf(rotation_degrees.z, target_angle, 1.0 - exp(-18.0 * delta))
 		return
 	super._process(delta)
 	_face_camera()
@@ -102,22 +106,40 @@ func _on_area_3d_input_event(camera_node: Node, event: InputEvent, event_pos: Ve
 	if left_pressed and not is_pouring:
 		await _pour()
 
+func _get_pour_height_ratio() -> float:
+	var viewport := get_viewport()
+	if not viewport:
+		return 0.5
+	var vp_height: float = viewport.get_visible_rect().size.y
+	if vp_height <= 1.0:
+		return 0.5
+	var mouse_y: float = viewport.get_mouse_position().y
+	var raw_height: float = 1.0 - clampf(mouse_y / vp_height, 0.0, 1.0)
+	return clampf((raw_height - 0.1) / 0.8, 0.0, 1.0)
+
+func _get_pour_rate_multiplier() -> float:
+	return _get_pour_height_ratio() * 2.0
+
+func _get_pour_angle_degrees() -> float:
+	return _get_pour_height_ratio() * MAX_POUR_ANGLE_DEGREES
+
 # tips bottle sideways and squirts liquid into the glass while left click is held
 func _pour() -> void:
 	is_pouring = true
 	if GameState.player:
 		GameState.player._update_hand("holding")
-	rotation_degrees.z = 80
 
 	if pouring_into:
-		$CPUParticles3D.emitting = true
 		while _is_pour_button_held() and in_game and GameState.player and GameState.player.in_game and current_liquid > 0.0 and is_instance_valid(pouring_into):
-			var cost_mult: float = pouring_into.get_resource_usage_multiplier(liquid_resource.id) if pouring_into.has_method("get_resource_usage_multiplier") else 1.0
-			var max_bottle_pour: float = current_liquid / maxf(cost_mult, 0.001)
-			var amount := minf(POUR_AMOUNT, max_bottle_pour)
-			var poured_variant = pouring_into._pouring(liquid_resource.id, amount)
-			var actual_poured: float = float(poured_variant) if (poured_variant is float or poured_variant is int) else amount
-			set_liquid_amount(current_liquid - actual_poured * cost_mult)
+			var rate_mult: float = _get_pour_rate_multiplier()
+			$CPUParticles3D.emitting = rate_mult > 0.0
+			if rate_mult > 0.0:
+				var cost_mult: float = pouring_into.get_resource_usage_multiplier(liquid_resource.id) if pouring_into.has_method("get_resource_usage_multiplier") else 1.0
+				var max_bottle_pour: float = current_liquid / maxf(cost_mult, 0.001)
+				var amount := minf(POUR_AMOUNT * rate_mult, max_bottle_pour)
+				var poured_variant = pouring_into._pouring(liquid_resource.id, amount)
+				var actual_poured: float = float(poured_variant) if (poured_variant is float or poured_variant is int) else amount
+				set_liquid_amount(current_liquid - actual_poured * cost_mult)
 			await get_tree().create_timer(POUR_INTERVAL).timeout
 			if not is_inside_tree():
 				return
@@ -163,6 +185,8 @@ func _in_game() -> void:
 
 func _out_of_game() -> void:
 	in_game = false
+	is_pouring = false
+	$CPUParticles3D.emitting = false
 	_return_original()
 	pouring_into = null
 
@@ -292,3 +316,4 @@ func _add_liquid(amount: float) -> void:
 
 func _on_liquid_refresh_timeout() -> void:
 	_add_liquid(0.25)
+	
