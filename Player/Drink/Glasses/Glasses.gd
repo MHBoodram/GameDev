@@ -402,39 +402,44 @@ func _rebuild_liquid_gradient(show_hud: bool = true) -> void:
 			hud.update_pouring_indicator(self, liquids, size, visual_helper)
 
 func _pouring(id: String, liquids_num: float) -> float:
+	if liquids_num <= 0.0:
+		return 0.0
+
 	var current_total: float = 0.0
 	for l in liquids:
 		current_total += float(l[1])
 
-	var available_space := size - current_total
-	if available_space <= 0.0:
-		return 0.0
+	var available_space := maxf(0.0, size - current_total)
+	var added := minf(liquids_num, available_space)
+	var overflow := maxf(0.0, liquids_num - added)
 
-	liquids_num = minf(liquids_num, available_space)
-	if liquids_num <= 0.0:
-		return 0.0
+	if overflow > 0.00001:
+		var overflow_percent := (overflow / maxf(size, 0.001)) * 100.0
+		drink_mix.add_overfill(overflow_percent)
 
-	var col: Color = visual_helper.LIQUID_COLOR.get(id, Color.WHITE)
+	if added > 0.0:
+		var col: Color = visual_helper.LIQUID_COLOR.get(id, Color.WHITE)
 
-	# stack liquid onto matching top layer or append a new layer
-	if not liquids.is_empty():
-		var top_drink = liquids[liquids.size() - 1]
-		if top_drink[0] is String and top_drink[0] == id:
-			top_drink[1] += liquids_num
-			if top_drink.size() > 3 and top_drink[3] is Dictionary:
-				top_drink[3][id] = top_drink[1]
+		# stack liquid onto matching top layer or append a new layer
+		if not liquids.is_empty():
+			var top_drink = liquids[liquids.size() - 1]
+			if top_drink[0] is String and top_drink[0] == id:
+				top_drink[1] += added
+				if top_drink.size() > 3 and top_drink[3] is Dictionary:
+					top_drink[3][id] = top_drink[1]
+			else:
+				liquids.push_back([id, added, col, {id: added}])
 		else:
-			liquids.push_back([id, liquids_num, col, {id: liquids_num}])
-	else:
-		liquids.push_back([id, liquids_num, col, {id: liquids_num}])
+			liquids.push_back([id, added, col, {id: added}])
 
-	# keep typed drink mix in sync
-	drink_mix.add_liquid(id, liquids_num)
+		# keep typed drink mix in sync
+		drink_mix.add_liquid(id, added)
 
-	visual_helper.slosh_velocity += randf_range(-0.35, 0.35) * (1.0 - clampf(viscosity, 0.0, 1.0))
-	visual_helper.slosh_vertical_velocity += randf_range(-0.15, 0.05)
-	visual_helper.wave_amplitude = minf(visual_helper.wave_amplitude + 0.035, 0.07)
-	_rebuild_liquid_gradient(true)
+		visual_helper.slosh_velocity += randf_range(-0.35, 0.35) * (1.0 - clampf(viscosity, 0.0, 1.0))
+		visual_helper.slosh_vertical_velocity += randf_range(-0.15, 0.05)
+		visual_helper.wave_amplitude = minf(visual_helper.wave_amplitude + 0.035, 0.07)
+		_rebuild_liquid_gradient(true)
+
 	return liquids_num
 
 func _pour_out(liquids_num: float) -> float:
@@ -764,4 +769,3 @@ func mark_mixed() -> void:
 
 func get_mixed_ingredients() -> Array[String]:
 	return get_unique_liquids_ids()
-	

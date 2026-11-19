@@ -8,11 +8,16 @@ var garnishes: Array[String] = []
 var processing_tags: Array[String] = [] # ex. "shaken", "spectral"
 var glass_type: String = ""
 var is_tiny: bool = false
+var overfill_percent: float = 0.0
 
 func add_liquid(id: String, amount: float) -> void:
 	if amount <= 0.0:
 		return
 	ingredients[id] = ingredients.get(id, 0.0) + amount
+
+func add_overfill(percent: float) -> void:
+	if percent > 0.0:
+		overfill_percent += percent
 
 func add_garnish(garnish_id: String) -> void:
 	if not garnishes.has(garnish_id):
