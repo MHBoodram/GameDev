@@ -20,6 +20,10 @@ var in_game: bool = false
 var is_being_served: bool = false
 var is_delivering: bool = false
 var is_consumed: bool = false
+var is_pouring_out: bool = false
+var pour_tilt_degrees: float = 0.0
+var _pour_tilt_tween: Tween = null
+var _active_trash: Area3D = null
 var _last_counter_position: Vector3 = Vector3.ZERO
 var _skip_initial_snap: bool = false
 
@@ -76,7 +80,10 @@ func is_working_area_item() -> bool:
 	return true
 
 func _is_drag_blocked() -> bool:
-	return in_game or is_being_served or is_consumed
+	return in_game or is_being_served or is_consumed or is_pouring_out
+
+func set_active_trash(trash_area: Area3D) -> void:
+	_active_trash = trash_area
 
 func get_drink_mix() -> DrinkMix:
 	return drink_mix
@@ -111,6 +118,12 @@ func handle_immediate_tool_click() -> bool:
 				return true
 			if tool_ctrl.should_consume_glass_click(self):
 				return true
+		elif is_instance_valid(_active_trash) and _active_trash.has_method("can_pour_glass") and _active_trash.can_pour_glass(self):
+			_active_trash.call("start_pour")
+			return true
+	elif is_instance_valid(_active_trash) and _active_trash.has_method("can_pour_glass") and _active_trash.can_pour_glass(self):
+		_active_trash.call("start_pour")
+		return true
 	return false
 
 func handle_non_drag_click() -> bool:
@@ -349,6 +362,8 @@ func _look_at_sprite(looking_at: Vector3) -> void:
 		target_flat.y = sprite.global_position.y
 		if target_flat.distance_squared_to(sprite.global_position) > 0.0001:
 			sprite.look_at(target_flat, Vector3.UP)
+			if not is_zero_approx(pour_tilt_degrees):
+				sprite.rotate_object_local(Vector3.BACK, deg_to_rad(pour_tilt_degrees))
 
 func _setup_liquid_shader() -> void:
 	var outside_sprite = get_node_or_null("Inside/Outside")
@@ -417,6 +432,109 @@ func _pouring(id: String, liquids_num: float) -> float:
 	visual_helper.wave_amplitude = minf(visual_helper.wave_amplitude + 0.035, 0.07)
 	_rebuild_liquid_gradient(true)
 	return liquids_num
+
+func _pour_out(liquids_num: float) -> float:
+	if liquids_num <= 0.0 or liquids.is_empty():
+		return 0.0
+
+	var remaining_to_remove := liquids_num
+	var total_removed := 0.0
+
+	while remaining_to_remove > 0.0001 and not liquids.is_empty():
+		var top_layer = liquids[liquids.size() - 1]
+		if not (top_layer is Array) or top_layer.size() < 2:
+			liquids.pop_back()
+			continue
+
+		var layer_amt := float(top_layer[1])
+		if layer_amt <= 0.0001:
+			liquids.pop_back()
+			continue
+
+		var remove_amt := minf(remaining_to_remove, layer_amt)
+		var keep_ratio := clampf((layer_amt - remove_amt) / layer_amt, 0.0, 1.0)
+		top_layer[1] = layer_amt - remove_amt
+
+		if top_layer.size() > 3 and top_layer[3] is Dictionary:
+			var ing_dict: Dictionary = top_layer[3]
+			for ing_key in ing_dict.keys():
+				var prev_ing := float(ing_dict[ing_key])
+				var new_ing := prev_ing * keep_ratio
+				ing_dict[ing_key] = new_ing
+				_subtract_drink_mix_liquid(str(ing_key), prev_ing - new_ing)
+		elif top_layer[0] is Array:
+			var ing_arr: Array = top_layer[0]
+			var per_ing_remove := remove_amt / maxf(float(ing_arr.size()), 1.0)
+			for ing_key in ing_arr:
+				_subtract_drink_mix_liquid(str(ing_key), per_ing_remove)
+		elif top_layer[0] is Dictionary:
+			var ing_dict: Dictionary = top_layer[0]
+			for ing_key in ing_dict.keys():
+				var prev_ing := float(ing_dict[ing_key])
+				var new_ing := prev_ing * keep_ratio
+				ing_dict[ing_key] = new_ing
+				_subtract_drink_mix_liquid(str(ing_key), prev_ing - new_ing)
+		else:
+			_subtract_drink_mix_liquid(str(top_layer[0]), remove_amt)
+
+		if float(top_layer[1]) <= 0.0001:
+			liquids.pop_back()
+
+		remaining_to_remove -= remove_amt
+		total_removed += remove_amt
+
+	if total_removed <= 0.0:
+		return 0.0
+
+	if liquids.is_empty():
+		var had_spectral := drink_mix.has_processing("spectral")
+		drink_mix.ingredients.clear()
+		drink_mix.garnishes.clear()
+		drink_mix.processing_tags.clear()
+		if visual_helper:
+			visual_helper.set_visual_override({})
+		if had_spectral and sprite:
+			SpectralEffect.clear_from_sprite(sprite, SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS)
+
+	visual_helper.slosh_velocity += randf_range(-0.35, 0.35) * (1.0 - clampf(viscosity, 0.0, 1.0))
+	visual_helper.slosh_vertical_velocity += randf_range(-0.15, 0.05)
+	visual_helper.wave_amplitude = minf(visual_helper.wave_amplitude + 0.035, 0.07)
+	_rebuild_liquid_gradient(not liquids.is_empty())
+	if liquids.is_empty() or total_liquids <= 0.0:
+		_remove_displaying_list()
+	return total_removed
+
+func _subtract_drink_mix_liquid(id: String, amount: float) -> void:
+	if amount <= 0.0 or not drink_mix.ingredients.has(id):
+		return
+	var updated := float(drink_mix.ingredients[id]) - amount
+	if updated <= 0.0001:
+		drink_mix.ingredients.erase(id)
+	else:
+		drink_mix.ingredients[id] = updated
+
+func start_pour_out(tilt_degrees: float = 80.0) -> void:
+	is_pouring_out = true
+	_is_pointer_pressed = false
+	is_balls_dragging = false
+	push_velocity = Vector3.ZERO
+	if _pour_tilt_tween and _pour_tilt_tween.is_valid():
+		_pour_tilt_tween.kill()
+	_pour_tilt_tween = create_tween()
+	_pour_tilt_tween.set_trans(Tween.TRANS_SINE)
+	_pour_tilt_tween.set_ease(Tween.EASE_OUT)
+	_pour_tilt_tween.tween_property(self, "pour_tilt_degrees", tilt_degrees, 0.15)
+
+func stop_pour_out() -> void:
+	if _pour_tilt_tween and _pour_tilt_tween.is_valid():
+		_pour_tilt_tween.kill()
+	_pour_tilt_tween = create_tween()
+	_pour_tilt_tween.set_trans(Tween.TRANS_SINE)
+	_pour_tilt_tween.set_ease(Tween.EASE_OUT)
+	_pour_tilt_tween.tween_property(self, "pour_tilt_degrees", 0.0, 0.15)
+	_pour_tilt_tween.finished.connect(func():
+		is_pouring_out = false
+	)
 
 func is_full() -> bool:
 	var current_total: float = 0.0
@@ -505,8 +623,6 @@ func _on_area_3d_area_entered(area: Area3D) -> void:
 func can_interact_with(target: Ingredients) -> bool:
 	if _is_drag_blocked() or not is_instance_valid(target) or target == self:
 		return false
-	if target.is_in_group("trash"):
-		return true
 	if target is Glasses:
 		return false
 	if target is Shaker:
@@ -522,9 +638,7 @@ func can_interact_with(target: Ingredients) -> bool:
 func execute_interaction(target: Ingredients) -> void:
 	if not can_interact_with(target):
 		return
-	if target.is_in_group("trash"):
-		_delete()
-	elif target is Shaker and can_be_shaken():
+	if target is Shaker and can_be_shaken():
 		target.start_shake(self)
 	elif target is Drinks and target.can_interact_with(self):
 		target.execute_interaction(self)

@@ -17,7 +17,7 @@
 [ext_resource type="Texture2D" uid="uid://cg54c51342qpt" path="res://Assets/UI/The_sott.png" id="13_e1j77"]
 [ext_resource type="PackedScene" uid="uid://cw00ac021vjlu" path="res://UI/Tutorial/Keys.tscn" id="14_nmhfw"]
 [ext_resource type="Texture2D" uid="uid://xnqyp4q8b5va" path="res://Assets/3D_textures/toposcope_sunset_2k.hdr" id="14_pka58"]
-[ext_resource type="Script" path="res://Player/areaInteracts/trash.gd" id="15_trash"]
+[ext_resource type="Script" uid="uid://b5ui5rtir2bx5" path="res://Player/areaInteracts/trash.gd" id="15_trash"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_v88eg"]
 radius = 0.12624745
@@ -34,7 +34,7 @@ sections = 2
 section_length = 0.02
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_2tkpp"]
-size = Vector3(0.74475, 0.25, 0.74475)
+size = Vector3(0.74474996, 0.25, 0.74474996)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nmhfw"]
 albedo_color = Color(0.9, 0.15, 0.15, 0.85)
@@ -244,6 +244,10 @@ spread = 0.0
 [node name="Trash" type="Area3D" parent="Coutner" unique_id=1858386361 groups=["trash"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.385725, 0, -1.1753345)
 script = ExtResource("15_trash")
+snap_pull_speed = null
+snap_release_speed = null
+snap_break_distance = null
+pour_out_amount = null
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/Trash" unique_id=1252558082]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.39232594, 1.0599998, 1.0581994)
@@ -253,9 +257,6 @@ shape = SubResource("BoxShape3D_2tkpp")
 transform = Transform3D(1.655, 0, 0, 0, 1.655, 0, 0, 0, 1.655, -0.39232594, 1.0599998, 1.0581994)
 visible = false
 mesh = SubResource("BoxMesh_trash_square")
-
-[node name="Marker3D" type="Marker3D" parent="Coutner" unique_id=1047419930]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.88968897, 1.4529363, 0.24294817)
 
 [node name="Camera mark" type="Marker3D" parent="Coutner" unique_id=734330987 groups=["counter_mark"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 1.728)
@@ -323,6 +324,9 @@ libraries/ = SubResource("AnimationLibrary_nmhfw")
 
 [node name="beer_camera_marker" type="Marker3D" parent="." unique_id=1720176036]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5346204, 2.5651095, 2.9390748)
+
+[node name="sink_camera_marker" type="Marker3D" parent="." unique_id=1047419930]
+transform = Transform3D(-1, 0, 1.509958e-07, 0, 1, 0, -1.509958e-07, 0, -1, -0.66992426, 2.432033, 2.8795245)
 
 [connection signal="input_event" from="Coutner/BeerGlass Button" to="Player" method="_on_beer_glass_button_input_event"]
 [connection signal="mouse_entered" from="Coutner/BeerGlass Button" to="." method="_on_beer_glass_button_mouse_entered"]

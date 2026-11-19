@@ -482,16 +482,11 @@ func _finish_drag_or_click() -> void:
 	if not target and collider is Ingredients:
 		target = collider as Ingredients
 
-	# double dispatch onto target ingredient appliance or trash
+	# double dispatch onto target ingredient or appliance
 	if target and can_interact_with(target):
 		current_hovered_target = null
 		target.set_highlight(false)
 		execute_interaction(target)
-	elif collider is Node and (collider as Node).is_in_group("trash") and is_in_group("glass") and has_method("_delete"):
-		if is_instance_valid(current_hovered_target):
-			current_hovered_target.set_highlight(false)
-		current_hovered_target = null
-		call("_delete")
 	else:
 		if is_instance_valid(current_hovered_target):
 			current_hovered_target.set_highlight(false)

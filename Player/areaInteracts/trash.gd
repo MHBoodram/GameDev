@@ -5,8 +5,160 @@ extends Area3D
 @export var collision_shape_path: NodePath = NodePath("CollisionShape3D")
 @export var min_collision_height: float = 0.25
 
+@export_group("Glass Snapping")
+@export var snap_pull_speed: float = 22.0
+@export var snap_release_speed: float = 16.0
+@export var snap_break_distance: float = 0.45
+
+@export_group("Pouring")
+@export var pour_out_amount: float = 0.35
+
+var in_pour_zone: Glasses = null
+var _glasses_in_area: Array[Glasses] = []
+var _is_pouring: bool = false
+
 func _ready() -> void:
 	sync_bounds_from_indicator()
+	if Engine.is_editor_hint():
+		return
+	if not area_entered.is_connected(_on_area_entered):
+		area_entered.connect(_on_area_entered)
+	if not area_exited.is_connected(_on_area_exited):
+		area_exited.connect(_on_area_exited)
+	if not input_event.is_connected(_on_trash_input_event):
+		input_event.connect(_on_trash_input_event)
+	if not mouse_entered.is_connected(_on_mouse_entered):
+		mouse_entered.connect(_on_mouse_entered)
+	if not mouse_exited.is_connected(_on_mouse_exited):
+		mouse_exited.connect(_on_mouse_exited)
+
+func _snap_target() -> Node3D:
+	var indicator := get_node_or_null(indicator_path) as Node3D
+	if is_instance_valid(indicator):
+		return indicator
+	var col := get_node_or_null(collision_shape_path) as Node3D
+	if is_instance_valid(col):
+		return col
+	return self
+
+func _get_camera_rig() -> Camera3D:
+	var cam: Camera3D = get_viewport().get_camera_3d()
+	if cam and cam.has_method("focus_on_marker") and cam.has_method("return_from_marker"):
+		return cam
+	return null
+
+func _get_sink_camera_marker() -> Node3D:
+	var scene_root := get_tree().current_scene
+	if is_instance_valid(scene_root):
+		var marker := scene_root.get_node_or_null("sink_camera_marker") as Node3D
+		if marker:
+			return marker
+	if is_instance_valid(GameState.main_node):
+		return GameState.main_node.get_node_or_null("sink_camera_marker") as Node3D
+	return null
+
+func _is_pour_button_held() -> bool:
+	return Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.get_action_strength("Left_click") > 0.0
+
+func can_pour_glass(glass: Glasses) -> bool:
+	if _is_pouring:
+		return false
+	if not is_instance_valid(glass) or glass != in_pour_zone:
+		return false
+	return glass.total_liquids > 0.0
+
+@warning_ignore("unused_parameter")
+func _on_trash_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and not _is_pouring:
+		start_pour()
+
+func start_pour() -> void:
+	if _is_pouring:
+		return
+	if not in_pour_zone or not is_instance_valid(in_pour_zone) or in_pour_zone.total_liquids <= 0.0:
+		return
+
+	_is_pouring = true
+	var active_glass := in_pour_zone
+	var cam_rig: Camera3D = _get_camera_rig()
+	var marker := _get_sink_camera_marker()
+	if cam_rig and marker:
+		if GameState.gameplay_ui and GameState.gameplay_ui.has_method("_in_down_minigame"):
+			GameState.gameplay_ui._in_down_minigame()
+		cam_rig.call("focus_on_marker", marker, 0.55)
+
+	if active_glass.has_method("start_pour_out"):
+		active_glass.start_pour_out(80.0)
+
+	while _is_pour_button_held() and is_inside_tree():
+		if is_instance_valid(active_glass) and active_glass.total_liquids > 0.0:
+			active_glass._pour_out(pour_out_amount)
+			SFXAudio.play_liquidpour()
+		await get_tree().create_timer(0.1).timeout
+		if not is_inside_tree():
+			_is_pouring = false
+			return
+
+	if is_instance_valid(active_glass) and active_glass.has_method("stop_pour_out"):
+		active_glass.stop_pour_out()
+
+	if cam_rig and marker:
+		await get_tree().create_timer(0.15).timeout
+		if not is_inside_tree():
+			_is_pouring = false
+			return
+		cam_rig.call("return_from_marker", 0.55)
+		if cam_rig.has_signal("marker_returned"):
+			await cam_rig.marker_returned
+		if not is_inside_tree():
+			_is_pouring = false
+			return
+		if GameState.gameplay_ui and GameState.gameplay_ui.has_method("_out_down_minigame"):
+			GameState.gameplay_ui._out_down_minigame()
+	_is_pouring = false
+
+func _on_area_entered(area: Area3D) -> void:
+	if not (area is Glasses) or not area.is_in_group("glass"):
+		return
+	var glass := area as Glasses
+	if not _glasses_in_area.has(glass):
+		_glasses_in_area.append(glass)
+	if not in_pour_zone:
+		_set_active_glass(glass)
+
+func _on_area_exited(area: Area3D) -> void:
+	if _glasses_in_area.size() > 0:
+		_glasses_in_area.erase(area)
+	if area == in_pour_zone:
+		if is_instance_valid(area):
+			area.exit_snap_zone(_snap_target())
+			if area.has_method("set_active_trash"):
+				area.set_active_trash(null)
+			area._remove_displaying_list()
+		in_pour_zone = null
+		for g in _glasses_in_area:
+			if is_instance_valid(g):
+				_set_active_glass(g)
+				break
+
+func _set_active_glass(glass: Glasses) -> void:
+	in_pour_zone = glass
+	if glass.has_method("set_active_trash"):
+		glass.set_active_trash(self)
+	glass.enter_snap_zone(_snap_target(), snap_pull_speed, snap_release_speed, snap_break_distance)
+
+func _on_mouse_entered() -> void:
+	if Ingredients.active_dragging_item != null:
+		return
+	if in_pour_zone and is_instance_valid(in_pour_zone) and in_pour_zone.total_liquids > 0.0:
+		if GameState.player:
+			GameState.player._update_hand("interact")
+
+func _on_mouse_exited() -> void:
+	if Ingredients.active_dragging_item != null:
+		return
+	if GameState.player:
+		GameState.player._update_hand("idle")
 
 func sync_bounds_from_indicator() -> void:
 	var indicator := get_node_or_null(indicator_path) as Node3D

@@ -204,6 +204,5 @@ func _on_beer_glass_button_input_event(_cam: Node, event: InputEvent, _pos: Vect
 		SFXAudio.play_mugpickup()
 		_spawn_and_begin_drag(beer_glass, "beer_glass", spawn_pos)
 
-func _on_trash_area_entered(area: Area3D) -> void:
-	if area.is_in_group("glass") and area.has_method("_delete"):
-		area._delete()
+func _on_trash_area_entered(_area: Area3D) -> void:
+	pass
