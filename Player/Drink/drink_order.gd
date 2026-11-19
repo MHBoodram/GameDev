@@ -6,6 +6,8 @@ var species_id: String = ""
 var recipe_name: String = ""
 var ingredients: Dictionary = {} # name -> desired proportion (0.0 to 1.0)
 var garnishes: Array[String] = []
+var accepted_garnishes: Array[String] = [] # list of garnishes that a customer would want with their drink
+var ice_preference: int = DrinkRecipe.IcePreference.DONT_CARE
 var required_processing: Array[String] = [] # "shaken", "spectral", etc
 var required_glass: String = ""
 var is_tiny: bool = false
@@ -49,6 +51,8 @@ static func from_recipe(recipe: DrinkRecipe) -> DrinkOrder:
 	order.required_glass = recipe.required_glass
 	order.garnishes = recipe.garnishes.duplicate()
 	order.required_processing = recipe.processing.duplicate()
+	order.accepted_garnishes = recipe.accepted_garnishes
+	order.ice_preference = recipe.ice_preference
 
 	# normalize recipe ingredients
 	var raw_sum: float = 0.0

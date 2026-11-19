@@ -11,3 +11,8 @@ extends Resource
 @export var processing: Array[String] = [] # "shaken", "spectral"
 @export var is_alcoholic: bool = true
 @export var preferred_by_species: Array[String] = []
+
+enum IcePreference {DONT_CARE, REQUIRED, FORBIDDEN}
+
+@export var accepted_garnishes: Array[String] = []
+@export var ice_preference: IcePreference = IcePreference.DONT_CARE
