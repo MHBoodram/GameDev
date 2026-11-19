@@ -248,7 +248,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2280426, 1.06, 1.4114742)
 shape = SubResource("BoxShape3D_2tkpp")
 
 [node name="TrashIndicator" type="MeshInstance3D" parent="Coutner/Trash" unique_id=198421098]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2280426, 1.06, 1.4114742)
+transform = Transform3D(1.655, 0, 0, 0, 1.655, 0, 0, 0, 1.655, -0.39232594, 1.0599998, 1.0581994)
+visible = false
 mesh = SubResource("BoxMesh_trash_square")
 
 [node name="Marker3D" type="Marker3D" parent="Coutner" unique_id=1047419930]

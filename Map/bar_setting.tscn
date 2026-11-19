@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://hpxbjx0xsej2"]
 
 [ext_resource type="Script" uid="uid://kifb6k1p1hg1" path="res://Map/bar_setting.gd" id="1_ck6hi"]
-[ext_resource type="PackedScene" uid="uid://dcns2u2wox6od" path="res://Assets/3D/bar.glb" id="1_qvavo"]
+[ext_resource type="PackedScene" uid="uid://ccwvwd416dojw" path="res://Assets/3D/bar.glb" id="1_qvavo"]
 
 [node name="BarSetting" type="Node3D" unique_id=1770039662]
 script = ExtResource("1_ck6hi")
