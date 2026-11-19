@@ -50,7 +50,7 @@ static func apply_to_glass(glass: Glasses) -> void:
 			"glass_reflection_strength": maxf(glass.glass_reflection_strength, 0.5)
 		})
 
-	glass._rebuild_liquid_gradient()
+	glass._rebuild_liquid_gradient(false)
 	glass._update_shader_parameters()
 
 static func clear_from_sprite(sprite: Sprite3D, restore_alpha_cut: SpriteBase3D.AlphaCutMode = SpriteBase3D.ALPHA_CUT_HASH) -> void:

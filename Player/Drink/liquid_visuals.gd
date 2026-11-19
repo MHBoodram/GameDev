@@ -115,7 +115,7 @@ func sync_shader_uniforms(fill_ratio: float, config: Dictionary) -> void:
 		var val = _visual_override.get(uniform_name, config[uniform_name])
 		liquid_shader_mat.set_shader_parameter(uniform_name, val)
 
-func rebuild_gradient(liquids: Array, total_liquids: float, glass_size: float, liquid_box: VBoxContainer, label_scene: PackedScene) -> Label:
+func rebuild_gradient(liquids: Array, total_liquids: float, glass_size: float, liquid_box: VBoxContainer = null, label_scene: PackedScene = null) -> Label:
 	var last_label: Label = null
 	if not liquid_gradient:
 		return last_label
@@ -129,11 +129,12 @@ func rebuild_gradient(liquids: Array, total_liquids: float, glass_size: float, l
 	var tint_col: Color = _visual_override.get("liquid_tint_color", Color.WHITE)
 	var tint_mix: float = float(_visual_override.get("liquid_tint_strength", 0.35))
 
-	# updates liquid layer floating UI label texts
+	# fallback when a standalone cup scene supplies its own liquid_box
 	if liquid_box and label_scene:
 		var children := liquid_box.get_children()
 		if children.size() != liquids.size():
 			for c in children:
+				liquid_box.remove_child(c)
 				c.queue_free()
 			for layer in liquids:
 				liquid_box.add_child(label_scene.instantiate())

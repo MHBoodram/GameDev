@@ -8,7 +8,7 @@ class_name Glasses
 @export var size: float = 1.0
 @export var area_body: CollisionShape3D
 @export var sprite: Sprite3D
-@export var liquid_box: VBoxContainer
+@export var liquid_box: VBoxContainer = null
 @export var customer_hold_distance: float = 1.0
 
 var drink_mix: DrinkMix = DrinkMix.new()
@@ -144,6 +144,11 @@ func ready() -> void:
 	_last_counter_position = global_position
 	visual_helper.last_global_pos = global_position
 
+func _exit_tree() -> void:
+	var hud := HudIndicators.get_current()
+	if hud:
+		hud.hide_pouring_indicator(self)
+
 func start_drag_from_spawn(press_screen_pos: Vector2, from_shelf: bool = false) -> void:
 	if from_shelf:
 		var working_area_bounds = WorkingAreaService.get_working_area_bounds(self)
@@ -164,6 +169,7 @@ func start_drag_from_spawn(press_screen_pos: Vector2, from_shelf: bool = false) 
 	super.start_drag_from_spawn(press_screen_pos, from_shelf)
 
 func _delete() -> void:
+	_remove_displaying_list()
 	queue_free()
 
 func _update_hand_position(delta: float) -> void:
@@ -347,7 +353,7 @@ func _look_at_sprite(looking_at: Vector3) -> void:
 func _setup_liquid_shader() -> void:
 	var outside_sprite = get_node_or_null("Inside/Outside")
 	visual_helper.setup_shader(outside_sprite)
-	_rebuild_liquid_gradient()
+	_rebuild_liquid_gradient(false)
 
 func _update_shader_parameters() -> void:
 	var fill_ratio := clampf(total_liquids / maxf(size, 0.001), 0.0, 1.0)
@@ -366,11 +372,15 @@ func _update_shader_parameters() -> void:
 		"inner_margin_bottom": inner_margin_bottom
 	})
 
-func _rebuild_liquid_gradient() -> void:
+func _rebuild_liquid_gradient(show_hud: bool = true) -> void:
 	total_liquids = 0.0
 	for l in liquids:
 		total_liquids += float(l[1])
 	drink_list_label = visual_helper.rebuild_gradient(liquids, total_liquids, size, liquid_box, tcmtd)
+	if show_hud and not liquids.is_empty() and total_liquids > 0.0:
+		var hud := HudIndicators.get_current()
+		if hud:
+			hud.update_pouring_indicator(self, liquids, size, visual_helper)
 
 func _pouring(id: String, liquids_num: float) -> float:
 	var current_total: float = 0.0
@@ -405,7 +415,7 @@ func _pouring(id: String, liquids_num: float) -> float:
 	visual_helper.slosh_velocity += randf_range(-0.35, 0.35) * (1.0 - clampf(viscosity, 0.0, 1.0))
 	visual_helper.slosh_vertical_velocity += randf_range(-0.15, 0.05)
 	visual_helper.wave_amplitude = minf(visual_helper.wave_amplitude + 0.035, 0.07)
-	_rebuild_liquid_gradient()
+	_rebuild_liquid_gradient(true)
 	return liquids_num
 
 func is_full() -> bool:
@@ -563,10 +573,16 @@ func _on_returning_to_counter(target_pos: Vector3) -> void:
 func _on_returned_to_counter(target_pos: Vector3) -> void:
 	_last_counter_position = target_pos
 
-func _remove_displaying_list() -> void:
+func _remove_displaying_list(immediate: bool = false) -> void:
+	var hud := HudIndicators.get_current()
+	if hud:
+		hud.hide_pouring_indicator(self, immediate)
 	if liquid_box and liquid_box.modulate.a != 0.0:
-		var tween := get_tree().create_tween().parallel()
-		tween.tween_property(liquid_box, "modulate:a", 0.0, 1.0)
+		if immediate or not is_inside_tree():
+			liquid_box.modulate.a = 0.0
+		else:
+			var tween := get_tree().create_tween().parallel()
+			tween.tween_property(liquid_box, "modulate:a", 0.0, 1.0)
 
 func get_unique_liquids_ids() -> Array[String]:
 	return drink_mix.get_unique_ingredient_ids()
@@ -625,7 +641,7 @@ func mark_mixed() -> void:
 	liquids.clear()
 	liquids.push_back([mixed_names, total_amount, mixed_color, combined_amounts])
 	drink_mix.add_processing("shaken")
-	_rebuild_liquid_gradient()
+	_rebuild_liquid_gradient(true)
 
 func get_mixed_ingredients() -> Array[String]:
 	return get_unique_liquids_ids()

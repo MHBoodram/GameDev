@@ -345,8 +345,7 @@ func _on_spawn_cup_pressed() -> void:
 			glass.drink_mix.add_processing("spectral")
 			SpectralEffect.apply_to_glass(glass)
 
-	if glass.liquid_box:
-		glass.liquid_box.modulate.a = 0.0
+	glass._remove_displaying_list(true)
 
 func _on_take_orders_pressed() -> void:
 	if GameState.seat_manager:
