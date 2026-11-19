@@ -9,7 +9,10 @@ const FLAT_PENALTY_WRONG_INGREDIENT := 0.3
 const FLAT_PENALTY_MISSING_INGREDIENT := 0.4
 const PENALTY_WRONG_GLASS := 0.25
 const PENALTY_MISSING_GARNISH := 0.15
+const PENALTY_UNWANTED_GARNISH := 0.15
 const PENALTY_WRONG_PROCESSING := 0.3
+const PENALTY_ICE_MISMATCH := 0.08
+const MAX_FINISH_DEDUCTION := 0.25
 
 static func score_drink(served: DrinkMix, wanted: DrinkOrder) -> Dictionary:
 	# completely empty drink or no order
@@ -77,9 +80,22 @@ static func score_drink(served: DrinkMix, wanted: DrinkOrder) -> Dictionary:
 	print("IS_SATISIFACTORY: ", result["is_satisfactory"])
 	return result
 
+static func _finish_deduction(served: DrinkMix, wanted: DrinkOrder) -> float:
+	var deduction := 0.0
+	for garnish_id in wanted.garnishes:
+		if not served.garnishes.has(garnish_id):
+			deduction += PENALTY_MISSING_GARNISH
+	for garnish_id in served.garnishes:
+		if not wanted.garnishes.has(garnish_id) and not wanted.accepted_garnishes.has(garnish_id):
+			deduction += PENALTY_UNWANTED_GARNISH
+	if wanted.ice_preference == DrinkRecipe.IcePreference.REQUIRED and not served.has_ice:
+		deduction += PENALTY_ICE_MISMATCH
+	elif wanted.ice_preference == DrinkRecipe.IcePreference.FORBIDDEN and served.has_ice:
+		deduction += PENALTY_ICE_MISMATCH
+	return minf(deduction, MAX_FINISH_DEDUCTION)
+
 # bridge for the old nested arrays so we don't break anything right now
 static func score_legacy(drink_layers: Array, want_array: Array) -> Dictionary:
 	var served := DrinkMix.from_legacy_layers(drink_layers)
 	var wanted := DrinkOrder.from_legacy_want(want_array)
 	return score_drink(served, wanted)
-	

@@ -626,4 +626,3 @@ func _talking(open_mouth: bool = false) -> void:
 	var total_frames := hframes * vframes
 	if frame_check < total_frames:
 		frame = frame_check
-		

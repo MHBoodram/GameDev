@@ -8,15 +8,30 @@ var garnishes: Array[String] = []
 var processing_tags: Array[String] = [] # ex. "shaken", "spectral"
 var glass_type: String = ""
 var is_tiny: bool = false
+var max_garnishes = 2
+var has_ice = false
 
 func add_liquid(id: String, amount: float) -> void:
 	if amount <= 0.0:
 		return
 	ingredients[id] = ingredients.get(id, 0.0) + amount
 
-func add_garnish(garnish_id: String) -> void:
-	if not garnishes.has(garnish_id):
-		garnishes.append(garnish_id)
+func add_garnish(garnish_id: String) -> bool:
+	var clean_id := garnish_id.to_lower().strip_edges()
+	if clean_id.is_empty() or garnishes.has(clean_id) or garnishes.size() >= max_garnishes:
+		return false
+	garnishes.append(clean_id)
+	return true
+
+#func add_garnish(garnish_id: String) -> void: # Legacy code for future reference (sorry toby)
+	#if not garnishes.has(garnish_id):
+		#garnishes.append(garnish_id)
+
+func add_ice() -> bool:
+	if has_ice:
+		return false
+	has_ice = true
+	return true
 
 func add_processing(tag: String) -> void:
 	var clean_tag = tag.to_lower().strip_edges()
