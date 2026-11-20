@@ -1,7 +1,8 @@
 @tool
 extends Area3D
 
-const MAX_POUR_TILT_DEGREES: float = 120.0
+const MAX_POUR_TILT_DEGREES: float = 125.0
+const POUR_INTERVAL: float = 0.1
 
 @export var indicator_path: NodePath = NodePath("TrashIndicator")
 @export var collision_shape_path: NodePath = NodePath("CollisionShape3D")
@@ -57,7 +58,10 @@ func _get_pour_rate_multiplier() -> float:
 	return _get_pour_height_ratio() * 2.0
 
 func _get_pour_tilt_degrees() -> float:
-	return _get_pour_height_ratio() * MAX_POUR_TILT_DEGREES
+	var ratio: float = _get_pour_height_ratio()
+	if ratio <= 0.001:
+		return 0.0
+	return lerpf(42.0, MAX_POUR_TILT_DEGREES, ratio)
 
 func _snap_target() -> Node3D:
 	var indicator := get_node_or_null(indicator_path) as Node3D
@@ -118,16 +122,22 @@ func start_pour() -> void:
 	if active_glass.has_method("start_pour_out"):
 		active_glass.start_pour_out(_get_pour_tilt_degrees())
 
+	var sfx_timer: float = POUR_INTERVAL
 	while _is_pour_button_held() and is_inside_tree():
-		var rate_mult: float = _get_pour_rate_multiplier()
-		if rate_mult > 0.0 and is_instance_valid(active_glass) and active_glass.total_liquids > 0.0:
-			active_glass._pour_out(pour_out_amount * rate_mult)
-			SFXAudio.play_liquidpour()
-		await get_tree().create_timer(0.1).timeout
+		await get_tree().process_frame
 		if not is_inside_tree():
 			_is_pouring = false
 			_active_pouring_glass = null
 			return
+		var delta: float = clampf(get_process_delta_time(), 0.001, 0.05)
+		var rate_mult: float = _get_pour_rate_multiplier()
+		if rate_mult > 0.0 and is_instance_valid(active_glass) and active_glass.total_liquids > 0.0:
+			sfx_timer += delta
+			if sfx_timer >= POUR_INTERVAL:
+				sfx_timer -= POUR_INTERVAL
+				SFXAudio.play_liquidpour()
+		else:
+			sfx_timer = POUR_INTERVAL
 
 	_active_pouring_glass = null
 	if is_instance_valid(active_glass) and active_glass.has_method("stop_pour_out"):
