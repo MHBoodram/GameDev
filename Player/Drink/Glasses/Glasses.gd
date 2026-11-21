@@ -1,5 +1,5 @@
 # Physical 3D drink container holding a typed DrinkMix instance
-# Liquid pouring, liquid physics
+# Liquid pouring, fluid sim
 extends Ingredients
 class_name Glasses
 
@@ -13,6 +13,8 @@ class_name Glasses
 
 var drink_mix: DrinkMix = DrinkMix.new()
 var visual_helper: LiquidVisualHelper = LiquidVisualHelper.new()
+var cup_fluid_sim: CupFluidSim = null
+var _outside_sprite: Sprite3D = null
 
 var drink_list_label: Label
 var total_liquids: float = 0.0
@@ -27,6 +29,7 @@ var _pour_tilt_tween: Tween = null
 var _active_trash: Area3D = null
 var _last_counter_position: Vector3 = Vector3.ZERO
 var _skip_initial_snap: bool = false
+var _sink_drain_stall_timer: float = 0.0
 
 @export_group("Liquid Physics")
 @export var viscosity: float = 0.25
@@ -88,6 +91,22 @@ func set_active_trash(trash_area: Area3D) -> void:
 
 func get_drink_mix() -> DrinkMix:
 	return drink_mix
+
+func get_cavity_rim_world_position() -> Vector3:
+	var sim := LiquidSim.get_sim(self)
+	if sim:
+		return sim.get_cup_rim_world_position(self)
+	return global_position + Vector3(0.0, 0.08, 0.0)
+
+func get_liquid_surface_world_position() -> Vector3:
+	var sim := LiquidSim.get_sim(self)
+	if sim:
+		return sim.get_cup_surface_world_position(self)
+	return global_position
+
+func on_liquid_stream_impact(intensity: float = 1.0) -> void:
+	visual_helper.wave_amplitude = minf(visual_helper.wave_amplitude + 0.005 * intensity, 0.065)
+	visual_helper.slosh_vertical_velocity = clampf(visual_helper.slosh_vertical_velocity - 0.04 * intensity, -0.35, 0.35)
 
 func get_resource_usage_multiplier(liquid_id: String = "") -> float:
 	var sp_mult := SpeciesRegistry.get_glass_resource_multiplier(self, liquid_id)
@@ -157,8 +176,14 @@ func ready() -> void:
 		base_y_position = get_working_area_surface_y()
 	_last_counter_position = global_position
 	visual_helper.last_global_pos = global_position
+	var sim := LiquidSim.get_sim(self)
+	if sim:
+		sim.register_glass(self)
 
 func _exit_tree() -> void:
+	var sim := LiquidSim.get_sim(self)
+	if sim:
+		sim.unregister_glass(self)
 	var hud := HudIndicators.get_current()
 	if hud:
 		hud.hide_pouring_indicator(self)
@@ -206,14 +231,20 @@ func _process(delta: float) -> void:
 	super._process(delta)
 	_update_snap(delta)
 	visual_helper.update_physics(delta, global_position, camera, viscosity, spring_stiffness, base_damping, slosh_sensitivity, max_slosh_angle, wave_frequency, vertical_spring, vertical_damping, vertical_sensitivity)
-	if not is_consumed:
-		_update_shader_parameters()
 
 	if is_pouring_out and not (_pour_tilt_tween and _pour_tilt_tween.is_valid()):
 		pour_tilt_degrees = lerpf(pour_tilt_degrees, _target_pour_tilt_degrees, 1.0 - exp(-18.0 * delta))
 
 	if camera and not is_balls_dragging:
 		_look_at_sprite(camera.global_position)
+
+	if cup_fluid_sim and not is_consumed:
+		var ejected := cup_fluid_sim.step(delta, is_pouring_out, pour_tilt_degrees, is_full())
+		_process_ejected_fluid_particles(ejected, delta)
+
+	if not is_consumed:
+		_update_shader_parameters()
+
 	if _is_drag_blocked():
 		return
 
@@ -231,6 +262,59 @@ func _process(delta: float) -> void:
 				else:
 					global_position.y = lerpf(global_position.y, target_y, 1.0 - exp(-20.0 * delta))
 			_last_counter_position = global_position
+
+func _process_ejected_fluid_particles(ejected: Array[Dictionary], delta: float) -> void:
+	var sim := LiquidSim.get_sim(self)
+	if not ejected.is_empty():
+		_sink_drain_stall_timer = 0.0
+		for p in ejected:
+			var ing_id: String = str(p["ingredient_id"])
+			var vol: float = float(p["volume"])
+			var p_col: Color = p["color"]
+			var uv_pos: Vector2 = p["uv_pos"]
+			var uv_vel: Vector2 = p["uv_vel"]
+			var side_bias: float = float(p["side"])
+
+			if is_pouring_out:
+				_consume_fluid_particle(ing_id, vol)
+			else:
+				var overflow_pct: float = (vol / maxf(size, 0.001)) * 100.0
+				drink_mix.add_overfill(overflow_pct)
+
+			if sim and is_instance_valid(_outside_sprite):
+				var world_p: Vector3 = _uv_to_world_pos(uv_pos)
+				var world_v: Vector3 = _uv_vel_to_world_vel(uv_vel, side_bias, is_pouring_out)
+				sim.emit_cup_spill_particle(self, world_p, world_v, p_col, ing_id, vol, is_pouring_out)
+	elif is_pouring_out and pour_tilt_degrees >= 55.0 and total_liquids > 0.0:
+		# Ensure steeply tilted cups drain cleanly to 0% without trapping final droplets
+		_sink_drain_stall_timer += delta
+		if _sink_drain_stall_timer >= 0.08:
+			_sink_drain_stall_timer = 0.0
+			_pour_out(minf(total_liquids, cup_fluid_sim.get_unit_volume() * 1.5))
+
+func _uv_to_world_pos(uv_pos: Vector2) -> Vector3:
+	var target_spr: Sprite3D = _outside_sprite if is_instance_valid(_outside_sprite) else sprite
+	if not is_instance_valid(target_spr):
+		return global_position
+	var rect: Rect2 = target_spr.get_item_rect()
+	var ps: float = target_spr.pixel_size
+	var v_from_bot: float = uv_pos.y if target_spr.flip_v else (1.0 - uv_pos.y)
+	var lx: float = (rect.position.x + uv_pos.x * rect.size.x) * ps
+	var ly: float = (rect.position.y + v_from_bot * rect.size.y) * ps
+	return target_spr.global_transform * Vector3(lx, ly, -0.014)
+
+func _uv_vel_to_world_vel(uv_vel: Vector2, side_bias: float, pouring_sink: bool) -> Vector3:
+	var target_spr: Sprite3D = _outside_sprite if is_instance_valid(_outside_sprite) else sprite
+	if not is_instance_valid(target_spr):
+		return Vector3(0.0, -0.4, 0.0)
+	var world_v: Vector3 = target_spr.global_transform.basis * Vector3(uv_vel.x * 0.08, -uv_vel.y * 0.08, 0.0)
+	if pouring_sink:
+		var right_axis: Vector3 = target_spr.global_transform.basis.x.normalized()
+		world_v += -right_axis * (side_bias * 0.08) + Vector3(0.0, -0.22, 0.0)
+	else:
+		var right_axis: Vector3 = target_spr.global_transform.basis.x.normalized()
+		world_v += right_axis * (side_bias * 0.09) + Vector3(0.0, 0.04, 0.0)
+	return world_v
 
 func _post_process_counter_constraints() -> void:
 	if _snap_point and is_instance_valid(_snap_point) and not _snap_suppressed and _snap_blend > 0.0:
@@ -259,7 +343,6 @@ func exit_snap_zone(point: Node3D) -> void:
 func is_snapped() -> bool:
 	return _snap_locked
 
-# snaps glass into keg pour zone when dragging nearby and releases when pulled beyond break distance
 func _update_snap(delta: float) -> void:
 	if not _snap_point or not is_instance_valid(_snap_point):
 		if _snap_point != null:
@@ -288,7 +371,6 @@ func _update_snap(delta: float) -> void:
 		want = 1.0
 
 	var speed := _snap_pull_speed if want > _snap_blend else _snap_release_speed
-	# exponential ease
 	_snap_blend = lerpf(_snap_blend, want, 1.0 - exp(-speed * delta))
 	if absf(_snap_blend - want) < 0.01:
 		_snap_blend = want
@@ -318,7 +400,6 @@ func _play_snap_bounce() -> void:
 	tween.tween_property(sprite, "scale", _inside_base_scale * Vector3(1.08, 0.92, 1.0), 0.05)
 	tween.tween_property(sprite, "scale", _inside_base_scale, 0.12)
 
-# pushes nearby glasses apart when too close
 func _apply_collision_push(delta: float) -> void:
 	var surface_y := get_working_area_surface_y()
 	if absf(global_position.y - surface_y) > 0.15:
@@ -370,8 +451,13 @@ func _look_at_sprite(looking_at: Vector3) -> void:
 				sprite.rotate_object_local(Vector3.BACK, deg_to_rad(pour_tilt_degrees))
 
 func _setup_liquid_shader() -> void:
-	var outside_sprite = get_node_or_null("Inside/Outside")
-	visual_helper.setup_shader(outside_sprite)
+	_outside_sprite = get_node_or_null("Inside/Outside") as Sprite3D
+	visual_helper.setup_shader(_outside_sprite)
+	if cup_fluid_sim == null and is_instance_valid(_outside_sprite):
+		cup_fluid_sim = CupFluidSim.new()
+		cup_fluid_sim.name = "CupFluidSim"
+		add_child(cup_fluid_sim)
+		cup_fluid_sim.setup(self, _outside_sprite, size)
 	_rebuild_liquid_gradient(false)
 
 func _update_shader_parameters() -> void:
@@ -390,6 +476,11 @@ func _update_shader_parameters() -> void:
 		"inner_margin_top": inner_margin_top,
 		"inner_margin_bottom": inner_margin_bottom
 	})
+	if visual_helper.liquid_shader_mat and cup_fluid_sim:
+		visual_helper.liquid_shader_mat.set_shader_parameter("use_fluid_field", true)
+		visual_helper.liquid_shader_mat.set_shader_parameter("fluid_field_texture", cup_fluid_sim.get_texture())
+		visual_helper.liquid_shader_mat.set_shader_parameter("fluid_density_threshold", 0.34)
+		visual_helper.liquid_shader_mat.set_shader_parameter("local_up_uv", cup_fluid_sim.get_local_up_uv())
 
 func _rebuild_liquid_gradient(show_hud: bool = true) -> void:
 	total_liquids = 0.0
@@ -400,6 +491,55 @@ func _rebuild_liquid_gradient(show_hud: bool = true) -> void:
 		var hud := HudIndicators.get_current()
 		if hud:
 			hud.update_pouring_indicator(self, liquids, size, visual_helper)
+
+func receive_fluid_particle(ing_id: String, volume: float, col: Color, uv_pos: Vector2, uv_vel: Vector2) -> bool:
+	if volume <= 0.0:
+		return true
+	var current_total: float = 0.0
+	for l in liquids:
+		current_total += float(l[1])
+
+	var available_space := maxf(0.0, size - current_total)
+	if available_space <= 0.0001:
+		var over_pct: float = (volume / maxf(size, 0.001)) * 100.0
+		drink_mix.add_overfill(over_pct)
+		return false
+
+	var added := minf(volume, available_space)
+	var overflow := maxf(0.0, volume - added)
+	if overflow > 0.00001:
+		var over_pct := (overflow / maxf(size, 0.001)) * 100.0
+		drink_mix.add_overfill(over_pct)
+
+	_pouring_from_sim(ing_id, added, col)
+	if cup_fluid_sim:
+		var unit_v: float = cup_fluid_sim.get_unit_volume()
+		var split_count: int = clampi(int(roundf(added / maxf(unit_v, 0.005))), 1, 4)
+		var p_vol: float = added / float(split_count)
+		for _i in split_count:
+			var jitter_uv := uv_pos + Vector2(randf_range(-0.025, 0.025), randf_range(-0.015, 0.015))
+			var jitter_vel := uv_vel + Vector2(randf_range(-10.0, 10.0), randf_range(-6.0, 6.0))
+			cup_fluid_sim.add_particle(ing_id, p_vol, col, jitter_uv, jitter_vel)
+
+	return overflow <= 0.00001
+
+func _pouring_from_sim(id: String, added: float, col_override: Color = Color(-1, -1, -1, -1)) -> void:
+	if added <= 0.0:
+		return
+	var col: Color = col_override if col_override.r >= 0.0 else visual_helper.LIQUID_COLOR.get(id, Color.WHITE)
+	if not liquids.is_empty():
+		var top_drink = liquids[liquids.size() - 1]
+		if top_drink[0] is String and top_drink[0] == id:
+			top_drink[1] += added
+			if top_drink.size() > 3 and top_drink[3] is Dictionary:
+				top_drink[3][id] = top_drink[1]
+		else:
+			liquids.push_back([id, added, col, {id: added}])
+	else:
+		liquids.push_back([id, added, col, {id: added}])
+
+	drink_mix.add_liquid(id, added)
+	_rebuild_liquid_gradient(true)
 
 func _pouring(id: String, liquids_num: float) -> float:
 	if liquids_num <= 0.0:
@@ -417,34 +557,116 @@ func _pouring(id: String, liquids_num: float) -> float:
 		var overflow_percent := (overflow / maxf(size, 0.001)) * 100.0
 		drink_mix.add_overfill(overflow_percent)
 
+	var col: Color = visual_helper.LIQUID_COLOR.get(id, Color.WHITE)
+
 	if added > 0.0:
-		var col: Color = visual_helper.LIQUID_COLOR.get(id, Color.WHITE)
+		_pouring_from_sim(id, added, col)
+		if cup_fluid_sim:
+			cup_fluid_sim.sync_fill_to_liquids(liquids, total_liquids, size, visual_helper)
 
-		# stack liquid onto matching top layer or append a new layer
-		if not liquids.is_empty():
-			var top_drink = liquids[liquids.size() - 1]
-			if top_drink[0] is String and top_drink[0] == id:
-				top_drink[1] += added
-				if top_drink.size() > 3 and top_drink[3] is Dictionary:
-					top_drink[3][id] = top_drink[1]
-			else:
-				liquids.push_back([id, added, col, {id: added}])
-		else:
-			liquids.push_back([id, added, col, {id: added}])
-
-		# keep typed drink mix in sync
-		drink_mix.add_liquid(id, added)
-
-		visual_helper.slosh_velocity += randf_range(-0.35, 0.35) * (1.0 - clampf(viscosity, 0.0, 1.0))
-		visual_helper.slosh_vertical_velocity += randf_range(-0.15, 0.05)
-		visual_helper.wave_amplitude = minf(visual_helper.wave_amplitude + 0.035, 0.07)
-		_rebuild_liquid_gradient(true)
+	if overflow > 0.0001:
+		var sim := LiquidSim.get_sim(self)
+		if sim:
+			sim.notify_overflow(self, id, overflow, col)
 
 	return liquids_num
+
+func _consume_fluid_particle(ing_id: String, amount: float) -> void:
+	if amount <= 0.0 or liquids.is_empty():
+		return
+
+	var remaining := amount
+	# Prefer matching layer from top down
+	for idx in range(liquids.size() - 1, -1, -1):
+		if remaining <= 0.0001:
+			break
+		var layer = liquids[idx]
+		if not (layer is Array) or layer.size() < 2:
+			continue
+		var layer_id: String = visual_helper.format_layer_name(layer[0])
+		if layer_id != ing_id and idx != liquids.size() - 1 and liquids.size() > 1:
+			continue
+		var layer_amt := float(layer[1])
+		if layer_amt <= 0.0001:
+			continue
+		var take := minf(remaining, layer_amt)
+		var keep_ratio := clampf((layer_amt - take) / layer_amt, 0.0, 1.0)
+		layer[1] = layer_amt - take
+		_subtract_layer_ingredients(layer, take, keep_ratio)
+		remaining -= take
+		if float(layer[1]) <= 0.0001:
+			liquids.remove_at(idx)
+
+	# Fallback if specific layer id didn't match (e.g. mixed drink)
+	while remaining > 0.0001 and not liquids.is_empty():
+		var top_layer = liquids[liquids.size() - 1]
+		if not (top_layer is Array) or top_layer.size() < 2:
+			liquids.pop_back()
+			continue
+		var l_amt := float(top_layer[1])
+		if l_amt <= 0.0001:
+			liquids.pop_back()
+			continue
+		var take := minf(remaining, l_amt)
+		var keep_ratio := clampf((l_amt - take) / l_amt, 0.0, 1.0)
+		top_layer[1] = l_amt - take
+		_subtract_layer_ingredients(top_layer, take, keep_ratio)
+		remaining -= take
+		if float(top_layer[1]) <= 0.0001:
+			liquids.pop_back()
+
+	if liquids.is_empty():
+		_clear_empty_cup_state()
+	else:
+		_rebuild_liquid_gradient(true)
+
+func _subtract_layer_ingredients(layer: Array, remove_amt: float, keep_ratio: float) -> void:
+	if layer.size() > 3 and layer[3] is Dictionary:
+		var ing_dict: Dictionary = layer[3]
+		for ing_key in ing_dict.keys():
+			var prev_ing := float(ing_dict[ing_key])
+			var new_ing := prev_ing * keep_ratio
+			ing_dict[ing_key] = new_ing
+			_subtract_drink_mix_liquid(str(ing_key), prev_ing - new_ing)
+	elif layer[0] is Array:
+		var ing_arr: Array = layer[0]
+		var per_ing_remove := remove_amt / maxf(float(ing_arr.size()), 1.0)
+		for ing_key in ing_arr:
+			_subtract_drink_mix_liquid(str(ing_key), per_ing_remove)
+	elif layer[0] is Dictionary:
+		var ing_dict: Dictionary = layer[0]
+		for ing_key in ing_dict.keys():
+			var prev_ing := float(ing_dict[ing_key])
+			var new_ing := prev_ing * keep_ratio
+			ing_dict[ing_key] = new_ing
+			_subtract_drink_mix_liquid(str(ing_key), prev_ing - new_ing)
+	else:
+		_subtract_drink_mix_liquid(str(layer[0]), remove_amt)
+
+func _clear_empty_cup_state() -> void:
+	var had_spectral := drink_mix.has_processing("spectral")
+	drink_mix.ingredients.clear()
+	drink_mix.garnishes.clear()
+	drink_mix.processing_tags.clear()
+	if visual_helper:
+		visual_helper.set_visual_override({})
+	if had_spectral and sprite:
+		SpectralEffect.clear_from_sprite(sprite, SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS)
+	if cup_fluid_sim:
+		cup_fluid_sim.clear_particles()
+	_rebuild_liquid_gradient(false)
+	_remove_displaying_list()
 
 func _pour_out(liquids_num: float) -> float:
 	if liquids_num <= 0.0 or liquids.is_empty():
 		return 0.0
+
+	var top_before = liquids[liquids.size() - 1]
+	var out_col: Color = Color.WHITE
+	var out_id: String = ""
+	if top_before is Array and top_before.size() >= 2:
+		out_col = visual_helper.get_layer_color(top_before)
+		out_id = str(top_before[0]) if not (top_before[0] is Array or top_before[0] is Dictionary) else "mixed"
 
 	var remaining_to_remove := liquids_num
 	var total_removed := 0.0
@@ -463,28 +685,7 @@ func _pour_out(liquids_num: float) -> float:
 		var remove_amt := minf(remaining_to_remove, layer_amt)
 		var keep_ratio := clampf((layer_amt - remove_amt) / layer_amt, 0.0, 1.0)
 		top_layer[1] = layer_amt - remove_amt
-
-		if top_layer.size() > 3 and top_layer[3] is Dictionary:
-			var ing_dict: Dictionary = top_layer[3]
-			for ing_key in ing_dict.keys():
-				var prev_ing := float(ing_dict[ing_key])
-				var new_ing := prev_ing * keep_ratio
-				ing_dict[ing_key] = new_ing
-				_subtract_drink_mix_liquid(str(ing_key), prev_ing - new_ing)
-		elif top_layer[0] is Array:
-			var ing_arr: Array = top_layer[0]
-			var per_ing_remove := remove_amt / maxf(float(ing_arr.size()), 1.0)
-			for ing_key in ing_arr:
-				_subtract_drink_mix_liquid(str(ing_key), per_ing_remove)
-		elif top_layer[0] is Dictionary:
-			var ing_dict: Dictionary = top_layer[0]
-			for ing_key in ing_dict.keys():
-				var prev_ing := float(ing_dict[ing_key])
-				var new_ing := prev_ing * keep_ratio
-				ing_dict[ing_key] = new_ing
-				_subtract_drink_mix_liquid(str(ing_key), prev_ing - new_ing)
-		else:
-			_subtract_drink_mix_liquid(str(top_layer[0]), remove_amt)
+		_subtract_layer_ingredients(top_layer, remove_amt, keep_ratio)
 
 		if float(top_layer[1]) <= 0.0001:
 			liquids.pop_back()
@@ -495,22 +696,18 @@ func _pour_out(liquids_num: float) -> float:
 	if total_removed <= 0.0:
 		return 0.0
 
-	if liquids.is_empty():
-		var had_spectral := drink_mix.has_processing("spectral")
-		drink_mix.ingredients.clear()
-		drink_mix.garnishes.clear()
-		drink_mix.processing_tags.clear()
-		if visual_helper:
-			visual_helper.set_visual_override({})
-		if had_spectral and sprite:
-			SpectralEffect.clear_from_sprite(sprite, SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS)
+	var sim := LiquidSim.get_sim(self)
+	if sim and is_instance_valid(_outside_sprite):
+		var lip_w: Vector3 = _uv_to_world_pos(Vector2(0.18, 0.14))
+		var lip_v: Vector3 = _uv_vel_to_world_vel(Vector2(-1.0, 0.5), -1.0, true)
+		sim.emit_cup_spill_particle(self, lip_w, lip_v, out_col, out_id, total_removed, true)
 
-	visual_helper.slosh_velocity += randf_range(-0.35, 0.35) * (1.0 - clampf(viscosity, 0.0, 1.0))
-	visual_helper.slosh_vertical_velocity += randf_range(-0.15, 0.05)
-	visual_helper.wave_amplitude = minf(visual_helper.wave_amplitude + 0.035, 0.07)
-	_rebuild_liquid_gradient(not liquids.is_empty())
-	if liquids.is_empty() or total_liquids <= 0.0:
-		_remove_displaying_list()
+	if liquids.is_empty():
+		_clear_empty_cup_state()
+	else:
+		_rebuild_liquid_gradient(true)
+		if cup_fluid_sim:
+			cup_fluid_sim.sync_fill_to_liquids(liquids, total_liquids, size, visual_helper)
 	return total_removed
 
 func _subtract_drink_mix_liquid(id: String, amount: float) -> void:
@@ -524,6 +721,7 @@ func _subtract_drink_mix_liquid(id: String, amount: float) -> void:
 
 func start_pour_out(tilt_degrees: float = 80.0) -> void:
 	is_pouring_out = true
+	_sink_drain_stall_timer = 0.0
 	_is_pointer_pressed = false
 	is_balls_dragging = false
 	push_velocity = Vector3.ZERO
@@ -541,7 +739,7 @@ func stop_pour_out() -> void:
 	_pour_tilt_tween = create_tween()
 	_pour_tilt_tween.set_trans(Tween.TRANS_SINE)
 	_pour_tilt_tween.set_ease(Tween.EASE_OUT)
-	_pour_tilt_tween.tween_property(self, "pour_tilt_degrees", 0.0, 0.15)
+	_pour_tilt_tween.tween_property(self, "pour_tilt_degrees", 0.0, 0.18)
 	_pour_tilt_tween.finished.connect(func():
 		is_pouring_out = false
 	)
@@ -605,7 +803,6 @@ func _return_drink() -> Array:
 	if current_total <= 0.0:
 		return []
 
-	# normalizes layers so ratios sum to 1.0 for the customer scoring system
 	var scale_to_prop := 1.0 / current_total
 	var normalized: Array = []
 	for layer in liquids:
@@ -726,7 +923,6 @@ func is_mixed() -> bool:
 	var layer0 = liquids[0]
 	return (layer0[0] is Array or layer0[0] is Dictionary) and layer0[0].size() >= 2
 
-# collapses separate layers into one blended liquid and tags drink mix as shaken
 func mark_mixed() -> void:
 	if get_unique_liquids_ids().size() < 2 or liquids.is_empty():
 		return
@@ -766,6 +962,8 @@ func mark_mixed() -> void:
 	liquids.push_back([mixed_names, total_amount, mixed_color, combined_amounts])
 	drink_mix.add_processing("shaken")
 	_rebuild_liquid_gradient(true)
+	if cup_fluid_sim:
+		cup_fluid_sim.recolor_mixed(mixed_color, " + ".join(mixed_names))
 
 func get_mixed_ingredients() -> Array[String]:
 	return get_unique_liquids_ids()

@@ -7,6 +7,8 @@ const POUR_AMOUNT: float = 0.25
 const POUR_INTERVAL: float = 0.1
 const MAX_POUR_ANGLE_DEGREES: float = 120.0
 
+static var _spout_local_cache: Dictionary = {}
+
 @onready var liquid_refresh: Timer = get_node("Liquid_refresh")
 @export var liquid_resource: Liquid
 @export var size: float = 50.0
@@ -28,6 +30,8 @@ var liquid_shader_mat: ShaderMaterial
 var gradient_texture: GradientTexture2D
 var _tex_from: Vector2
 var _tex_to_full: Vector2
+var _cached_spout_local: Vector3 = Vector3.ZERO
+var _has_cached_spout: bool = false
 
 func _is_drag_blocked() -> bool:
 	return in_game
@@ -38,7 +42,6 @@ func _get_drag_follow_speed() -> float:
 func _get_drag_hold_lift() -> float:
 	return hold_lift
 
-# snaps bottle floating above glass if hovering over one
 func _get_free_drag_target(delta: float) -> Vector3:
 	if snap_to_glass and camera and is_instance_valid(current_hovered_target) and can_interact_with(current_hovered_target):
 		var to_cam := (camera.global_position - current_hovered_target.global_position).normalized()
@@ -52,6 +55,7 @@ func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 
 	$Inside.texture = liquid_resource.sprite
 	$Inside/Outside.texture = liquid_resource.outside_Sprite
+	_has_cached_spout = false
 
 	original_position = og_position
 	counter_origin = Counter
@@ -89,9 +93,8 @@ func _apply_outside_texture() -> void:
 
 func _process(delta: float) -> void:
 	if in_game:
-		if is_pouring:
-			var target_angle := _get_pour_angle_degrees()
-			rotation_degrees.z = lerpf(rotation_degrees.z, target_angle, 1.0 - exp(-18.0 * delta))
+		var target_angle: float = _get_pour_angle_degrees() if is_pouring else 0.0
+		rotation_degrees.z = lerpf(rotation_degrees.z, target_angle, 1.0 - exp(-18.0 * delta))
 		return
 	super._process(delta)
 	_face_camera()
@@ -121,36 +124,132 @@ func _get_pour_rate_multiplier() -> float:
 	return _get_pour_height_ratio() * 2.0
 
 func _get_pour_angle_degrees() -> float:
-	return _get_pour_height_ratio() * MAX_POUR_ANGLE_DEGREES
+	var ratio: float = _get_pour_height_ratio()
+	if ratio <= 0.001:
+		return 0.0
+	return lerpf(32.0, MAX_POUR_ANGLE_DEGREES, ratio)
 
-# tips bottle sideways and squirts liquid into the glass while left click is held
+func _get_spout_local_offset() -> Vector3:
+	if _has_cached_spout:
+		return _cached_spout_local
+	var inside := get_node_or_null("Inside") as Sprite3D
+	if not is_instance_valid(inside) or inside.texture == null:
+		return Vector3(0.0, 0.35, 0.0)
+
+	var tex_id: int = inside.texture.get_rid().get_id()
+	var cache_key: String = "%d_%s" % [tex_id, str(inside.flip_h)]
+	if _spout_local_cache.has(cache_key):
+		_cached_spout_local = _spout_local_cache[cache_key]
+		_has_cached_spout = true
+		return _cached_spout_local
+
+	var rect: Rect2 = inside.get_item_rect()
+	var ps: float = inside.pixel_size
+	var fallback := Vector3(0.0, rect.end.y * ps * 0.88, 0.0)
+
+	var img: Image = inside.texture.get_image()
+	if img != null and not img.is_empty():
+		if img.is_compressed():
+			if img.decompress() != OK:
+				img = null
+	if img != null and not img.is_empty() and not img.is_compressed():
+		var used: Rect2i = img.get_used_rect()
+		if used.size.x > 0 and used.size.y > 0:
+			var tex_w: int = img.get_width()
+			var tex_h: int = img.get_height()
+			var top_band_end: int = mini(used.end.y, used.position.y + maxi(2, int(float(used.size.y) * 0.12)))
+			var sum_x: float = 0.0
+			var count_x: int = 0
+			for py in range(used.position.y, top_band_end):
+				for px in range(used.position.x, used.end.x):
+					if img.get_pixel(px, py).a > 0.15:
+						sum_x += float(px) + 0.5
+						count_x += 1
+			var avg_px_x: float = (sum_x / float(count_x)) if count_x > 0 else (float(used.position.x) + float(used.size.x) * 0.5)
+			var u: float = avg_px_x / float(tex_w)
+			if inside.flip_h:
+				u = 1.0 - u
+			var v: float = (float(used.position.y) + 1.5) / float(tex_h)
+			var v_from_bottom: float = v if inside.flip_v else (1.0 - v)
+			var lx: float = (rect.position.x + u * rect.size.x) * ps
+			var ly: float = (rect.position.y + v_from_bottom * rect.size.y) * ps
+			fallback = Vector3(lx, ly, 0.0)
+
+	_spout_local_cache[cache_key] = fallback
+	_cached_spout_local = fallback
+	_has_cached_spout = true
+	return _cached_spout_local
+
+func _get_spout_world_position() -> Vector3:
+	var inside := get_node_or_null("Inside") as Sprite3D
+	if is_instance_valid(inside):
+		return inside.global_transform * _get_spout_local_offset()
+	return global_position
+
+func _compute_stream_launch_velocity(spout_pos: Vector3, target_pos: Vector3, rate_mult: float) -> Vector3:
+	var dist: float = spout_pos.distance_to(target_pos)
+	var t_flight: float = clampf(dist / lerpf(1.75, 2.35, clampf(rate_mult * 0.5, 0.0, 1.0)), 0.12, 0.22)
+	var dx: float = target_pos.x - spout_pos.x
+	var dz: float = target_pos.z - spout_pos.z
+	var dy: float = target_pos.y - spout_pos.y
+	var vy: float = (dy + 0.5 * LiquidSim.WORLD_GRAVITY * t_flight * t_flight) / t_flight
+	return Vector3(dx / t_flight, vy, dz / t_flight)
+
+# tips bottle sideways and emits volume-carrying fluid particles into the glass
 func _pour() -> void:
 	is_pouring = true
+	$CPUParticles3D.emitting = false
 	if GameState.player:
 		GameState.player._update_hand("holding")
 
+	var sfx_timer: float = POUR_INTERVAL
+	var emit_accum: float = 0.0
 	if pouring_into:
 		while _is_pour_button_held() and in_game and GameState.player and GameState.player.in_game and current_liquid > 0.0 and is_instance_valid(pouring_into):
-			var rate_mult: float = _get_pour_rate_multiplier()
-			$CPUParticles3D.emitting = rate_mult > 0.0
-			if rate_mult > 0.0:
-				var cost_mult: float = pouring_into.get_resource_usage_multiplier(liquid_resource.id) if pouring_into.has_method("get_resource_usage_multiplier") else 1.0
-				var max_bottle_pour: float = current_liquid / maxf(cost_mult, 0.001)
-				var amount := minf(POUR_AMOUNT * rate_mult, max_bottle_pour)
-				var poured_variant = pouring_into._pouring(liquid_resource.id, amount)
-				var actual_poured: float = float(poured_variant) if (poured_variant is float or poured_variant is int) else amount
-				set_liquid_amount(current_liquid - actual_poured * cost_mult)
-			await get_tree().create_timer(POUR_INTERVAL).timeout
+			await get_tree().process_frame
 			if not is_inside_tree():
 				return
+			var delta: float = clampf(get_process_delta_time(), 0.001, 0.05)
+			var rate_mult: float = _get_pour_rate_multiplier()
+			if rate_mult > 0.0 and current_liquid > 0.0 and is_instance_valid(pouring_into):
+				if absf(rotation_degrees.z) > 22.0:
+					var cost_mult: float = pouring_into.get_resource_usage_multiplier(liquid_resource.id) if pouring_into.has_method("get_resource_usage_multiplier") else 1.0
+					var max_bottle_pour: float = current_liquid / maxf(cost_mult, 0.001)
+					var step_factor: float = delta / POUR_INTERVAL
+					var amount := minf(POUR_AMOUNT * rate_mult * step_factor, max_bottle_pour)
+					set_liquid_amount(current_liquid - amount * cost_mult)
+					emit_accum += amount
+
+					var sim := LiquidSim.get_sim(self)
+					if sim:
+						var spout_pos: Vector3 = _get_spout_world_position()
+						var target_pos: Vector3
+						if pouring_into.has_method("get_cavity_rim_world_position"):
+							target_pos = pouring_into.get_cavity_rim_world_position()
+						elif pouring_into.has_method("get_liquid_surface_world_position"):
+							target_pos = pouring_into.get_liquid_surface_world_position()
+						else:
+							target_pos = pouring_into.global_position
+						var launch_vel: Vector3 = _compute_stream_launch_velocity(spout_pos, target_pos, rate_mult)
+						sim.emit_volume_stream(get_instance_id(), spout_pos, launch_vel, color_liquid, liquid_resource.id, emit_accum, clampf(rate_mult * 0.5, 0.08, 1.0), delta, pouring_into, 0.004)
+						emit_accum = 0.0
+					else:
+						pouring_into._pouring(liquid_resource.id, emit_accum)
+						emit_accum = 0.0
+
+					sfx_timer += delta
+					if sfx_timer >= POUR_INTERVAL:
+						sfx_timer -= POUR_INTERVAL
+						SFXAudio.play_liquidpour()
+			else:
+				sfx_timer = POUR_INTERVAL
 
 	$CPUParticles3D.emitting = false
-	rotation_degrees.z = 0
+	is_pouring = false
 	if GameState.player:
 		GameState.player._update_hand("idle")
-	is_pouring = false
 
-	await get_tree().create_timer(0.2).timeout
+	await get_tree().create_timer(0.25).timeout
 	if is_inside_tree() and in_game and GameState.player and GameState.player.in_game:
 		GameState.player._out_of_game()
 
@@ -227,8 +326,6 @@ func _on_interact_area_entered(_area: Area3D) -> void:
 func _on_interact_area_exited(_area: Area3D) -> void:
 	pass
 
-# Liquid
-
 func set_liquid_color(new_color: Color) -> void:
 	color_liquid = new_color
 	_update_liquid_shader()
@@ -241,6 +338,7 @@ func _update_liquid_shader() -> void:
 	if not liquid_shader_mat or size <= 0.0:
 		return
 	var fill := clampf(current_liquid / size, 0.0, 1.0)
+	liquid_shader_mat.set_shader_parameter("use_fluid_field", false)
 	liquid_shader_mat.set_shader_parameter("fill_amount", fill)
 	if liquid_gradient:
 		liquid_gradient.offsets = PackedFloat32Array([0.0, 1.0])
@@ -267,6 +365,7 @@ func _setup_liquid_shader() -> void:
 		return
 
 	liquid_shader_mat = source.duplicate() as ShaderMaterial
+	liquid_shader_mat.set_shader_parameter("use_fluid_field", false)
 	if use_override:
 		outside.material_override = liquid_shader_mat
 	else:
@@ -292,7 +391,6 @@ func _setup_liquid_shader() -> void:
 	_rebuild_liquid_gradient()
 	_update_liquid_shader()
 
-# slides gradient offset downwards as bottle liquid empties
 func _rebuild_liquid_gradient() -> void:
 	if not liquid_gradient or not gradient_texture or size <= 0.0:
 		return
@@ -316,4 +414,3 @@ func _add_liquid(amount: float) -> void:
 
 func _on_liquid_refresh_timeout() -> void:
 	_add_liquid(0.25)
-	
