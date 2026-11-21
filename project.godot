@@ -14,7 +14,6 @@ config/name="TechDemo"
 run/main_scene="uid://dbopjf61c8b21"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
-<<<<<<<HEADconfig/name="TechDemo"
 
 [audio]
 
