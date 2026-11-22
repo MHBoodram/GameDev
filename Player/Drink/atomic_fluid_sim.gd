@@ -8,6 +8,9 @@ const WORKGROUP_SIZE := AtomicFluidShaders.WORKGROUP_SIZE
 const PARTICLES_PER_CELL := 4
 const PARTICLE_VOLUME_WEIGHT := 0.258
 const PARTICLE_STRIDE := 48
+const GRID_GRAVITY := 105.0
+const MAX_GRID_ACCEL := 550.0
+const MAX_IMPULSE_VEL := 65.0
 
 # Shared static GPU resources across all containers
 static var _gpu_checked: bool = false
@@ -42,6 +45,7 @@ var _synced_amounts: Dictionary = {} # ingredient_key -> float amount
 var _synced_total: float = 0.0
 var _synced_mixed: bool = false
 var _last_single_color: Color = Color(-1.0, -1.0, -1.0, -1.0)
+var _last_single_visc: float = -1.0
 var _pending_ops: Array[Dictionary] = []
 var _pending_impulse: Vector2 = Vector2.ZERO
 var _last_down_dir: Vector2 = Vector2(0.0, 1.0)
@@ -69,11 +73,14 @@ var _cpu_cells: Array[Vector2i] = []
 var _cpu_pos: PackedVector2Array = PackedVector2Array()
 var _cpu_pvel: PackedVector2Array = PackedVector2Array()
 var _cpu_rho: PackedFloat32Array = PackedFloat32Array()
+var _cpu_visc: PackedFloat32Array = PackedFloat32Array()
 var _cpu_col: PackedColorArray = PackedColorArray()
 var _cpu_vx: PackedFloat32Array = PackedFloat32Array()
 var _cpu_vy: PackedFloat32Array = PackedFloat32Array()
 var _cpu_mass: PackedFloat32Array = PackedFloat32Array()
 var _cpu_vol: PackedFloat32Array = PackedFloat32Array()
+var _cpu_cell_visc: PackedFloat32Array = PackedFloat32Array()
+var _cpu_cell_p: PackedFloat32Array = PackedFloat32Array()
 var _cpu_px: PackedFloat32Array = PackedFloat32Array()
 var _cpu_py: PackedFloat32Array = PackedFloat32Array()
 var _cpu_pr: PackedFloat32Array = PackedFloat32Array()
@@ -108,16 +115,18 @@ func add_agitation(impulse_grid_vel: Vector2) -> void:
 	_pending_impulse += impulse_grid_vel
 
 
-func sync_bottle_liquid(id: String, current_amount: float, capacity: float, color: Color, buoyancy: float) -> void:
+func sync_bottle_liquid(id: String, current_amount: float, capacity: float, color: Color, buoyancy: float, viscosity_val: float = -1.0) -> void:
 	if capacity <= 0.0001 or current_amount <= 0.0001:
 		_sync_empty()
 		return
 	var clamped_amt := clampf(current_amount, 0.0, capacity)
 	var layers := [[id, clamped_amt, color, {id: clamped_amt}]]
-	sync_container_liquids(layers, capacity, false, {id: buoyancy})
+	var buoy_ov := {id: buoyancy} if buoyancy > 0.0 else {}
+	var visc_ov := {id: viscosity_val} if viscosity_val >= 0.0 else {}
+	sync_container_liquids(layers, capacity, false, buoy_ov, {}, visc_ov)
 
 
-func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool, buoyancy_overrides: Dictionary = {}, pour_info: Dictionary = {}) -> void:
+func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool, buoyancy_overrides: Dictionary = {}, pour_info: Dictionary = {}, viscosity_overrides: Dictionary = {}) -> void:
 	if _max_particles <= 0 or capacity <= 0.0001 or liquids.is_empty():
 		_sync_empty()
 		return
@@ -137,6 +146,7 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 		var key: String = ""
 		var col: Color = Color.WHITE
 		var buoy: float = 1.0
+		var visc: float = 0.0
 
 		if layer.size() > 2 and layer[2] is Color:
 			col = layer[2]
@@ -156,20 +166,25 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 			var key_parts: Array[String] = []
 			var w_sum := 0.0
 			var rho_sum := 0.0
+			var visc_sum := 0.0
 			for k in keys:
 				var ks := str(k)
 				key_parts.append(ks)
 				var kw := maxf(float(ing_weights[k]), 0.0)
 				var kb: float = float(buoyancy_overrides.get(ks, AtomicFluidShaders.get_liquid_buoyancy(ks)))
+				var kv: float = clampf(float(viscosity_overrides.get(ks, AtomicFluidShaders.get_liquid_viscosity(ks))), 0.0, 1.0)
 				w_sum += kw
 				rho_sum += kw * (1.0 / clampf(kb, 0.35, 2.5))
+				visc_sum += kw * kv
 			key = "+".join(key_parts)
 			buoy = 1.0 / maxf(rho_sum / maxf(w_sum, 0.0001), 0.35)
+			visc = clampf(visc_sum / maxf(w_sum, 0.0001), 0.0, 1.0)
 		else:
 			key = str(layer[0])
 			if not (layer.size() > 2 and layer[2] is Color):
 				col = AtomicFluidShaders.LIQUID_COLOR.get(key, Color.WHITE)
 			buoy = float(buoyancy_overrides.get(key, AtomicFluidShaders.get_liquid_buoyancy(key)))
+			visc = clampf(float(viscosity_overrides.get(key, AtomicFluidShaders.get_liquid_viscosity(key))), 0.0, 1.0)
 
 		var rho := 1.0 / clampf(buoy, 0.35, 2.5)
 		new_amounts[key] = new_amounts.get(key, 0.0) + amt
@@ -178,6 +193,7 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 			"amount": amt,
 			"color": col,
 			"rho": rho,
+			"visc": visc,
 		})
 
 	if total_amt <= 0.0001 or layer_items.is_empty():
@@ -195,7 +211,7 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 			var share := float(item["amount"]) / total_amt
 			var cnt := (target_count - assigned) if i == layer_items.size() - 1 else clampi(roundi(share * float(target_count)), 0, target_count - assigned)
 			if cnt > 0:
-				specs.append({"count": cnt, "color": item["color"], "rho": item["rho"]})
+				specs.append({"count": cnt, "color": item["color"], "rho": item["rho"], "visc": item["visc"]})
 				assigned += cnt
 		if bool(pour_info.get("from_pour", false)):
 			_queue_append_stream(specs, 0, pour_info, true)
@@ -206,16 +222,20 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 		_synced_total = total_amt
 		_synced_mixed = is_mixed_flag
 		_last_single_color = (layer_items[0]["color"] as Color) if layer_items.size() == 1 else Color(-1.0, -1.0, -1.0, -1.0)
+		_last_single_visc = float(layer_items[0]["visc"]) if layer_items.size() == 1 else -1.0
 		return
 
 	if layer_items.size() == 1:
 		var single_item := layer_items[0]
 		var single_col: Color = single_item["color"]
-		if (is_mixed_flag and not _synced_mixed) or (not is_mixed_flag and single_col != _last_single_color):
-			_queue_blend(single_col, float(single_item["rho"]), _active_count)
+		var single_visc: float = float(single_item["visc"])
+		if (is_mixed_flag and not _synced_mixed) or (not is_mixed_flag and (single_col != _last_single_color or not is_equal_approx(single_visc, _last_single_visc))):
+			_queue_blend(single_col, float(single_item["rho"]), single_visc, _active_count)
 			_last_single_color = single_col
+			_last_single_visc = single_visc
 	else:
 		_last_single_color = Color(-1.0, -1.0, -1.0, -1.0)
+		_last_single_visc = -1.0
 
 	if target_count > _active_count:
 		var add_total := target_count - _active_count
@@ -228,11 +248,11 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 			var diff := maxf(cur_a - prev_a, 0.0)
 			if diff > 0.0001:
 				delta_sum += diff
-				added_specs.append({"diff": diff, "color": item["color"], "rho": item["rho"]})
+				added_specs.append({"diff": diff, "color": item["color"], "rho": item["rho"], "visc": item["visc"]})
 
 		if delta_sum <= 0.0001:
 			var last_item := layer_items[layer_items.size() - 1]
-			added_specs.append({"diff": 1.0, "color": last_item["color"], "rho": last_item["rho"]})
+			added_specs.append({"diff": 1.0, "color": last_item["color"], "rho": last_item["rho"], "visc": last_item["visc"]})
 			delta_sum = 1.0
 
 		var spawn_specs: Array[Dictionary] = []
@@ -241,7 +261,7 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 			var sp := added_specs[i]
 			var cnt := (add_total - assigned_add) if i == added_specs.size() - 1 else clampi(roundi((float(sp["diff"]) / delta_sum) * float(add_total)), 0, add_total - assigned_add)
 			if cnt > 0:
-				spawn_specs.append({"count": cnt, "color": sp["color"], "rho": sp["rho"]})
+				spawn_specs.append({"count": cnt, "color": sp["color"], "rho": sp["rho"], "visc": sp["visc"]})
 				assigned_add += cnt
 
 		if assigned_add > 0:
@@ -266,6 +286,7 @@ func _sync_empty() -> void:
 	_synced_total = 0.0
 	_synced_mixed = false
 	_last_single_color = Color(-1.0, -1.0, -1.0, -1.0)
+	_last_single_visc = -1.0
 	_pending_ops.append({"op": "clear"})
 
 
@@ -273,19 +294,21 @@ func step(delta: float, local_accel_world: Vector2, viscosity: float) -> void:
 	if _disposed:
 		return
 
-	var scale_g := 24.0 / 9.8
+	var scale_g := GRID_GRAVITY / 9.8
 	var grid_accel := Vector2(local_accel_world.x * scale_g, -local_accel_world.y * scale_g)
+	if grid_accel.length() > MAX_GRID_ACCEL:
+		grid_accel = grid_accel.normalized() * MAX_GRID_ACCEL
+
 	var imp := _pending_impulse
 	_pending_impulse = Vector2.ZERO
+	if imp.length() > MAX_IMPULSE_VEL:
+		imp = imp.normalized() * MAX_IMPULSE_VEL
 
 	if grid_accel.length_squared() > 0.01:
 		_last_down_dir = grid_accel.normalized()
 
 	var clamped_delta := clampf(delta, 0.001, 0.033)
 	var accel_with_imp := grid_accel + imp / maxf(clamped_delta, 0.008)
-	var max_acc := 120.0
-	if accel_with_imp.length() > max_acc:
-		accel_with_imp = accel_with_imp.normalized() * max_acc
 
 	var ops_copy := _pending_ops.duplicate()
 	_pending_ops.clear()
@@ -383,7 +406,7 @@ static func _free_rids_on_render_thread(rids: Array[RID], uniform_sets: Array[RI
 			rd.free_rid(rid)
 
 
-func _encode_particle(bytes: PackedByteArray, pidx: int, px: float, py: float, rho: float, col: Color, vx: float, vy: float, inject_vel: float) -> void:
+func _encode_particle(bytes: PackedByteArray, pidx: int, px: float, py: float, rho: float, visc: float, col: Color, vx: float, vy: float, inject_vel: float) -> void:
 	var base := pidx * PARTICLE_STRIDE
 	bytes.encode_float(base + 0, px)
 	bytes.encode_float(base + 4, py)
@@ -396,7 +419,7 @@ func _encode_particle(bytes: PackedByteArray, pidx: int, px: float, py: float, r
 	bytes.encode_float(base + 32, vx)
 	bytes.encode_float(base + 36, vy)
 	bytes.encode_float(base + 40, inject_vel)
-	bytes.encode_float(base + 44, 0.0)
+	bytes.encode_float(base + 44, clampf(visc, 0.0, 1.0))
 
 
 func _queue_init_fill(specs: Array[Dictionary], total_particles: int) -> void:
@@ -432,8 +455,9 @@ func _queue_init_fill(specs: Array[Dictionary], total_particles: int) -> void:
 			var px := clampf(float(cell.x) + off.x + randf_range(-0.06, 0.06), 0.55, float(GRID_SIZE) - 1.55)
 			var py := clampf(float(cell.y) + off.y + randf_range(-0.06, 0.06), 0.55, float(GRID_SIZE) - 1.55)
 			var rho := float(sp["rho"])
+			var visc := float(sp.get("visc", 0.0))
 			var col: Color = sp["color"]
-			_encode_particle(bytes, pidx, px, py, rho, col, 0.0, 0.0, 0.0)
+			_encode_particle(bytes, pidx, px, py, rho, visc, col, 0.0, 0.0, 0.0)
 			pidx += 1
 
 	_pending_ops.append({
@@ -494,6 +518,7 @@ func _queue_append_stream(specs: Array[Dictionary], start_index: int, pour_info:
 	for sp in specs:
 		var cnt := int(sp["count"])
 		var rho := float(sp["rho"])
+		var visc := float(sp.get("visc", 0.0))
 		var col: Color = sp["color"]
 		for _i in cnt:
 			var t := (float(pidx) + randf_range(0.0, 0.85)) / maxf(float(total_add), 1.0)
@@ -505,7 +530,7 @@ func _queue_append_stream(specs: Array[Dictionary], start_index: int, pour_info:
 
 			var p_vx := stream_vx + randf_range(-1.8, 1.8)
 			var p_vy := stream_vy + randf_range(-3.0, 3.0)
-			_encode_particle(bytes, pidx, clamped_pos.x, clamped_pos.y, rho, col, p_vx, p_vy, 1.0)
+			_encode_particle(bytes, pidx, clamped_pos.x, clamped_pos.y, rho, visc, col, p_vx, p_vy, 1.0)
 			pidx += 1
 
 	_pending_ops.append({
@@ -525,11 +550,12 @@ func _queue_cull(remove_count: int, old_count: int, new_count: int) -> void:
 	})
 
 
-func _queue_blend(col: Color, target_rho: float, active_count: int) -> void:
+func _queue_blend(col: Color, target_rho: float, target_visc: float, active_count: int) -> void:
 	_pending_ops.append({
 		"op": "blend",
 		"color": col,
 		"rho": target_rho,
+		"visc": clampf(target_visc, 0.0, 1.0),
 		"count": active_count,
 	})
 
@@ -999,8 +1025,9 @@ func _gpu_step(frame_dt: float, accel: Vector2, viscosity: float, active_count: 
 				if cnt > 0:
 					var col: Color = op["color"]
 					var rho: float = float(op["rho"])
+					var visc: float = float(op.get("visc", 0.0))
 					var groups: int = _groups_for(cnt)
-					_dispatch(rd, _pipelines["blend"], _sets["blend"], groups, 1, _pack_pc(col.r, col.g, col.b, rho, 0.0, 0.0, 0.0, cnt))
+					_dispatch(rd, _pipelines["blend"], _sets["blend"], groups, 1, _pack_pc(col.r, col.g, col.b, rho, visc, 0.0, 0.0, cnt))
 
 	if active_count <= 0:
 		if not cleared_this_frame and not _tex_cleared:
@@ -1008,10 +1035,10 @@ func _gpu_step(frame_dt: float, accel: Vector2, viscosity: float, active_count: 
 			_tex_cleared = true
 		return
 
-	var substeps := 3
-	var sub_dt := clampf(frame_dt / float(substeps), 0.002, 0.006)
+	var substeps := clampi(int(ceili(frame_dt / 0.0018)), 6, 16)
+	var sub_dt := frame_dt / float(substeps)
 	var part_groups: int = _groups_for(active_count)
-	var pc := _pack_pc(sub_dt, accel.x, accel.y, viscosity, 24.0, 75.0, 0.98, active_count)
+	var pc := _pack_pc(sub_dt, accel.x, accel.y, viscosity, GRID_GRAVITY, 5000.0, 1.04, active_count)
 
 	for _s in substeps:
 		_flip_flop = not _flip_flop
@@ -1038,6 +1065,8 @@ func _init_cpu_fallback(tex: Texture2D) -> void:
 	_cpu_vy.resize(CPU_N * CPU_N)
 	_cpu_mass.resize(CPU_N * CPU_N)
 	_cpu_vol.resize(CPU_N * CPU_N)
+	_cpu_cell_visc.resize(CPU_N * CPU_N)
+	_cpu_cell_p.resize(CPU_N * CPU_N)
 	_cpu_px.resize(CPU_N * CPU_N)
 	_cpu_py.resize(CPU_N * CPU_N)
 	_cpu_pr.resize(CPU_N * CPU_N)
@@ -1086,6 +1115,7 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 				_cpu_pos.clear()
 				_cpu_pvel.clear()
 				_cpu_rho.clear()
+				_cpu_visc.clear()
 				_cpu_col.clear()
 			"init_upload", "append_upload":
 				var bytes: PackedByteArray = op["bytes"]
@@ -1094,6 +1124,7 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 					_cpu_pos.clear()
 					_cpu_pvel.clear()
 					_cpu_rho.clear()
+					_cpu_visc.clear()
 					_cpu_col.clear()
 				var scale := float(CPU_N) / float(GRID_SIZE)
 				for i in cnt:
@@ -1106,19 +1137,23 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 					_cpu_pos.append(p)
 					_cpu_pvel.append(pv)
 					_cpu_rho.append(bytes.decode_float(b + 8))
+					_cpu_visc.append(clampf(bytes.decode_float(b + 44), 0.0, 1.0))
 					_cpu_col.append(Color(bytes.decode_float(b + 16), bytes.decode_float(b + 20), bytes.decode_float(b + 24), 1.0))
 			"cull":
 				var new_cnt: int = mini(int(float(op["new_count"]) * 0.5), _cpu_pos.size())
 				_cpu_pos.resize(new_cnt)
 				_cpu_pvel.resize(new_cnt)
 				_cpu_rho.resize(new_cnt)
+				_cpu_visc.resize(new_cnt)
 				_cpu_col.resize(new_cnt)
 			"blend":
 				var col: Color = op["color"]
 				var rho: float = float(op["rho"])
+				var visc: float = float(op.get("visc", 0.0))
 				for i in _cpu_col.size():
 					_cpu_col[i] = col
 					_cpu_rho[i] = rho
+					_cpu_visc[i] = visc
 
 	if _cpu_pos.is_empty():
 		_cpu_img.fill(Color(0, 0, 0, 0))
@@ -1126,50 +1161,84 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 		return
 
 	var n := _cpu_pos.size()
-	var dt := clampf(frame_dt * 0.5, 0.002, 0.012)
+	var dt := clampf(frame_dt * 0.5, 0.001, 0.016)
 	var half_accel := accel * 0.5
-	var damp := maxf(0.0, 1.0 - viscosity * dt * 2.5)
-	_cpu_mass.fill(0.0)
-	_cpu_vol.fill(0.0)
-	_cpu_px.fill(0.0)
-	_cpu_py.fill(0.0)
 
-	for i in n:
-		var p := _cpu_pos[i]
-		var cx := clampi(int(p.x), 1, CPU_N - 2)
-		var cy := clampi(int(p.y), 1, CPU_N - 2)
-		var idx := cx + cy * CPU_N
-		_cpu_vol[idx] += 0.5
-		_cpu_mass[idx] += 0.5 * _cpu_rho[i]
+	for _sub in 2:
+		_cpu_mass.fill(0.0)
+		_cpu_vol.fill(0.0)
+		_cpu_cell_visc.fill(0.0)
+		_cpu_px.fill(0.0)
+		_cpu_py.fill(0.0)
 
-	for y in CPU_N:
-		for x in CPU_N:
-			var idx := x + y * CPU_N
-			if _cpu_mass[idx] > 0.001:
-				_cpu_vx[idx] = (_cpu_vx[idx] * damp + half_accel.x * dt)
-				_cpu_vy[idx] = (_cpu_vy[idx] * damp + half_accel.y * dt)
-			else:
-				_cpu_vx[idx] = 0.0
-				_cpu_vy[idx] = 0.0
+		for i in n:
+			var p := _cpu_pos[i]
+			var cx := clampi(int(p.x), 1, CPU_N - 2)
+			var cy := clampi(int(p.y), 1, CPU_N - 2)
+			var idx := cx + cy * CPU_N
+			var m := 0.5 * _cpu_rho[i]
+			var p_v := clampf(maxf(_cpu_visc[i], viscosity), 0.0, 1.0)
+			_cpu_vol[idx] += 0.5
+			_cpu_mass[idx] += m
+			_cpu_cell_visc[idx] += m * p_v
 
-	for i in n:
-		var p := _cpu_pos[i]
-		var pv := _cpu_pvel[i]
-		var cx := clampi(int(p.x), 1, CPU_N - 2)
-		var cy := clampi(int(p.y), 1, CPU_N - 2)
-		var idx := cx + cy * CPU_N
-		var local_rho := _cpu_mass[idx] / maxf(_cpu_vol[idx], 0.001)
-		var rel := clampf((_cpu_rho[i] - local_rho) / maxf(_cpu_rho[i], 0.25), -1.0, 1.0)
-		var step_v := Vector2(_cpu_vx[idx], _cpu_vy[idx]) + pv
-		p += step_v * dt + _last_down_dir * (rel * 8.0 * dt)
-		_cpu_pvel[i] = pv * damp
-		p.x = clampf(p.x, 1.0, float(CPU_N - 2))
-		p.y = clampf(p.y, 1.0, float(CPU_N - 2))
-		var nc := int(p.x) + int(p.y) * CPU_N
-		if _cpu_mask[nc] == 0:
-			p += Vector2(_cpu_sdf_nx[nc], _cpu_sdf_ny[nc]) * 0.5
-			_cpu_pvel[i] = Vector2.ZERO
-		_cpu_pos[i] = p
+		for idx in CPU_N * CPU_N:
+			_cpu_cell_p[idx] = minf(maxf(0.0, _cpu_vol[idx] - 1.05), 1.5)
+
+		for y in CPU_N:
+			for x in CPU_N:
+				var idx := x + y * CPU_N
+				if _cpu_mask[idx] == 1 and _cpu_mass[idx] > 0.001:
+					var cell_visc := clampf(_cpu_cell_visc[idx] / _cpu_mass[idx], 0.0, 1.0)
+					var cell_damp := maxf(0.0, 1.0 - (0.25 + cell_visc * 8.0) * dt)
+					var grad_px := 0.0
+					var grad_py := 0.0
+					if x > 0 and x < CPU_N - 1 and y > 0 and y < CPU_N - 1:
+						grad_px = (_cpu_cell_p[idx + 1] - _cpu_cell_p[idx - 1]) * 0.5
+						grad_py = (_cpu_cell_p[idx + CPU_N] - _cpu_cell_p[idx - CPU_N]) * 0.5
+					var vx := _cpu_vx[idx] * cell_damp + (half_accel.x - grad_px * 18.0) * dt
+					var vy := _cpu_vy[idx] * cell_damp + (half_accel.y - grad_py * 18.0) * dt
+					if x <= 1 or _cpu_mask[idx - 1] == 0:
+						vx = maxf(vx, 0.0)
+					if x >= CPU_N - 2 or _cpu_mask[idx + 1] == 0:
+						vx = minf(vx, 0.0)
+					if y <= 1 or _cpu_mask[idx - CPU_N] == 0:
+						vy = maxf(vy, 0.0)
+					if y >= CPU_N - 2 or _cpu_mask[idx + CPU_N] == 0:
+						vy = minf(vy, 0.0)
+					_cpu_vx[idx] = vx
+					_cpu_vy[idx] = vy
+				else:
+					_cpu_vx[idx] = 0.0
+					_cpu_vy[idx] = 0.0
+
+		for i in n:
+			var p := _cpu_pos[i]
+			var pv := _cpu_pvel[i]
+			var p_visc := clampf(maxf(_cpu_visc[i], viscosity), 0.0, 1.0)
+			var p_damp := maxf(0.0, 1.0 - (0.25 + p_visc * 8.0) * dt)
+			var cx := clampi(int(p.x), 1, CPU_N - 2)
+			var cy := clampi(int(p.y), 1, CPU_N - 2)
+			var idx := cx + cy * CPU_N
+			var local_rho := _cpu_mass[idx] / maxf(_cpu_vol[idx], 0.001)
+			var rel := clampf((_cpu_rho[i] - local_rho) / maxf(_cpu_rho[i], 0.25), -1.0, 1.0)
+			var buoy_speed := maxf(0.0, 12.0 - p_visc * 10.0)
+			var step_v := Vector2(_cpu_vx[idx], _cpu_vy[idx]) + pv
+			p += step_v * dt + _last_down_dir * (rel * buoy_speed * dt)
+			_cpu_pvel[i] = pv * p_damp
+			p.x = clampf(p.x, 1.0, float(CPU_N - 2))
+			p.y = clampf(p.y, 1.0, float(CPU_N - 2))
+			var nc := int(p.x) + int(p.y) * CPU_N
+			if _cpu_mask[nc] == 0:
+				var n_vec := Vector2(_cpu_sdf_nx[nc], _cpu_sdf_ny[nc])
+				n_vec = n_vec.normalized() if n_vec.length_squared() > 0.0001 else Vector2(0.0, -1.0)
+				p += n_vec * 0.25
+				var vn := _cpu_pvel[i].dot(n_vec)
+				var v_tan := _cpu_pvel[i] - n_vec * vn
+				if vn < 0.0:
+					vn = 0.0
+				_cpu_pvel[i] = n_vec * vn + v_tan * exp(-dt * p_visc * 240.0)
+			_cpu_pos[i] = p
 
 	_cpu_pr.fill(0.0)
 	_cpu_pg.fill(0.0)

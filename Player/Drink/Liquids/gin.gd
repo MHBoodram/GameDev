@@ -16,7 +16,7 @@ const MAX_POUR_ANGLE_DEGREES: float = 120.0
 @export var follow_speed: float = 30.0
 
 @export_group("Liquid Physics")
-@export var viscosity: float = 0.25
+@export var viscosity: float = 0.0
 @export var spring_stiffness: float = 75.0
 @export var base_damping: float = 4.0
 @export var slosh_sensitivity: float = 0.28
@@ -59,6 +59,11 @@ func _ensure_pour_stream() -> void:
 		_pour_stream = PourStreamVisual.new()
 		add_child(_pour_stream)
 
+func _get_effective_viscosity() -> float:
+	var id_str := liquid_resource.id if liquid_resource else "gin"
+	var res_visc := liquid_resource.viscosity if (liquid_resource and liquid_resource.viscosity >= 0.0) else LiquidVisualHelper.get_liquid_viscosity(id_str)
+	return clampf(maxf(viscosity, res_visc), 0.0, 1.0)
+
 func ready() -> void:
 	_ensure_pour_stream()
 	if liquid_resource:
@@ -67,6 +72,8 @@ func ready() -> void:
 		color_liquid = liquid_resource.liquid_color
 		if liquid_resource.buoyancy > 0.0:
 			LiquidVisualHelper.register_liquid_buoyancy(liquid_resource.id, liquid_resource.buoyancy)
+		if liquid_resource.viscosity >= 0.0:
+			LiquidVisualHelper.register_liquid_viscosity(liquid_resource.id, liquid_resource.viscosity)
 		$Inside.texture = liquid_resource.sprite
 		$Inside/Outside.texture = liquid_resource.outside_Sprite
 		var inside_node := get_node_or_null("Inside") as Node3D
@@ -100,6 +107,8 @@ func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 
 	if liquid_resource.buoyancy > 0.0:
 		LiquidVisualHelper.register_liquid_buoyancy(liquid_resource.id, liquid_resource.buoyancy)
+	if liquid_resource.viscosity >= 0.0:
+		LiquidVisualHelper.register_liquid_viscosity(liquid_resource.id, liquid_resource.viscosity)
 
 	$Inside.texture = liquid_resource.sprite
 	$Inside/Outside.texture = liquid_resource.outside_Sprite
@@ -177,7 +186,7 @@ func _process(delta: float) -> void:
 	var inside_node := get_node_or_null("Inside") as Node3D
 	var track_pos: Vector3 = inside_node.global_position if inside_node else global_position
 	var outside_sprite := get_node_or_null("Inside/Outside") as Node3D
-	visual_helper.update_physics(delta, track_pos, camera, viscosity, spring_stiffness, base_damping, slosh_sensitivity, max_slosh_angle, wave_frequency, vertical_spring, vertical_damping, vertical_sensitivity, outside_sprite)
+	visual_helper.update_physics(delta, track_pos, camera, _get_effective_viscosity(), spring_stiffness, base_damping, slosh_sensitivity, max_slosh_angle, wave_frequency, vertical_spring, vertical_damping, vertical_sensitivity, outside_sprite)
 	_update_liquid_shader()
 
 func _on_area_3d_input_event(camera_node: Node, event: InputEvent, event_pos: Vector3, normal: Vector3, shape_idx: int) -> void:
@@ -370,7 +379,8 @@ func _setup_liquid_shader() -> void:
 func _rebuild_liquid_gradient() -> void:
 	var id_str := liquid_resource.id if liquid_resource else "gin"
 	var buoy := liquid_resource.buoyancy if liquid_resource else -1.0
-	visual_helper.sync_bottle_liquid(id_str, current_liquid, size, color_liquid, buoy)
+	var visc := _get_effective_viscosity()
+	visual_helper.sync_bottle_liquid(id_str, current_liquid, size, color_liquid, buoy, visc)
 
 func _add_liquid(amount: float) -> void:
 	current_liquid = clampf(current_liquid + amount, 0.0, size)

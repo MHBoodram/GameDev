@@ -28,7 +28,19 @@ const LIQUID_BUOYANCY := {
 	"blood": 0.52
 }
 
+const LIQUID_VISCOSITY := {
+	"spirit": 0.0,
+	"beer": 0.0,
+	"gin": 0.0,
+	"vodka": 0.0,
+	"tequila": 0.0,
+	"whiskey": 0.0,
+	"rum": 0.0,
+	"blood": 0.0
+}
+
 static var _custom_buoyancy: Dictionary = {}
+static var _custom_viscosity: Dictionary = {}
 
 static func register_liquid_buoyancy(id: String, buoyancy_val: float) -> void:
 	if buoyancy_val > 0.0:
@@ -41,6 +53,17 @@ static func get_liquid_buoyancy(id: String) -> float:
 		return float(LIQUID_BUOYANCY[id])
 	var h: int = abs(hash(id)) % 1000
 	return 0.60 + (float(h) / 999.0) * 0.95
+
+static func register_liquid_viscosity(id: String, viscosity_val: float) -> void:
+	if viscosity_val >= 0.0:
+		_custom_viscosity[id] = clampf(viscosity_val, 0.0, 1.0)
+
+static func get_liquid_viscosity(id: String) -> float:
+	if _custom_viscosity.has(id):
+		return clampf(float(_custom_viscosity[id]), 0.0, 1.0)
+	if LIQUID_VISCOSITY.has(id):
+		return clampf(float(LIQUID_VISCOSITY[id]), 0.0, 1.0)
+	return 0.0
 
 const CLEAR_GLSL := """#version 450
 layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
@@ -86,11 +109,15 @@ void main() {
 	if (idx >= uint(N * N)) return;
 
 	float mass = float(density[idx * 2u + 1u]) / FIXED_SCALE;
+	float cell_visc = clamp(pc.viscosity, 0.0, 1.0);
 	vec2 v = vec2(0.0);
 	if (mass > 0.001) {
 		vec2 mom = vec2(in_volume[idx].xy) / FIXED_SCALE;
+		float visc_mom = float(in_volume[idx].z) / FIXED_SCALE;
+		cell_visc = clamp(max(pc.viscosity, visc_mom / mass), 0.0, 1.0);
 		v = mom / mass;
-		v *= max(0.0, 1.0 - pc.viscosity * pc.dt * 2.5);
+		float base_damp = 0.25 + cell_visc * 8.0;
+		v *= max(0.0, 1.0 - base_damp * pc.dt);
 		v += pc.dt * vec2(pc.accel_x, pc.accel_y);
 	}
 
@@ -105,23 +132,30 @@ void main() {
 
 	if (sdf.w < 0.5 || sdf.z < 0.5) {
 		vec2 n = sdf.xy;
-		float vn = dot(v, n);
-		if (vn < 0.0) {
-			v -= n * vn;
-		}
-		if (sdf.w < 0.5) {
-			v *= 0.25;
-			if (sdf.z > -3.0) {
-				v += n * 0.5;
-			} else {
-				v = vec2(0.0);
+		float n_len = length(n);
+		if (n_len > 0.001) {
+			n /= n_len;
+			float vn = dot(v, n);
+			vec2 v_tan = v - n * vn;
+			if (vn < 0.0) {
+				vn = 0.0;
 			}
+			// Slip-free walls when cell_visc == 0.0
+			float wall_rate = (sdf.w < 0.5) ? (cell_visc * 240.0) : (cell_visc * 90.0);
+			v_tan *= exp(-pc.dt * wall_rate);
+			if (sdf.w < 0.5 && sdf.z <= -3.0) {
+				vn = 0.0;
+				v_tan = vec2(0.0);
+			}
+			v = n * vn + v_tan;
+		} else if (sdf.w < 0.5) {
+			v = vec2(0.0);
 		}
 	}
 
 	float speed = length(v);
-	if (speed > 60.0) {
-		v = (v / speed) * 60.0;
+	if (speed > 140.0) {
+		v = (v / speed) * 140.0;
 	}
 
 	in_volume[idx] = ivec4(floatBitsToInt(v.x), floatBitsToInt(v.y), 0, 0);
@@ -222,7 +256,7 @@ void main() {
 		}
 	}
 
-	pos += clamp(pc.dt * v, vec2(-1.0), vec2(1.0));
+	pos += clamp(pc.dt * v, vec2(-0.9), vec2(0.9));
 	pos = constrainToContainer(pos);
 
 	base_coord = ivec2(pos - 0.5);
@@ -315,6 +349,7 @@ void main() {
 	float vol_w = part.pos_props.w;
 	if (vol_w <= 0.0) return;
 
+	float p_visc = clamp(max(part.init_vel.w, pc.viscosity), 0.0, 1.0);
 	vec2 pos = constrainToContainer(part.pos_props.xy);
 
 	ivec2 base_coord = ivec2(pos - 0.5);
@@ -343,7 +378,7 @@ void main() {
 		}
 	}
 
-	pos += clamp(pc.dt * v, vec2(-1.0), vec2(1.0));
+	pos += clamp(pc.dt * v, vec2(-0.9), vec2(0.9));
 	pos = constrainToContainer(pos);
 
 	base_coord = ivec2(pos - 0.5);
@@ -370,7 +405,7 @@ void main() {
 		float local_rho = mass_den / max(vol_den, 0.001);
 		vec2 down_dir = accel_vec / accel_len;
 		float rel_diff = clamp((rho_p - local_rho) / rho_p, -1.0, 1.0);
-		float buoy_speed = max(0.0, 18.0 - pc.viscosity * 8.0);
+		float buoy_speed = max(0.0, 24.0 - p_visc * 20.0);
 		vec2 slip = down_dir * (rel_diff * buoy_speed);
 		pos += clamp(pc.dt * slip, vec2(-0.45), vec2(0.45));
 		pos = constrainToContainer(pos);
@@ -384,10 +419,23 @@ void main() {
 
 	particles[pid].pos_props.xy = pos;
 
-	float pressure = max(0.0, pc.stiffness * (vol_den - pc.rest_density));
+	float d_rho = max(0.0, vol_den - pc.rest_density);
+	float pressure = clamp(pc.stiffness * (d_rho + 2.2 * d_rho * d_rho), 0.0, 6000.0);
 	float m_p = vol_w * rho_p;
-	float c_damp = max(0.15, 0.5 - pc.viscosity * 0.25);
-	mat2 affine = mat2(vol_w * pressure, 0.0, 0.0, vol_w * pressure) + m_p * C * c_damp;
+
+	// Stop divergence
+	mat2 C_t = transpose(C);
+	mat2 C_sym = 0.5 * (C + C_t);
+	mat2 C_rot = 0.5 * (C - C_t);
+	float div_v = C[0][0] + C[1][1];
+	mat2 C_dev = C_sym - mat2(0.5 * div_v, 0.0, 0.0, 0.5 * div_v);
+
+	float shear_keep = exp(-pc.dt * mix(2.5, 450.0, p_visc));
+	float rot_keep = exp(-pc.dt * mix(1.0, 200.0, p_visc));
+	mat2 C_eff = C_dev * shear_keep + C_rot * rot_keep;
+
+	float stress_p = 4.0 * pc.dt * vol_w * pressure;
+	mat2 affine = mat2(stress_p, 0.0, 0.0, stress_p) + m_p * C_eff;
 
 	for (int x = 0; x < 3; x++)
 	for (int y = 0; y < 3; y++) {
@@ -397,8 +445,10 @@ void main() {
 		vec2 vel_x_mass = weight * (m_p * v + affine * dpos);
 		int imx = int(round(vel_x_mass.x * FIXED_SCALE));
 		int imy = int(round(vel_x_mass.y * FIXED_SCALE));
+		int ivisc = int(round(weight * m_p * p_visc * FIXED_SCALE));
 		if (imx != 0) atomicAdd(out_volume[idx].x, imx);
 		if (imy != 0) atomicAdd(out_volume[idx].y, imy);
+		if (ivisc != 0) atomicAdd(out_volume[idx].z, ivisc);
 	}
 }
 """
@@ -706,7 +756,7 @@ layout(push_constant, std430) uniform PushConstants {
 	float color_g;
 	float color_b;
 	float target_density;
-	float gravity;
+	float target_viscosity;
 	float stiffness;
 	float rest_density;
 	uint count_a;
@@ -717,5 +767,6 @@ void main() {
 	if (pid >= pc.count_a) return;
 	particles[pid].pos_props.z = pc.target_density;
 	particles[pid].color = vec4(pc.color_r, pc.color_g, pc.color_b, 1.0);
+	particles[pid].init_vel.w = pc.target_viscosity;
 }
 """

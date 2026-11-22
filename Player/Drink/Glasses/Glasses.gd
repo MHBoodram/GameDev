@@ -30,7 +30,7 @@ var _last_counter_position: Vector3 = Vector3.ZERO
 var _skip_initial_snap: bool = false
 
 @export_group("Liquid Physics")
-@export var viscosity: float = 0.25
+@export var viscosity: float = 0.0
 @export var spring_stiffness: float = 75.0
 @export var base_damping: float = 4.0
 @export var slosh_sensitivity: float = 0.28

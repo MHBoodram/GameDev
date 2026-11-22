@@ -6,6 +6,7 @@ extends RefCounted
 const CONTAINER_SHADER := preload("res://Player/Drink/liquid_container.gdshader")
 const LIQUID_COLOR := AtomicFluidShaders.LIQUID_COLOR
 const LIQUID_BUOYANCY := AtomicFluidShaders.LIQUID_BUOYANCY
+const LIQUID_VISCOSITY := AtomicFluidShaders.LIQUID_VISCOSITY
 const UNIFORM_PIXEL_DENSITY: float = 150.0
 const REFERENCE_PIXEL_RESOLUTION: float = 48.0
 
@@ -27,13 +28,19 @@ var _pending_pour_info: Dictionary = {}
 
 var fluid_sim: AtomicFluidSim = null
 var _outside_sprite: Node = null
-var _last_viscosity: float = 0.25
+var _last_viscosity: float = 0.0
 
 static func register_liquid_buoyancy(id: String, buoyancy_val: float) -> void:
 	AtomicFluidShaders.register_liquid_buoyancy(id, buoyancy_val)
 
 static func get_liquid_buoyancy(id: String) -> float:
 	return AtomicFluidShaders.get_liquid_buoyancy(id)
+
+static func register_liquid_viscosity(id: String, viscosity_val: float) -> void:
+	AtomicFluidShaders.register_liquid_viscosity(id, viscosity_val)
+
+static func get_liquid_viscosity(id: String) -> float:
+	return AtomicFluidShaders.get_liquid_viscosity(id)
 
 func set_visual_override(override_data: Dictionary) -> void:
 	_visual_override = override_data.duplicate()
@@ -116,14 +123,17 @@ func sync_container_liquids(liquids: Array, glass_size: float, is_mixed_flag: bo
 	var pour_info := _pending_pour_info
 	_pending_pour_info = {}
 	if fluid_sim:
-		fluid_sim.sync_container_liquids(liquids, glass_size, is_mixed_flag, AtomicFluidShaders._custom_buoyancy, pour_info)
+		fluid_sim.sync_container_liquids(liquids, glass_size, is_mixed_flag, AtomicFluidShaders._custom_buoyancy, pour_info, AtomicFluidShaders._custom_viscosity)
 
-func sync_bottle_liquid(id: String, current_amount: float, bottle_size: float, color: Color, buoyancy: float = -1.0) -> void:
+func sync_bottle_liquid(id: String, current_amount: float, bottle_size: float, color: Color, buoyancy: float = -1.0, viscosity_val: float = -1.0) -> void:
 	if buoyancy > 0.0:
 		register_liquid_buoyancy(id, buoyancy)
+	if viscosity_val >= 0.0:
+		register_liquid_viscosity(id, viscosity_val)
 	var eff_buoy := buoyancy if buoyancy > 0.0 else get_liquid_buoyancy(id)
+	var eff_visc := clampf(viscosity_val, 0.0, 1.0) if viscosity_val >= 0.0 else get_liquid_viscosity(id)
 	if fluid_sim:
-		fluid_sim.sync_bottle_liquid(id, current_amount, bottle_size, color, eff_buoy)
+		fluid_sim.sync_bottle_liquid(id, current_amount, bottle_size, color, eff_buoy, eff_visc)
 
 func update_physics(delta: float, current_pos: Vector3, camera: Camera3D, viscosity: float, spring_stiffness: float, base_damping: float, slosh_sens: float, max_slosh: float, wave_freq: float, vert_spring: float, vert_damping: float, vert_sens: float, container_sprite: Node3D = null) -> void:
 	if delta <= 0.0:
@@ -141,8 +151,8 @@ func update_physics(delta: float, current_pos: Vector3, camera: Camera3D, viscos
 	last_global_pos = current_pos
 	last_velocity = frame_velocity
 
-	if frame_accel.length() > 28.0:
-		frame_accel = frame_accel.normalized() * 28.0
+	if frame_accel.length() > 50.0:
+		frame_accel = frame_accel.normalized() * 50.0
 
 	var h_accel: float = frame_accel.dot(camera.global_transform.basis.x) if camera else frame_accel.x
 	var clamped_visc := clampf(viscosity, 0.0, 1.0)
