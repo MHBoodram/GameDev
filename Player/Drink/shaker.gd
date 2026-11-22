@@ -10,6 +10,7 @@ var _shaking : bool = false
 var _jiggle_nodes : Array[Node3D] = []
 var _jiggle_home : Dictionary = {}
 var _jiggle_tweens : Dictionary = {}
+var _active_glass : Glasses = null
 
 func ready() -> void:
 	super.ready()
@@ -35,6 +36,7 @@ func start_shake(glass: Glasses) -> void:
 	if not is_instance_valid(glass) or not glass.can_be_shaken():
 		return
 	_shaking = true
+	_active_glass = glass
 
 	_in_game()
 	glass._in_game()
@@ -61,6 +63,7 @@ func start_shake(glass: Glasses) -> void:
 	var success: bool = await mini.finished
 
 	_end_jiggle()
+	_active_glass = null
 	if is_instance_valid(glass):
 		if success:
 			glass.mark_mixed()
@@ -71,6 +74,8 @@ func start_shake(glass: Glasses) -> void:
 
 func _on_shake_pumped() -> void:
 	SFXAudio.play_shakerrattle()
+	if is_instance_valid(_active_glass) and _active_glass.visual_helper:
+		_active_glass.visual_helper.add_agitation(Vector2(randf_range(-12.0, 12.0), randf_range(-14.0, -5.0)))
 	for n in _jiggle_nodes:
 		if not is_instance_valid(n):
 			continue

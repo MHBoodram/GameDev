@@ -13,6 +13,7 @@ class_name Glasses
 
 var drink_mix: DrinkMix = DrinkMix.new()
 var visual_helper: LiquidVisualHelper = LiquidVisualHelper.new()
+var _pour_out_stream: PourStreamVisual = null
 
 var drink_list_label: Label
 var total_liquids: float = 0.0
@@ -141,11 +142,82 @@ func _get_free_drag_target(delta: float) -> Vector3:
 		return camera.project_position(get_viewport().get_mouse_position(), _drag_current_depth)
 	return global_position
 
+func _get_container_sprite() -> Sprite3D:
+	var outside_sprite := get_node_or_null("Inside/Outside") as Sprite3D
+	if is_instance_valid(outside_sprite) and outside_sprite.texture:
+		return outside_sprite
+	if is_instance_valid(sprite):
+		return sprite
+	return get_node_or_null("Inside") as Sprite3D
+
+func get_rim_center_world_position() -> Vector3:
+	var sp := _get_container_sprite()
+	if sp:
+		return PourStreamVisual.get_sprite_top_spout_world_position(sp)
+	return global_position + Vector3(0.0, 0.08, 0.0)
+
+func get_liquid_surface_world_position() -> Vector3:
+	var sp := _get_container_sprite()
+	if sp:
+		var fill_ratio := clampf(total_liquids / maxf(size, 0.001), 0.05, 0.96)
+		return PourStreamVisual.get_sprite_surface_world_position(sp, fill_ratio)
+	return global_position
+
+func get_pour_spout_world_position() -> Vector3:
+	var sp := _get_container_sprite()
+	if sp:
+		return PourStreamVisual.get_sprite_rim_spout_world_position(sp, pour_tilt_degrees)
+	return global_position
+
+func get_top_liquid_color() -> Color:
+	if liquids.is_empty():
+		return Color.WHITE
+	var top_layer = liquids[liquids.size() - 1]
+	if top_layer is Array:
+		return visual_helper.get_layer_color(top_layer)
+	return Color.WHITE
+
+func compute_pour_info_from_world(impact_world_pos: Vector3, incoming_world_vel: Vector3) -> Dictionary:
+	var sp := _get_container_sprite()
+	var entry_u := 0.5
+	var grid_vel := Vector2(0.0, 36.0)
+	if sp:
+		entry_u = PourStreamVisual.world_pos_to_sprite_u(sp, impact_world_pos)
+		grid_vel = PourStreamVisual.world_vel_to_grid_vel(sp, incoming_world_vel)
+	return {
+		"from_pour": true,
+		"entry_u": clampf(entry_u, 0.15, 0.85),
+		"stream_vx": clampf(grid_vel.x, -16.0, 16.0),
+		"stream_vy": clampf(maxf(grid_vel.y, 28.0), 28.0, 48.0),
+	}
+
+func _ensure_pour_out_stream() -> void:
+	if not is_instance_valid(_pour_out_stream):
+		_pour_out_stream = PourStreamVisual.new()
+		add_child(_pour_out_stream)
+
+func _update_pour_out_stream() -> void:
+	_ensure_pour_out_stream()
+	if is_pouring_out and total_liquids > 0.001 and absf(pour_tilt_degrees) > 10.0:
+		var spout_pos := get_pour_spout_world_position()
+		var sp := _get_container_sprite()
+		var outward_x := Vector3.RIGHT
+		if is_instance_valid(sp):
+			var sign_dir := -1.0 if pour_tilt_degrees >= 0.0 else 1.0
+			outward_x = (sp.global_transform.basis.x * sign_dir).normalized()
+		var eject_dir := (outward_x * 0.35 + Vector3(0.0, -0.92, 0.0)).normalized()
+		var end_pos := Vector3(spout_pos.x, spout_pos.y - 2.2, spout_pos.z)
+		var flow_rate := clampf(absf(pour_tilt_degrees) / 65.0, 0.25, 1.8)
+		_pour_out_stream.set_stream_active(true, spout_pos, end_pos, get_top_liquid_color(), flow_rate, eject_dir, false, false)
+	else:
+		_pour_out_stream.set_stream_active(false)
+
 func ready() -> void:
 	rotation = Vector3.ZERO
 	if sprite:
 		_inside_base_scale = sprite.scale
 		_inside_base_pos = sprite.position
+	_ensure_pour_out_stream()
 	_setup_liquid_shader()
 	if highlight:
 		highlight.modulate = Color(1.5, 1.5, 0.0, 5.0)
@@ -156,9 +228,12 @@ func ready() -> void:
 	else:
 		base_y_position = get_working_area_surface_y()
 	_last_counter_position = global_position
-	visual_helper.last_global_pos = global_position
+	visual_helper.last_global_pos = sprite.global_position if sprite else global_position
 
 func _exit_tree() -> void:
+	visual_helper.cleanup()
+	if is_instance_valid(_pour_out_stream):
+		_pour_out_stream.set_stream_active(false)
 	var hud := HudIndicators.get_current()
 	if hud:
 		hud.hide_pouring_indicator(self)
@@ -176,7 +251,7 @@ func start_drag_from_spawn(press_screen_pos: Vector2, from_shelf: bool = false) 
 		_last_counter_position = _clamp_to_counter(global_position)
 		_last_counter_position.y = get_working_area_surface_y()
 
-	visual_helper.last_global_pos = global_position
+	visual_helper.last_global_pos = sprite.global_position if sprite else global_position
 	visual_helper.last_velocity = Vector3.ZERO
 	if camera:
 		_look_at_sprite(camera.global_position)
@@ -184,6 +259,8 @@ func start_drag_from_spawn(press_screen_pos: Vector2, from_shelf: bool = false) 
 
 func _delete() -> void:
 	_remove_displaying_list()
+	if is_instance_valid(_pour_out_stream):
+		_pour_out_stream.set_stream_active(false)
 	queue_free()
 
 func _update_hand_position(delta: float) -> void:
@@ -205,15 +282,21 @@ func _update_hand_position(delta: float) -> void:
 func _process(delta: float) -> void:
 	super._process(delta)
 	_update_snap(delta)
-	visual_helper.update_physics(delta, global_position, camera, viscosity, spring_stiffness, base_damping, slosh_sensitivity, max_slosh_angle, wave_frequency, vertical_spring, vertical_damping, vertical_sensitivity)
-	if not is_consumed:
-		_update_shader_parameters()
 
 	if is_pouring_out and not (_pour_tilt_tween and _pour_tilt_tween.is_valid()):
 		pour_tilt_degrees = lerpf(pour_tilt_degrees, _target_pour_tilt_degrees, 1.0 - exp(-18.0 * delta))
 
 	if camera and not is_balls_dragging:
 		_look_at_sprite(camera.global_position)
+
+	_update_pour_out_stream()
+
+	var track_pos: Vector3 = sprite.global_position if sprite else global_position
+	var outside_sprite := get_node_or_null("Inside/Outside") as Node3D
+	visual_helper.update_physics(delta, track_pos, camera, viscosity, spring_stiffness, base_damping, slosh_sensitivity, max_slosh_angle, wave_frequency, vertical_spring, vertical_damping, vertical_sensitivity, outside_sprite)
+	if not is_consumed:
+		_update_shader_parameters()
+
 	if _is_drag_blocked():
 		return
 
@@ -395,13 +478,13 @@ func _rebuild_liquid_gradient(show_hud: bool = true) -> void:
 	total_liquids = 0.0
 	for l in liquids:
 		total_liquids += float(l[1])
-	drink_list_label = visual_helper.rebuild_gradient(liquids, total_liquids, size, liquid_box, tcmtd)
+	drink_list_label = visual_helper.rebuild_gradient(liquids, total_liquids, size, liquid_box, tcmtd, is_mixed())
 	if show_hud and not liquids.is_empty() and total_liquids > 0.0:
 		var hud := HudIndicators.get_current()
 		if hud:
 			hud.update_pouring_indicator(self, liquids, size, visual_helper)
 
-func _pouring(id: String, liquids_num: float) -> float:
+func _pouring(id: String, liquids_num: float, pour_info: Dictionary = {}) -> float:
 	if liquids_num <= 0.0:
 		return 0.0
 
@@ -435,9 +518,18 @@ func _pouring(id: String, liquids_num: float) -> float:
 		# keep typed drink mix in sync
 		drink_mix.add_liquid(id, added)
 
-		visual_helper.slosh_velocity += randf_range(-0.35, 0.35) * (1.0 - clampf(viscosity, 0.0, 1.0))
-		visual_helper.slosh_vertical_velocity += randf_range(-0.15, 0.05)
-		visual_helper.wave_amplitude = minf(visual_helper.wave_amplitude + 0.035, 0.07)
+		var effective_pour := pour_info.duplicate()
+		effective_pour["from_pour"] = true
+		if not effective_pour.has("entry_u"):
+			effective_pour["entry_u"] = 0.5
+		if not effective_pour.has("stream_vy"):
+			effective_pour["stream_vy"] = 34.0
+		if visual_helper.has_method("set_next_pour_info"):
+			visual_helper.call("set_next_pour_info", effective_pour)
+
+		var vx_imp := float(effective_pour.get("stream_vx", 0.0)) * 0.25 + randf_range(-1.6, 1.6)
+		visual_helper.add_agitation(Vector2(vx_imp, 3.8))
+		visual_helper.slosh_vertical_velocity += randf_range(-0.12, 0.04)
 		_rebuild_liquid_gradient(true)
 
 	return liquids_num
@@ -505,9 +597,8 @@ func _pour_out(liquids_num: float) -> float:
 		if had_spectral and sprite:
 			SpectralEffect.clear_from_sprite(sprite, SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS)
 
-	visual_helper.slosh_velocity += randf_range(-0.35, 0.35) * (1.0 - clampf(viscosity, 0.0, 1.0))
-	visual_helper.slosh_vertical_velocity += randf_range(-0.15, 0.05)
-	visual_helper.wave_amplitude = minf(visual_helper.wave_amplitude + 0.035, 0.07)
+	visual_helper.add_agitation(Vector2(randf_range(-1.2, 1.2), -1.5))
+	visual_helper.slosh_vertical_velocity += randf_range(-0.12, 0.04)
 	_rebuild_liquid_gradient(not liquids.is_empty())
 	if liquids.is_empty() or total_liquids <= 0.0:
 		_remove_displaying_list()
@@ -536,6 +627,8 @@ func set_pour_out_tilt(tilt_degrees: float) -> void:
 
 func stop_pour_out() -> void:
 	_target_pour_tilt_degrees = 0.0
+	if is_instance_valid(_pour_out_stream):
+		_pour_out_stream.set_stream_active(false)
 	if _pour_tilt_tween and _pour_tilt_tween.is_valid():
 		_pour_tilt_tween.kill()
 	_pour_tilt_tween = create_tween()
@@ -570,6 +663,8 @@ func _in_game() -> void:
 	_is_returning_to_counter = false
 	_is_mode_transitioning = false
 	push_velocity = Vector3.ZERO
+	if is_instance_valid(_pour_out_stream):
+		_pour_out_stream.set_stream_active(false)
 	if _drag_return_tween and _drag_return_tween.is_valid():
 		_drag_return_tween.kill()
 	if area_body:
@@ -595,6 +690,8 @@ func _dranked() -> void:
 	if is_consumed:
 		return
 	is_consumed = true
+	if is_instance_valid(_pour_out_stream):
+		_pour_out_stream.set_stream_active(false)
 	queue_free()
 
 func _return_drink() -> Array:

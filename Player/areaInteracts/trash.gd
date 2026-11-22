@@ -2,6 +2,8 @@
 extends Area3D
 
 const MAX_POUR_TILT_DEGREES: float = 120.0
+const POUR_INTERVAL: float = 0.033
+const SFX_INTERVAL_MS: int = 100
 
 @export var indicator_path: NodePath = NodePath("TrashIndicator")
 @export var collision_shape_path: NodePath = NodePath("CollisionShape3D")
@@ -19,6 +21,7 @@ var in_pour_zone: Glasses = null
 var _glasses_in_area: Array[Glasses] = []
 var _is_pouring: bool = false
 var _active_pouring_glass: Glasses = null
+var _last_sfx_ms: int = 0
 
 func _ready() -> void:
 	sync_bounds_from_indicator()
@@ -120,10 +123,13 @@ func start_pour() -> void:
 
 	while _is_pour_button_held() and is_inside_tree():
 		var rate_mult: float = _get_pour_rate_multiplier()
-		if rate_mult > 0.0 and is_instance_valid(active_glass) and active_glass.total_liquids > 0.0:
-			active_glass._pour_out(pour_out_amount * rate_mult)
-			SFXAudio.play_liquidpour()
-		await get_tree().create_timer(0.1).timeout
+		if rate_mult > 0.02 and is_instance_valid(active_glass) and active_glass.total_liquids > 0.0:
+			active_glass._pour_out(pour_out_amount * (POUR_INTERVAL / 0.1) * rate_mult)
+			var now_ms := Time.get_ticks_msec()
+			if now_ms - _last_sfx_ms >= SFX_INTERVAL_MS:
+				_last_sfx_ms = now_ms
+				SFXAudio.play_liquidpour()
+		await get_tree().create_timer(POUR_INTERVAL).timeout
 		if not is_inside_tree():
 			_is_pouring = false
 			_active_pouring_glass = null
