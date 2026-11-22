@@ -309,6 +309,7 @@ func _process(delta: float) -> void:
 		var nozzle_spread := lerpf(0.0022, 0.0055, clampf(_flow_rate * 0.5, 0.0, 1.0))
 		var target_y := _end_pos.y if _snap_to_target else (_start_pos.y - 2.2)
 		var rim_y := (_rim_pos.y if _has_rim_pos else target_y) if _snap_to_target else -9999.0
+		var px_size := 1.0 / LiquidVisualHelper.UNIFORM_PIXEL_DENSITY
 
 		for s_i in to_spawn:
 			var sub_t := (float(s_i) / maxf(float(to_spawn), 1.0)) * dt
@@ -324,7 +325,6 @@ func _process(delta: float) -> void:
 			)
 			var v := base_vel + jitter_vel
 			var p := _start_pos + jitter_pos + v * sub_t
-			var px_size := randf_range(0.004, 0.0064)
 			_add_pixel(p, v, _vary_pixel_color(_color), px_size, 0.9, target_y, rim_y, false)
 
 	var horiz_damp := exp(-14.0 * dt)
@@ -351,7 +351,7 @@ func _process(delta: float) -> void:
 					_p_pos[i] = Vector3(p.x, _p_target_y[i] + 0.002, p.z)
 					_p_vel[i] = Vector3(randf_range(-0.16, 0.16), randf_range(0.09, 0.22), randf_range(-0.05, 0.05))
 					_p_col[i] = _p_col[i].lightened(0.18)
-					_p_size[i] = clampf(_p_size[i] * 0.72, 0.003, 0.005)
+					_p_size[i] = _p_size[i] * 0.72
 					_p_life[i] = 0.0
 					_p_max_life[i] = randf_range(0.07, 0.13)
 					_p_is_splash[i] = 1

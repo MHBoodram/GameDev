@@ -5,6 +5,7 @@ uniform sampler2D texture_albedo : source_color, filter_nearest;
 uniform sampler2D fluid_texture : source_color, filter_linear;
 
 uniform float pixel_resolution = 48.0;
+uniform vec2 pixel_grid = vec2(0.0, 0.0);
 uniform vec4 surface_highlight_color : source_color = vec4(1.4, 1.4, 1.5, 1.0);
 uniform vec4 secondary_highlight_color : source_color = vec4(0.9, 0.4, 0.95, 0.85);
 uniform float surface_highlight_thickness = 1.2;
@@ -34,7 +35,7 @@ void fragment() {
 		discard;
 	}
 
-	float res = max(pixel_resolution, 16.0);
+	vec2 res = (pixel_grid.x > 0.0 && pixel_grid.y > 0.0) ? max(pixel_grid, vec2(8.0)) : vec2(max(pixel_resolution, 8.0));
 	vec2 pix_uv = (floor(UV * res) + 0.5) / res;
 	vec4 fluid = texture(fluid_texture, pix_uv);
 
@@ -48,19 +49,19 @@ void fragment() {
 		ALBEDO = vec3(0.92, 0.96, 1.0);
 		ALPHA = glass_sheen * mask_alpha;
 	} else {
-		float step_uv = max(1.0 / res, 1.0 / 64.0) * max(surface_highlight_thickness, 0.5);
+		vec2 step_uv = max(1.0 / res, vec2(1.0 / 64.0)) * max(surface_highlight_thickness, 0.5);
 
-		float mask_up = texture(texture_albedo, clamp(pix_uv + vec2(0.0, -step_uv), 0.0, 1.0)).a;
-		float mask_dn = texture(texture_albedo, clamp(pix_uv + vec2(0.0, step_uv), 0.0, 1.0)).a;
-		float mask_lf = texture(texture_albedo, clamp(pix_uv + vec2(-step_uv, 0.0), 0.0, 1.0)).a;
-		float mask_rt = texture(texture_albedo, clamp(pix_uv + vec2(step_uv, 0.0), 0.0, 1.0)).a;
+		float mask_up = texture(texture_albedo, clamp(pix_uv + vec2(0.0, -step_uv.y), 0.0, 1.0)).a;
+		float mask_dn = texture(texture_albedo, clamp(pix_uv + vec2(0.0, step_uv.y), 0.0, 1.0)).a;
+		float mask_lf = texture(texture_albedo, clamp(pix_uv + vec2(-step_uv.x, 0.0), 0.0, 1.0)).a;
+		float mask_rt = texture(texture_albedo, clamp(pix_uv + vec2(step_uv.x, 0.0), 0.0, 1.0)).a;
 
-		float flu_up = texture(fluid_texture, clamp(pix_uv + vec2(0.0, -step_uv), 0.0, 1.0)).a;
-		float flu_dn = texture(fluid_texture, clamp(pix_uv + vec2(0.0, step_uv), 0.0, 1.0)).a;
-		float flu_lf = texture(fluid_texture, clamp(pix_uv + vec2(-step_uv, 0.0), 0.0, 1.0)).a;
-		float flu_rt = texture(fluid_texture, clamp(pix_uv + vec2(step_uv, 0.0), 0.0, 1.0)).a;
+		float flu_up = texture(fluid_texture, clamp(pix_uv + vec2(0.0, -step_uv.y), 0.0, 1.0)).a;
+		float flu_dn = texture(fluid_texture, clamp(pix_uv + vec2(0.0, step_uv.y), 0.0, 1.0)).a;
+		float flu_lf = texture(fluid_texture, clamp(pix_uv + vec2(-step_uv.x, 0.0), 0.0, 1.0)).a;
+		float flu_rt = texture(fluid_texture, clamp(pix_uv + vec2(step_uv.x, 0.0), 0.0, 1.0)).a;
 
-		bool air_up = (flu_up < 0.25) && (mask_up > 0.1 || pix_uv.y <= step_uv * 1.5);
+		bool air_up = (flu_up < 0.25) && (mask_up > 0.1 || pix_uv.y <= step_uv.y * 1.5);
 		bool air_dn = (flu_dn < 0.25) && (mask_dn > 0.1);
 		bool air_lf = (flu_lf < 0.25) && (mask_lf > 0.1);
 		bool air_rt = (flu_rt < 0.25) && (mask_rt > 0.1);
@@ -69,7 +70,6 @@ void fragment() {
 		float depth_factor = clamp((pix_uv.y - inner_margin_top) / max(inner_margin_bottom - inner_margin_top, 0.1), 0.0, 1.0);
 		vec3 base_col = fluid.rgb * mix(1.0, 1.0 - bottom_darkening, depth_factor);
 
-		// Subtle animated caustics & sparkles
 		float beam = sin(pix_uv.x * 14.0 + TIME * 1.4 + pix_uv.y * 5.0) * 0.5 + 0.5;
 		base_col += base_col * pow(beam, 3.0) * caustic_beam_strength * (1.0 - depth_factor * 0.5);
 
@@ -78,7 +78,6 @@ void fragment() {
 			base_col += vec3(0.28);
 		}
 
-		// Highlight on simulated air-liquid free surface / wave crest
 		vec3 surf_tint = mix(secondary_highlight_color.rgb, surface_highlight_color.rgb, air_up ? 1.0 : 0.55);
 		vec3 lit_col = mix(base_col, max(base_col, surf_tint * 0.85), is_surface * 0.72);
 		lit_col = mix(lit_col, vec3(0.95, 0.98, 1.0), glass_sheen * 0.55);

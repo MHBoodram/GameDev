@@ -6,6 +6,8 @@ extends RefCounted
 const CONTAINER_SHADER := preload("res://Player/Drink/liquid_container.gdshader")
 const LIQUID_COLOR := AtomicFluidShaders.LIQUID_COLOR
 const LIQUID_BUOYANCY := AtomicFluidShaders.LIQUID_BUOYANCY
+const UNIFORM_PIXEL_DENSITY: float = 150.0
+const REFERENCE_PIXEL_RESOLUTION: float = 48.0
 
 var slosh_angle: float = 0.0
 var slosh_velocity: float = 0.0
@@ -82,6 +84,10 @@ func setup_shader(outside_sprite: Node) -> ShaderMaterial:
 	var fluid_tex := fluid_sim.setup_from_texture(mask_tex)
 	if fluid_tex:
 		liquid_shader_mat.set_shader_parameter("fluid_texture", fluid_tex)
+
+	var init_grid := _compute_pixel_grid(REFERENCE_PIXEL_RESOLUTION)
+	liquid_shader_mat.set_shader_parameter("pixel_grid", init_grid)
+	liquid_shader_mat.set_shader_parameter("pixel_resolution", (init_grid.x + init_grid.y) * 0.5)
 
 	gradient_texture = GradientTexture2D.new()
 	gradient_texture.width = 64
@@ -181,12 +187,39 @@ func update_physics(delta: float, current_pos: Vector3, camera: Camera3D, viscos
 			local_accel = Vector2(world_accel.dot(axis_x), world_accel.dot(axis_y))
 		fluid_sim.step(delta, local_accel, viscosity)
 
+func _compute_pixel_grid(base_resolution: float) -> Vector2:
+	if _visual_override.has("pixel_resolution"):
+		var ov := maxf(float(_visual_override["pixel_resolution"]), 8.0)
+		return Vector2(ov, ov)
+
+	var res_scale := maxf(base_resolution, 8.0) / REFERENCE_PIXEL_RESOLUTION
+	var sp := _outside_sprite as Sprite3D
+	if is_instance_valid(sp) and sp.texture != null and sp.is_inside_tree():
+		var rect := sp.get_item_rect()
+		if rect.size.x > 0.0 and rect.size.y > 0.0:
+			var b := sp.global_transform.basis
+			var world_w := rect.size.x * sp.pixel_size * b.x.length()
+			var world_h := rect.size.y * sp.pixel_size * b.y.length()
+			if world_w > 0.0001 and world_h > 0.0001:
+				var density := UNIFORM_PIXEL_DENSITY * res_scale
+				return Vector2(maxf(world_w * density, 8.0), maxf(world_h * density, 8.0))
+
+	var fallback := maxf(base_resolution, 8.0)
+	return Vector2(fallback, fallback)
+
 func sync_shader_uniforms(_fill_ratio: float, config: Dictionary) -> void:
 	if not liquid_shader_mat:
 		return
 	for uniform_name in config.keys():
+		if uniform_name == "pixel_resolution":
+			continue
 		var val = _visual_override.get(uniform_name, config[uniform_name])
 		liquid_shader_mat.set_shader_parameter(uniform_name, val)
+
+	var base_res := float(config.get("pixel_resolution", REFERENCE_PIXEL_RESOLUTION))
+	var grid := _compute_pixel_grid(base_res)
+	liquid_shader_mat.set_shader_parameter("pixel_grid", grid)
+	liquid_shader_mat.set_shader_parameter("pixel_resolution", (grid.x + grid.y) * 0.5)
 
 func rebuild_gradient(liquids: Array, total_liquids: float, glass_size: float, liquid_box: VBoxContainer = null, label_scene: PackedScene = null, is_mixed_flag: bool = false) -> Label:
 	var last_label: Label = null

@@ -26,6 +26,7 @@ static var _mask_cache: Dictionary = {}
 var _disposed: bool = false
 var _gpu_initialized: bool = false
 var _flip_flop: bool = false
+var _tex_cleared: bool = false
 
 var _mask_cells: Array[Vector2i] = [] # sorted bottom-to-top up to brim
 var _mask_bytes: PackedByteArray = PackedByteArray()
@@ -90,7 +91,7 @@ func setup_from_texture(mask_texture: Texture2D) -> Texture2D:
 
 	if _gpu_available:
 		_display_tex_rd = Texture2DRD.new()
-		RenderingServer.call_on_render_thread(_gpu_init_instance.bind(_sdf_bytes))
+		RenderingServer.call_on_render_thread(AtomicFluidSim._gpu_init_static.bind(self, _sdf_bytes))
 		return _display_tex_rd
 	else:
 		_init_cpu_fallback(mask_texture)
@@ -291,7 +292,7 @@ func step(delta: float, local_accel_world: Vector2, viscosity: float) -> void:
 
 	if _gpu_available:
 		RenderingServer.call_on_render_thread(
-			_gpu_step.bind(clamped_delta, accel_with_imp, clampf(viscosity, 0.0, 1.0), _active_count, _last_down_dir, ops_copy)
+			AtomicFluidSim._gpu_step_static.bind(self, clamped_delta, accel_with_imp, clampf(viscosity, 0.0, 1.0), _active_count, _last_down_dir, ops_copy)
 		)
 	else:
 		_cpu_step(clamped_delta, accel_with_imp, clampf(viscosity, 0.0, 1.0), ops_copy)
@@ -305,12 +306,14 @@ func cleanup() -> void:
 
 	if _display_tex_rd:
 		_display_tex_rd.texture_rd_rid = RID()
+		_display_tex_rd = null
 
-	var owned: Array[RID] = []
+	var sets_to_free: Array[RID] = []
 	for uset_key in _sets.keys():
 		var urid: RID = _sets[uset_key]
 		if urid.is_valid():
-			owned.append(urid)
+			sets_to_free.append(urid)
+	var owned: Array[RID] = []
 	for rid in [_in_volume_a, _in_volume_b, _density_buf, _particles_buf, _wall_sdf_buf, _out_tex_rid]:
 		if rid.is_valid():
 			owned.append(rid)
@@ -322,19 +325,59 @@ func cleanup() -> void:
 	_out_tex_rid = RID()
 	_sets.clear()
 
-	if _gpu_available and not owned.is_empty():
-		RenderingServer.call_on_render_thread(_free_rids_on_render_thread.bind(owned))
+	if _gpu_available and RenderingServer.get_rendering_device() != null and (not owned.is_empty() or not sets_to_free.is_empty()):
+		RenderingServer.call_on_render_thread(AtomicFluidSim._free_rids_on_render_thread.bind(owned, sets_to_free))
 
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE:
-		cleanup()
+		if _disposed:
+			return
+		_disposed = true
+		_pending_ops.clear()
+
+		if _display_tex_rd:
+			_display_tex_rd.texture_rd_rid = RID()
+			_display_tex_rd = null
+
+		var sets_to_free: Array[RID] = []
+		for uset_key in _sets.keys():
+			var urid: RID = _sets[uset_key]
+			if urid.is_valid():
+				sets_to_free.append(urid)
+		var owned: Array[RID] = []
+		for rid in [_in_volume_a, _in_volume_b, _density_buf, _particles_buf, _wall_sdf_buf, _out_tex_rid]:
+			if rid.is_valid():
+				owned.append(rid)
+		_in_volume_a = RID()
+		_in_volume_b = RID()
+		_density_buf = RID()
+		_particles_buf = RID()
+		_wall_sdf_buf = RID()
+		_out_tex_rid = RID()
+		_sets.clear()
+
+		if _gpu_available and RenderingServer.get_rendering_device() != null and (not owned.is_empty() or not sets_to_free.is_empty()):
+			RenderingServer.call_on_render_thread(AtomicFluidSim._free_rids_on_render_thread.bind(owned, sets_to_free))
 
 
-static func _free_rids_on_render_thread(rids: Array[RID]) -> void:
+static func _gpu_init_static(sim: AtomicFluidSim, sdf_bytes: PackedByteArray) -> void:
+	if sim and not sim._disposed:
+		sim._gpu_init_instance(sdf_bytes)
+
+
+static func _gpu_step_static(sim: AtomicFluidSim, frame_dt: float, accel: Vector2, viscosity: float, active_count: int, down_dir: Vector2, ops: Array) -> void:
+	if sim and not sim._disposed:
+		sim._gpu_step(frame_dt, accel, viscosity, active_count, down_dir, ops)
+
+
+static func _free_rids_on_render_thread(rids: Array[RID], uniform_sets: Array[RID] = []) -> void:
 	var rd := RenderingServer.get_rendering_device()
 	if not rd:
 		return
+	for urid in uniform_sets:
+		if urid.is_valid() and rd.uniform_set_is_valid(urid):
+			rd.free_rid(urid)
 	for rid in rids:
 		if rid.is_valid():
 			rd.free_rid(rid)
@@ -677,7 +720,6 @@ static func _edt_2d_pass(d: PackedFloat32Array) -> void:
 static func _ensure_shared_pipelines(rd: RenderingDevice) -> bool:
 	if _shaders_ready:
 		return true
-	_shaders_ready = true
 
 	var sources := {
 		"clear": AtomicFluidShaders.CLEAR_GLSL,
@@ -720,6 +762,7 @@ static func _ensure_shared_pipelines(rd: RenderingDevice) -> bool:
 	_shared_cull_scan_set = _make_uniform_set(rd, _shaders["cull_scan"], [
 		_ssbo_uniform(0, _shared_cull_meta_buf),
 	])
+	_shaders_ready = true
 	return true
 
 
@@ -770,9 +813,16 @@ func _gpu_init_instance(sdf_bytes: PackedByteArray) -> void:
 	fmt.texture_type = RenderingDevice.TEXTURE_TYPE_2D
 	fmt.width = GRID_SIZE
 	fmt.height = GRID_SIZE
-	fmt.usage_bits = RenderingDevice.TEXTURE_USAGE_STORAGE_BIT | RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT | RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT | RenderingDevice.TEXTURE_USAGE_CAN_UPDATE_BIT
+	fmt.usage_bits = (
+		RenderingDevice.TEXTURE_USAGE_STORAGE_BIT
+		| RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT
+		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
+		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT
+		| RenderingDevice.TEXTURE_USAGE_CAN_UPDATE_BIT
+	)
 	_out_tex_rid = rd.texture_create(fmt, RDTextureView.new())
 	rd.texture_clear(_out_tex_rid, Color(0, 0, 0, 0), 0, 1, 0, 1)
+	_tex_cleared = true
 
 	_sets["clear"] = _make_uniform_set(rd, _shaders["clear"], [
 		_ssbo_uniform(0, _in_volume_a),
@@ -918,6 +968,7 @@ func _gpu_step(frame_dt: float, accel: Vector2, viscosity: float, active_count: 
 				_dispatch(rd, _pipelines["clear"], _sets["clear"], grid_groups, 1)
 				rd.texture_clear(_out_tex_rid, Color(0, 0, 0, 0), 0, 1, 0, 1)
 				cleared_this_frame = true
+				_tex_cleared = true
 			"init_upload":
 				var bytes: PackedByteArray = op["bytes"]
 				if not bytes.is_empty():
@@ -952,8 +1003,9 @@ func _gpu_step(frame_dt: float, accel: Vector2, viscosity: float, active_count: 
 					_dispatch(rd, _pipelines["blend"], _sets["blend"], groups, 1, _pack_pc(col.r, col.g, col.b, rho, 0.0, 0.0, 0.0, cnt))
 
 	if active_count <= 0:
-		if not cleared_this_frame:
+		if not cleared_this_frame and not _tex_cleared:
 			rd.texture_clear(_out_tex_rid, Color(0, 0, 0, 0), 0, 1, 0, 1)
+			_tex_cleared = true
 		return
 
 	var substeps := 3
@@ -972,6 +1024,7 @@ func _gpu_step(frame_dt: float, accel: Vector2, viscosity: float, active_count: 
 	_dispatch(rd, _pipelines["display_clear"], _sets["disp_clear_" + disp_idx], grid_groups, 1)
 	_dispatch(rd, _pipelines["display_splat"], _sets["disp_splat_" + disp_idx], part_groups, 1, pc)
 	_dispatch(rd, _pipelines["display_resolve"], _sets["disp_resolve_" + disp_idx], int(GRID_SIZE / 8.0), int(GRID_SIZE / 8.0))
+	_tex_cleared = false
 
 
 func _init_cpu_fallback(tex: Texture2D) -> void:
