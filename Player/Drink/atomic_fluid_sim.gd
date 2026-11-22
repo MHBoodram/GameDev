@@ -6,11 +6,13 @@ const GRID_CELLS := AtomicFluidShaders.GRID_CELLS
 const MAX_PARTICLES := AtomicFluidShaders.MAX_PARTICLES
 const WORKGROUP_SIZE := AtomicFluidShaders.WORKGROUP_SIZE
 const PARTICLES_PER_CELL := 4
-const PARTICLE_VOLUME_WEIGHT := 0.258
+const PARTICLE_VOLUME_WEIGHT := 0.278
 const PARTICLE_STRIDE := 48
-const GRID_GRAVITY := 105.0
+const GRID_GRAVITY := 65.0
 const MAX_GRID_ACCEL := 550.0
 const MAX_IMPULSE_VEL := 65.0
+const EOS_STIFFNESS := 30000.0
+const REST_DENSITY := 1.00
 
 # Shared static GPU resources across all containers
 static var _gpu_checked: bool = false
@@ -87,6 +89,7 @@ var _cpu_pr: PackedFloat32Array = PackedFloat32Array()
 var _cpu_pg: PackedFloat32Array = PackedFloat32Array()
 var _cpu_pb: PackedFloat32Array = PackedFloat32Array()
 var _cpu_pw: PackedFloat32Array = PackedFloat32Array()
+var _cpu_skip_acc: int = 0
 
 
 func setup_from_texture(mask_texture: Texture2D) -> Texture2D:
@@ -1035,10 +1038,10 @@ func _gpu_step(frame_dt: float, accel: Vector2, viscosity: float, active_count: 
 			_tex_cleared = true
 		return
 
-	var substeps := clampi(int(ceili(frame_dt / 0.0018)), 6, 16)
+	var substeps := clampi(int(ceili(frame_dt / 0.0008)), 10, 28)
 	var sub_dt := frame_dt / float(substeps)
 	var part_groups: int = _groups_for(active_count)
-	var pc := _pack_pc(sub_dt, accel.x, accel.y, viscosity, GRID_GRAVITY, 5000.0, 1.04, active_count)
+	var pc := _pack_pc(sub_dt, accel.x, accel.y, viscosity, GRID_GRAVITY, EOS_STIFFNESS, REST_DENSITY, active_count)
 
 	for _s in substeps:
 		_flip_flop = not _flip_flop
@@ -1095,7 +1098,7 @@ func _init_cpu_fallback(tex: Texture2D) -> void:
 		for x in CPU_N:
 			if _cpu_mask[x + y * CPU_N] == 1:
 				_cpu_cells.append(Vector2i(x, y))
-	_max_particles = _cpu_cells.size() * 2
+	_max_particles = _cpu_cells.size() * 4
 
 	for y in CPU_N:
 		for x in CPU_N:
@@ -1117,6 +1120,7 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 				_cpu_rho.clear()
 				_cpu_visc.clear()
 				_cpu_col.clear()
+				_cpu_skip_acc = 0
 			"init_upload", "append_upload":
 				var bytes: PackedByteArray = op["bytes"]
 				var cnt: int = int(op["count"])
@@ -1126,10 +1130,15 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 					_cpu_rho.clear()
 					_cpu_visc.clear()
 					_cpu_col.clear()
+					_cpu_skip_acc = 0
 				var scale := float(CPU_N) / float(GRID_SIZE)
 				for i in cnt:
-					if i % 2 != 0 and _cpu_pos.size() >= _max_particles:
+					_cpu_skip_acc += 1
+					if _cpu_skip_acc < 4:
 						continue
+					_cpu_skip_acc -= 4
+					if _cpu_pos.size() >= _max_particles:
+						break
 					var b := i * PARTICLE_STRIDE
 					var p := Vector2(bytes.decode_float(b), bytes.decode_float(b + 4)) * scale
 					var v_flag := bytes.decode_float(b + 40)
@@ -1140,7 +1149,7 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 					_cpu_visc.append(clampf(bytes.decode_float(b + 44), 0.0, 1.0))
 					_cpu_col.append(Color(bytes.decode_float(b + 16), bytes.decode_float(b + 20), bytes.decode_float(b + 24), 1.0))
 			"cull":
-				var new_cnt: int = mini(int(float(op["new_count"]) * 0.5), _cpu_pos.size())
+				var new_cnt: int = mini(roundi(float(op["new_count"]) * 0.25), _cpu_pos.size())
 				_cpu_pos.resize(new_cnt)
 				_cpu_pvel.resize(new_cnt)
 				_cpu_rho.resize(new_cnt)
@@ -1161,10 +1170,10 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 		return
 
 	var n := _cpu_pos.size()
-	var dt := clampf(frame_dt * 0.5, 0.001, 0.016)
+	var dt := clampf(frame_dt * 0.25, 0.001, 0.008)
 	var half_accel := accel * 0.5
 
-	for _sub in 2:
+	for _sub in 4:
 		_cpu_mass.fill(0.0)
 		_cpu_vol.fill(0.0)
 		_cpu_cell_visc.fill(0.0)
@@ -1176,14 +1185,14 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 			var cx := clampi(int(p.x), 1, CPU_N - 2)
 			var cy := clampi(int(p.y), 1, CPU_N - 2)
 			var idx := cx + cy * CPU_N
-			var m := 0.5 * _cpu_rho[i]
+			var m := PARTICLE_VOLUME_WEIGHT * _cpu_rho[i]
 			var p_v := clampf(maxf(_cpu_visc[i], viscosity), 0.0, 1.0)
-			_cpu_vol[idx] += 0.5
+			_cpu_vol[idx] += PARTICLE_VOLUME_WEIGHT
 			_cpu_mass[idx] += m
 			_cpu_cell_visc[idx] += m * p_v
 
 		for idx in CPU_N * CPU_N:
-			_cpu_cell_p[idx] = minf(maxf(0.0, _cpu_vol[idx] - 1.05), 1.5)
+			_cpu_cell_p[idx] = clampf(maxf(0.0, _cpu_vol[idx] - REST_DENSITY) * 65.0, 0.0, 120.0)
 
 		for y in CPU_N:
 			for x in CPU_N:
@@ -1196,8 +1205,8 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 					if x > 0 and x < CPU_N - 1 and y > 0 and y < CPU_N - 1:
 						grad_px = (_cpu_cell_p[idx + 1] - _cpu_cell_p[idx - 1]) * 0.5
 						grad_py = (_cpu_cell_p[idx + CPU_N] - _cpu_cell_p[idx - CPU_N]) * 0.5
-					var vx := _cpu_vx[idx] * cell_damp + (half_accel.x - grad_px * 18.0) * dt
-					var vy := _cpu_vy[idx] * cell_damp + (half_accel.y - grad_py * 18.0) * dt
+					var vx := _cpu_vx[idx] * cell_damp + (half_accel.x - grad_px * 24.0) * dt
+					var vy := _cpu_vy[idx] * cell_damp + (half_accel.y - grad_py * 24.0) * dt
 					if x <= 1 or _cpu_mask[idx - 1] == 0:
 						vx = maxf(vx, 0.0)
 					if x >= CPU_N - 2 or _cpu_mask[idx + 1] == 0:

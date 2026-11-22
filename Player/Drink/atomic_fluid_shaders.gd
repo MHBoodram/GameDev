@@ -199,7 +199,7 @@ uint getIdx(ivec2 p) {
 }
 
 vec4 sampleSDF(vec2 pos) {
-	vec2 clamped = clamp(pos, vec2(0.0), vec2(float(N) - 1.001));
+	vec2 clamped = clamp(pos - 0.5, vec2(0.0), vec2(float(N) - 1.001));
 	ivec2 p0 = ivec2(floor(clamped));
 	vec2 f = clamped - vec2(p0);
 	vec4 s00 = wall_sdf[getIdx(p0)];
@@ -315,7 +315,7 @@ uint getIdx(ivec2 p) {
 }
 
 vec4 sampleSDF(vec2 pos) {
-	vec2 clamped = clamp(pos, vec2(0.0), vec2(float(N) - 1.001));
+	vec2 clamped = clamp(pos - 0.5, vec2(0.0), vec2(float(N) - 1.001));
 	ivec2 p0 = ivec2(floor(clamped));
 	vec2 f = clamped - vec2(p0);
 	vec4 s00 = wall_sdf[getIdx(p0)];
@@ -420,7 +420,7 @@ void main() {
 	particles[pid].pos_props.xy = pos;
 
 	float d_rho = max(0.0, vol_den - pc.rest_density);
-	float pressure = clamp(pc.stiffness * (d_rho + 2.2 * d_rho * d_rho), 0.0, 6000.0);
+	float pressure = clamp(pc.stiffness * (d_rho + 1.2 * d_rho * d_rho), 0.0, 40000.0);
 	float m_p = vol_w * rho_p;
 
 	// Stop divergence
