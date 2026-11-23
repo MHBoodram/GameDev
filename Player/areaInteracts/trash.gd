@@ -141,8 +141,8 @@ func start_pour() -> void:
 	if active_glass.has_method("start_pour_out"):
 		active_glass.start_pour_out(_get_pour_tilt_degrees())
 
-	while _is_pour_button_held() and is_inside_tree():
-		if is_instance_valid(active_glass) and active_glass.total_liquids > 0.0 and active_glass.can_pour_out_from_mouth():
+	while _is_pour_button_held() and is_inside_tree() and is_instance_valid(active_glass) and active_glass.total_liquids > 0.0:
+		if active_glass.can_pour_out_from_mouth():
 			var rate_mult: float = clampf(absf(active_glass.pour_tilt_degrees) / (MAX_POUR_TILT_DEGREES * 0.5), 0.15, 2.0)
 			active_glass._pour_out(pour_out_amount * (POUR_INTERVAL / 0.1) * rate_mult)
 			var now_ms := Time.get_ticks_msec()

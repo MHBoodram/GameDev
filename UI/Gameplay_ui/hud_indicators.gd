@@ -6,6 +6,7 @@ const LIQUIDS_LABEL_SCENE: PackedScene = preload("res://Player/Drink/Glasses/liq
 
 const INCREASE_COLOR: Color = Color(0.28, 0.96, 0.36, 1.0)
 const DECREASE_COLOR: Color = Color(1.0, 0.25, 0.25, 1.0)
+const CLEAN_COLOR: Color = Color(0.55, 0.92, 1.0, 1.0)
 const OUTLINE_COLOR: Color = Color(0.0, 0.0, 0.0, 1.0)
 const SHADOW_COLOR: Color = Color(0.0, 0.0, 0.0, 0.75)
 
@@ -136,6 +137,26 @@ func _register_default_channels() -> void:
 		"positive_color": INCREASE_COLOR,
 		"negative_color": DECREASE_COLOR
 	})
+	register_channel("cup_spill", {
+		"stack_group": "cup_feedback",
+		"align": "center",
+		"font_size": 48,
+		"float_distance": 56.0,
+		"duration": 1.15,
+		"scale_punch": 1.36,
+		"positive_color": INCREASE_COLOR,
+		"negative_color": DECREASE_COLOR
+	})
+	register_channel("cup_reset", {
+		"stack_group": "cup_feedback",
+		"align": "center",
+		"font_size": 48,
+		"float_distance": DEFAULT_FLOAT_DISTANCE,
+		"duration": DEFAULT_DURATION,
+		"scale_punch": 1.32,
+		"positive_color": CLEAN_COLOR,
+		"negative_color": DECREASE_COLOR
+	})
 	register_channel("default", {
 		"stack_group": "right_hud",
 		"align": "right",
@@ -205,6 +226,36 @@ func show_species_rep_change(species_name: String, delta: float, suffix: String 
 	var amount_str: String = format_number(delta, false)
 	return show_delta_indicator("species_rep", delta, amount_str + " " + display_species + " Rep" + suffix, options)
 
+func show_cup_spill_indicator(glass: Node3D, spilled_percent: float = 0.0, options: Dictionary = {}) -> Label:
+	var vp_size: Vector2 = _get_viewport_size()
+	var fallback := Vector2(vp_size.x * 0.5, vp_size.y * 0.35)
+	var merged: Dictionary = options.duplicate()
+	if not merged.has("channel"):
+		merged["channel"] = "cup_spill"
+	if not merged.has("anchor") and not merged.has("anchor_resolver"):
+		merged["anchor"] = _get_world_anchor(glass, Vector3(0.0, 0.15, 0.0), fallback)
+	if not merged.has("stack_group") and is_instance_valid(glass):
+		merged["stack_group"] = "cup_" + str(glass.get_instance_id())
+	if not merged.has("jitter_x"):
+		merged["jitter_x"] = 0.0
+	if spilled_percent >= 0.05:
+		return show_delta_indicator("cup_spill", -spilled_percent, format_number(spilled_percent) + "% Spill!", merged)
+	return show_floating_text("Spilling!", DECREASE_COLOR, merged)
+
+func show_cup_empty_indicator(glass: Node3D, options: Dictionary = {}) -> Label:
+	var vp_size: Vector2 = _get_viewport_size()
+	var fallback := Vector2(vp_size.x * 0.5, vp_size.y * 0.35)
+	var merged: Dictionary = options.duplicate()
+	if not merged.has("channel"):
+		merged["channel"] = "cup_reset"
+	if not merged.has("anchor") and not merged.has("anchor_resolver"):
+		merged["anchor"] = _get_world_anchor(glass, Vector3(0.0, 0.15, 0.0), fallback)
+	if not merged.has("stack_group") and is_instance_valid(glass):
+		merged["stack_group"] = "cup_" + str(glass.get_instance_id())
+	if not merged.has("jitter_x"):
+		merged["jitter_x"] = 0.0
+	return show_floating_text("Cup Empty! (Reset)", CLEAN_COLOR, merged)
+
 func show_delta_indicator(channel_id: String, delta: float, formatted_body: String, options: Dictionary = {}) -> Label:
 	if absf(delta) < 0.005:
 		return null
@@ -241,6 +292,8 @@ func show_floating_text(text: String, color: Color = Color.WHITE, options: Dicti
 	var stack_group: String = str(cfg.get("stack_group", channel_id))
 
 	var label := _create_styled_label(text, color, font_size, outline_col, outline_size)
+	if align == "center":
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var label_size: Vector2 = label.get_minimum_size()
 	label.size = label_size
 	label.pivot_offset = label_size * 0.5
@@ -278,7 +331,10 @@ func show_floating_text(text: String, color: Color = Color.WHITE, options: Dicti
 	tween.tween_property(label, "modulate:a", 0.0, duration * 0.45).set_delay(delay + duration * 0.55).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.chain().tween_callback(func():
 		if _active_floating_groups.has(stack_group):
-			(_active_floating_groups[stack_group] as Array).erase(label)
+			var arr := _active_floating_groups[stack_group] as Array
+			arr.erase(label)
+			if arr.is_empty():
+				_active_floating_groups.erase(stack_group)
 		if is_instance_valid(label):
 			label.queue_free()
 	)
@@ -305,6 +361,17 @@ func _get_viewport_size() -> Vector2:
 	if vp_size.x <= 1.0 or vp_size.y <= 1.0:
 		return Vector2(1280.0, 720.0)
 	return vp_size
+
+func _get_world_anchor(target_node: Node3D, world_offset: Vector3, fallback_anchor: Vector2) -> Vector2:
+	if not is_instance_valid(target_node) or not is_inside_tree():
+		return fallback_anchor
+	var cam: Camera3D = get_viewport().get_camera_3d()
+	if not is_instance_valid(cam):
+		return fallback_anchor
+	var world_pos: Vector3 = target_node.global_position + world_offset
+	if cam.is_position_behind(world_pos):
+		return fallback_anchor
+	return cam.unproject_position(world_pos)
 
 func _resolve_anchor(cfg: Dictionary, vp_size: Vector2) -> Vector2:
 	if cfg.has("anchor") and cfg["anchor"] is Vector2:
@@ -435,7 +502,9 @@ func update_status_group(group_id: String, entries: Array[Dictionary], owner_obj
 			lbl.text = entry_text
 		if use_wavy_labels:
 			if lbl.material is ShaderMaterial:
-				(lbl.material as ShaderMaterial).set_shader_parameter("base_color", entry_color)
+				var shader_mat := lbl.material as ShaderMaterial
+				shader_mat.set_shader_parameter("base_color", entry_color)
+				shader_mat.set_shader_parameter("secondary_color", entry.get("secondary_color", Color(0.5, 0.9, 1.0, 1.0)))
 		else:
 			lbl.add_theme_color_override("font_color", entry_color)
 
@@ -512,6 +581,14 @@ func update_pouring_indicator(glass: Node, liquids: Array, glass_size: float, vi
 		entries.append({
 			"text": layer_name + ": " + str(snappedf(pct, 0.1)) + "%",
 			"color": col
+		})
+
+	var dm: Variant = glass.get("drink_mix") if is_instance_valid(glass) else null
+	if dm is DrinkMix and (dm as DrinkMix).overfill_percent > 0.05:
+		entries.append({
+			"text": "Spilled: -" + format_number((dm as DrinkMix).overfill_percent) + "%",
+			"color": DECREASE_COLOR,
+			"secondary_color": DECREASE_COLOR
 		})
 
 	update_status_group("pouring", entries, glass, true)
