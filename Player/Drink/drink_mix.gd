@@ -60,7 +60,7 @@ func get_top_buoyant_layer_index() -> int:
 			continue
 		if float(layer[1]) <= 0.0001:
 			continue
-		var buoy := AtomicFluidShaders.get_layer_buoyancy(layer)
+		var buoy := LiquidProperties.get_layer_buoyancy(layer)
 		if buoy >= best_buoyancy:
 			best_buoyancy = buoy
 			best_idx = i
@@ -131,7 +131,12 @@ func drain_top(amount: float) -> float:
 
 	return total_removed
 
-func mix_all(average_color_fn: Callable = Callable(), color_map: Dictionary = AtomicFluidShaders.LIQUID_COLOR) -> bool:
+func _resolve_ingredient_color(id: String, color_map: Dictionary) -> Color:
+	if not color_map.is_empty() and color_map != LiquidProperties.LIQUID_COLOR and color_map.has(id):
+		return color_map[id]
+	return LiquidProperties.get_liquid_color(id)
+
+func mix_all(average_color_fn: Callable = Callable(), color_map: Dictionary = {}) -> bool:
 	if get_unique_ingredient_ids().size() < 2 or layers.is_empty():
 		return false
 
@@ -150,17 +155,17 @@ func mix_all(average_color_fn: Callable = Callable(), color_map: Dictionary = At
 			for ing in layer[3]:
 				var a := float(layer[3][ing])
 				combined_amounts[str(ing)] = combined_amounts.get(str(ing), 0.0) + a
-				color_weights.append([color_map.get(str(ing), Color.WHITE), a])
+				color_weights.append([_resolve_ingredient_color(str(ing), color_map), a])
 		elif layer[0] is Array:
 			var split_a := layer_amt / maxf(float(layer[0].size()), 1.0)
 			for ing in layer[0]:
 				var s := str(ing)
 				combined_amounts[s] = combined_amounts.get(s, 0.0) + split_a
-				color_weights.append([color_map.get(s, Color.WHITE), split_a])
+				color_weights.append([_resolve_ingredient_color(s, color_map), split_a])
 		else:
 			var s := str(layer[0])
 			combined_amounts[s] = combined_amounts.get(s, 0.0) + layer_amt
-			color_weights.append([color_map.get(s, Color.WHITE), layer_amt])
+			color_weights.append([_resolve_ingredient_color(s, color_map), layer_amt])
 
 	var mixed_color: Color = average_color_fn.call(color_weights) if average_color_fn.is_valid() else Color.WHITE
 	var mixed_names: Array[String] = []

@@ -121,7 +121,7 @@ func _process(delta: float) -> void:
 			keg_water_particle.emitting = false
 		if is_instance_valid(_pour_stream):
 			if rate_mult > 0.02:
-				var beer_col: Color = AtomicFluidShaders.LIQUID_COLOR.get("beer", Color(0.98, 0.322, 0.051, 1.0))
+				var beer_col: Color = LiquidProperties.get_liquid_color("beer", Color(0.98, 0.322, 0.051, 1.0))
 				var rim_pos: Variant = in_pour_zone.get_rim_center_world_position() if (in_pour_zone and is_instance_valid(in_pour_zone)) else null
 				_pour_stream.set_stream_active(
 					true,

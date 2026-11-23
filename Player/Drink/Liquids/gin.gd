@@ -67,19 +67,16 @@ func _ensure_pour_helpers() -> void:
 
 func _get_effective_viscosity() -> float:
 	var id_str := liquid_resource.id if liquid_resource else "gin"
-	var res_visc := liquid_resource.viscosity if (liquid_resource and liquid_resource.viscosity >= 0.0) else LiquidVisualHelper.get_liquid_viscosity(id_str)
+	var res_visc := liquid_resource.viscosity if (liquid_resource and liquid_resource.viscosity >= 0.0) else LiquidProperties.get_liquid_viscosity(id_str)
 	return clampf(maxf(viscosity, res_visc), 0.0, 1.0)
 
 func ready() -> void:
 	_ensure_pour_helpers()
 	if liquid_resource:
+		LiquidProperties.register_from_liquid(liquid_resource)
 		size = liquid_resource.liquid_size
 		current_liquid = size
 		color_liquid = liquid_resource.liquid_color
-		if liquid_resource.buoyancy > 0.0:
-			LiquidVisualHelper.register_liquid_buoyancy(liquid_resource.id, liquid_resource.buoyancy)
-		if liquid_resource.viscosity >= 0.0:
-			LiquidVisualHelper.register_liquid_viscosity(liquid_resource.id, liquid_resource.viscosity)
 		$Inside.texture = liquid_resource.sprite
 		$Inside/Outside.texture = liquid_resource.outside_Sprite
 		var inside_node := get_node_or_null("Inside") as Node3D
@@ -91,14 +88,10 @@ func ready() -> void:
 func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 	_ensure_pour_helpers()
 	liquid_resource = _liquid
+	LiquidProperties.register_from_liquid(liquid_resource)
 	size = liquid_resource.liquid_size
 	current_liquid = size
 	color_liquid = liquid_resource.liquid_color
-
-	if liquid_resource.buoyancy > 0.0:
-		LiquidVisualHelper.register_liquid_buoyancy(liquid_resource.id, liquid_resource.buoyancy)
-	if liquid_resource.viscosity >= 0.0:
-		LiquidVisualHelper.register_liquid_viscosity(liquid_resource.id, liquid_resource.viscosity)
 
 	$Inside.texture = liquid_resource.sprite
 	$Inside/Outside.texture = liquid_resource.outside_Sprite
@@ -150,7 +143,7 @@ func _apply_outside_texture() -> void:
 func _get_spout_world_position() -> Vector3:
 	var inside_sprite := get_node_or_null("Inside") as Sprite3D
 	if inside_sprite:
-		return PourStreamVisual.get_sprite_top_spout_world_position(inside_sprite)
+		return SpriteSpoutUtils.get_sprite_top_spout_world_position(inside_sprite)
 	return global_position
 
 func _get_target_pour_world_position() -> Vector3:

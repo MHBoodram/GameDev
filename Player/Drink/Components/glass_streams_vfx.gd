@@ -105,7 +105,7 @@ func _update_pour_splash(delta: float, glass: Glasses, sp: Sprite3D, camera: Cam
 		return
 
 	var fill_ratio := clampf(glass.total_liquids / maxf(glass.size, 0.001), 0.05, 0.96)
-	var impact_pos := PourStreamVisual.get_sprite_surface_world_position(sp, fill_ratio, _pour_splash_entry_u)
+	var impact_pos := SpriteSpoutUtils.get_sprite_surface_world_position(sp, fill_ratio, _pour_splash_entry_u)
 	var active_cam := camera if is_instance_valid(camera) else glass.get_viewport().get_camera_3d()
 	var cam_dir := (active_cam.global_position - impact_pos).normalized() if is_instance_valid(active_cam) else -sp.global_transform.basis.z.normalized()
 	var spawn_pos := impact_pos + cam_dir * 0.008
@@ -135,7 +135,7 @@ func _update_overflow_streams(delta: float, glass: Glasses, sp: Sprite3D, camera
 		_overflow_stream_right.set_stream_active(false)
 		return
 
-	var edges := PourStreamVisual.get_sprite_rim_edges_world_positions(sp)
+	var edges := SpriteSpoutUtils.get_sprite_rim_edges_world_positions(sp)
 	var center_pos: Vector3 = edges["center"]
 	var left_edge: Vector3 = edges["left"]
 	var right_edge: Vector3 = edges["right"]
@@ -144,7 +144,7 @@ func _update_overflow_streams(delta: float, glass: Glasses, sp: Sprite3D, camera
 	var floor_y := left_edge.y - 2.2
 	if is_on_counter:
 		var bounds = WorkingAreaService.get_working_area_bounds(glass)
-		floor_y = ((bounds as AABB).end.y + 0.002) if (bounds is AABB) else PourStreamVisual.get_sprite_surface_world_position(sp, 0.0).y
+		floor_y = ((bounds as AABB).end.y + 0.002) if (bounds is AABB) else SpriteSpoutUtils.get_sprite_surface_world_position(sp, 0.0).y
 
 	var basis_x := sp.global_transform.basis.x.normalized()
 	var basis_y := sp.global_transform.basis.y.normalized()

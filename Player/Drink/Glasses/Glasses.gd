@@ -8,7 +8,6 @@ const OVERFLOW_EPSILON: float = 0.0005
 const PUSH_FRICTION: float = 14.0
 const INTERACTION_SEPARATION_DISTANCE: float = 0.14
 
-@onready var tcmtd := preload("res://Player/Drink/Glasses/liquids_label.tscn")
 @export var size: float = 1.0
 @export var area_body: CollisionShape3D
 @export var sprite: Sprite3D
@@ -24,7 +23,6 @@ var visual_helper: LiquidVisualHelper = LiquidVisualHelper.new()
 var _snap_follower: SnapZoneFollower = SnapZoneFollower.new()
 var _streams_vfx: GlassStreamsVfx = null
 
-var drink_list_label: Label
 var total_liquids: float = 0.0
 var in_game: bool = false
 var is_being_served: bool = false
@@ -153,33 +151,33 @@ func _get_container_sprite() -> Sprite3D:
 
 func get_rim_center_world_position() -> Vector3:
 	var sp := _get_container_sprite()
-	return PourStreamVisual.get_sprite_top_spout_world_position(sp) if sp else (global_position + Vector3(0.0, 0.08, 0.0))
+	return SpriteSpoutUtils.get_sprite_top_spout_world_position(sp) if sp else (global_position + Vector3(0.0, 0.08, 0.0))
 
 func get_liquid_surface_world_position() -> Vector3:
 	var sp := _get_container_sprite()
 	if sp:
 		var fill_ratio := clampf(total_liquids / maxf(size, 0.001), 0.05, 0.96)
-		return PourStreamVisual.get_sprite_surface_world_position(sp, fill_ratio)
+		return SpriteSpoutUtils.get_sprite_surface_world_position(sp, fill_ratio)
 	return global_position
 
 func get_pour_spout_world_position() -> Vector3:
 	var sp := _get_container_sprite()
-	return PourStreamVisual.get_sprite_rim_spout_world_position(sp, pour_tilt_degrees) if sp else global_position
+	return SpriteSpoutUtils.get_sprite_rim_spout_world_position(sp, pour_tilt_degrees) if sp else global_position
 
 func get_top_liquid_color() -> Color:
 	var top_idx := drink_mix.get_top_buoyant_layer_index()
 	if top_idx == -1:
 		return Color.WHITE
 	var top_layer = liquids[top_idx]
-	return visual_helper.get_layer_color(top_layer) if top_layer is Array else Color.WHITE
+	return LiquidColorUtils.get_layer_color(top_layer) if top_layer is Array else Color.WHITE
 
 func compute_pour_info_from_world(impact_world_pos: Vector3, incoming_world_vel: Vector3) -> Dictionary:
 	var sp := _get_container_sprite()
 	var entry_u := 0.5
 	var grid_vel := Vector2(0.0, 36.0)
 	if sp:
-		entry_u = PourStreamVisual.world_pos_to_sprite_u(sp, impact_world_pos)
-		grid_vel = PourStreamVisual.world_vel_to_grid_vel(sp, incoming_world_vel)
+		entry_u = SpriteSpoutUtils.world_pos_to_sprite_u(sp, impact_world_pos)
+		grid_vel = SpriteSpoutUtils.world_vel_to_grid_vel(sp, incoming_world_vel)
 	return {
 		"from_pour": true,
 		"entry_u": clampf(entry_u, 0.15, 0.85),
@@ -409,7 +407,7 @@ func _rebuild_liquid_gradient(show_hud: bool = true) -> void:
 	total_liquids = 0.0
 	for l in liquids:
 		total_liquids += float(l[1])
-	drink_list_label = visual_helper.rebuild_gradient(liquids, total_liquids, size, liquid_box, tcmtd, is_mixed())
+	visual_helper.rebuild_gradient(liquids, total_liquids, size, is_mixed())
 	if show_hud and not liquids.is_empty() and total_liquids > 0.0:
 		GameEvents.cup_pouring_updated.emit(self, liquids, size, visual_helper)
 
@@ -423,7 +421,7 @@ func _pouring(id: String, liquids_num: float, pour_info: Dictionary = {}) -> flo
 	var added := minf(liquids_num, available_space)
 	var overflow := maxf(0.0, liquids_num - added)
 
-	var incoming_col: Color = visual_helper.LIQUID_COLOR.get(id, Color.WHITE)
+	var incoming_col: Color = LiquidProperties.get_liquid_color(id)
 	if overflow > OVERFLOW_EPSILON:
 		var overflow_percent := (overflow / maxf(size, 0.001)) * 100.0
 		drink_mix.add_overfill(overflow_percent)
@@ -704,7 +702,7 @@ func is_mixed() -> bool:
 	return drink_mix.is_mixed()
 
 func mark_mixed() -> void:
-	if drink_mix.mix_all(visual_helper.average_hsv_color, visual_helper.LIQUID_COLOR):
+	if drink_mix.mix_all(LiquidColorUtils.average_hsv_color):
 		_rebuild_liquid_gradient(true)
 
 func get_mixed_ingredients() -> Array[String]:
