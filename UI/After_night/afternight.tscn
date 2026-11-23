@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://d35b6bj2mv0a3" path="res://Map/afternight.tscn" id="1_bps6g"]
 [ext_resource type="Script" uid="uid://ciwnqc6giiiy6" path="res://UI/After_night/afternight.gd" id="1_sxjop"]
+[ext_resource type="Environment" uid="uid://c2h86ipdfciqx" path="res://Map/Afternight_Environment.tres" id="3_hkwvl"]
 [ext_resource type="PackedScene" uid="uid://cidirpdmn2j5" path="res://Player/After_Night_Player/AfterNightPlayer.tscn" id="3_myvk3"]
 [ext_resource type="Script" uid="uid://ilqlfi7mgoyf" path="res://Player/Dynamic_camera.gd" id="4_n4i4h"]
 [ext_resource type="PackedScene" uid="uid://sx4hrn3cgwy1" path="res://Player/Coutner.tscn" id="4_reyg2"]
@@ -166,6 +167,7 @@ script = ExtResource("1_sxjop")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.004, 1.17, 1.426)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1767207049]
+environment = ExtResource("3_hkwvl")
 
 [node name="Sun" type="DirectionalLight3D" parent="WorldEnvironment" unique_id=154308508]
 transform = Transform3D(-0.95751554, -0.16707794, 0.23505107, -0.08849062, 0.94597405, 0.3119334, -0.2744694, 0.27788123, -0.9205698, 6.6585455, 3.4872513, -7.5352235)
@@ -309,7 +311,7 @@ wait_time = 300.0
 one_shot = true
 
 [node name="Viewport" type="Sprite3D" parent="." unique_id=199499708]
-transform = Transform3D(0.09918737, 0, 0, 0, -5.2643796e-09, 0.16071211, 0, -0.12043496, -7.0249495e-09, -0.38534808, 2.3437724, 2.0515742)
+transform = Transform3D(0.09918737, 0, 0, 0, -5.2643796e-09, 0.16071211, 0, -0.12043496, -7.0249495e-09, -0.0566383, 2.3437724, 2.0515742)
 texture = SubResource("ViewportTexture_hkwvl")
 
 [node name="SubViewport" type="SubViewport" parent="Viewport" unique_id=328333767]
