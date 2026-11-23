@@ -3,6 +3,20 @@ extends Node3D
 # Renders mid-pour liquid
 const MAX_PIXELS := 280
 const GRAVITY := 5.4
+
+const SPLASH_PIXELS_PER_SEC_MIN := 42.0
+const SPLASH_PIXELS_PER_SEC_MAX := 115.0
+const SPLASH_HORIZ_SPEED := 0.34
+const SPLASH_UP_SPEED_MIN := 0.30
+const SPLASH_UP_SPEED_MAX := 0.58
+const SPLASH_DEPTH_SPEED := 0.06
+const SPLASH_FLOW_SCALE_MIN := 0.72
+const SPLASH_FLOW_SCALE_MAX := 1.28
+const SPLASH_SIZE_MIN := 0.60
+const SPLASH_SIZE_MAX := 0.92
+const SPLASH_LIFE_MIN := 0.16
+const SPLASH_LIFE_MAX := 0.30
+
 static var _sprite_anchor_cache: Dictionary = {}
 var _mm_instance: MultiMeshInstance3D = null
 var _multi_mesh: MultiMesh = null
@@ -322,27 +336,28 @@ func _process(delta: float) -> void:
 	if _active:
 		var px_size := 1.0 / LiquidVisualHelper.UNIFORM_PIXEL_DENSITY
 		if _splash_mode:
-			var pixels_per_sec := lerpf(35.0, 100.0, clampf(_flow_rate * 0.5, 0.0, 1.0))
+			var flow_t := clampf(_flow_rate * 0.5, 0.0, 1.0)
+			var pixels_per_sec := lerpf(SPLASH_PIXELS_PER_SEC_MIN, SPLASH_PIXELS_PER_SEC_MAX, flow_t)
 			_spawn_accum += pixels_per_sec * dt
 			var to_spawn := int(_spawn_accum)
 			_spawn_accum -= float(to_spawn)
 			var cam_spawn := get_viewport().get_camera_3d()
 			var cam_right := cam_spawn.global_transform.basis.x.normalized() if cam_spawn else Vector3.RIGHT
 			var cam_fwd := cam_spawn.global_transform.basis.z.normalized() if cam_spawn else Vector3.BACK
-			var flow_scale := lerpf(0.7, 1.25, clampf(_flow_rate * 0.5, 0.0, 1.0))
+			var flow_scale := lerpf(SPLASH_FLOW_SCALE_MIN, SPLASH_FLOW_SCALE_MAX, flow_t)
 			var surface_y := _end_pos.y
 			for _s_i in to_spawn:
-				var horiz_speed := randf_range(-0.28, 0.28) * flow_scale
-				var up_speed := randf_range(0.16, 0.36) * flow_scale
-				var depth_speed := randf_range(0.0, 0.05) * flow_scale
+				var horiz_speed := randf_range(-SPLASH_HORIZ_SPEED, SPLASH_HORIZ_SPEED) * flow_scale
+				var up_speed := randf_range(SPLASH_UP_SPEED_MIN, SPLASH_UP_SPEED_MAX) * flow_scale
+				var depth_speed := randf_range(0.0, SPLASH_DEPTH_SPEED) * flow_scale
 				var v := cam_right * horiz_speed + Vector3.UP * up_speed + cam_fwd * depth_speed
-				var p := _start_pos + cam_right * randf_range(-0.008, 0.008) + Vector3.UP * randf_range(0.0, 0.004)
+				var p := _start_pos + cam_right * randf_range(-0.008, 0.008) + Vector3.UP * randf_range(0.0, 0.005)
 				_add_pixel(
 					p,
 					v,
 					_vary_pixel_color(_color).lightened(0.16),
-					px_size * randf_range(0.55, 0.85),
-					randf_range(0.10, 0.20),
+					px_size * randf_range(SPLASH_SIZE_MIN, SPLASH_SIZE_MAX),
+					randf_range(SPLASH_LIFE_MIN, SPLASH_LIFE_MAX),
 					surface_y,
 					-9999.0,
 					true
