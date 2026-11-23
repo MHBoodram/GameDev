@@ -54,6 +54,46 @@ static func get_liquid_buoyancy(id: String) -> float:
 	var h: int = abs(hash(id)) % 1000
 	return 0.60 + (float(h) / 999.0) * 0.95
 
+static func get_layer_buoyancy(layer: Array, buoyancy_overrides: Dictionary = {}) -> float:
+	if layer.is_empty():
+		return 1.0
+
+	if not (layer[0] is Array or layer[0] is Dictionary):
+		var id := str(layer[0])
+		if buoyancy_overrides.has(id):
+			return clampf(float(buoyancy_overrides[id]), 0.35, 2.5)
+		return clampf(get_liquid_buoyancy(id), 0.35, 2.5)
+
+	var ing_weights: Dictionary = {}
+	if layer.size() > 3 and layer[3] is Dictionary and not (layer[3] as Dictionary).is_empty():
+		ing_weights = layer[3]
+	elif layer[0] is Dictionary:
+		ing_weights = layer[0]
+	elif layer[0] is Array:
+		var arr: Array = layer[0]
+		if arr.is_empty():
+			return 1.0
+		var amt := float(layer[1]) if layer.size() > 1 else 1.0
+		var split_w := maxf(amt, 1.0) / float(arr.size())
+		for k in arr:
+			var ks := str(k)
+			ing_weights[ks] = ing_weights.get(ks, 0.0) + split_w
+
+	var w_sum := 0.0
+	var rho_sum := 0.0
+	for k in ing_weights.keys():
+		var ks := str(k)
+		var kw := maxf(float(ing_weights[k]), 0.0)
+		if kw <= 0.0:
+			continue
+		var kb := float(buoyancy_overrides.get(ks, get_liquid_buoyancy(ks)))
+		w_sum += kw
+		rho_sum += kw * (1.0 / clampf(kb, 0.35, 2.5))
+
+	if w_sum <= 0.0001:
+		return 1.0
+	return clampf(w_sum / rho_sum, 0.35, 2.5)
+
 static func register_liquid_viscosity(id: String, viscosity_val: float) -> void:
 	if viscosity_val >= 0.0:
 		_custom_viscosity[id] = clampf(viscosity_val, 0.0, 1.0)
@@ -405,7 +445,7 @@ void main() {
 		float local_rho = mass_den / max(vol_den, 0.001);
 		vec2 down_dir = accel_vec / accel_len;
 		float rel_diff = clamp((rho_p - local_rho) / rho_p, -1.0, 1.0);
-		float buoy_speed = max(0.0, 24.0 - p_visc * 20.0);
+		float buoy_speed = max(0.0, 40.0 - p_visc * 34.0);
 		vec2 slip = down_dir * (rel_diff * buoy_speed);
 		pos += clamp(pc.dt * slip, vec2(-0.45), vec2(0.45));
 		pos = constrainToContainer(pos);
@@ -599,10 +639,11 @@ layout(push_constant, std430) uniform PushConstants {
 	uint count_a;
 } pc;
 
-int getProjBin(vec2 pos, vec2 down_dir) {
+int getProjBin(vec2 pos, float rho_p, vec2 down_dir) {
 	vec2 centered = (pos - vec2(32.0)) / 32.0;
 	float proj_up = dot(centered, -down_dir);
-	float norm = clamp(0.5 - proj_up * 0.45, 0.0, 0.9999);
+	float buoy_bias = clamp((rho_p - 1.0) * 0.05, -0.06, 0.06);
+	float norm = clamp(0.5 - proj_up * 0.45 + buoy_bias, 0.0, 0.9999);
 	return clamp(int(norm * 64.0), 0, 63);
 }
 
@@ -613,7 +654,7 @@ void main() {
 	vec2 accel_vec = vec2(pc.accel_x, pc.accel_y);
 	float alen = length(accel_vec);
 	vec2 down_dir = (alen > 0.01) ? (accel_vec / alen) : vec2(0.0, 1.0);
-	int bin = getProjBin(particles[pid].pos_props.xy, down_dir);
+	int bin = getProjBin(particles[pid].pos_props.xy, particles[pid].pos_props.z, down_dir);
 	atomicAdd(meta.hist[bin], 1u);
 }
 """
@@ -693,10 +734,11 @@ layout(push_constant, std430) uniform PushConstants {
 	uint count_a;
 } pc;
 
-int getProjBin(vec2 pos, vec2 down_dir) {
+int getProjBin(vec2 pos, float rho_p, vec2 down_dir) {
 	vec2 centered = (pos - vec2(32.0)) / 32.0;
 	float proj_up = dot(centered, -down_dir);
-	float norm = clamp(0.5 - proj_up * 0.45, 0.0, 0.9999);
+	float buoy_bias = clamp((rho_p - 1.0) * 0.05, -0.06, 0.06);
+	float norm = clamp(0.5 - proj_up * 0.45 + buoy_bias, 0.0, 0.9999);
 	return clamp(int(norm * 64.0), 0, 63);
 }
 
@@ -707,7 +749,7 @@ void main() {
 	vec2 accel_vec = vec2(pc.accel_x, pc.accel_y);
 	float alen = length(accel_vec);
 	vec2 down_dir = (alen > 0.01) ? (accel_vec / alen) : vec2(0.0, 1.0);
-	uint bin = uint(getProjBin(particles[pid].pos_props.xy, down_dir));
+	uint bin = uint(getProjBin(particles[pid].pos_props.xy, particles[pid].pos_props.z, down_dir));
 
 	if (bin < meta.cutoff_bin) {
 		return;

@@ -36,6 +36,9 @@ static func register_liquid_buoyancy(id: String, buoyancy_val: float) -> void:
 static func get_liquid_buoyancy(id: String) -> float:
 	return AtomicFluidShaders.get_liquid_buoyancy(id)
 
+static func get_layer_buoyancy(layer: Array) -> float:
+	return AtomicFluidShaders.get_layer_buoyancy(layer)
+
 static func register_liquid_viscosity(id: String, viscosity_val: float) -> void:
 	AtomicFluidShaders.register_liquid_viscosity(id, viscosity_val)
 
@@ -290,17 +293,28 @@ func rebuild_gradient(liquids: Array, total_liquids: float, glass_size: float, l
 	var colors := PackedColorArray()
 	var current_pos: float = 0.0
 
-	for i in range(liquids.size() - 1, -1, -1):
-		var layer = liquids[i]
+	var sorted_indices: Array[int] = []
+	for i in liquids.size():
+		var l = liquids[i]
+		if l is Array and l.size() >= 2 and float(l[1]) > 0.0:
+			sorted_indices.append(i)
+	sorted_indices.sort_custom(func(a: int, b: int) -> bool:
+		var ba := get_layer_buoyancy(liquids[a])
+		var bb := get_layer_buoyancy(liquids[b])
+		if is_equal_approx(ba, bb):
+			return a < b
+		return ba < bb
+	)
+
+	for idx_pos in range(sorted_indices.size() - 1, -1, -1):
+		var layer = liquids[sorted_indices[idx_pos]]
 		var amount: float = float(layer[1])
-		if amount <= 0.0:
-			continue
 		var layer_col := get_layer_color(layer)
 		if has_tint:
 			layer_col = layer_col.lerp(Color(tint_col.r, tint_col.g, tint_col.b, layer_col.a), tint_mix)
 		colors.append(layer_col)
 		current_pos += amount / total_liquids
-		if i > 0 and current_pos < 1.0:
+		if idx_pos > 0 and current_pos < 1.0:
 			offsets.append(clampf(current_pos, 0.001, 0.999))
 
 	while colors.size() < offsets.size():

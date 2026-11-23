@@ -51,6 +51,7 @@ var _synced_amounts: Dictionary = {} # ingredient_key -> float amount
 var _synced_total: float = 0.0
 var _synced_mixed: bool = false
 var _last_single_color: Color = Color(-1.0, -1.0, -1.0, -1.0)
+var _last_single_rho: float = -1.0
 var _last_single_visc: float = -1.0
 var _pending_ops: Array[Dictionary] = []
 var _pending_impulse: Vector2 = Vector2.ZERO
@@ -185,7 +186,7 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 
 		var key: String = ""
 		var col: Color = Color.WHITE
-		var buoy: float = 1.0
+		var buoy: float = AtomicFluidShaders.get_layer_buoyancy(layer, buoyancy_overrides)
 		var visc: float = 0.0
 
 		if layer.size() > 2 and layer[2] is Color:
@@ -193,7 +194,7 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 
 		if layer[0] is Array or layer[0] is Dictionary:
 			var ing_weights: Dictionary = {}
-			if layer.size() > 3 and layer[3] is Dictionary:
+			if layer.size() > 3 and layer[3] is Dictionary and not (layer[3] as Dictionary).is_empty():
 				ing_weights = layer[3]
 			elif layer[0] is Dictionary:
 				ing_weights = layer[0]
@@ -205,25 +206,20 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 			keys.sort()
 			var key_parts: Array[String] = []
 			var w_sum := 0.0
-			var rho_sum := 0.0
 			var visc_sum := 0.0
 			for k in keys:
 				var ks := str(k)
 				key_parts.append(ks)
 				var kw := maxf(float(ing_weights[k]), 0.0)
-				var kb: float = float(buoyancy_overrides.get(ks, AtomicFluidShaders.get_liquid_buoyancy(ks)))
 				var kv: float = clampf(float(viscosity_overrides.get(ks, AtomicFluidShaders.get_liquid_viscosity(ks))), 0.0, 1.0)
 				w_sum += kw
-				rho_sum += kw * (1.0 / clampf(kb, 0.35, 2.5))
 				visc_sum += kw * kv
 			key = "+".join(key_parts)
-			buoy = 1.0 / maxf(rho_sum / maxf(w_sum, 0.0001), 0.35)
 			visc = clampf(visc_sum / maxf(w_sum, 0.0001), 0.0, 1.0)
 		else:
 			key = str(layer[0])
 			if not (layer.size() > 2 and layer[2] is Color):
 				col = AtomicFluidShaders.LIQUID_COLOR.get(key, Color.WHITE)
-			buoy = float(buoyancy_overrides.get(key, AtomicFluidShaders.get_liquid_buoyancy(key)))
 			visc = clampf(float(viscosity_overrides.get(key, AtomicFluidShaders.get_liquid_viscosity(key))), 0.0, 1.0)
 
 		var rho := 1.0 / clampf(buoy, 0.35, 2.5)
@@ -248,7 +244,7 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 		var specs: Array[Dictionary] = []
 		var assigned := 0
 		for i in layer_items.size():
-			var item := layer_items[i]
+			var item: Dictionary = layer_items[i]
 			var share := float(item["amount"]) / total_amt
 			var cnt := (target_count - assigned) if i == layer_items.size() - 1 else clampi(roundi(share * float(target_count)), 0, target_count - assigned)
 			if cnt > 0:
@@ -263,19 +259,23 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 		_synced_total = total_amt
 		_synced_mixed = is_mixed_flag
 		_last_single_color = (layer_items[0]["color"] as Color) if layer_items.size() == 1 else Color(-1.0, -1.0, -1.0, -1.0)
+		_last_single_rho = float(layer_items[0]["rho"]) if layer_items.size() == 1 else -1.0
 		_last_single_visc = float(layer_items[0]["visc"]) if layer_items.size() == 1 else -1.0
 		return
 
 	if layer_items.size() == 1:
-		var single_item := layer_items[0]
+		var single_item: Dictionary = layer_items[0]
 		var single_col: Color = single_item["color"]
+		var single_rho: float = float(single_item["rho"])
 		var single_visc: float = float(single_item["visc"])
-		if (is_mixed_flag and not _synced_mixed) or (not is_mixed_flag and (single_col != _last_single_color or not is_equal_approx(single_visc, _last_single_visc))):
-			_queue_blend(single_col, float(single_item["rho"]), single_visc, _active_count)
+		if (is_mixed_flag and not _synced_mixed) or single_col != _last_single_color or not is_equal_approx(single_rho, _last_single_rho) or not is_equal_approx(single_visc, _last_single_visc):
+			_queue_blend(single_col, single_rho, single_visc, _active_count)
 			_last_single_color = single_col
+			_last_single_rho = single_rho
 			_last_single_visc = single_visc
 	else:
 		_last_single_color = Color(-1.0, -1.0, -1.0, -1.0)
+		_last_single_rho = -1.0
 		_last_single_visc = -1.0
 
 	if target_count > _active_count:
@@ -292,14 +292,14 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 				added_specs.append({"diff": diff, "color": item["color"], "rho": item["rho"], "visc": item["visc"]})
 
 		if delta_sum <= 0.0001:
-			var last_item := layer_items[layer_items.size() - 1]
+			var last_item: Dictionary = layer_items[layer_items.size() - 1]
 			added_specs.append({"diff": 1.0, "color": last_item["color"], "rho": last_item["rho"], "visc": last_item["visc"]})
 			delta_sum = 1.0
 
 		var spawn_specs: Array[Dictionary] = []
 		var assigned_add := 0
 		for i in added_specs.size():
-			var sp := added_specs[i]
+			var sp: Dictionary = added_specs[i]
 			var cnt := (add_total - assigned_add) if i == added_specs.size() - 1 else clampi(roundi((float(sp["diff"]) / delta_sum) * float(add_total)), 0, add_total - assigned_add)
 			if cnt > 0:
 				spawn_specs.append({"count": cnt, "color": sp["color"], "rho": sp["rho"], "visc": sp["visc"]})
@@ -328,6 +328,7 @@ func _sync_empty() -> void:
 	_synced_total = 0.0
 	_synced_mixed = false
 	_last_single_color = Color(-1.0, -1.0, -1.0, -1.0)
+	_last_single_rho = -1.0
 	_last_single_visc = -1.0
 	_pending_ops.append({"op": "clear"})
 
@@ -523,6 +524,12 @@ func _encode_particle(bytes: PackedByteArray, pidx: int, px: float, py: float, r
 
 
 func _queue_init_fill(specs: Array[Dictionary], total_particles: int) -> void:
+	var sorted_specs: Array[Dictionary] = []
+	sorted_specs.assign(specs)
+	sorted_specs.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return float(a["rho"]) > float(b["rho"])
+	)
+
 	var bytes := PackedByteArray()
 	bytes.resize(total_particles * PARTICLE_STRIDE)
 
@@ -536,7 +543,7 @@ func _queue_init_fill(specs: Array[Dictionary], total_particles: int) -> void:
 	var cell_count := _mask_cells.size()
 	var pidx := 0
 	var spec_idx := 0
-	var spec_rem := int(specs[0]["count"]) if not specs.is_empty() else 0
+	var spec_rem := int(sorted_specs[0]["count"]) if not sorted_specs.is_empty() else 0
 
 	for c_i in cell_count:
 		if pidx >= total_particles:
@@ -545,10 +552,10 @@ func _queue_init_fill(specs: Array[Dictionary], total_particles: int) -> void:
 		for sub in PARTICLES_PER_CELL:
 			if pidx >= total_particles:
 				break
-			while spec_rem <= 0 and spec_idx + 1 < specs.size():
+			while spec_rem <= 0 and spec_idx + 1 < sorted_specs.size():
 				spec_idx += 1
-				spec_rem = int(specs[spec_idx]["count"])
-			var sp := specs[spec_idx]
+				spec_rem = int(sorted_specs[spec_idx]["count"])
+			var sp: Dictionary = sorted_specs[spec_idx]
 			spec_rem -= 1
 
 			var off: Vector2 = offsets[sub]
@@ -1380,7 +1387,9 @@ func _cpu_cull_particles(new_cnt: int) -> void:
 	for i in old_cnt:
 		indices[i] = i
 	indices.sort_custom(func(a: int, b: int) -> bool:
-		return _cpu_pos[a].dot(_last_down_dir) > _cpu_pos[b].dot(_last_down_dir)
+		var score_a := _cpu_pos[a].dot(_last_down_dir) + clampf((_cpu_rho[a] - 1.0) * 1.5, -1.5, 1.5)
+		var score_b := _cpu_pos[b].dot(_last_down_dir) + clampf((_cpu_rho[b] - 1.0) * 1.5, -1.5, 1.5)
+		return score_a > score_b
 	)
 
 	var keep_pos := PackedVector2Array()
@@ -1531,7 +1540,7 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 			var idx := cx + cy * CPU_N
 			var local_rho := _cpu_mass[idx] / maxf(_cpu_vol[idx], 0.001)
 			var rel := clampf((_cpu_rho[i] - local_rho) / maxf(_cpu_rho[i], 0.25), -1.0, 1.0)
-			var buoy_speed := maxf(0.0, 12.0 - p_visc * 10.0)
+			var buoy_speed := maxf(0.0, 20.0 - p_visc * 17.0)
 			var step_v := Vector2(_cpu_vx[idx], _cpu_vy[idx]) + pv
 			p += step_v * dt + _last_down_dir * (rel * buoy_speed * dt)
 			_cpu_pvel[i] = pv * p_damp

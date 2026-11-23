@@ -192,10 +192,28 @@ func get_pour_spout_world_position() -> Vector3:
 		return PourStreamVisual.get_sprite_rim_spout_world_position(sp, pour_tilt_degrees)
 	return global_position
 
-func get_top_liquid_color() -> Color:
+func _get_top_buoyant_layer_index() -> int:
 	if liquids.is_empty():
+		return -1
+	var best_idx: int = -1
+	var best_buoyancy: float = -INF
+	for i in liquids.size():
+		var layer = liquids[i]
+		if not (layer is Array) or layer.size() < 2:
+			continue
+		if float(layer[1]) <= 0.0001:
+			continue
+		var buoy := LiquidVisualHelper.get_layer_buoyancy(layer)
+		if buoy >= best_buoyancy:
+			best_buoyancy = buoy
+			best_idx = i
+	return best_idx
+
+func get_top_liquid_color() -> Color:
+	var top_idx := _get_top_buoyant_layer_index()
+	if top_idx == -1:
 		return Color.WHITE
-	var top_layer = liquids[liquids.size() - 1]
+	var top_layer = liquids[top_idx]
 	if top_layer is Array:
 		return visual_helper.get_layer_color(top_layer)
 	return Color.WHITE
@@ -713,25 +731,27 @@ func _pour_out(liquids_num: float) -> float:
 	if liquids_num <= 0.0 or liquids.is_empty():
 		return 0.0
 
+	for i in range(liquids.size() - 1, -1, -1):
+		var l = liquids[i]
+		if not (l is Array) or l.size() < 2 or float(l[1]) <= 0.0001:
+			liquids.remove_at(i)
+
 	var remaining_to_remove := liquids_num
 	var total_removed := 0.0
 
 	while remaining_to_remove > 0.0001 and not liquids.is_empty():
-		var top_layer = liquids[liquids.size() - 1]
-		if not (top_layer is Array) or top_layer.size() < 2:
-			liquids.pop_back()
-			continue
+		var top_idx := _get_top_buoyant_layer_index()
+		if top_idx == -1:
+			liquids.clear()
+			break
 
+		var top_layer = liquids[top_idx]
 		var layer_amt := float(top_layer[1])
-		if layer_amt <= 0.0001:
-			liquids.pop_back()
-			continue
-
 		var remove_amt := minf(remaining_to_remove, layer_amt)
 		var keep_ratio := clampf((layer_amt - remove_amt) / layer_amt, 0.0, 1.0)
 		top_layer[1] = layer_amt - remove_amt
 
-		if top_layer.size() > 3 and top_layer[3] is Dictionary:
+		if top_layer.size() > 3 and top_layer[3] is Dictionary and not (top_layer[3] as Dictionary).is_empty():
 			var ing_dict: Dictionary = top_layer[3]
 			for ing_key in ing_dict.keys():
 				var prev_ing := float(ing_dict[ing_key])
@@ -754,7 +774,7 @@ func _pour_out(liquids_num: float) -> float:
 			_subtract_drink_mix_liquid(str(top_layer[0]), remove_amt)
 
 		if float(top_layer[1]) <= 0.0001:
-			liquids.pop_back()
+			liquids.remove_at(top_idx)
 
 		remaining_to_remove -= remove_amt
 		total_removed += remove_amt
