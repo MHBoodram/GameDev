@@ -42,6 +42,7 @@ var _target_pour_tilt_degrees: float = 0.0
 var _pour_tilt_tween: Tween = null
 var _active_trash: Area3D = null
 var _last_counter_position: Vector3 = Vector3.ZERO
+var _previous_counter_position: Vector3 = Vector3.ZERO
 var _skip_initial_snap: bool = false
 
 @export_group("Liquid Physics")
@@ -98,6 +99,12 @@ func is_working_area_item() -> bool:
 
 func _is_drag_blocked() -> bool:
 	return in_game or is_being_served or is_consumed or is_pouring_out
+
+func _on_drag_started() -> void:
+	if not is_instance_valid(_active_trash) and not _is_returning_to_counter and absf(global_position.y - get_working_area_surface_y()) <= 0.15:
+		var saved := _clamp_to_counter(global_position)
+		saved.y = get_working_area_surface_y()
+		_previous_counter_position = saved
 
 func set_active_trash(trash_area: Area3D) -> void:
 	_active_trash = trash_area
@@ -407,6 +414,7 @@ func ready() -> void:
 	else:
 		base_y_position = get_working_area_surface_y()
 	_last_counter_position = global_position
+	_previous_counter_position = global_position
 	visual_helper.last_global_pos = sprite.global_position if sprite else global_position
 
 func _exit_tree() -> void:
@@ -431,6 +439,7 @@ func start_drag_from_spawn(press_screen_pos: Vector2, from_shelf: bool = false) 
 	else:
 		_last_counter_position = _clamp_to_counter(global_position)
 		_last_counter_position.y = get_working_area_surface_y()
+	_previous_counter_position = _last_counter_position
 
 	visual_helper.last_global_pos = sprite.global_position if sprite else global_position
 	visual_helper.last_velocity = Vector3.ZERO
@@ -499,6 +508,8 @@ func _process(delta: float) -> void:
 				else:
 					global_position.y = lerpf(global_position.y, target_y, 1.0 - exp(-20.0 * delta))
 			_last_counter_position = global_position
+			if not is_instance_valid(_active_trash):
+				_previous_counter_position = global_position
 
 func _post_process_counter_constraints() -> void:
 	if _snap_point and is_instance_valid(_snap_point) and not _snap_suppressed and _snap_blend > 0.0:
@@ -876,6 +887,32 @@ func _in_game() -> void:
 	if area_body:
 		area_body.disabled = true
 
+func return_to_location(target_raw_pos: Vector3, duration: float = 0.3, clear_snap: bool = false) -> void:
+	if clear_snap:
+		_snap_suppressed = true
+		_snap_blend = 0.0
+		if _snap_locked:
+			_snap_locked = false
+			snappedOut.emit(_snap_point)
+		_snap_point = null
+		_active_trash = null
+		visual_helper.set_mouth_monitoring(false)
+		_is_pointer_pressed = false
+		is_balls_dragging = false
+		push_velocity = Vector3.ZERO
+	var target_pos := _get_saved_counter_position(target_raw_pos)
+	_last_counter_position = target_pos
+	if global_position.distance_to(target_pos) > 0.005:
+		_return_to_counter_smoothly(target_pos, duration)
+	else:
+		global_position = target_pos
+		base_y_position = target_pos.y
+		_on_returned_to_counter(target_pos)
+
+func return_to_previous_location(duration: float = 0.3) -> void:
+	var fallback := _previous_counter_position if _previous_counter_position != Vector3.ZERO else _last_counter_position
+	return_to_location(fallback, duration, true)
+
 func _out_of_game() -> void:
 	in_game = false
 	_stop_pour_splash()
@@ -883,13 +920,7 @@ func _out_of_game() -> void:
 	if area_body:
 		area_body.disabled = false
 	_remove_displaying_list()
-	var target_pos := _get_saved_counter_position(_last_counter_position)
-	if global_position.distance_to(target_pos) > 0.005:
-		_return_to_counter_smoothly(target_pos)
-	else:
-		global_position = target_pos
-		base_y_position = target_pos.y
-		_last_counter_position = target_pos
+	return_to_location(_last_counter_position, 0.3, false)
 
 func _on_hover(hovered: bool) -> void:
 	set_highlight(hovered)
@@ -1002,9 +1033,13 @@ func on_drop_failed() -> void:
 
 func _on_returning_to_counter(target_pos: Vector3) -> void:
 	_last_counter_position = target_pos
+	if not is_instance_valid(_active_trash):
+		_previous_counter_position = target_pos
 
 func _on_returned_to_counter(target_pos: Vector3) -> void:
 	_last_counter_position = target_pos
+	if not is_instance_valid(_active_trash):
+		_previous_counter_position = target_pos
 
 func _remove_displaying_list(immediate: bool = false) -> void:
 	var hud := HudIndicators.get_current()

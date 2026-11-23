@@ -102,6 +102,23 @@ func _on_trash_input_event(camera: Node, event: InputEvent, event_position: Vect
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and not _is_pouring:
 		start_pour()
 
+func _return_glass_to_previous_location(glass: Glasses) -> void:
+	if not is_instance_valid(glass):
+		return
+	_glasses_in_area.erase(glass)
+	if in_pour_zone == glass:
+		in_pour_zone = null
+	if glass.has_method("set_active_trash"):
+		glass.set_active_trash(null)
+	glass._remove_displaying_list()
+	if glass.has_method("return_to_previous_location"):
+		glass.return_to_previous_location()
+	if not in_pour_zone:
+		for g in _glasses_in_area:
+			if is_instance_valid(g):
+				_set_active_glass(g)
+				break
+
 func start_pour() -> void:
 	if _is_pouring:
 		return
@@ -139,11 +156,14 @@ func start_pour() -> void:
 	if is_instance_valid(active_glass) and active_glass.has_method("stop_pour_out"):
 		active_glass.stop_pour_out()
 
+	await get_tree().create_timer(0.15).timeout
+	if not is_inside_tree():
+		_is_pouring = false
+		return
+
+	_return_glass_to_previous_location(active_glass)
+
 	if cam_rig and marker:
-		await get_tree().create_timer(0.15).timeout
-		if not is_inside_tree():
-			_is_pouring = false
-			return
 		cam_rig.call("return_from_marker", 0.55)
 		if cam_rig.has_signal("marker_returned"):
 			await cam_rig.marker_returned
