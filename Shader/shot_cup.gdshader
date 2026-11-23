@@ -1,85 +1,165 @@
 shader_type spatial;
-render_mode blend_mix, depth_draw_always, cull_disabled;
+render_mode unshaded, cull_disabled;
 
 uniform sampler2D texture_albedo : source_color, filter_nearest;
 uniform sampler2D gradient_texture : source_color, filter_nearest;
+
 uniform float fill_amount : hint_range(0.0, 1.0) = 0.0;
 uniform float slosh_angle = 0.0;
 uniform float slosh_vertical_offset = 0.0;
 uniform float wave_phase = 0.0;
 uniform float wave_amplitude = 0.0;
 uniform float pixel_resolution = 48.0;
+
 uniform vec4 surface_highlight_color : source_color = vec4(1.4, 1.4, 1.5, 1.0);
 uniform vec4 secondary_highlight_color : source_color = vec4(0.9, 0.4, 0.95, 0.85);
 uniform float surface_highlight_thickness = 1.2;
-uniform float bottom_darkening : hint_range(0.0, 1.0) = 0.45;
-uniform float liquid_transparency : hint_range(0.0, 1.0) = 0.9;
-uniform float inner_margin_top : hint_range(0.0, 1.0) = 0.12;
-uniform float inner_margin_bottom : hint_range(0.0, 1.0) = 0.88;
-uniform float caustic_beam_strength : hint_range(0.0, 2.0) = 0.35;
-uniform float sparkle_density : hint_range(0.0, 2.0) = 0.7;
-uniform float glass_reflection_strength : hint_range(0.0, 1.0) = 0.28;
-uniform float meniscus_curve : hint_range(0.0, 0.1) = 0.03;
+uniform float bottom_darkening = 0.45;
+uniform float liquid_transparency = 0.9;
+
+uniform float inner_margin_top = 0.12;
+uniform float inner_margin_bottom = 0.88;
+uniform float caustic_beam_strength = 0.35;
+uniform float sparkle_density = 0.7;
+uniform float glass_reflection_strength = 0.28;
+uniform float meniscus_curve = 0.03;
 uniform float gradient_offset = 0.0;
 uniform bool flip_gradient = false;
 
-void fragment() {
-	vec4 glass_color = texture(texture_albedo, UV);
+uniform sampler2D fluid_field_texture : source_color, filter_nearest;
+uniform bool use_fluid_field = false;
+uniform float fluid_density_threshold = 0.34;
+uniform vec2 local_up_uv = vec2(0.0, -1.0);
+uniform vec4 liquid_tint_color : source_color = vec4(0.45, 0.92, 1.0, 1.0);
+uniform float liquid_tint_strength = 0.0;
 
-	if (glass_color.a < 0.02) {
+float bayer4x4(ivec2 p) {
+	int x = ((p.x % 4) + 4) % 4;
+	int y = ((p.y % 4) + 4) % 4;
+	int idx = x + y * 4;
+	const float m[16] = float[16](
+		0.0, 8.0, 2.0, 10.0,
+		12.0, 4.0, 14.0, 6.0,
+		3.0, 11.0, 1.0, 9.0,
+		15.0, 7.0, 13.0, 5.0
+	);
+	return m[idx] / 16.0;
+}
+
+float hash21(vec2 p) {
+	p = fract(p * vec2(123.34, 456.21));
+	p += dot(p, p + 45.32);
+	return fract(p.x * p.y);
+}
+
+vec3 shade_pixel_fluid(vec3 base_col, float surface_depth_px, ivec2 cell, float edge_density) {
+	float dither = mix(bayer4x4(cell), hash21(vec2(cell)), 0.42);
+	float band_noise = (hash21(vec2(cell) * 0.5 + vec2(3.1, 7.4)) - 0.5) * 0.65;
+
+	vec3 surface_col = clamp(base_col * 1.24 + vec3(0.08, 0.10, 0.12), vec3(0.0), vec3(1.0));
+	vec3 mid_col = base_col;
+	vec3 deep_col = base_col * (1.0 - clamp(bottom_darkening, 0.0, 0.95) * 0.52);
+
+	float s_depth = surface_depth_px + band_noise;
+	if (edge_density < fluid_density_threshold * 1.32) {
+		return surface_col;
+	}
+
+	float t_surf = clamp((s_depth - 1.2) / 2.6, 0.0, 1.0);
+	float t_deep = clamp((s_depth - 4.8) / 5.5, 0.0, 1.0);
+
+	vec3 col = (dither < t_surf) ? mid_col : surface_col;
+	if (t_deep > 0.0) {
+		col = (dither < t_deep) ? deep_col : col;
+	}
+	return col;
+}
+
+void fragment() {
+	vec4 mask_tex = texture(texture_albedo, UV);
+	if (mask_tex.a < 0.1) {
 		discard;
 	}
 
-	vec2 stepped_uv = floor(UV * pixel_resolution) / pixel_resolution;
+	float res = max(pixel_resolution, 8.0);
+	vec2 grid_uv = (floor(UV * res) + vec2(0.5)) / res;
+	ivec2 cell = ivec2(floor(UV * res));
+	float step_uv = 1.0 / res;
 
-	float wall_distance = abs(stepped_uv.x - 0.5) * 2.0;
-	float wall_meniscus = pow(wall_distance, 3.5) * meniscus_curve;
+	if (use_fluid_field) {
+		vec2 d_uv = vec2(grid_uv.x * 0.5, grid_uv.y);
+		vec2 c_uv = vec2(0.5 + grid_uv.x * 0.5, grid_uv.y);
 
-	float base_surface_y = mix(inner_margin_bottom, inner_margin_top, clamp(fill_amount, 0.0, 1.0));
-	float centered_x = stepped_uv.x - 0.5;
-	float wave = sin(centered_x * 12.0 + wave_phase) * wave_amplitude + cos(centered_x * 24.0 - wave_phase * 1.6) * (wave_amplitude * 0.35);
-	float surface_y = base_surface_y - centered_x * slosh_angle - slosh_vertical_offset - wall_meniscus + wave;
-	float stepped_surface = floor(surface_y * pixel_resolution) / pixel_resolution;
-
-	vec4 final_color = glass_color;
-
-	if (fill_amount > 0.001 && stepped_uv.y >= stepped_surface && stepped_uv.y <= inner_margin_bottom) {
-		float liquid_depth_ratio = clamp((stepped_uv.y - stepped_surface) / max(inner_margin_bottom - stepped_surface, 0.001), 0.0, 1.0);
-		vec4 liquid_sample = texture(gradient_texture, vec2(clamp(liquid_depth_ratio, 0.01, 0.99), 0.5));
-
-		vec3 liquid_rgb = liquid_sample.rgb * mix(1.15, 1.0 - bottom_darkening, liquid_depth_ratio);
-
-		float beam_one = sin(stepped_uv.x * 28.0 + wave_phase * 0.4) * 0.5 + 0.5;
-		float beam_two = sin(stepped_uv.x * 52.0 - wave_phase * 0.7) * 0.5 + 0.5;
-		float caustic_shafts = pow(beam_one * beam_two, 2.0) * caustic_beam_strength * exp(-liquid_depth_ratio * 2.2);
-		liquid_rgb += vec3(caustic_shafts);
-
-		float pixel_random = fract(sin(dot(floor(stepped_uv * pixel_resolution), vec2(12.9898, 78.233))) * 43758.5453);
-		float sparkle_cycle = fract(pixel_random * 7.0 + TIME * 0.9);
-		if (pixel_random > 0.92) {
-			float sparkle_pulse = smoothstep(0.3, 0.5, sparkle_cycle) * (1.0 - smoothstep(0.5, 0.7, sparkle_cycle));
-			liquid_rgb += vec3(sparkle_pulse * sparkle_density);
+		float density = texture(fluid_field_texture, d_uv).r;
+		if (density < fluid_density_threshold) {
+			discard;
 		}
 
-		float highlight_band = surface_highlight_thickness / pixel_resolution;
-		if (stepped_uv.y < stepped_surface + highlight_band) {
-			liquid_rgb = mix(liquid_rgb, surface_highlight_color.rgb, surface_highlight_color.a);
-		} else if (stepped_uv.y < stepped_surface + highlight_band * 2.0) {
-			liquid_rgb = mix(liquid_rgb, secondary_highlight_color.rgb, secondary_highlight_color.a * 0.6);
+		vec3 col_sum = texture(fluid_field_texture, c_uv).rgb;
+		vec3 base_col = clamp(col_sum / max(density, 0.001), vec3(0.0), vec3(1.0));
+		if (liquid_tint_strength > 0.001) {
+			base_col = mix(base_col, liquid_tint_color.rgb, clamp(liquid_tint_strength, 0.0, 1.0));
 		}
 
-		float diagonal_glare = clamp(1.0 - abs((stepped_uv.x * 1.3 + stepped_uv.y * 0.7) - 0.75) * 5.0, 0.0, 1.0);
-		diagonal_glare = pow(diagonal_glare, 3.0) * glass_reflection_strength;
-		liquid_rgb += vec3(diagonal_glare);
+		vec2 up_dir = normalize(local_up_uv);
+		vec2 side_dir = vec2(-up_dir.y, up_dir.x);
 
-		vec3 blended_rgb = mix(liquid_rgb, glass_color.rgb, glass_color.a * 0.35);
-		float blended_alpha = mix(liquid_transparency, 1.0, glass_color.a);
-		final_color = vec4(blended_rgb, blended_alpha);
-	} else if (glass_color.a > 0.02) {
-		float diagonal_glare = clamp(1.0 - abs((stepped_uv.x * 1.3 + stepped_uv.y * 0.7) - 0.75) * 5.0, 0.0, 1.0);
-		final_color.rgb += vec3(pow(diagonal_glare, 3.0) * glass_reflection_strength * 0.5);
+		float air_depth = 0.0;
+		for (int i = 1; i <= 10; i++) {
+			vec2 probe = clamp(grid_uv + up_dir * (float(i) * step_uv), vec2(0.001), vec2(0.999));
+			float p_mask = texture(texture_albedo, probe).a;
+			float p_dens = texture(fluid_field_texture, vec2(probe.x * 0.5, probe.y)).r;
+			if (p_mask < 0.1 || p_dens < fluid_density_threshold) {
+				break;
+			}
+			air_depth += 1.0;
+		}
+
+		float left_d = texture(fluid_field_texture, vec2(clamp(grid_uv + side_dir * step_uv, vec2(0.001), vec2(0.999)).x * 0.5, clamp(grid_uv + side_dir * step_uv, vec2(0.001), vec2(0.999)).y)).r;
+		float right_d = texture(fluid_field_texture, vec2(clamp(grid_uv - side_dir * step_uv, vec2(0.001), vec2(0.999)).x * 0.5, clamp(grid_uv - side_dir * step_uv, vec2(0.001), vec2(0.999)).y)).r;
+		if (left_d < fluid_density_threshold || right_d < fluid_density_threshold) {
+			air_depth = min(air_depth, 1.4);
+		}
+
+		vec3 final_col = shade_pixel_fluid(base_col, air_depth, cell, density);
+		float glass_edge = smoothstep(0.18, 0.08, abs(grid_uv.x - 0.22));
+		final_col = mix(final_col, vec3(1.0), glass_edge * glass_reflection_strength * 0.35);
+
+		ALBEDO = final_col;
+		ALPHA = clamp(liquid_transparency * mask_tex.a, 0.0, 1.0);
+	} else {
+		if (fill_amount <= 0.001) {
+			discard;
+		}
+
+		float bottom_y = clamp(inner_margin_bottom, 0.05, 1.0);
+		float top_y = clamp(inner_margin_top, 0.0, bottom_y - 0.05);
+		float fill_line_y = mix(bottom_y, top_y, clamp(fill_amount, 0.0, 1.0));
+
+		float x_off = grid_uv.x - 0.5;
+		float slosh_y = x_off * tan(clamp(slosh_angle, -1.2, 1.2));
+		float wave_y = sin(grid_uv.x * 14.0 + wave_phase) * wave_amplitude;
+		float meniscus = -meniscus_curve * pow(abs(x_off) * 2.0, 2.0);
+		float surface_y = fill_line_y + slosh_vertical_offset + slosh_y + wave_y + meniscus;
+
+		if (grid_uv.y < surface_y) {
+			discard;
+		}
+
+		float norm_h = clamp((bottom_y - grid_uv.y) / max(bottom_y - surface_y, 0.001), 0.0, 1.0);
+		float grad_u = flip_gradient ? (1.0 - norm_h) : norm_h;
+		grad_u = clamp(grad_u + gradient_offset, 0.0, 1.0);
+		vec3 base_col = texture(gradient_texture, vec2(grad_u, 0.5)).rgb;
+		if (liquid_tint_strength > 0.001) {
+			base_col = mix(base_col, liquid_tint_color.rgb, clamp(liquid_tint_strength, 0.0, 1.0));
+		}
+
+		float depth_px = max(0.0, (grid_uv.y - surface_y) * res);
+		vec3 final_col = shade_pixel_fluid(base_col, depth_px, cell, fluid_density_threshold * 1.5);
+		float glass_edge = smoothstep(0.18, 0.08, abs(grid_uv.x - 0.22));
+		final_col = mix(final_col, vec3(1.0), glass_edge * glass_reflection_strength * 0.35);
+
+		ALBEDO = final_col;
+		ALPHA = clamp(liquid_transparency * mask_tex.a, 0.0, 1.0);
 	}
-
-	ALBEDO = final_color.rgb;
-	ALPHA = final_color.a;
 }

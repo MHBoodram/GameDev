@@ -92,7 +92,6 @@ func _get_drag_follow_speed() -> float:
 func _get_drag_hold_lift() -> float:
 	return hold_lift
 
-# snaps bottle floating above glass if hovering over one
 func _get_free_drag_target(delta: float) -> Vector3:
 	if snap_to_glass and camera and is_instance_valid(current_hovered_target) and can_interact_with(current_hovered_target):
 		var to_cam := (camera.global_position - current_hovered_target.global_position).normalized()
@@ -226,15 +225,20 @@ func _get_pour_rate_multiplier() -> float:
 	return _get_pour_height_ratio() * 2.0
 
 func _get_pour_angle_degrees() -> float:
-	return _get_pour_height_ratio() * MAX_POUR_ANGLE_DEGREES
+	var ratio: float = _get_pour_height_ratio()
+	if ratio <= 0.001:
+		return 0.0
+	return lerpf(32.0, MAX_POUR_ANGLE_DEGREES, ratio)
 
 # tips bottle sideways and addds liquid pixels into the glass while left click is held
 func _pour() -> void:
 	is_pouring = true
+	$CPUParticles3D.emitting = false
 	if GameState.player:
 		GameState.player._update_hand("holding")
 	$CPUParticles3D.emitting = false
 
+	var sfx_timer: float = 0.1
 	if pouring_into:
 		while _is_pour_button_held() and in_game and GameState.player and GameState.player.in_game and current_liquid > 0.0 and is_instance_valid(pouring_into):
 			var rate_mult: float = _get_effective_pour_rate_multiplier()
@@ -248,19 +252,25 @@ func _pour() -> void:
 				var poured_variant = pouring_into._pouring(liquid_resource.id, amount, pour_info)
 				var actual_poured: float = float(poured_variant) if (poured_variant is float or poured_variant is int) else amount
 				set_liquid_amount(current_liquid - actual_poured * cost_mult)
+				sfx_timer += POUR_INTERVAL
+				if sfx_timer >= 0.1:
+					sfx_timer -= 0.1
+					SFXAudio.play_liquidpour()
+			else:
+				sfx_timer = 0.1
 			await get_tree().create_timer(POUR_INTERVAL).timeout
 			if not is_inside_tree():
 				return
 
 	$CPUParticles3D.emitting = false
+	is_pouring = false
 	if is_instance_valid(_pour_stream):
 		_pour_stream.set_stream_active(false)
 	rotation_degrees.z = 0
 	if GameState.player:
 		GameState.player._update_hand("idle")
-	is_pouring = false
 
-	await get_tree().create_timer(0.2).timeout
+	await get_tree().create_timer(0.25).timeout
 	if is_inside_tree() and in_game and GameState.player and GameState.player.in_game:
 		GameState.player._out_of_game()
 
@@ -343,8 +353,6 @@ func _on_interact_area_entered(_area: Area3D) -> void:
 
 func _on_interact_area_exited(_area: Area3D) -> void:
 	pass
-
-# Liquid
 
 func set_liquid_color(new_color: Color) -> void:
 	color_liquid = new_color

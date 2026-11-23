@@ -60,7 +60,10 @@ func _get_pour_rate_multiplier() -> float:
 	return _get_pour_height_ratio() * 2.0
 
 func _get_pour_tilt_degrees() -> float:
-	return _get_pour_height_ratio() * MAX_POUR_TILT_DEGREES
+	var ratio: float = _get_pour_height_ratio()
+	if ratio <= 0.001:
+		return 0.0
+	return lerpf(42.0, MAX_POUR_TILT_DEGREES, ratio)
 
 func _snap_target() -> Node3D:
 	var indicator := get_node_or_null(indicator_path) as Node3D

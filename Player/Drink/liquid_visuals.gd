@@ -361,7 +361,6 @@ func get_layer_hsv_color(layer: Array) -> Color:
 		return LIQUID_COLOR.get(str(layer[0]), Color.WHITE)
 	return average_hsv_color(weights)
 
-# HSV color space to prevent blened colors always turning brown
 func average_hsv_color(color_weights: Array) -> Color:
 	if color_weights.is_empty():
 		return Color.WHITE
