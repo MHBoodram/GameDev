@@ -34,7 +34,8 @@ var special_state: bool = true
 var night_paused: bool = false
 var can_end_night: bool = true
 var is_dialogue_open: bool = false
-var character_talking: Base_NPC
+var character_talking: Node3D #Changed for Afternight
+
 
 func register_subsystems(main: Node3D, p_player: Node3D, timer: Timer, env: WorldEnvironment, sun_node: DirectionalLight3D, counter_ref: Node3D) -> void:
 	main_node = main

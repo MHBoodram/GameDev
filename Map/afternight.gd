@@ -39,7 +39,11 @@ func _setup_shop_scene() -> void:
 	$Spot_003.light_color = Color("80fd00")
 	$Spot.show()
 	$Spot_002.show()
-	
+
+func _get_marker(id: int) -> Marker3D:
+	var string_node = str("Marker",id)
+	var marker3d_node = get_node(string_node)
+	return marker3d_node
 
 func _setup_working_area_walls() -> void:
 	if get_node_or_null("WorkingAreaInvisibleWalls") != null:

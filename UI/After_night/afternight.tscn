@@ -16,21 +16,6 @@
 [ext_resource type="PackedScene" uid="uid://c7e1o70yhke0k" path="res://UI/After_night/after_night_menu.tscn" id="14_22u17"]
 [ext_resource type="Resource" uid="uid://bk0hkcys7plb0" path="res://NPC/Resources/yecott.tres" id="15_cotfs"]
 
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_reyg2"]
-load_path = "res://.godot/imported/toposcope_sunset_2k.hdr-9f1a087744ac216565fb09a6d9e764d7.bptc.ctex"
-
-[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_sxjop"]
-panorama = SubResource("CompressedTexture2D_reyg2")
-
-[sub_resource type="Sky" id="Sky_n4i4h"]
-sky_material = SubResource("PanoramaSkyMaterial_sxjop")
-
-[sub_resource type="Environment" id="Environment_22u17"]
-background_mode = 2
-background_energy_multiplier = 0.0
-sky = SubResource("Sky_n4i4h")
-sky_rotation = Vector3(0, -2.120575, 0)
-
 [sub_resource type="Animation" id="Animation_n4i4h"]
 length = 0.001
 tracks/0/type = "value"
@@ -114,7 +99,7 @@ tracks/2/type = "value"
 tracks/2/imported = false
 tracks/2/enabled = true
 tracks/2/path = NodePath(".:position")
-tracks/2/interp = 1
+tracks/2/interp = 2
 tracks/2/loop_wrap = true
 tracks/2/keys = {
 "times": PackedFloat32Array(0, 0.6),
@@ -126,7 +111,7 @@ tracks/3/type = "value"
 tracks/3/imported = false
 tracks/3/enabled = true
 tracks/3/path = NodePath(".:rotation")
-tracks/3/interp = 1
+tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = {
 "times": PackedFloat32Array(0, 0.6),
@@ -181,7 +166,6 @@ script = ExtResource("1_sxjop")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.004, 1.17, 1.426)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1767207049]
-environment = SubResource("Environment_22u17")
 
 [node name="Sun" type="DirectionalLight3D" parent="WorldEnvironment" unique_id=154308508]
 transform = Transform3D(-0.95751554, -0.16707794, 0.23505107, -0.08849062, 0.94597405, 0.3119334, -0.2744694, 0.27788123, -0.9205698, 6.6585455, 3.4872513, -7.5352235)
@@ -370,10 +354,26 @@ transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -0.047801152, 2.9228249
 visible = false
 npc_resource = ExtResource("15_cotfs")
 
+[node name="Choice1" type="Marker3D" parent="ShopKeeper" unique_id=695025756]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.3576584, 0)
+
+[node name="Choice2" type="Marker3D" parent="ShopKeeper" unique_id=1192028642]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 1.6576586, 0)
+
+[node name="Choice3" type="Marker3D" parent="ShopKeeper" unique_id=1021425485]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8576584, 0)
+
+[node name="Choice4" type="Marker3D" parent="ShopKeeper" unique_id=136988419]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.6576586, 0)
+
+[node name="Choice5" type="Marker3D" parent="ShopKeeper" unique_id=1046000916]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.3576584, 0)
+
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=138677692]
 visible = false
 
 [node name="Button" type="Button" parent="CanvasLayer" unique_id=1293870491]
+visible = false
 offset_left = 490.0
 offset_top = 114.0
 offset_right = 771.0

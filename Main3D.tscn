@@ -243,11 +243,8 @@ spread = 0.0
 
 [node name="Trash" type="Area3D" parent="Coutner" unique_id=1858386361 groups=["trash"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.385725, 0, -1.1753345)
+input_ray_pickable = false
 script = ExtResource("15_trash")
-snap_pull_speed = null
-snap_release_speed = null
-snap_break_distance = null
-pour_out_amount = null
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/Trash" unique_id=1252558082]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.39232594, 1.0599998, 1.0581994)

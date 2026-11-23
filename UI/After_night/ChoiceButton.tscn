@@ -1,0 +1,47 @@
+[gd_scene format=3 uid="uid://cdelfxra8t3p7"]
+
+[ext_resource type="Script" uid="uid://bs5lbbqif5csr" path="res://UI/After_night/choice_button.gd" id="1_3l1iy"]
+[ext_resource type="Texture2D" uid="uid://b7nlctbymwul3" path="res://Assets/Items/Ingreidents/Blood.png" id="1_j0omp"]
+[ext_resource type="FontFile" uid="uid://cq83j1cam8lw" path="res://Assets/Font/Merchant Copy.ttf" id="3_aq1hf"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_3l1iy"]
+radius = 0.23042034
+
+[node name="ChoiceButton" type="Area3D" unique_id=627011791 groups=["Choice"]]
+script = ExtResource("1_3l1iy")
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=1152830332]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+shaded = true
+alpha_cut = 3
+texture_filter = 2
+texture = ExtResource("1_j0omp")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1893819632]
+shape = SubResource("SphereShape3D_3l1iy")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=249039050]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.020347327)
+light_energy = 0.0
+
+[node name="Label3D" type="Label3D" parent="." unique_id=1092870651]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3074123, 0)
+texture_filter = 0
+text = "Name:
+Cost:
+"
+font = ExtResource("3_aq1hf")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=906432561]
+
+[node name="Button" type="Button" parent="CanvasLayer" unique_id=48635641]
+offset_right = 8.0
+offset_bottom = 8.0
+
+[node name="Button2" type="Button" parent="CanvasLayer" unique_id=1275157784]
+offset_right = 8.0
+offset_bottom = 8.0
+
+[connection signal="input_event" from="." to="." method="_on_input_event"]
+[connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]
