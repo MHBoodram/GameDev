@@ -164,7 +164,7 @@ func _update_pour_stream() -> void:
 		var rim_pos: Vector3 = surface_pos
 		if pouring_into.has_method("get_rim_center_world_position"):
 			rim_pos = pouring_into.call("get_rim_center_world_position") as Vector3
-		_pour_stream.set_stream_active(true, start_pos, surface_pos, color_liquid, rate_mult, Vector3.DOWN, true, true, rim_pos)
+		_pour_stream.set_stream_active(true, start_pos, surface_pos, color_liquid, rate_mult, Vector3.DOWN, true, false, rim_pos)
 	else:
 		_pour_stream.set_stream_active(false)
 

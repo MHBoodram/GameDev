@@ -148,7 +148,7 @@ func _process(delta: float) -> void:
 					rate_mult,
 					Vector3.DOWN,
 					true,
-					true,
+					false,
 					rim_pos
 				)
 			else:

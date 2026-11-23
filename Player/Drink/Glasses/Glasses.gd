@@ -4,6 +4,7 @@ extends Ingredients
 class_name Glasses
 
 const OVERFLOW_STREAM_HOLD_TIME: float = 0.075
+const POUR_SPLASH_HOLD_TIME: float = 0.075
 
 @onready var tcmtd := preload("res://Player/Drink/Glasses/liquids_label.tscn")
 @export var liquids: Array = []
@@ -16,6 +17,11 @@ const OVERFLOW_STREAM_HOLD_TIME: float = 0.075
 var drink_mix: DrinkMix = DrinkMix.new()
 var visual_helper: LiquidVisualHelper = LiquidVisualHelper.new()
 var _pour_out_stream: PourStreamVisual = null
+var _pour_splash_stream: PourStreamVisual = null
+var _pour_splash_timer: float = 0.0
+var _pour_splash_flow_rate: float = 0.0
+var _pour_splash_color: Color = Color.WHITE
+var _pour_splash_entry_u: float = 0.5
 var _overflow_stream_left: PourStreamVisual = null
 var _overflow_stream_right: PourStreamVisual = null
 var _overflow_timer: float = 0.0
@@ -203,6 +209,53 @@ func _ensure_pour_out_stream() -> void:
 		_pour_out_stream = PourStreamVisual.new()
 		add_child(_pour_out_stream)
 
+func _ensure_pour_splash_stream() -> void:
+	if not is_instance_valid(_pour_splash_stream):
+		_pour_splash_stream = PourStreamVisual.new()
+		add_child(_pour_splash_stream)
+
+func _stop_pour_splash() -> void:
+	_pour_splash_timer = 0.0
+	_pour_splash_flow_rate = 0.0
+	if is_instance_valid(_pour_splash_stream):
+		_pour_splash_stream.set_splash_active(false)
+
+func _get_pour_splash_color(id: String) -> Color:
+	var incoming_col: Color = visual_helper.LIQUID_COLOR.get(id, Color.WHITE)
+	var base_col: Color = incoming_col.lerp(get_top_liquid_color(), 0.2) if not liquids.is_empty() else incoming_col
+	if visual_helper and visual_helper._visual_override.has("liquid_tint_color"):
+		var tint_col: Color = visual_helper._visual_override.get("liquid_tint_color", Color.WHITE)
+		var tint_mix: float = float(visual_helper._visual_override.get("liquid_tint_strength", 0.35))
+		base_col = base_col.lerp(Color(tint_col.r, tint_col.g, tint_col.b, base_col.a), tint_mix)
+	return base_col
+
+func _trigger_pour_splash(id: String, liquids_num: float, pour_info: Dictionary) -> void:
+	_pour_splash_color = _get_pour_splash_color(id)
+	_pour_splash_entry_u = clampf(float(pour_info.get("entry_u", 0.5)), 0.15, 0.85)
+	var target_flow := clampf(liquids_num / 0.0825, 0.25, 1.8)
+	_pour_splash_flow_rate = lerpf(_pour_splash_flow_rate, target_flow, 0.5) if _pour_splash_timer > 0.0 else target_flow
+	_pour_splash_timer = POUR_SPLASH_HOLD_TIME
+
+func _update_pour_splash(delta: float) -> void:
+	_ensure_pour_splash_stream()
+	if _pour_splash_timer <= 0.0 or is_consumed or is_pouring_out:
+		_pour_splash_timer = 0.0
+		_pour_splash_stream.set_splash_active(false)
+		return
+
+	_pour_splash_timer = maxf(0.0, _pour_splash_timer - delta)
+	var sp := _get_container_sprite()
+	if not is_instance_valid(sp):
+		_pour_splash_stream.set_splash_active(false)
+		return
+
+	var fill_ratio := clampf(total_liquids / maxf(size, 0.001), 0.05, 0.96)
+	var impact_pos := PourStreamVisual.get_sprite_surface_world_position(sp, fill_ratio, _pour_splash_entry_u)
+	var active_cam := camera if is_instance_valid(camera) else get_viewport().get_camera_3d()
+	var cam_dir := (active_cam.global_position - impact_pos).normalized() if is_instance_valid(active_cam) else -sp.global_transform.basis.z.normalized()
+	var spawn_pos := impact_pos + cam_dir * 0.008
+	_pour_splash_stream.set_splash_active(true, spawn_pos, _pour_splash_color, _pour_splash_flow_rate, impact_pos.y)
+
 func _ensure_overflow_streams() -> void:
 	if not is_instance_valid(_overflow_stream_left):
 		_overflow_stream_left = PourStreamVisual.new()
@@ -289,8 +342,8 @@ func _update_overflow_streams(delta: float) -> void:
 	var left_dir := (left_outward * 0.48 + Vector3.DOWN * 0.88).normalized()
 	var right_dir := (right_outward * 0.48 + Vector3.DOWN * 0.88).normalized()
 
-	_overflow_stream_left.set_stream_active(true, left_spawn, left_end, _overflow_color, _overflow_flow_rate, left_dir, false, is_on_counter)
-	_overflow_stream_right.set_stream_active(true, right_spawn, right_end, _overflow_color, _overflow_flow_rate, right_dir, false, is_on_counter)
+	_overflow_stream_left.set_stream_active(true, left_spawn, left_end, _overflow_color, _overflow_flow_rate, left_dir, false, false)
+	_overflow_stream_right.set_stream_active(true, right_spawn, right_end, _overflow_color, _overflow_flow_rate, right_dir, false, false)
 
 func _update_pour_out_stream() -> void:
 	_ensure_pour_out_stream()
@@ -314,6 +367,7 @@ func ready() -> void:
 		_inside_base_scale = sprite.scale
 		_inside_base_pos = sprite.position
 	_ensure_pour_out_stream()
+	_ensure_pour_splash_stream()
 	_ensure_overflow_streams()
 	_setup_liquid_shader()
 	if highlight:
@@ -331,6 +385,7 @@ func _exit_tree() -> void:
 	visual_helper.cleanup()
 	if is_instance_valid(_pour_out_stream):
 		_pour_out_stream.set_stream_active(false)
+	_stop_pour_splash()
 	_stop_overflow_streams()
 	var hud := HudIndicators.get_current()
 	if hud:
@@ -359,6 +414,7 @@ func _delete() -> void:
 	_remove_displaying_list()
 	if is_instance_valid(_pour_out_stream):
 		_pour_out_stream.set_stream_active(false)
+	_stop_pour_splash()
 	_stop_overflow_streams()
 	queue_free()
 
@@ -389,6 +445,7 @@ func _process(delta: float) -> void:
 		_look_at_sprite(camera.global_position)
 
 	_update_pour_out_stream()
+	_update_pour_splash(delta)
 	_update_overflow_streams(delta)
 
 	var track_pos: Vector3 = sprite.global_position if sprite else global_position
@@ -637,6 +694,9 @@ func _pouring(id: String, liquids_num: float, pour_info: Dictionary = {}) -> flo
 		visual_helper.add_agitation(Vector2(vx_imp, 3.2))
 		visual_helper.slosh_vertical_velocity += randf_range(-0.1, 0.04)
 
+	if added > 0.0 or overflow > 0.00001:
+		_trigger_pour_splash(id, liquids_num, pour_info)
+
 	return liquids_num
 
 func _pour_out(liquids_num: float) -> float:
@@ -725,6 +785,7 @@ func start_pour_out(tilt_degrees: float = 80.0) -> void:
 	_is_pointer_pressed = false
 	is_balls_dragging = false
 	push_velocity = Vector3.ZERO
+	_stop_pour_splash()
 	_target_pour_tilt_degrees = tilt_degrees
 	if _pour_tilt_tween and _pour_tilt_tween.is_valid():
 		_pour_tilt_tween.kill()
@@ -772,6 +833,7 @@ func _in_game() -> void:
 	push_velocity = Vector3.ZERO
 	if is_instance_valid(_pour_out_stream):
 		_pour_out_stream.set_stream_active(false)
+	_stop_pour_splash()
 	_stop_overflow_streams()
 	if _drag_return_tween and _drag_return_tween.is_valid():
 		_drag_return_tween.kill()
@@ -780,6 +842,7 @@ func _in_game() -> void:
 
 func _out_of_game() -> void:
 	in_game = false
+	_stop_pour_splash()
 	_stop_overflow_streams()
 	if area_body:
 		area_body.disabled = false
@@ -801,6 +864,7 @@ func _dranked() -> void:
 	is_consumed = true
 	if is_instance_valid(_pour_out_stream):
 		_pour_out_stream.set_stream_active(false)
+	_stop_pour_splash()
 	_stop_overflow_streams()
 	queue_free()
 
