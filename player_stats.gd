@@ -19,10 +19,6 @@ var upgrades : Dictionary = {
 		{
 
 		},
-	"Tools":
-		{
-
-		},
 	"Marketing":
 		{
 
@@ -44,10 +40,22 @@ var unlocks : Dictionary = {
 	},
 	"Ingredients":{
 		"Blood" : true,
-		#"Slime" : false,
 		"Fishing_Rod" : false,
 		"Mag" : false
 	},
+	"Upgrades":{
+		"Jukebox" : false,
+		"Human Banner" : false,
+		"Vampire Banner" : false,
+		"Slime Banner" : false,
+		"Tiny Banner" : false,
+		"Instant Refill" : false,
+		"Drinks Size Increase" : false,
+	},
+	"Recipes":{
+		"BLOODY MARY" : false,
+		"Classic Mojito" : false,
+	}
 }
 
 func _ready() -> void:

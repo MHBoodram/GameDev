@@ -1,0 +1,43 @@
+#First intro
+~ firstIntro
+Shop Keeper: Hello Mister, new here huh
+Shop Keeper: You can call me the Shop Keeper
+do GameState.main_node._go_next()
+set speaking_title = "firstWait1"
+=> END
+
+~ firstWait1
+Shop Keeper: Just pick one, don't worry it won't bite
+=> END
+
+~ firstWait2
+Shop Keeper: Mister...
+Shop Keeper: You good?
+=> END
+
+~ firstWait3
+Shop Keeper: JUST PICK A DAMN ITEM
+=> END
+
+
+#Constant
+~ Comingback
+Shop Keeper: Welcome back
+do GameState.main_node._go_next()
+set speaking_title = "wait"
+=> END
+
+~ wait
+% Shop Keeper: What's up, the items are above
+% Shop Keeper: It's on the house don't worry
+%1 Shop Keeper: Just pick a damn item
+=> END
+
+~ options
+Shop Keeper: Go next
+- How are you doing
+	Shop Keeper: Not too bad Mister
+- Leaving
+	Shop Keeper: See you later mister
+	do GameState.main_node._finished_night()
+=> END

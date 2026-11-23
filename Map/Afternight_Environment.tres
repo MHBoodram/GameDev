@@ -1,0 +1,16 @@
+[gd_resource type="Environment" format=3 uid="uid://c2h86ipdfciqx"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_reyg2"]
+load_path = "res://.godot/imported/toposcope_sunset_2k.hdr-9f1a087744ac216565fb09a6d9e764d7.bptc.ctex"
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_sxjop"]
+panorama = SubResource("CompressedTexture2D_reyg2")
+
+[sub_resource type="Sky" id="Sky_n4i4h"]
+sky_material = SubResource("PanoramaSkyMaterial_sxjop")
+
+[resource]
+background_mode = 2
+background_energy_multiplier = 0.0
+sky = SubResource("Sky_n4i4h")
+sky_rotation = Vector3(0, -2.120575, 0)

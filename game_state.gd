@@ -34,7 +34,8 @@ var special_state: bool = true
 var night_paused: bool = false
 var can_end_night: bool = true
 var is_dialogue_open: bool = false
-var character_talking: Base_NPC
+var character_talking: Node3D #Changed for Afternight
+
 
 var story_flags: Dictionary = {}
 var scheduled_npcs: Array[Dictionary] = []

@@ -16,6 +16,7 @@ func _on_interaction_input_event(camera_node: Node, event: InputEvent, _pos: Vec
 	if not can_talk or speaking_title == "" or speaking_title == null:
 		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		GameState.character_talking = self
 		if abs(camera_node.global_position.x - global_position.x) < 2:
 			talk()
 
