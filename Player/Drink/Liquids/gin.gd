@@ -3,8 +3,9 @@ class_name Drinks
 
 # base controller script for all shelf liquor and blood bottles (liquid.tscn)
 
+signal pour_minigame_requested(bottle: Drinks, glass: Glasses)
+
 const POUR_AMOUNT: float = 0.0825
-const POUR_INTERVAL: float = 0.033
 const MIN_POUR_ANGLE_DEGREES: float = 5.0
 const MAX_POUR_ANGLE_DEGREES: float = 150.0
 
@@ -54,11 +55,15 @@ var liquid_gradient: Gradient
 var liquid_shader_mat: ShaderMaterial
 var gradient_texture: GradientTexture2D
 var _pour_stream: PourStreamVisual = null
+var _pour_controller: PourController = null
 
-func _ensure_pour_stream() -> void:
+func _ensure_pour_helpers() -> void:
 	if not is_instance_valid(_pour_stream):
 		_pour_stream = PourStreamVisual.new()
 		add_child(_pour_stream)
+	if not is_instance_valid(_pour_controller):
+		_pour_controller = PourController.new()
+		add_child(_pour_controller)
 
 func _get_effective_viscosity() -> float:
 	var id_str := liquid_resource.id if liquid_resource else "gin"
@@ -66,7 +71,7 @@ func _get_effective_viscosity() -> float:
 	return clampf(maxf(viscosity, res_visc), 0.0, 1.0)
 
 func ready() -> void:
-	_ensure_pour_stream()
+	_ensure_pour_helpers()
 	if liquid_resource:
 		size = liquid_resource.liquid_size
 		current_liquid = size
@@ -83,23 +88,8 @@ func ready() -> void:
 		_apply_outside_texture()
 		set_liquid_color(liquid_resource.liquid_color)
 
-func _is_drag_blocked() -> bool:
-	return in_game
-
-func _get_drag_follow_speed() -> float:
-	return follow_speed
-
-func _get_drag_hold_lift() -> float:
-	return hold_lift
-
-func _get_free_drag_target(delta: float) -> Vector3:
-	if snap_to_glass and camera and is_instance_valid(current_hovered_target) and can_interact_with(current_hovered_target):
-		var to_cam := (camera.global_position - current_hovered_target.global_position).normalized()
-		return current_hovered_target.global_position + snap_offset + to_cam * hold_lift
-	return super._get_free_drag_target(delta)
-
 func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
-	_ensure_pour_stream()
+	_ensure_pour_helpers()
 	liquid_resource = _liquid
 	size = liquid_resource.liquid_size
 	current_liquid = size
@@ -127,18 +117,33 @@ func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 
 func _exit_tree() -> void:
 	visual_helper.cleanup()
+	if is_instance_valid(_pour_controller):
+		_pour_controller.stop(false)
 	if is_instance_valid(_pour_stream):
 		_pour_stream.set_stream_active(false)
+
+func _is_drag_blocked() -> bool:
+	return in_game
+
+func _get_drag_follow_speed() -> float:
+	return follow_speed
+
+func _get_drag_hold_lift() -> float:
+	return hold_lift
+
+func _get_free_drag_target(delta: float) -> Vector3:
+	if snap_to_glass and camera and is_instance_valid(current_hovered_target) and can_interact_with(current_hovered_target):
+		var to_cam := (camera.global_position - current_hovered_target.global_position).normalized()
+		return current_hovered_target.global_position + snap_offset + to_cam * hold_lift
+	return super._get_free_drag_target(delta)
 
 func _apply_outside_texture() -> void:
 	var tex: Texture2D = liquid_resource.outside_Sprite
 	if tex == null:
 		return
-
 	var outside := $Inside/Outside as GeometryInstance3D
 	if outside is Sprite3D:
 		outside.texture = tex
-
 	if liquid_shader_mat:
 		liquid_shader_mat.set_shader_parameter("texture_albedo", tex)
 
@@ -164,7 +169,7 @@ func _get_effective_pour_rate_multiplier() -> float:
 	return clampf(rotation_degrees.z / (MAX_POUR_ANGLE_DEGREES * 0.5), 0.15, 2.0)
 
 func _update_pour_stream() -> void:
-	_ensure_pour_stream()
+	_ensure_pour_helpers()
 	var rate_mult: float = _get_effective_pour_rate_multiplier()
 	if in_game and is_pouring and rate_mult > 0.0 and is_instance_valid(pouring_into):
 		var start_pos: Vector3 = _get_spout_world_position()
@@ -187,7 +192,7 @@ func _process(delta: float) -> void:
 		if inside_node:
 			inside_node.rotation = inside_node.rotation.lerp(Vector3.ZERO, 1.0 - exp(-18.0 * delta))
 		if is_pouring:
-			var target_angle := _get_pour_angle_degrees()
+			var target_angle := PourController.get_pour_tilt_angle(get_viewport(), 32.0, MAX_POUR_ANGLE_DEGREES)
 			rotation_degrees.z = lerpf(rotation_degrees.z, target_angle, 1.0 - exp(-18.0 * delta))
 			_update_pour_stream()
 		else:
@@ -202,96 +207,65 @@ func _process(delta: float) -> void:
 
 func _on_area_3d_input_event(camera_node: Node, event: InputEvent, event_pos: Vector3, normal: Vector3, shape_idx: int) -> void:
 	var left_pressed: bool = event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed
-
 	if not in_game:
 		super._on_area_3d_input_event(camera_node, event, event_pos, normal, shape_idx)
 		return
-
 	if left_pressed and not is_pouring:
-		await _pour()
+		_start_pour()
 
-func _get_pour_height_ratio() -> float:
-	var viewport := get_viewport()
-	if not viewport:
-		return 0.5
-	var vp_height: float = viewport.get_visible_rect().size.y
-	if vp_height <= 1.0:
-		return 0.5
-	var mouse_y: float = viewport.get_mouse_position().y
-	var raw_height: float = 1.0 - clampf(mouse_y / vp_height, 0.0, 1.0)
-	return clampf((raw_height - 0.1) / 0.8, 0.0, 1.0)
-
-func _get_pour_rate_multiplier() -> float:
-	return _get_pour_height_ratio() * 2.0
-
-func _get_pour_angle_degrees() -> float:
-	var ratio: float = _get_pour_height_ratio()
-	if ratio <= 0.001:
-		return 0.0
-	return lerpf(32.0, MAX_POUR_ANGLE_DEGREES, ratio)
-
-# tips bottle sideways and addds liquid pixels into the glass while left click is held
-func _pour() -> void:
+func _start_pour() -> void:
+	_ensure_pour_helpers()
 	is_pouring = true
 	$CPUParticles3D.emitting = false
-	if GameState.player:
-		GameState.player._update_hand("holding")
-	$CPUParticles3D.emitting = false
+	GameEvents.hand_cursor_changed.emit("holding")
+	if not pouring_into:
+		_on_pour_finished()
+		return
+	_pour_controller.start(_on_pour_tick, _can_continue_pour, _on_pour_finished)
 
-	var sfx_timer: float = 0.1
-	if pouring_into:
-		while _is_pour_button_held() and in_game and GameState.player and GameState.player.in_game and current_liquid > 0.0 and is_instance_valid(pouring_into):
-			var rate_mult: float = _get_effective_pour_rate_multiplier()
-			if rate_mult > 0.0:
-				var cost_mult: float = pouring_into.get_resource_usage_multiplier(liquid_resource.id) if pouring_into.has_method("get_resource_usage_multiplier") else 1.0
-				var max_bottle_pour: float = current_liquid / maxf(cost_mult, 0.001)
-				var amount: float = minf(POUR_AMOUNT * rate_mult, max_bottle_pour)
-				var target_pos: Vector3 = _get_target_pour_world_position()
-				var arrival_vel: Vector3 = _pour_stream.get_arrival_velocity() if is_instance_valid(_pour_stream) else Vector3(0.0, -1.6, 0.0)
-				var pour_info: Dictionary = pouring_into.compute_pour_info_from_world(target_pos, arrival_vel) if pouring_into.has_method("compute_pour_info_from_world") else {"from_pour": true}
-				var poured_variant = pouring_into._pouring(liquid_resource.id, amount, pour_info)
-				var actual_poured: float = float(poured_variant) if (poured_variant is float or poured_variant is int) else amount
-				set_liquid_amount(current_liquid - actual_poured * cost_mult)
-				sfx_timer += POUR_INTERVAL
-				if sfx_timer >= 0.1:
-					sfx_timer -= 0.1
-					GameEvents.sfx_requested.emit("liquidpour")
-			else:
-				sfx_timer = 0.1
-			await get_tree().create_timer(POUR_INTERVAL).timeout
-			if not is_inside_tree():
-				return
+func _can_continue_pour() -> bool:
+	return in_game and current_liquid > 0.0 and is_instance_valid(pouring_into)
 
+func _on_pour_tick(_dt: float) -> bool:
+	var rate_mult: float = _get_effective_pour_rate_multiplier()
+	if rate_mult <= 0.0:
+		return false
+	var cost_mult: float = pouring_into.get_resource_usage_multiplier(liquid_resource.id) if pouring_into.has_method("get_resource_usage_multiplier") else 1.0
+	var max_bottle_pour: float = current_liquid / maxf(cost_mult, 0.001)
+	var amount: float = minf(POUR_AMOUNT * rate_mult, max_bottle_pour)
+	var target_pos: Vector3 = _get_target_pour_world_position()
+	var arrival_vel: Vector3 = _pour_stream.get_arrival_velocity() if is_instance_valid(_pour_stream) else Vector3(0.0, -1.6, 0.0)
+	var pour_info: Dictionary = pouring_into.compute_pour_info_from_world(target_pos, arrival_vel) if pouring_into.has_method("compute_pour_info_from_world") else {"from_pour": true}
+	var poured_variant = pouring_into._pouring(liquid_resource.id, amount, pour_info)
+	var actual_poured: float = float(poured_variant) if (poured_variant is float or poured_variant is int) else amount
+	set_liquid_amount(current_liquid - actual_poured * cost_mult)
+	return true
+
+func _on_pour_finished() -> void:
 	$CPUParticles3D.emitting = false
 	is_pouring = false
 	if is_instance_valid(_pour_stream):
 		_pour_stream.set_stream_active(false)
-	rotation_degrees.z = 0
-	if GameState.player:
-		GameState.player._update_hand("idle")
+	rotation_degrees.z = 0.0
+	GameEvents.hand_cursor_changed.emit("idle")
 
+	if not is_inside_tree():
+		return
 	await get_tree().create_timer(0.25).timeout
-	if is_inside_tree() and in_game and GameState.player and GameState.player.in_game:
-		GameState.player._out_of_game()
-
-func _is_pour_button_held() -> bool:
-	return Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.get_action_strength("Left_click") > 0.0
-
-func _look_at_sprite(looking_at: Vector3) -> void:
-	if looking_at:
-		var target_flat := looking_at
-		target_flat.y = $Inside.global_position.y
-		$Inside.look_at(target_flat, Vector3.UP)
+	if is_inside_tree() and in_game:
+		var focus := StationFocusController.get_current(self)
+		if focus and focus.is_bottle_pour_active():
+			focus.end_bottle_pour()
 
 func _return_original() -> void:
-	if _drag_return_tween and _drag_return_tween.is_valid():
-		_drag_return_tween.kill()
-	_drag_return_tween = get_tree().create_tween().set_parallel(true)
-	_drag_return_tween.set_trans(Tween.TRANS_SINE)
-	_drag_return_tween.set_ease(Tween.EASE_OUT)
+	_drag_controller.kill_return_tween()
+	var tween := get_tree().create_tween().set_parallel(true)
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.set_ease(Tween.EASE_OUT)
 	if original_position:
-		_drag_return_tween.tween_property(self, "global_position", original_position.global_position, 0.5)
-	_drag_return_tween.tween_property($Inside, "global_rotation", Vector3.ZERO, 0.5)
+		tween.tween_property(self, "global_position", original_position.global_position, 0.5)
+	tween.tween_property($Inside, "global_rotation", Vector3.ZERO, 0.5)
+	_drag_controller.drag_return_tween = tween
 	rotation_degrees = Vector3.ZERO
 
 func _in_game() -> void:
@@ -301,8 +275,7 @@ func _in_game() -> void:
 	is_balls_dragging = false
 	if is_instance_valid(_pour_stream):
 		_pour_stream.set_stream_active(false)
-	if _drag_return_tween and _drag_return_tween.is_valid():
-		_drag_return_tween.kill()
+	_drag_controller.kill_return_tween()
 	if pouring_into and pouring_into.has_method("_on_hover"):
 		pouring_into._on_hover(false)
 
@@ -310,6 +283,8 @@ func _out_of_game() -> void:
 	in_game = false
 	visual_helper.set_mouth_monitoring(false)
 	is_pouring = false
+	if is_instance_valid(_pour_controller):
+		_pour_controller.stop(false)
 	rotation_degrees.z = 0.0
 	$CPUParticles3D.emitting = false
 	if is_instance_valid(_pour_stream):
@@ -322,10 +297,14 @@ func _pouring_game() -> void:
 		return
 	pouring_into.in_game = true
 	in_game = true
-	GameState.player._perfect_pour(self, pouring_into)
+	pour_minigame_requested.emit(self, pouring_into as Glasses)
+	var focus := StationFocusController.get_current(self)
+	if focus:
+		focus.begin_bottle_pour(self, pouring_into as Glasses)
 	$CollisionShape3D.disabled = true
 	await get_tree().create_timer(0.2).timeout
-	$CollisionShape3D.disabled = false
+	if is_inside_tree():
+		$CollisionShape3D.disabled = false
 	is_balls_dragging = false
 
 func can_interact_with(target: Ingredients) -> bool:

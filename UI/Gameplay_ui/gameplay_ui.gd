@@ -35,12 +35,23 @@ func _ready() -> void:
 		PlayerStats.money_changed.connect(_on_money_changed)
 	if not GameEvents.night_title_requested.is_connected(_on_night_title_requested):
 		GameEvents.night_title_requested.connect(_on_night_title_requested)
+	if not GameEvents.minigame_lock_changed.is_connected(_on_minigame_lock_changed):
+		GameEvents.minigame_lock_changed.connect(_on_minigame_lock_changed)
 
 func _exit_tree() -> void:
 	if is_instance_valid(PlayerStats) and PlayerStats.money_changed.is_connected(_on_money_changed):
 		PlayerStats.money_changed.disconnect(_on_money_changed)
-	if is_instance_valid(GameEvents._bus) and GameEvents.night_title_requested.is_connected(_on_night_title_requested):
-		GameEvents.night_title_requested.disconnect(_on_night_title_requested)
+	if GameEvents._bus:
+		if GameEvents.night_title_requested.is_connected(_on_night_title_requested):
+			GameEvents.night_title_requested.disconnect(_on_night_title_requested)
+		if GameEvents.minigame_lock_changed.is_connected(_on_minigame_lock_changed):
+			GameEvents.minigame_lock_changed.disconnect(_on_minigame_lock_changed)
+
+func _on_minigame_lock_changed(locked: bool) -> void:
+	if locked:
+		_in_down_minigame()
+	else:
+		_out_down_minigame()
 
 func _on_money_changed(new_value: float, _delta: float) -> void:
 	_change_money(new_value)

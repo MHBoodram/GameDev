@@ -49,6 +49,7 @@ func _enter_tree() -> void:
 
 func _exit_tree() -> void:
 	_disconnect_player_stats()
+	_disconnect_game_events()
 	if current == self:
 		current = null
 
@@ -67,6 +68,7 @@ func _ready() -> void:
 	_register_default_channels()
 	_ensure_pouring_group()
 	_connect_player_stats()
+	_connect_game_events()
 
 func _process(_delta: float) -> void:
 	if _status_groups.has("pouring"):
@@ -89,6 +91,40 @@ func _get_channel_config(channel_id: String, options: Dictionary = {}) -> Dictio
 	for key in options.keys():
 		base[key] = options[key]
 	return base
+
+func _connect_game_events() -> void:
+	if not GameEvents.cup_spilled.is_connected(_on_cup_spilled):
+		GameEvents.cup_spilled.connect(_on_cup_spilled)
+	if not GameEvents.cup_emptied.is_connected(_on_cup_emptied):
+		GameEvents.cup_emptied.connect(_on_cup_emptied)
+	if not GameEvents.cup_pouring_updated.is_connected(_on_cup_pouring_updated):
+		GameEvents.cup_pouring_updated.connect(_on_cup_pouring_updated)
+	if not GameEvents.cup_pouring_stopped.is_connected(_on_cup_pouring_stopped):
+		GameEvents.cup_pouring_stopped.connect(_on_cup_pouring_stopped)
+
+func _disconnect_game_events() -> void:
+	if not GameEvents._bus:
+		return
+	if GameEvents.cup_spilled.is_connected(_on_cup_spilled):
+		GameEvents.cup_spilled.disconnect(_on_cup_spilled)
+	if GameEvents.cup_emptied.is_connected(_on_cup_emptied):
+		GameEvents.cup_emptied.disconnect(_on_cup_emptied)
+	if GameEvents.cup_pouring_updated.is_connected(_on_cup_pouring_updated):
+		GameEvents.cup_pouring_updated.disconnect(_on_cup_pouring_updated)
+	if GameEvents.cup_pouring_stopped.is_connected(_on_cup_pouring_stopped):
+		GameEvents.cup_pouring_stopped.disconnect(_on_cup_pouring_stopped)
+
+func _on_cup_spilled(glass: Node3D, overflow_percent: float) -> void:
+	show_cup_spill_indicator(glass, overflow_percent)
+
+func _on_cup_emptied(glass: Node3D) -> void:
+	show_cup_empty_indicator(glass)
+
+func _on_cup_pouring_updated(glass: Node, liquids: Array, capacity: float, visual_helper: RefCounted) -> void:
+	update_pouring_indicator(glass, liquids, capacity, visual_helper as LiquidVisualHelper)
+
+func _on_cup_pouring_stopped(glass: Node, immediate: bool) -> void:
+	hide_pouring_indicator(glass, immediate)
 
 func _connect_player_stats() -> void:
 	if not PlayerStats:
