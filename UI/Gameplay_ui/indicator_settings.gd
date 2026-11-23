@@ -130,9 +130,7 @@ const HUD_CHANNELS := {
 		"jitter_x": 0.0,
 		"world_offset": Vector3(0.0, 0.15, 0.0),
 		"fallback_anchor_ratio": Vector2(0.5, 0.35),
-		"min_percent_for_value": 0.05,
-		"text_format": "{sign}{amount}% Spill!",
-		"fallback_text": "Spilling!",
+		"text": "Spilled!",
 	},
 	"cup_reset": {
 		"enabled": true,
@@ -171,11 +169,7 @@ const STATUS_GROUPS := {
 		"enabled": true,
 		"use_wavy_labels": true,
 		"fade_duration": 1.0,
-		"min_spilled_percent": 0.05,
 		"layer_text_format": "{name}: {percent}%",
-		"spilled_text_format": "Spilled: -{percent}%",
-		"spilled_color": COLORS["decrease"],
-		"spilled_secondary_color": COLORS["decrease"],
 		"default_secondary_color": COLORS["pouring_secondary"],
 		"layout": {
 			"anchor_preset": Control.PRESET_TOP_RIGHT,

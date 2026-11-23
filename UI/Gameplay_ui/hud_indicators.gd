@@ -177,7 +177,7 @@ func show_species_rep_change(species_name: String, delta: float, suffix: String 
 		merged["channel"] = "species_rep"
 	return show_floating_text(text, color, merged)
 
-func show_cup_spill_indicator(glass: Node3D, spilled_percent: float = 0.0, options: Dictionary = {}) -> Label:
+func show_cup_spill_indicator(glass: Node3D, _spilled_percent: float = 0.0, options: Dictionary = {}) -> Label:
 	var cfg: Dictionary = _get_channel_config("cup_spill", options)
 	if not bool(cfg.get("enabled", true)):
 		return null
@@ -194,13 +194,8 @@ func show_cup_spill_indicator(glass: Node3D, spilled_percent: float = 0.0, optio
 		merged["stack_group"] = "cup_" + str(glass.get_instance_id())
 	if not merged.has("jitter_x") and cfg.has("jitter_x"):
 		merged["jitter_x"] = cfg["jitter_x"]
-	var min_pct: float = float(cfg.get("min_percent_for_value", 0.05))
-	if spilled_percent >= min_pct:
-		var text: String = IndicatorSettings.format_delta_text("cup_spill", -spilled_percent, {
-			"amount": format_number(spilled_percent),
-		}, cfg)
-		return show_floating_text(text, cfg.get("negative_color", DECREASE_COLOR), merged)
-	return show_floating_text(str(cfg.get("fallback_text", "Spilling!")), cfg.get("negative_color", DECREASE_COLOR), merged)
+	var text: String = str(cfg.get("text", "Spilled!"))
+	return show_floating_text(text, cfg.get("negative_color", DECREASE_COLOR), merged)
 
 func show_cup_empty_indicator(glass: Node3D, options: Dictionary = {}) -> Label:
 	var cfg: Dictionary = _get_channel_config("cup_reset", options)
@@ -573,19 +568,6 @@ func update_pouring_indicator(glass: Node, liquids: Array, glass_size: float, vi
 				"percent": str(snappedf(pct, 0.1)),
 			}),
 			"color": col
-		})
-
-	var dm: Variant = glass.get("drink_mix") if is_instance_valid(glass) else null
-	var min_spilled: float = float(cfg.get("min_spilled_percent", 0.05))
-	if dm is DrinkMix and (dm as DrinkMix).overfill_percent > min_spilled:
-		var spilled_template: String = str(cfg.get("spilled_text_format", "Spilled: -{percent}%"))
-		var spilled_col: Color = cfg.get("spilled_color", DECREASE_COLOR)
-		entries.append({
-			"text": IndicatorSettings.format_text(spilled_template, {
-				"percent": format_number((dm as DrinkMix).overfill_percent),
-			}),
-			"color": spilled_col,
-			"secondary_color": cfg.get("spilled_secondary_color", spilled_col)
 		})
 
 	update_status_group("pouring", entries, glass, bool(cfg.get("use_wavy_labels", true)), cfg.get("layout", {}))
