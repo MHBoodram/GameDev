@@ -113,6 +113,9 @@ func can_highlight_on_hover() -> bool:
 func handle_immediate_tool_click() -> bool:
 	return false
 
+func _on_drag_started() -> void:
+	pass
+
 func _begin_mode_transition(new_mode: DragMode) -> void:
 	_active_drag_mode = new_mode
 	_is_mode_transitioning = true
@@ -517,6 +520,7 @@ func _on_area_3d_input_event(_cam: Node, event: InputEvent, _pos: Vector3, _norm
 				active_selected_item.set_selected(false)
 				active_selected_item = null
 
+		_on_drag_started()
 		_is_returning_to_counter = false
 		if _drag_return_tween and _drag_return_tween.is_valid():
 			_drag_return_tween.kill()

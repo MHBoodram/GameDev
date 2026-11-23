@@ -17,10 +17,6 @@ var spawn_timer_acc: float = 0.0
 func setup(host: Node3D) -> void:
 	main_root = host
 	receipt_board.setup(host)
-	if not DialogueManager.dialogue_started.is_connected(_on_dialogue_started):
-		DialogueManager.dialogue_started.connect(_on_dialogue_started)
-	if not DialogueManager.dialogue_ended.is_connected(_on_dialogue_ended):
-		DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
 
 func start_spawning() -> void:
 	is_spawning_allowed = true
@@ -40,13 +36,6 @@ func _process(delta: float) -> void:
 	if spawn_timer_acc >= spawn_interval:
 		spawn_timer_acc = 0.0
 		spawn_random_customer()
-
-func _on_dialogue_started(_resource) -> void:
-	GameState.is_dialogue_open = true
-
-func _on_dialogue_ended(_resource) -> void:
-	GameState.is_dialogue_open = false
-	GameState.character_talking = null
 
 func get_empty_seat_count() -> int:
 	return seats.count(null)
@@ -102,11 +91,7 @@ func spawn_customer(npc_source: Variant, patience: float = 90.0, dialogue_title:
 	if target_seat:
 		npc._moving_to(target_seat)
 
-	var order := npc._want_drink()
-	match free_seat:
-		0: GameState.seat1_order = order
-		1: GameState.seat2_order = order
-		2: GameState.seat3_order = order
+	npc._want_drink()
 
 	return npc
 

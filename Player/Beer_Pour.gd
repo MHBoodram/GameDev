@@ -14,14 +14,20 @@ const HOVER_COLOR := Color(1.0, 0.0, 0.0, 0.9)
 const LOCKED_COLOR := Color(0.3, 1.0, 0.3, .9)
 const KEG_IDLE_ROT_X := -131.5
 const KEG_MAX_POUR_ROT_X := 2.5
-const POUR_INTERVAL := 0.1
+const POUR_AMOUNT := 0.0825
+const POUR_INTERVAL := 0.033
+const SFX_INTERVAL_MS := 100
 
 var in_pour_zone: Glasses = null
 var _glasses_in_area: Array[Glasses] = []
 var _is_pouring: bool = false
+var _pour_stream: PourStreamVisual = null
+var _last_sfx_ms: int = 0
 
 func _ready() -> void:
-	if keg_water_particle:
+	_pour_stream = PourStreamVisual.new()
+	add_child(_pour_stream)
+	if is_instance_valid(keg_water_particle):
 		keg_water_particle.emitting = false
 
 func _snap_target() -> Node3D:
@@ -69,11 +75,27 @@ func _get_pour_rate_multiplier() -> float:
 func _get_keg_pour_angle() -> float:
 	return lerpf(KEG_IDLE_ROT_X, KEG_MAX_POUR_ROT_X, _get_pour_height_ratio())
 
+func _get_tap_nozzle_position() -> Vector3:
+	if is_instance_valid(keg_water_particle):
+		return keg_water_particle.global_position
+	var snap := _snap_target()
+	if is_instance_valid(snap):
+		return snap.global_position + Vector3(0.0, 0.35, 0.0)
+	return global_position
+
+func _get_beer_stream_target() -> Vector3:
+	if in_pour_zone and is_instance_valid(in_pour_zone):
+		return in_pour_zone.get_liquid_surface_world_position()
+	var snap := _snap_target()
+	if is_instance_valid(snap):
+		return snap.global_position
+	return _get_tap_nozzle_position() + Vector3(0.0, -0.4, 0.0)
+
 @warning_ignore("unused_parameter")
 func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and not _is_pouring:
 		_is_pouring = true
-		if keg_water_particle:
+		if is_instance_valid(keg_water_particle):
 			keg_water_particle.emitting = false
 		var cam_rig: Camera3D = _get_camera_rig()
 		var marker := _get_beer_camera_marker()
@@ -82,25 +104,26 @@ func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: V
 				GameState.gameplay_ui._in_down_minigame()
 			cam_rig.call("focus_on_marker", marker, 0.55)
 
-		var sfx_timer: float = POUR_INTERVAL
 		while _is_pour_button_held() and is_inside_tree():
-			await get_tree().process_frame
+			var rate_mult: float = _get_pour_rate_multiplier()
+			if rate_mult > 0.02 and in_pour_zone and is_instance_valid(in_pour_zone):
+				var target_pos := _get_beer_stream_target()
+				var arrival_vel := _pour_stream.get_arrival_velocity() if is_instance_valid(_pour_stream) else Vector3(0.0, -1.8, 0.0)
+				var pour_info: Dictionary = in_pour_zone.compute_pour_info_from_world(target_pos, arrival_vel)
+				in_pour_zone._pouring("beer", POUR_AMOUNT * rate_mult, pour_info)
+				var now_ms := Time.get_ticks_msec()
+				if now_ms - _last_sfx_ms >= SFX_INTERVAL_MS:
+					_last_sfx_ms = now_ms
+					GameEvents.sfx_requested.emit("liquidpour")
+			await get_tree().create_timer(POUR_INTERVAL).timeout
 			if not is_inside_tree():
 				_is_pouring = false
 				return
-			var delta: float = clampf(get_process_delta_time(), 0.001, 0.05)
-			var rate_mult: float = _get_pour_rate_multiplier()
-			if rate_mult > 0.0:
-				sfx_timer += delta
-				if sfx_timer >= POUR_INTERVAL:
-					sfx_timer -= POUR_INTERVAL
-					if in_pour_zone and is_instance_valid(in_pour_zone):
-						SFXAudio.play_liquidpour()
-			else:
-				sfx_timer = POUR_INTERVAL
-
-		if keg_water_particle:
+		keg_sprite.rotation_degrees.x = KEG_IDLE_ROT_X
+		if is_instance_valid(keg_water_particle):
 			keg_water_particle.emitting = false
+		if is_instance_valid(_pour_stream):
+			_pour_stream.set_stream_active(false)
 		_is_pouring = false
 
 		if cam_rig and marker:
@@ -119,26 +142,30 @@ func _process(delta: float) -> void:
 	if _is_pouring:
 		var target_rot: float = _get_keg_pour_angle()
 		keg_sprite.rotation_degrees.x = lerpf(keg_sprite.rotation_degrees.x, target_rot, 1.0 - exp(-18.0 * delta))
-		if keg_water_particle:
-			keg_water_particle.emitting = false
-
 		var rate_mult: float = _get_pour_rate_multiplier()
-		if rate_mult > 0.0:
-			var sim := LiquidSim.get_sim(self)
-			var vol_amount: float = 0.25 * rate_mult * (delta / POUR_INTERVAL)
-			if sim:
-				var nozzle_pos: Vector3 = _get_nozzle_world_position()
-				var stream_vel := Vector3(0.0, -0.48 - 0.38 * rate_mult, 0.0)
-				if in_pour_zone and is_instance_valid(in_pour_zone) and in_pour_zone.has_method("get_cavity_rim_world_position"):
-					var rim_pos: Vector3 = in_pour_zone.get_cavity_rim_world_position()
-					nozzle_pos.x = lerpf(nozzle_pos.x, rim_pos.x, 0.65)
-					nozzle_pos.z = lerpf(nozzle_pos.z, rim_pos.z, 0.65)
-				var beer_col: Color = LiquidVisualHelper.LIQUID_COLOR.get("beer", Color(0.98, 0.322, 0.051, 1.0))
-				sim.emit_volume_stream(get_instance_id(), nozzle_pos, stream_vel, beer_col, "beer", vol_amount, clampf(rate_mult * 0.5, 0.08, 1.0), delta, in_pour_zone, 0.004)
-			elif in_pour_zone and is_instance_valid(in_pour_zone):
-				in_pour_zone._pouring("beer", vol_amount)
+		if is_instance_valid(keg_water_particle):
+			keg_water_particle.emitting = false
+		if is_instance_valid(_pour_stream):
+			if rate_mult > 0.02:
+				var beer_col: Color = AtomicFluidShaders.LIQUID_COLOR.get("beer", Color(0.98, 0.322, 0.051, 1.0))
+				var rim_pos: Variant = in_pour_zone.get_rim_center_world_position() if (in_pour_zone and is_instance_valid(in_pour_zone)) else null
+				_pour_stream.set_stream_active(
+					true,
+					_get_tap_nozzle_position(),
+					_get_beer_stream_target(),
+					beer_col,
+					rate_mult,
+					Vector3.DOWN,
+					true,
+					false,
+					rim_pos
+				)
+			else:
+				_pour_stream.set_stream_active(false)
 	else:
 		keg_sprite.rotation_degrees.x = lerpf(keg_sprite.rotation_degrees.x, KEG_IDLE_ROT_X, 1.0 - exp(-18.0 * delta))
+		if is_instance_valid(_pour_stream):
+			_pour_stream.set_stream_active(false)
 
 	if in_pour_zone and is_instance_valid(in_pour_zone):
 		pour_zone.modulate = LOCKED_COLOR if in_pour_zone.is_snapped() else HOVER_COLOR

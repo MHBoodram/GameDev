@@ -96,8 +96,6 @@ func _change_money(new_value: float) -> void:
 	var delta: float = new_value - old_money
 	money = new_value
 	print("[money]: ", money)
-	if GameState.gameplay_ui:
-		GameState.gameplay_ui._change_money(new_value)
 	if not is_zero_approx(delta):
 		money_changed.emit(money, delta)
 

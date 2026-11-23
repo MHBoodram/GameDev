@@ -1,8 +1,9 @@
 @tool
 extends Area3D
 
-const MAX_POUR_TILT_DEGREES: float = 125.0
-const POUR_INTERVAL: float = 0.1
+const MAX_POUR_TILT_DEGREES: float = 135.0
+const POUR_INTERVAL: float = 0.033
+const SFX_INTERVAL_MS: int = 100
 
 @export var indicator_path: NodePath = NodePath("TrashIndicator")
 @export var collision_shape_path: NodePath = NodePath("CollisionShape3D")
@@ -20,6 +21,7 @@ var in_pour_zone: Glasses = null
 var _glasses_in_area: Array[Glasses] = []
 var _is_pouring: bool = false
 var _active_pouring_glass: Glasses = null
+var _last_sfx_ms: int = 0
 
 func _ready() -> void:
 	sync_bounds_from_indicator()
@@ -103,6 +105,23 @@ func _on_trash_input_event(camera: Node, event: InputEvent, event_position: Vect
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and not _is_pouring:
 		start_pour()
 
+func _return_glass_to_previous_location(glass: Glasses) -> void:
+	if not is_instance_valid(glass):
+		return
+	_glasses_in_area.erase(glass)
+	if in_pour_zone == glass:
+		in_pour_zone = null
+	if glass.has_method("set_active_trash"):
+		glass.set_active_trash(null)
+	glass._remove_displaying_list()
+	if glass.has_method("return_to_previous_location"):
+		glass.return_to_previous_location()
+	if not in_pour_zone:
+		for g in _glasses_in_area:
+			if is_instance_valid(g):
+				_set_active_glass(g)
+				break
+
 func start_pour() -> void:
 	if _is_pouring:
 		return
@@ -122,32 +141,32 @@ func start_pour() -> void:
 	if active_glass.has_method("start_pour_out"):
 		active_glass.start_pour_out(_get_pour_tilt_degrees())
 
-	var sfx_timer: float = POUR_INTERVAL
-	while _is_pour_button_held() and is_inside_tree():
-		await get_tree().process_frame
+	while _is_pour_button_held() and is_inside_tree() and is_instance_valid(active_glass) and active_glass.total_liquids > 0.0:
+		if active_glass.can_pour_out_from_mouth():
+			var rate_mult: float = clampf(absf(active_glass.pour_tilt_degrees) / (MAX_POUR_TILT_DEGREES * 0.5), 0.15, 2.0)
+			active_glass._pour_out(pour_out_amount * (POUR_INTERVAL / 0.1) * rate_mult)
+			var now_ms := Time.get_ticks_msec()
+			if now_ms - _last_sfx_ms >= SFX_INTERVAL_MS:
+				_last_sfx_ms = now_ms
+				GameEvents.sfx_requested.emit("liquidpour")
+		await get_tree().create_timer(POUR_INTERVAL).timeout
 		if not is_inside_tree():
 			_is_pouring = false
 			_active_pouring_glass = null
 			return
-		var delta: float = clampf(get_process_delta_time(), 0.001, 0.05)
-		var rate_mult: float = _get_pour_rate_multiplier()
-		if rate_mult > 0.0 and is_instance_valid(active_glass) and active_glass.total_liquids > 0.0:
-			sfx_timer += delta
-			if sfx_timer >= POUR_INTERVAL:
-				sfx_timer -= POUR_INTERVAL
-				SFXAudio.play_liquidpour()
-		else:
-			sfx_timer = POUR_INTERVAL
 
 	_active_pouring_glass = null
 	if is_instance_valid(active_glass) and active_glass.has_method("stop_pour_out"):
 		active_glass.stop_pour_out()
 
+	await get_tree().create_timer(0.15).timeout
+	if not is_inside_tree():
+		_is_pouring = false
+		return
+
+	_return_glass_to_previous_location(active_glass)
+
 	if cam_rig and marker:
-		await get_tree().create_timer(0.15).timeout
-		if not is_inside_tree():
-			_is_pouring = false
-			return
 		cam_rig.call("return_from_marker", 0.55)
 		if cam_rig.has_signal("marker_returned"):
 			await cam_rig.marker_returned

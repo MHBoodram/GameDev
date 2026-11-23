@@ -17,7 +17,7 @@ func _ready() -> void:
 		previous_cells = bottle.current_liquid if bottle and "current_liquid" in bottle else 0.0
 	set_fill(previous_cells)
 
-	SFXAudio.play_draw()
+	GameEvents.sfx_requested.emit("draw")
 	$AnimationPlayer.play("hurt")
 	await $AnimationPlayer.animation_finished
 
@@ -88,7 +88,7 @@ func set_fill(value: float) -> void:
 		mat.set_shader_parameter("fill_amount", value)
 
 func make_red_particles_2d_explsion() -> CPUParticles2D:
-	SFXAudio.play_stab()
+	GameEvents.sfx_requested.emit("stab")
 	var p := CPUParticles2D.new()
 	p.texture = make_tear_texture(16, 24)
 	p.emitting = true

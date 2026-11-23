@@ -260,9 +260,6 @@ func _on_jump_night_pressed() -> void:
 	GameState.special_state = false
 	GameState.night_paused = false
 	GameState.can_end_night = true
-	GameState.seat1_order = []
-	GameState.seat2_order = []
-	GameState.seat3_order = []
 
 	GameState.night = clampi(target_night, 1, GameState.max_nights)
 	GameState.reset_night_restarts()

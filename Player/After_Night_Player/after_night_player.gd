@@ -191,7 +191,7 @@ func _on_shot_glass_button_input_event(_cam: Node, event: InputEvent, _pos: Vect
 			var btn := counter.get_node_or_null("ShotGlass Button") as Node3D
 			if btn:
 				spawn_pos = btn.global_position
-		SFXAudio.play_mugpickup()
+		GameEvents.sfx_requested.emit("mugpickup")
 		_spawn_and_begin_drag(shot_glass, "shot_glass", spawn_pos)
 
 func _on_beer_glass_button_input_event(_cam: Node, event: InputEvent, _pos: Vector3, _norm: Vector3, _shape_idx: int) -> void:
@@ -201,7 +201,7 @@ func _on_beer_glass_button_input_event(_cam: Node, event: InputEvent, _pos: Vect
 			var btn := counter.get_node_or_null("BeerGlass Button") as Node3D
 			if btn:
 				spawn_pos = btn.global_position
-		SFXAudio.play_mugpickup()
+		GameEvents.sfx_requested.emit("mugpickup")
 		_spawn_and_begin_drag(beer_glass, "beer_glass", spawn_pos)
 
 func _on_trash_area_entered(_area: Area3D) -> void:

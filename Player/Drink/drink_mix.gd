@@ -12,6 +12,14 @@ var overfill_percent: float = 0.0
 var max_garnishes = 2
 var has_ice = false
 
+func reset() -> void:
+	ingredients.clear()
+	garnishes.clear()
+	processing_tags.clear()
+	is_tiny = false
+	overfill_percent = 0.0
+	has_ice = false
+
 func add_liquid(id: String, amount: float) -> void:
 	if amount <= 0.0:
 		return

@@ -21,9 +21,6 @@ func _ready() -> void:
 
 func _on_play_pressed() -> void:
 	MusicPlayer.play_game()
-	GameState.seat1_order = []
-	GameState.seat2_order = []
-	GameState.seat3_order = []
 	Transition._changing_scene(GAME_SCENE)
 
 func _change_hover(n_name: String = "Setting") -> void:

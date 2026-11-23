@@ -64,7 +64,7 @@ func evaluate_drink_attempt(_npc: Sprite3D, mix: DrinkMix, _wanted: DrinkOrder) 
 		"clear_orders": true,
 		"zero_satisfaction": true,
 		"emo": "mad",
-		"feedback": "Passed right through!"
+		"feedback": "ghost_passed_through"
 	}
 
 func consume_delivered_cup(_npc: Sprite3D, drink: Area3D) -> bool:
@@ -102,7 +102,7 @@ func consume_delivered_cup(_npc: Sprite3D, drink: Area3D) -> bool:
 func on_drink_served(npc: Sprite3D, _mix: DrinkMix, _wanted: DrinkOrder, score_data: Dictionary) -> void:
 	if score_data.get("is_satisfactory", false) and not ghost_fell_through:
 		if is_instance_valid(npc) and npc.has_method("show_floating_feedback"):
-			npc.show_floating_feedback("Spectral delight!")
+			npc.show_floating_feedback("ghost_spectral_delight")
 
 func modify_species_reputation_delta(_npc: Sprite3D, _race_name: String, base_delta: float, is_satisfactory: bool, _drink_score: float) -> float:
 	if is_satisfactory and not ghost_fell_through:
@@ -146,7 +146,7 @@ func on_tool_interact_glass(tool_id: String, glass: Area3D, _player: Node3D) -> 
 		stab_tween.tween_property(target_sprite, "position:y", base_pos.y, 0.22)
 
 	cup.set_highlight(false)
-	GameState.play_sfx("play_stab")
+	GameEvents.sfx_requested.emit("stab")
 	if cup.camera and cup.camera.has_method("add_shake"):
 		cup.camera.add_shake(0.15)
 	return true

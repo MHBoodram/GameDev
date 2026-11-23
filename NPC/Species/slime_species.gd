@@ -79,18 +79,18 @@ func on_npc_tool_click(npc: Sprite3D, tool_id: String, player: Node3D) -> bool:
 
 	if state.get("is_split_child", false):
 		if npc.has_method("show_floating_feedback"):
-			npc.show_floating_feedback("Too small to slice!")
+			npc.show_floating_feedback("slime_too_small")
 		return true
 	if state.get("sliced", false):
 		if npc.has_method("show_floating_feedback"):
-			npc.show_floating_feedback("Already sliced!")
+			npc.show_floating_feedback("slime_already_sliced")
 		return true
 
 	if not GameState.seat_manager:
 		return false
 	if GameState.seat_manager.get_empty_seat_count() <= 0:
 		if npc.has_method("show_floating_feedback"):
-			npc.show_floating_feedback("No empty seats!")
+			npc.show_floating_feedback("slime_no_seats")
 		return true
 
 	state["sliced"] = true
@@ -129,7 +129,7 @@ func _can_slice(npc: Sprite3D) -> bool:
 	return not state.get("sliced", false) and not state.get("is_split_child", false)
 
 func _play_slime_sfx(context_node: Node) -> void:
-	GameState.play_sfx("play_stab")
+	GameEvents.sfx_requested.emit("stab")
 	if not ResourceLoader.exists(SLIME_SFX_PATH):
 		return
 	var stream := load(SLIME_SFX_PATH) as AudioStream
