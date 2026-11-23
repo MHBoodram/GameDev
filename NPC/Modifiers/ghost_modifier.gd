@@ -146,7 +146,7 @@ func on_tool_interact_glass(tool_id: String, glass: Area3D, _player: Node3D) -> 
 		stab_tween.tween_property(target_sprite, "position:y", base_pos.y, 0.22)
 
 	cup.set_highlight(false)
-	GameState.play_sfx("play_stab")
+	GameEvents.sfx_requested.emit("stab")
 	if cup.camera and cup.camera.has_method("add_shake"):
 		cup.camera.add_shake(0.15)
 	return true

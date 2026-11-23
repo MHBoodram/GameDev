@@ -135,7 +135,7 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 	_is_highlighted = false
 	ModifierRegistry.clear_npc_visuals(self)
 	SpeciesRegistry.clear_npc_visuals(self)
-	GameState.play_sfx("play_entranto")
+	GameEvents.sfx_requested.emit("entranto")
 
 	if patience > 0.0:
 		max_patience = patience
@@ -553,8 +553,7 @@ func _check_tutorial() -> bool:
 	return true
 
 func night_popup(_arg = null) -> void:
-	if GameState.gameplay_ui and GameState.gameplay_ui.has_method("_night_title_popup"):
-		GameState.gameplay_ui._night_title_popup()
+	GameEvents.night_title_requested.emit("")
 
 func hold_night_end(hold: bool = true) -> void:
 	GameState.hold_night_end(hold)
@@ -636,4 +635,3 @@ func _talking(open_mouth: bool = false) -> void:
 	var total_frames := hframes * vframes
 	if frame_check < total_frames:
 		frame = frame_check
-		

@@ -129,7 +129,7 @@ func _can_slice(npc: Sprite3D) -> bool:
 	return not state.get("sliced", false) and not state.get("is_split_child", false)
 
 func _play_slime_sfx(context_node: Node) -> void:
-	GameState.play_sfx("play_stab")
+	GameEvents.sfx_requested.emit("stab")
 	if not ResourceLoader.exists(SLIME_SFX_PATH):
 		return
 	var stream := load(SLIME_SFX_PATH) as AudioStream

@@ -9,9 +9,6 @@
 # minigame_host - Minigames and rewards
 extends Node
 
-var seat1_order: Array = []
-var seat2_order: Array = []
-var seat3_order: Array = []
 var night: int = 1
 var max_nights: int = 7
 var night_duration: float = 300.0
@@ -36,9 +33,29 @@ var can_end_night: bool = true
 var is_dialogue_open: bool = false
 var character_talking: Base_NPC
 
-func register_subsystems(main: Node3D, p_player: Node3D, timer: Timer, env: WorldEnvironment, sun_node: DirectionalLight3D, counter_ref: Node3D) -> void:
+func _ready() -> void:
+	call_deferred("_connect_dialogue_signals")
+
+func _connect_dialogue_signals() -> void:
+	if not DialogueManager.dialogue_started.is_connected(_on_dialogue_started):
+		DialogueManager.dialogue_started.connect(_on_dialogue_started)
+	if not DialogueManager.dialogue_ended.is_connected(_on_dialogue_ended):
+		DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
+
+func _on_dialogue_started(_resource) -> void:
+	is_dialogue_open = true
+	GameEvents.dialogue_state_changed.emit(true, character_talking)
+
+func _on_dialogue_ended(_resource) -> void:
+	is_dialogue_open = false
+	character_talking = null
+	GameEvents.dialogue_state_changed.emit(false, null)
+
+func register_gameplay_subsystems(main: Node3D, p_player: Node3D, timer: Timer, env: WorldEnvironment, sun_node: DirectionalLight3D, counter_ref: Node3D) -> void:
 	main_node = main
 	player = p_player
+	is_dialogue_open = false
+	character_talking = null
 
 	night_manager = NightManager.new()
 	seat_manager = SeatManager.new()
@@ -58,21 +75,29 @@ func register_subsystems(main: Node3D, p_player: Node3D, timer: Timer, env: Worl
 	SettingState.apply_world_environment()
 	PlayerStats.previous_money = PlayerStats.money
 
+func register_shop_subsystems(main: Node3D, p_player: Node3D, counter_ref: Node3D) -> void:
+	main_node = main
+	player = p_player
+	is_dialogue_open = false
+	character_talking = null
+
+	night_manager = null
+	seat_manager = null
+	minigame_host = null
+
+	shelf_manager = BarShelfManager.new()
+	main.add_child(shelf_manager)
+	shelf_manager.refresh_shelf_bottles(main, counter_ref)
+
+	SettingState.apply_world_environment()
+	PlayerStats.previous_money = PlayerStats.money
+
+func register_subsystems(main: Node3D, p_player: Node3D, timer: Timer, env: WorldEnvironment, sun_node: DirectionalLight3D, counter_ref: Node3D) -> void:
+	register_gameplay_subsystems(main, p_player, timer, env, sun_node, counter_ref)
+
 func start_night() -> void:
 	if night_manager:
 		night_manager.setup_night_shift(main_node)
-
-func play_sfx(method_name: String) -> void:
-	var tree := get_tree()
-	if not tree:
-		return
-	var sfx := tree.root.get_node_or_null("SFXAudio")
-	if sfx and sfx.has_method(method_name):
-		sfx.call(method_name)
-
-func night_popup(_arg = null) -> void:
-	if gameplay_ui and gameplay_ui.has_method("_night_title_popup"):
-		gameplay_ui._night_title_popup()
 
 func get_night_quota(night_number: int) -> float:
 	current_quota = BASE_QUOTA * float(night_number * night_number)

@@ -31,6 +31,27 @@ func _ready() -> void:
 	_sync_money_display(PlayerStats.money)
 	set_shift_hud_visible(false)
 	_setup_hud_indicators()
+	if PlayerStats and not PlayerStats.money_changed.is_connected(_on_money_changed):
+		PlayerStats.money_changed.connect(_on_money_changed)
+	if not GameEvents.night_title_requested.is_connected(_on_night_title_requested):
+		GameEvents.night_title_requested.connect(_on_night_title_requested)
+
+func _exit_tree() -> void:
+	if is_instance_valid(PlayerStats) and PlayerStats.money_changed.is_connected(_on_money_changed):
+		PlayerStats.money_changed.disconnect(_on_money_changed)
+	if is_instance_valid(GameEvents._bus) and GameEvents.night_title_requested.is_connected(_on_night_title_requested):
+		GameEvents.night_title_requested.disconnect(_on_night_title_requested)
+
+func _on_money_changed(new_value: float, _delta: float) -> void:
+	_change_money(new_value)
+
+func _on_night_title_requested(text: String) -> void:
+	if text == "":
+		_night_title_popup()
+	else:
+		$ColorRect3/Night/HeyPeter.hide()
+		$ColorRect3/Night.text = text
+		$AnimationPlayer.play("Night_Animation")
 
 func _setup_hud_indicators() -> void:
 	if hud_indicators and is_instance_valid(hud_indicators):
@@ -173,4 +194,3 @@ func _tutorial_find_shark() -> Base_NPC:
 
 func _tutorial_start_drink() -> void:
 	tutorial_director.start_drink_tutorial(self)
-	

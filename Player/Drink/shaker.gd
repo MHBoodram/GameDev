@@ -73,7 +73,7 @@ func start_shake(glass: Glasses) -> void:
 	_shaking = false
 
 func _on_shake_pumped() -> void:
-	SFXAudio.play_shakerrattle()
+	GameEvents.sfx_requested.emit("shaker")
 	if is_instance_valid(_active_glass) and _active_glass.visual_helper:
 		_active_glass.visual_helper.add_agitation(Vector2(randf_range(-12.0, 12.0), randf_range(-14.0, -5.0)))
 	for n in _jiggle_nodes:

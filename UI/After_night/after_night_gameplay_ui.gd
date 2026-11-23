@@ -34,7 +34,16 @@ func _ready() -> void:
 	_sync_money_display(PlayerStats.money)
 	set_shift_hud_visible(false)
 	_setup_hud_indicators()
+	if PlayerStats and not PlayerStats.money_changed.is_connected(_on_money_changed):
+		PlayerStats.money_changed.connect(_on_money_changed)
 	print(camera_rig.global_position)
+
+func _exit_tree() -> void:
+	if is_instance_valid(PlayerStats) and PlayerStats.money_changed.is_connected(_on_money_changed):
+		PlayerStats.money_changed.disconnect(_on_money_changed)
+
+func _on_money_changed(new_value: float, _delta: float) -> void:
+	_change_money(new_value)
 
 func _setup_hud_indicators() -> void:
 	if hud_indicators and is_instance_valid(hud_indicators):
@@ -174,4 +183,3 @@ func _change_time(new_value: float) -> void:
 #
 #func _tutorial_start_drink() -> void:
 	#tutorial_director.start_drink_tutorial(self)
-	

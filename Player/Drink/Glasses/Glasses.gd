@@ -481,7 +481,7 @@ func _update_hand_position(delta: float) -> void:
 	var pull := clampf(excess / full_pull, 0.0, 1.0)
 	var goal := mouse.lerp(glass_screen, pull)
 	var hand = GameState.player.hand_sprite
-	GameState.play_sfx("play_mugpickup")
+	GameEvents.sfx_requested.emit("mugpickup")
 	if hand:
 		hand.global_position = hand.global_position.lerp(goal, 1.0 - exp(-30.0 * delta))
 
@@ -917,7 +917,7 @@ func _pushing_glass(other_glass: Area3D) -> void:
 	if push_dir.length() < 0.001:
 		push_dir = Vector3(1.0, 0.0, 0.0)
 	push_velocity += push_dir.normalized() * 0.1
-	GameState.play_sfx("play_mugpickup")
+	GameEvents.sfx_requested.emit("mugpickup")
 
 func _in_game() -> void:
 	in_game = true

@@ -7,7 +7,7 @@ extends Node3D
 @onready var counter: Node3D = $Coutner
 
 func _ready() -> void:
-	GameState.register_subsystems(self, player, night_timer, world_environment, sun, counter)
+	GameState.register_shop_subsystems(self, player, counter)
 	$Viewport.modulate.a = 0
 	await get_tree().create_timer(0.5).timeout
 	$new_bar._open_light()

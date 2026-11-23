@@ -148,7 +148,7 @@ func start_pour() -> void:
 			var now_ms := Time.get_ticks_msec()
 			if now_ms - _last_sfx_ms >= SFX_INTERVAL_MS:
 				_last_sfx_ms = now_ms
-				SFXAudio.play_liquidpour()
+				GameEvents.sfx_requested.emit("liquidpour")
 		await get_tree().create_timer(POUR_INTERVAL).timeout
 		if not is_inside_tree():
 			_is_pouring = false

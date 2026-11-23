@@ -255,7 +255,7 @@ func _pour() -> void:
 				sfx_timer += POUR_INTERVAL
 				if sfx_timer >= 0.1:
 					sfx_timer -= 0.1
-					SFXAudio.play_liquidpour()
+					GameEvents.sfx_requested.emit("liquidpour")
 			else:
 				sfx_timer = 0.1
 			await get_tree().create_timer(POUR_INTERVAL).timeout

@@ -13,7 +13,7 @@ const PAUSE_MENU_SCENE := preload("res://UI/Gameplay_ui/PauseMenu.tscn")
 @onready var debug_menu: CanvasLayer = $DebugMenu
 
 func _ready() -> void:
-	GameState.register_subsystems(self, player, night_timer, world_environment, sun, counter)
+	GameState.register_gameplay_subsystems(self, player, night_timer, world_environment, sun, counter)
 	add_child(PAUSE_MENU_SCENE.instantiate())
 
 	animation_player.play("opening")
