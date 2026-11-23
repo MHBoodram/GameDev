@@ -8,6 +8,9 @@ const PARTICLE_STRIDE := 48
 const GRID_GRAVITY := 65.0
 const MAX_GRID_ACCEL := 550.0
 const MAX_IMPULSE_VEL := 65.0
+const SIM_SPEED := 2.5
+const STEP_SKIP := 1
+const MAX_FRAME_DT := 0.033
 
 static var _gpu_checked: bool = false
 static var _gpu_available: bool = false
@@ -29,6 +32,11 @@ var _pending_ops: Array[Dictionary] = []
 var _pending_impulse: Vector2 = Vector2.ZERO
 var _last_down_dir: Vector2 = Vector2(0.0, 1.0)
 var _monitor_mouth: bool = false
+
+var _step_skip_counter: int = 0
+var _accumulated_dt: float = 0.0
+var _accumulated_accel_dt: Vector2 = Vector2.ZERO
+var _accumulated_want_readback: bool = false
 
 func setup_from_texture(mask_texture: Texture2D) -> Texture2D:
 	if not _gpu_checked:
@@ -216,11 +224,37 @@ func _sync_empty() -> void:
 func step(delta: float, local_accel_world: Vector2, viscosity: float) -> void:
 	if _disposed:
 		return
+
+	var frame_dt := clampf(delta, 0.001, MAX_FRAME_DT)
+	var skip_limit := maxi(STEP_SKIP, 0)
+	_accumulated_dt += frame_dt
+	_accumulated_accel_dt += local_accel_world * frame_dt
+	_accumulated_want_readback = _accumulated_want_readback or _monitor_mouth or absf(local_accel_world.x) > 0.35 or local_accel_world.y > -8.8
+
+	var has_urgent_op := false
+	for op in _pending_ops:
+		var op_name := str(op.get("op", ""))
+		if op_name == "clear" or op_name == "init_upload":
+			has_urgent_op = true
+			break
+
+	if not has_urgent_op and _step_skip_counter < skip_limit:
+		_step_skip_counter += 1
+		return
+	_step_skip_counter = 0
+
+	var elapsed_dt := maxf(_accumulated_dt, frame_dt)
+	var avg_local_accel := _accumulated_accel_dt / elapsed_dt
+	var want_readback := _active_count > 0 and _accumulated_want_readback
+	_accumulated_dt = 0.0
+	_accumulated_accel_dt = Vector2.ZERO
+	_accumulated_want_readback = false
+
 	if _active_count <= 0:
 		if _gpu: _gpu.clear_mouth_state()
 		if _cpu: _cpu.reset_mouth_state()
 
-	var grid_accel := Vector2(local_accel_world.x * (GRID_GRAVITY / 9.8), -local_accel_world.y * (GRID_GRAVITY / 9.8))
+	var grid_accel := Vector2(avg_local_accel.x * (GRID_GRAVITY / 9.8), -avg_local_accel.y * (GRID_GRAVITY / 9.8))
 	if grid_accel.length() > MAX_GRID_ACCEL:
 		grid_accel = grid_accel.normalized() * MAX_GRID_ACCEL
 	var imp := _pending_impulse
@@ -230,22 +264,25 @@ func step(delta: float, local_accel_world: Vector2, viscosity: float) -> void:
 	if grid_accel.length_squared() > 0.01:
 		_last_down_dir = grid_accel.normalized()
 
-	var dt := clampf(delta, 0.001, 0.033)
-	var accel_with_imp := grid_accel + imp / maxf(dt, 0.008)
+	var sim_dt := minf(elapsed_dt, MAX_FRAME_DT * float(skip_limit + 1)) * SIM_SPEED
+	var accel_with_imp := grid_accel + imp / maxf(sim_dt, 0.008)
 	var ops_copy := _pending_ops.duplicate()
 	_pending_ops.clear()
 
 	if _gpu_available and _gpu:
-		var want_readback := _active_count > 0 and (_monitor_mouth or absf(local_accel_world.x) > 0.35 or local_accel_world.y > -8.8)
-		_gpu.step(dt, accel_with_imp, clampf(viscosity, 0.0, 1.0), _active_count, _last_down_dir, ops_copy, want_readback)
+		_gpu.step(sim_dt, accel_with_imp, clampf(viscosity, 0.0, 1.0), _active_count, _last_down_dir, ops_copy, want_readback)
 	elif _cpu:
-		_cpu.step(dt, accel_with_imp, clampf(viscosity, 0.0, 1.0), _last_down_dir, ops_copy)
+		_cpu.step(sim_dt, accel_with_imp, clampf(viscosity, 0.0, 1.0), _last_down_dir, ops_copy)
 
 func cleanup() -> void:
 	if _disposed:
 		return
 	_disposed = true
 	_pending_ops.clear()
+	_step_skip_counter = 0
+	_accumulated_dt = 0.0
+	_accumulated_accel_dt = Vector2.ZERO
+	_accumulated_want_readback = false
 	if _gpu:
 		_gpu.cleanup()
 		_gpu = null

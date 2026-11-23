@@ -7,9 +7,13 @@ const MAX_PARTICLES := FluidComputeGLSL.MAX_PARTICLES
 const WORKGROUP_SIZE := FluidComputeGLSL.WORKGROUP_SIZE
 const PARTICLE_STRIDE := 48
 const GRID_GRAVITY := 65.0
-const EOS_STIFFNESS := 30000.0
+const EOS_STIFFNESS := 11000.0
 const REST_DENSITY := 1.00
 const MOUTH_WEIGHT_THRESHOLD := 40
+const SUBSTEP_DT := 0.0028
+const MAX_SUBSTEP_DT := 0.0030
+const MIN_SUBSTEPS := 8
+const MAX_SUBSTEPS := 32
 
 static var _shaders_ready: bool = false
 static var _shaders: Dictionary = {}
@@ -340,9 +344,10 @@ func _gpu_step(frame_dt: float, accel: Vector2, viscosity: float, active_count: 
 			_tex_cleared = true
 		return
 
-	var substeps := clampi(int(ceili(frame_dt / 0.0008)), 10, 28)
+	var substeps := clampi(int(ceili(frame_dt / SUBSTEP_DT)), MIN_SUBSTEPS, MAX_SUBSTEPS)
+	var step_dt := minf(frame_dt, float(substeps) * MAX_SUBSTEP_DT)
 	var part_groups := _groups_for(active_count)
-	var pc := _pack_pc(frame_dt / float(substeps), accel.x, accel.y, viscosity, GRID_GRAVITY, EOS_STIFFNESS, REST_DENSITY, active_count)
+	var pc := _pack_pc(step_dt / float(substeps), accel.x, accel.y, viscosity, GRID_GRAVITY, EOS_STIFFNESS, REST_DENSITY, active_count)
 	for _s in substeps:
 		_flip_flop = not _flip_flop
 		var s := "0" if _flip_flop else "1"

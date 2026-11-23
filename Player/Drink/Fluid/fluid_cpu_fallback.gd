@@ -6,6 +6,10 @@ const GRID_SIZE := FluidComputeGLSL.GRID_SIZE
 const PARTICLE_VOLUME_WEIGHT := 0.278
 const PARTICLE_STRIDE := 48
 const REST_DENSITY := 1.00
+const CPU_SUBSTEP_DT := 0.008
+const CPU_MAX_SUBSTEP_DT := 0.009
+const CPU_MIN_SUBSTEPS := 4
+const CPU_MAX_SUBSTEPS := 10
 
 var mouth_touching: bool = false
 var mouth_hits: int = 0
@@ -203,10 +207,12 @@ func step(frame_dt: float, accel: Vector2, viscosity: float, last_down_dir: Vect
 		return
 
 	var n := _cpu_pos.size()
-	var dt := clampf(frame_dt * 0.25, 0.001, 0.008)
+	var substeps := clampi(int(ceili(frame_dt / CPU_SUBSTEP_DT)), CPU_MIN_SUBSTEPS, CPU_MAX_SUBSTEPS)
+	var step_dt := minf(frame_dt, float(substeps) * CPU_MAX_SUBSTEP_DT)
+	var dt := maxf(step_dt / float(substeps), 0.001)
 	var half_accel := accel * 0.5
 
-	for _sub in 4:
+	for _sub in substeps:
 		_cpu_mass.fill(0.0)
 		_cpu_vol.fill(0.0)
 		_cpu_cell_visc.fill(0.0)
