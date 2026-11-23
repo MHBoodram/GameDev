@@ -4,7 +4,18 @@
 class_name ToolController
 extends RefCounted
 
+static var current: ToolController = null
+
 var tool_in_hand: String = "hand"
+
+static func get_active() -> ToolController:
+	if current != null:
+		return current
+	if is_instance_valid(GameState.player):
+		var found = GameState.player.get("tool_controller")
+		if found is ToolController:
+			return found as ToolController
+	return null
 
 func set_tool(new_tool: String) -> void:
 	tool_in_hand = new_tool.to_lower().strip_edges()

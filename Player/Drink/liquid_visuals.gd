@@ -4,9 +4,9 @@ extends RefCounted
 # Handles container liquid physics
 
 const CONTAINER_SHADER := preload("res://Player/Drink/liquid_container.gdshader")
-const LIQUID_COLOR := AtomicFluidShaders.LIQUID_COLOR
-const LIQUID_BUOYANCY := AtomicFluidShaders.LIQUID_BUOYANCY
-const LIQUID_VISCOSITY := AtomicFluidShaders.LIQUID_VISCOSITY
+const LIQUID_COLOR := LiquidProperties.LIQUID_COLOR
+const LIQUID_BUOYANCY := LiquidProperties.LIQUID_BUOYANCY
+const LIQUID_VISCOSITY := LiquidProperties.LIQUID_VISCOSITY
 const UNIFORM_PIXEL_DENSITY: float = 150.0
 const REFERENCE_PIXEL_RESOLUTION: float = 48.0
 
@@ -31,19 +31,19 @@ var _outside_sprite: Node = null
 var _last_viscosity: float = 0.0
 
 static func register_liquid_buoyancy(id: String, buoyancy_val: float) -> void:
-	AtomicFluidShaders.register_liquid_buoyancy(id, buoyancy_val)
+	LiquidProperties.register_liquid_buoyancy(id, buoyancy_val)
 
 static func get_liquid_buoyancy(id: String) -> float:
-	return AtomicFluidShaders.get_liquid_buoyancy(id)
+	return LiquidProperties.get_liquid_buoyancy(id)
 
 static func get_layer_buoyancy(layer: Array) -> float:
-	return AtomicFluidShaders.get_layer_buoyancy(layer)
+	return LiquidProperties.get_layer_buoyancy(layer)
 
 static func register_liquid_viscosity(id: String, viscosity_val: float) -> void:
-	AtomicFluidShaders.register_liquid_viscosity(id, viscosity_val)
+	LiquidProperties.register_liquid_viscosity(id, viscosity_val)
 
 static func get_liquid_viscosity(id: String) -> float:
-	return AtomicFluidShaders.get_liquid_viscosity(id)
+	return LiquidProperties.get_liquid_viscosity(id)
 
 func set_visual_override(override_data: Dictionary) -> void:
 	_visual_override = override_data.duplicate()
@@ -64,7 +64,6 @@ func get_mouth_contact_ratio() -> float:
 func setup_shader(outside_sprite: Node) -> ShaderMaterial:
 	if not outside_sprite:
 		return null
-
 	_outside_sprite = outside_sprite
 
 	var source_mat: Material = null
@@ -75,12 +74,9 @@ func setup_shader(outside_sprite: Node) -> ShaderMaterial:
 	elif "material_overlay" in outside_sprite and outside_sprite.material_overlay is ShaderMaterial:
 		source_mat = outside_sprite.material_overlay
 
-	if source_mat:
-		liquid_shader_mat = source_mat.duplicate() as ShaderMaterial
-	else:
-		liquid_shader_mat = ShaderMaterial.new()
+	liquid_shader_mat = source_mat.duplicate() as ShaderMaterial if source_mat else ShaderMaterial.new()
+	if not source_mat:
 		is_override = true
-
 	liquid_shader_mat.shader = CONTAINER_SHADER
 	liquid_shader_mat.render_priority = 2
 
@@ -94,7 +90,6 @@ func setup_shader(outside_sprite: Node) -> ShaderMaterial:
 		mask_tex = (outside_sprite as Sprite3D).texture
 	elif liquid_shader_mat.get_shader_parameter("texture_albedo") is Texture2D:
 		mask_tex = liquid_shader_mat.get_shader_parameter("texture_albedo") as Texture2D
-
 	if mask_tex:
 		liquid_shader_mat.set_shader_parameter("texture_albedo", mask_tex)
 
@@ -114,11 +109,9 @@ func setup_shader(outside_sprite: Node) -> ShaderMaterial:
 	gradient_texture.height = 4
 	gradient_texture.fill_from = Vector2(0.0, 0.5)
 	gradient_texture.fill_to = Vector2(1.0, 0.5)
-
 	liquid_gradient = Gradient.new()
 	liquid_gradient.interpolation_mode = Gradient.GRADIENT_INTERPOLATE_CONSTANT
 	gradient_texture.gradient = liquid_gradient
-
 	return liquid_shader_mat
 
 func cleanup() -> void:
@@ -136,15 +129,15 @@ func sync_container_liquids(liquids: Array, glass_size: float, is_mixed_flag: bo
 	var pour_info := _pending_pour_info
 	_pending_pour_info = {}
 	if fluid_sim:
-		fluid_sim.sync_container_liquids(liquids, glass_size, is_mixed_flag, AtomicFluidShaders._custom_buoyancy, pour_info, AtomicFluidShaders._custom_viscosity)
+		fluid_sim.sync_container_liquids(liquids, glass_size, is_mixed_flag, {}, pour_info, {})
 
 func sync_bottle_liquid(id: String, current_amount: float, bottle_size: float, color: Color, buoyancy: float = -1.0, viscosity_val: float = -1.0) -> void:
 	if buoyancy > 0.0:
-		register_liquid_buoyancy(id, buoyancy)
+		LiquidProperties.register_liquid_buoyancy(id, buoyancy)
 	if viscosity_val >= 0.0:
-		register_liquid_viscosity(id, viscosity_val)
-	var eff_buoy := buoyancy if buoyancy > 0.0 else get_liquid_buoyancy(id)
-	var eff_visc := clampf(viscosity_val, 0.0, 1.0) if viscosity_val >= 0.0 else get_liquid_viscosity(id)
+		LiquidProperties.register_liquid_viscosity(id, viscosity_val)
+	var eff_buoy := buoyancy if buoyancy > 0.0 else LiquidProperties.get_liquid_buoyancy(id)
+	var eff_visc := clampf(viscosity_val, 0.0, 1.0) if viscosity_val >= 0.0 else LiquidProperties.get_liquid_viscosity(id)
 	if fluid_sim:
 		fluid_sim.sync_bottle_liquid(id, current_amount, bottle_size, color, eff_buoy, eff_visc)
 
@@ -163,7 +156,6 @@ func update_physics(delta: float, current_pos: Vector3, camera: Camera3D, viscos
 	var frame_accel := (frame_velocity - last_velocity) / delta
 	last_global_pos = current_pos
 	last_velocity = frame_velocity
-
 	if frame_accel.length() > 50.0:
 		frame_accel = frame_accel.normalized() * 50.0
 
@@ -173,24 +165,15 @@ func update_physics(delta: float, current_pos: Vector3, camera: Camera3D, viscos
 	var eff_spring := spring_stiffness / (1.0 + clamped_visc * 0.7)
 	var current_max := lerpf(max_slosh, max_slosh * 0.35, clamped_visc)
 
-	var slosh_force := -h_accel * slosh_sens
-	var spring_force := -slosh_angle * eff_spring
-	var damping_force := -slosh_velocity * eff_damping
-	slosh_velocity += (spring_force + damping_force + slosh_force) * delta
-	slosh_angle += slosh_velocity * delta
-	slosh_angle = clampf(slosh_angle, -current_max, current_max)
+	slosh_velocity += (-slosh_angle * eff_spring - slosh_velocity * eff_damping - h_accel * slosh_sens) * delta
+	slosh_angle = clampf(slosh_angle + slosh_velocity * delta, -current_max, current_max)
 
-	var lateral_agitation := absf(slosh_velocity) * 0.02
-	var v_force := -frame_accel.y * vert_sens + lateral_agitation
-	var v_spring_force := -slosh_vertical_offset * (vert_spring / (1.0 + clamped_visc))
-	var v_damping_force := -slosh_vertical_velocity * (vert_damping * (1.0 + clamped_visc * 2.0))
-	slosh_vertical_velocity += (v_spring_force + v_damping_force + v_force) * delta
-	slosh_vertical_offset += slosh_vertical_velocity * delta
-	slosh_vertical_offset = clampf(slosh_vertical_offset, -0.15, 0.15)
+	var v_force := -frame_accel.y * vert_sens + absf(slosh_velocity) * 0.02
+	slosh_vertical_velocity += (-slosh_vertical_offset * (vert_spring / (1.0 + clamped_visc)) - slosh_vertical_velocity * (vert_damping * (1.0 + clamped_visc * 2.0)) + v_force) * delta
+	slosh_vertical_offset = clampf(slosh_vertical_offset + slosh_vertical_velocity * delta, -0.15, 0.15)
 
 	wave_phase += delta * wave_freq * (1.0 - clamped_visc * 0.6)
-	var agitation_energy := absf(slosh_velocity) * 0.025 + absf(frame_velocity.length()) * 0.015
-	var target_wave := clampf(agitation_energy, 0.0, 0.06 * (1.0 - clamped_visc * 0.6))
+	var target_wave := clampf(absf(slosh_velocity) * 0.025 + absf(frame_velocity.length()) * 0.015, 0.0, 0.06 * (1.0 - clamped_visc * 0.6))
 	wave_amplitude = lerpf(wave_amplitude, target_wave, 1.0 - exp(-20.0 * delta))
 
 	if fluid_sim:
@@ -199,14 +182,8 @@ func update_physics(delta: float, current_pos: Vector3, camera: Camera3D, viscos
 		var local_accel := Vector2(0.0, -9.8)
 		if is_instance_valid(sprite_node) and sprite_node.is_inside_tree():
 			var b := sprite_node.global_transform.basis
-			var axis_x := b.x.normalized()
-			var axis_y := b.y.normalized()
-			if sprite_node is Sprite3D:
-				var sp := sprite_node as Sprite3D
-				if sp.flip_h:
-					axis_x = -axis_x
-				if sp.flip_v:
-					axis_y = -axis_y
+			var axis_x := -b.x.normalized() if (sprite_node is Sprite3D and (sprite_node as Sprite3D).flip_h) else b.x.normalized()
+			var axis_y := -b.y.normalized() if (sprite_node is Sprite3D and (sprite_node as Sprite3D).flip_v) else b.y.normalized()
 			local_accel = Vector2(world_accel.dot(axis_x), world_accel.dot(axis_y))
 		fluid_sim.step(delta, local_accel, viscosity)
 
@@ -214,7 +191,6 @@ func _compute_pixel_grid(base_resolution: float) -> Vector2:
 	if _visual_override.has("pixel_resolution"):
 		var ov := maxf(float(_visual_override["pixel_resolution"]), 8.0)
 		return Vector2(ov, ov)
-
 	var res_scale := maxf(base_resolution, 8.0) / REFERENCE_PIXEL_RESOLUTION
 	var sp := _outside_sprite as Sprite3D
 	if is_instance_valid(sp) and sp.texture != null and sp.is_inside_tree():
@@ -226,7 +202,6 @@ func _compute_pixel_grid(base_resolution: float) -> Vector2:
 			if world_w > 0.0001 and world_h > 0.0001:
 				var density := UNIFORM_PIXEL_DENSITY * res_scale
 				return Vector2(maxf(world_w * density, 8.0), maxf(world_h * density, 8.0))
-
 	var fallback := maxf(base_resolution, 8.0)
 	return Vector2(fallback, fallback)
 
@@ -236,62 +211,23 @@ func sync_shader_uniforms(_fill_ratio: float, config: Dictionary) -> void:
 	for uniform_name in config.keys():
 		if uniform_name == "pixel_resolution":
 			continue
-		var val = _visual_override.get(uniform_name, config[uniform_name])
-		liquid_shader_mat.set_shader_parameter(uniform_name, val)
-
-	var base_res := float(config.get("pixel_resolution", REFERENCE_PIXEL_RESOLUTION))
-	var grid := _compute_pixel_grid(base_res)
+		liquid_shader_mat.set_shader_parameter(uniform_name, _visual_override.get(uniform_name, config[uniform_name]))
+	var grid := _compute_pixel_grid(float(config.get("pixel_resolution", REFERENCE_PIXEL_RESOLUTION)))
 	liquid_shader_mat.set_shader_parameter("pixel_grid", grid)
 	liquid_shader_mat.set_shader_parameter("pixel_resolution", (grid.x + grid.y) * 0.5)
 
-func rebuild_gradient(liquids: Array, total_liquids: float, glass_size: float, liquid_box: VBoxContainer = null, label_scene: PackedScene = null, is_mixed_flag: bool = false) -> Label:
-	var last_label: Label = null
-
+func rebuild_gradient(liquids: Array, total_liquids: float, glass_size: float, is_mixed_flag: bool = false) -> void:
 	sync_container_liquids(liquids, glass_size, is_mixed_flag)
-
 	if not liquid_gradient:
-		return last_label
-
+		return
 	if liquids.is_empty() or total_liquids <= 0.0:
 		liquid_gradient.offsets = PackedFloat32Array([0.0, 1.0])
 		liquid_gradient.colors = PackedColorArray([Color(0, 0, 0, 0), Color(0, 0, 0, 0)])
-		return last_label
+		return
 
 	var has_tint := _visual_override.has("liquid_tint_color")
 	var tint_col: Color = _visual_override.get("liquid_tint_color", Color.WHITE)
 	var tint_mix: float = float(_visual_override.get("liquid_tint_strength", 0.35))
-
-	if liquid_box and label_scene:
-		var children := liquid_box.get_children()
-		if children.size() != liquids.size():
-			for c in children:
-				liquid_box.remove_child(c)
-				c.queue_free()
-			for layer in liquids:
-				liquid_box.add_child(label_scene.instantiate())
-		children = liquid_box.get_children()
-		for i in range(mini(children.size(), liquids.size())):
-			var lbl = children[i]
-			var layer: Array = liquids[i]
-			var col := get_layer_color(layer)
-			if has_tint:
-				col = col.lerp(tint_col, tint_mix)
-			if lbl.material:
-				lbl.material.set_shader_parameter("base_color", col)
-			var layer_name := format_layer_name(layer[0])
-			var pct: float = (float(layer[1]) / maxf(glass_size, 0.001)) * 100.0
-			var text_str := layer_name + ": " + str(snappedf(pct, 0.1)) + "%"
-			if lbl.has_method("change_text"):
-				lbl.change_text(text_str)
-			else:
-				lbl.text = text_str
-		if not children.is_empty():
-			last_label = children[children.size() - 1] as Label
-		liquid_box.modulate.a = 1.0
-
-	var offsets := PackedFloat32Array([0.0])
-	var colors := PackedColorArray()
-	var current_pos: float = 0.0
 
 	var sorted_indices: Array[int] = []
 	for i in liquids.size():
@@ -299,21 +235,21 @@ func rebuild_gradient(liquids: Array, total_liquids: float, glass_size: float, l
 		if l is Array and l.size() >= 2 and float(l[1]) > 0.0:
 			sorted_indices.append(i)
 	sorted_indices.sort_custom(func(a: int, b: int) -> bool:
-		var ba := get_layer_buoyancy(liquids[a])
-		var bb := get_layer_buoyancy(liquids[b])
-		if is_equal_approx(ba, bb):
-			return a < b
-		return ba < bb
+		var ba := LiquidProperties.get_layer_buoyancy(liquids[a])
+		var bb := LiquidProperties.get_layer_buoyancy(liquids[b])
+		return a < b if is_equal_approx(ba, bb) else ba < bb
 	)
 
+	var offsets := PackedFloat32Array([0.0])
+	var colors := PackedColorArray()
+	var current_pos: float = 0.0
 	for idx_pos in range(sorted_indices.size() - 1, -1, -1):
 		var layer = liquids[sorted_indices[idx_pos]]
-		var amount: float = float(layer[1])
-		var layer_col := get_layer_color(layer)
+		var layer_col := LiquidColorUtils.get_layer_color(layer)
 		if has_tint:
 			layer_col = layer_col.lerp(Color(tint_col.r, tint_col.g, tint_col.b, layer_col.a), tint_mix)
 		colors.append(layer_col)
-		current_pos += amount / total_liquids
+		current_pos += float(layer[1]) / total_liquids
 		if idx_pos > 0 and current_pos < 1.0:
 			offsets.append(clampf(current_pos, 0.001, 0.999))
 
@@ -321,84 +257,17 @@ func rebuild_gradient(liquids: Array, total_liquids: float, glass_size: float, l
 		colors.append(colors[colors.size() - 1] if colors.size() > 0 else Color.WHITE)
 	while offsets.size() < colors.size():
 		offsets.append(1.0)
-
 	liquid_gradient.offsets = offsets
 	liquid_gradient.colors = colors
-	return last_label
 
 func format_layer_name(layer_id) -> String:
-	if layer_id is Array:
-		var names: Array = layer_id.duplicate()
-		names.sort()
-		return " + ".join(names)
-	elif layer_id is Dictionary:
-		var names: Array = layer_id.keys()
-		names.sort()
-		return " + ".join(names)
-	return str(layer_id)
+	return LiquidColorUtils.format_layer_name(layer_id)
 
 func get_layer_color(layer: Array) -> Color:
-	if layer.size() > 2 and layer[2] is Color:
-		return layer[2]
-	if layer[0] is Array or layer[0] is Dictionary:
-		return get_layer_hsv_color(layer)
-	return LIQUID_COLOR.get(str(layer[0]), Color.WHITE)
+	return LiquidColorUtils.get_layer_color(layer)
 
 func get_layer_hsv_color(layer: Array) -> Color:
-	if layer.size() > 2 and layer[2] is Color:
-		return layer[2]
-	var weights: Array = []
-	if layer.size() > 3 and layer[3] is Dictionary:
-		for ing in layer[3]:
-			weights.append([LIQUID_COLOR.get(str(ing), Color.WHITE), float(layer[3][ing])])
-	elif layer[0] is Array:
-		for ing in layer[0]:
-			weights.append([LIQUID_COLOR.get(str(ing), Color.WHITE), 1.0])
-	elif layer[0] is Dictionary:
-		for ing in layer[0]:
-			weights.append([LIQUID_COLOR.get(str(ing), Color.WHITE), float(layer[0][ing])])
-	else:
-		return LIQUID_COLOR.get(str(layer[0]), Color.WHITE)
-	return average_hsv_color(weights)
+	return LiquidColorUtils.get_layer_hsv_color(layer)
 
 func average_hsv_color(color_weights: Array) -> Color:
-	if color_weights.is_empty():
-		return Color.WHITE
-
-	var total_weight: float = 0.0
-	var sum_x: float = 0.0
-	var sum_y: float = 0.0
-	var sum_s: float = 0.0
-	var sum_v: float = 0.0
-	var sum_a: float = 0.0
-
-	for item in color_weights:
-		var c: Color = item[0]
-		var w: float = float(item[1])
-		if w <= 0.0:
-			continue
-		total_weight += w
-		var angle := c.h * TAU
-		var sat_w := maxf(c.s, 0.01) * w
-		sum_x += cos(angle) * sat_w
-		sum_y += sin(angle) * sat_w
-		sum_s += c.s * w
-		sum_v += c.v * w
-		sum_a += c.a * w
-
-	if total_weight <= 0.0:
-		return Color.WHITE
-
-	var avg_h: float = 0.0
-	if absf(sum_x) > 0.0001 or absf(sum_y) > 0.0001:
-		var avg_angle := atan2(sum_y, sum_x)
-		if avg_angle < 0.0:
-			avg_angle += TAU
-		avg_h = avg_angle / TAU
-	else:
-		avg_h = color_weights[0][0].h
-
-	var avg_s := clampf(sum_s / total_weight, 0.35, 1.0)
-	var avg_v := clampf(sum_v / total_weight, 0.5, 1.0)
-	var avg_a := clampf(sum_a / total_weight, 0.0, 1.0)
-	return Color.from_hsv(avg_h, avg_s, avg_v, avg_a)
+	return LiquidColorUtils.average_hsv_color(color_weights)

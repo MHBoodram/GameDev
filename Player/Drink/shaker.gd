@@ -38,6 +38,12 @@ func start_shake(glass: Glasses) -> void:
 	_shaking = true
 	_active_glass = glass
 
+	var focus := StationFocusController.get_current(self)
+	if focus:
+		focus.begin_station(null, 0.0, true)
+	else:
+		GameEvents.minigame_lock_changed.emit(true)
+
 	_in_game()
 	glass._in_game()
 
@@ -70,6 +76,10 @@ func start_shake(glass: Glasses) -> void:
 			print("[mixed]: ", glass.get_mixed_ingredients())
 		glass._out_of_game()
 	_out_of_game()
+	if focus:
+		await focus.end_station(false, 0.0)
+	else:
+		GameEvents.minigame_lock_changed.emit(false)
 	_shaking = false
 
 func _on_shake_pumped() -> void:

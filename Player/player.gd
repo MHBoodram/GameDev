@@ -11,14 +11,9 @@ extends Node3D
 @export var counter: Node3D
 var summoning: bool = false
 var in_game: bool = false
-var _pour_tween: Tween = null
 
 var tool_controller: ToolController = ToolController.new()
-
-var in_game_drinks: Dictionary = {
-	"Drink": {"Node": Node3D, "position": Vector3.ZERO},
-	"Glass": {"Node": Node3D, "position": Vector3.ZERO}
-}
+var station_focus: StationFocusController = null
 
 @export var counter_min_x: float = -1.0
 @export var counter_max_x: float = 1.184
@@ -33,7 +28,22 @@ var cup_offsets := {
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
+	ToolController.current = tool_controller
+	station_focus = get_node_or_null("StationFocusController") as StationFocusController
+	if not station_focus:
+		station_focus = StationFocusController.new()
+		station_focus.name = "StationFocusController"
+		add_child(station_focus)
+	station_focus.setup(self, camera_rig)
+	if not GameEvents.hand_cursor_changed.is_connected(_update_hand):
+		GameEvents.hand_cursor_changed.connect(_update_hand)
 	_update_hand("idle")
+
+func _exit_tree() -> void:
+	if ToolController.current == tool_controller:
+		ToolController.current = null
+	if GameEvents._bus and GameEvents.hand_cursor_changed.is_connected(_update_hand):
+		GameEvents.hand_cursor_changed.disconnect(_update_hand)
 
 func _process(_delta: float) -> void:
 	if hand_sprite:
@@ -100,7 +110,7 @@ func _handle_dialogue_input() -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.is_pressed() and event.button_index == MOUSE_BUTTON_RIGHT:
 		summoning = false
-		if in_game:
+		if in_game and station_focus and station_focus.is_bottle_pour_active():
 			_out_of_game()
 
 func _spawn_and_begin_drag(scene: PackedScene, cup_name: String, spawn_world_pos: Variant = null) -> void:
@@ -132,61 +142,14 @@ func _spawn_and_begin_drag(scene: PackedScene, cup_name: String, spawn_world_pos
 
 # locks bottle and cup in front of camera marks to run pour minigame
 func _perfect_pour(drink: Drinks, glass: Glasses) -> void:
-	if _pour_tween and _pour_tween.is_valid():
-		_pour_tween.kill()
-	if gameplay_ui:
-		gameplay_ui._in_down_minigame()
-	in_game = true
-	in_game_drinks["Drink"]["Node"] = drink
-	in_game_drinks["Drink"]["position"] = drink.global_position
-	in_game_drinks["Drink"]["position"].x = drink.global_position.x + 0.5
-	in_game_drinks["Glass"]["Node"] = glass
+	if station_focus:
+		station_focus.begin_bottle_pour(drink, glass)
 
-	var glass_home_pos: Vector3 = glass.global_position
-	if glass.has_method("_get_saved_counter_position"):
-		glass_home_pos = glass._get_saved_counter_position(glass._last_counter_position)
-	in_game_drinks["Glass"]["position"] = glass_home_pos
-	drink._in_game()
-	glass._in_game()
-
-	_pour_tween = get_tree().create_tween().set_parallel(true)
-	_pour_tween.tween_property(drink, "global_position", $Camera3D/drink_mark.global_position, 0.5)
-	_pour_tween.tween_property(glass, "global_position", $Camera3D/glass_mark.global_position, 0.5)
-	_pour_tween.tween_property(glass, "rotation_degrees:y", 0, 0.5)
-
-	await _pour_tween.finished
-	if not in_game or not is_instance_valid(drink):
-		return
-	await get_tree().process_frame
-	if in_game and is_instance_valid(drink):
-		drink.look_at($Camera3D.global_position)
 
 # returns bottle to shelf and cup to counter when canceling or finishing pour
 func _out_of_game() -> void:
-	if not in_game:
-		return
-	in_game = false
-	if _pour_tween and _pour_tween.is_valid():
-		_pour_tween.kill()
-	var drink = in_game_drinks["Drink"]["Node"]
-	var glass = in_game_drinks["Glass"]["Node"]
-
-	_pour_tween = get_tree().create_tween().set_parallel(true)
-	if is_instance_valid(drink):
-		if "original_position" in drink and drink.original_position:
-			_pour_tween.tween_property(drink, "global_position", drink.original_position.global_position, 0.5)
-		else:
-			_pour_tween.tween_property(drink, "global_position", in_game_drinks["Drink"]["position"], 0.5)
-	if is_instance_valid(glass):
-		_pour_tween.tween_property(glass, "global_position", in_game_drinks["Glass"]["position"], 0.5)
-
-	await _pour_tween.finished
-	if is_instance_valid(drink):
-		drink._out_of_game()
-	if is_instance_valid(glass):
-		glass._out_of_game()
-	if gameplay_ui and gameplay_ui.has_method("_out_down_minigame"):
-		gameplay_ui._out_down_minigame()
+	if station_focus:
+		station_focus.end_bottle_pour()
 
 func _on_shot_glass_button_input_event(_cam: Node, event: InputEvent, _pos: Vector3, _norm: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:

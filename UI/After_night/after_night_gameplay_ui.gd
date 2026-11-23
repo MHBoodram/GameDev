@@ -7,7 +7,6 @@ extends CanvasLayer
 
 var camera_rig: Camera = null
 var hud_indicators: HudIndicators = null
-#var tutorial_director: TutorialManager = TutorialManager.new()
 
 # patch to camera rig so existing scripts don't break
 var down: bool:
@@ -22,8 +21,6 @@ var current_position: int:
 		if camera_rig: camera_rig.current_position = val
 
 func _ready() -> void:
-	#add_child(tutorial_director)
-	
 	var cam: Camera3D = get_viewport().get_camera_3d()
 	if cam is Camera:
 		camera_rig = cam as Camera
@@ -36,11 +33,20 @@ func _ready() -> void:
 	_setup_hud_indicators()
 	if PlayerStats and not PlayerStats.money_changed.is_connected(_on_money_changed):
 		PlayerStats.money_changed.connect(_on_money_changed)
-	print(camera_rig.global_position)
+	if not GameEvents.minigame_lock_changed.is_connected(_on_minigame_lock_changed):
+		GameEvents.minigame_lock_changed.connect(_on_minigame_lock_changed)
 
 func _exit_tree() -> void:
 	if is_instance_valid(PlayerStats) and PlayerStats.money_changed.is_connected(_on_money_changed):
 		PlayerStats.money_changed.disconnect(_on_money_changed)
+	if GameEvents._bus and GameEvents.minigame_lock_changed.is_connected(_on_minigame_lock_changed):
+		GameEvents.minigame_lock_changed.disconnect(_on_minigame_lock_changed)
+
+func _on_minigame_lock_changed(locked: bool) -> void:
+	if locked:
+		_in_down_minigame()
+	else:
+		_out_down_minigame()
 
 func _on_money_changed(new_value: float, _delta: float) -> void:
 	_change_money(new_value)
@@ -117,7 +123,6 @@ func _on_right_button_pressed() -> void:
 func _on_bottom_button_pressed() -> void:
 	if !GameState.player.in_shop:
 		return
-	
 	if GameState.player and GameState.player.has_method("handle_counter_edge_action"):
 		if GameState.player.handle_counter_edge_action():
 			_in_down_minigame()

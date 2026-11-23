@@ -21,7 +21,6 @@ static var current: HudIndicators = null
 var _channels: Dictionary = {}
 var _active_floating_groups: Dictionary = {}
 var _status_groups: Dictionary = {}
-var _fallback_visual_helper: LiquidVisualHelper = LiquidVisualHelper.new()
 
 static func get_current() -> HudIndicators:
 	if is_instance_valid(current) and current.is_inside_tree():
@@ -49,6 +48,7 @@ func _enter_tree() -> void:
 
 func _exit_tree() -> void:
 	_disconnect_player_stats()
+	_disconnect_game_events()
 	if current == self:
 		current = null
 
@@ -67,6 +67,7 @@ func _ready() -> void:
 	_register_default_channels()
 	_ensure_pouring_group()
 	_connect_player_stats()
+	_connect_game_events()
 
 func _process(_delta: float) -> void:
 	if _status_groups.has("pouring"):
@@ -89,6 +90,40 @@ func _get_channel_config(channel_id: String, options: Dictionary = {}) -> Dictio
 	for key in options.keys():
 		base[key] = options[key]
 	return base
+
+func _connect_game_events() -> void:
+	if not GameEvents.cup_spilled.is_connected(_on_cup_spilled):
+		GameEvents.cup_spilled.connect(_on_cup_spilled)
+	if not GameEvents.cup_emptied.is_connected(_on_cup_emptied):
+		GameEvents.cup_emptied.connect(_on_cup_emptied)
+	if not GameEvents.cup_pouring_updated.is_connected(_on_cup_pouring_updated):
+		GameEvents.cup_pouring_updated.connect(_on_cup_pouring_updated)
+	if not GameEvents.cup_pouring_stopped.is_connected(_on_cup_pouring_stopped):
+		GameEvents.cup_pouring_stopped.connect(_on_cup_pouring_stopped)
+
+func _disconnect_game_events() -> void:
+	if not GameEvents._bus:
+		return
+	if GameEvents.cup_spilled.is_connected(_on_cup_spilled):
+		GameEvents.cup_spilled.disconnect(_on_cup_spilled)
+	if GameEvents.cup_emptied.is_connected(_on_cup_emptied):
+		GameEvents.cup_emptied.disconnect(_on_cup_emptied)
+	if GameEvents.cup_pouring_updated.is_connected(_on_cup_pouring_updated):
+		GameEvents.cup_pouring_updated.disconnect(_on_cup_pouring_updated)
+	if GameEvents.cup_pouring_stopped.is_connected(_on_cup_pouring_stopped):
+		GameEvents.cup_pouring_stopped.disconnect(_on_cup_pouring_stopped)
+
+func _on_cup_spilled(glass: Node3D, overflow_percent: float) -> void:
+	show_cup_spill_indicator(glass, overflow_percent)
+
+func _on_cup_emptied(glass: Node3D) -> void:
+	show_cup_empty_indicator(glass)
+
+func _on_cup_pouring_updated(glass: Node, liquids: Array, capacity: float, visual_helper: RefCounted) -> void:
+	update_pouring_indicator(glass, liquids, capacity, visual_helper as LiquidVisualHelper)
+
+func _on_cup_pouring_stopped(glass: Node, immediate: bool) -> void:
+	hide_pouring_indicator(glass, immediate)
 
 func _connect_player_stats() -> void:
 	if not PlayerStats:
@@ -547,20 +582,19 @@ func update_pouring_indicator(glass: Node, liquids: Array, glass_size: float, vi
 		hide_pouring_indicator(glass, true)
 		return
 
-	var helper: LiquidVisualHelper = visual_helper if visual_helper else _fallback_visual_helper
-	var has_tint: bool = helper._visual_override.has("liquid_tint_color")
-	var tint_col: Color = helper._visual_override.get("liquid_tint_color", Color.WHITE)
-	var tint_mix: float = float(helper._visual_override.get("liquid_tint_strength", 0.35))
+	var has_tint: bool = visual_helper != null and visual_helper._visual_override.has("liquid_tint_color")
+	var tint_col: Color = visual_helper._visual_override.get("liquid_tint_color", Color.WHITE) if has_tint else Color.WHITE
+	var tint_mix: float = float(visual_helper._visual_override.get("liquid_tint_strength", 0.35)) if has_tint else 0.35
 	var layer_template: String = str(cfg.get("layer_text_format", "{name}: {percent}%"))
 
 	var entries: Array[Dictionary] = []
 	for layer in liquids:
 		if not (layer is Array) or layer.size() < 2:
 			continue
-		var col: Color = helper.get_layer_color(layer)
+		var col: Color = LiquidColorUtils.get_layer_color(layer)
 		if has_tint:
 			col = col.lerp(tint_col, tint_mix)
-		var layer_name: String = helper.format_layer_name(layer[0])
+		var layer_name: String = LiquidColorUtils.format_layer_name(layer[0])
 		var pct: float = (float(layer[1]) / maxf(glass_size, 0.001)) * 100.0
 		entries.append({
 			"text": IndicatorSettings.format_text(layer_template, {
