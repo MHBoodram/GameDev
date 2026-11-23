@@ -48,6 +48,16 @@ func set_visual_override(override_data: Dictionary) -> void:
 func set_next_pour_info(pour_info: Dictionary) -> void:
 	_pending_pour_info = pour_info.duplicate()
 
+func set_mouth_monitoring(enabled: bool) -> void:
+	if fluid_sim:
+		fluid_sim.set_mouth_monitoring(enabled)
+
+func is_liquid_touching_mouth() -> bool:
+	return fluid_sim != null and fluid_sim.is_liquid_touching_mouth()
+
+func get_mouth_contact_ratio() -> float:
+	return fluid_sim.get_mouth_contact_ratio() if fluid_sim else 0.0
+
 func setup_shader(outside_sprite: Node) -> ShaderMaterial:
 	if not outside_sprite:
 		return null

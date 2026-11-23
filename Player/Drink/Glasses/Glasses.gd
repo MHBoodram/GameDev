@@ -5,6 +5,7 @@ class_name Glasses
 
 const OVERFLOW_STREAM_HOLD_TIME: float = 0.075
 const POUR_SPLASH_HOLD_TIME: float = 0.075
+const MIN_POUR_OUT_TILT_DEGREES: float = 5.0
 
 @onready var tcmtd := preload("res://Player/Drink/Glasses/liquids_label.tscn")
 @export var liquids: Array = []
@@ -35,6 +36,7 @@ var is_being_served: bool = false
 var is_delivering: bool = false
 var is_consumed: bool = false
 var is_pouring_out: bool = false
+var _is_actively_pouring_out: bool = false
 var pour_tilt_degrees: float = 0.0
 var _target_pour_tilt_degrees: float = 0.0
 var _pour_tilt_tween: Tween = null
@@ -99,6 +101,14 @@ func _is_drag_blocked() -> bool:
 
 func set_active_trash(trash_area: Area3D) -> void:
 	_active_trash = trash_area
+	visual_helper.set_mouth_monitoring(is_instance_valid(_active_trash) or _is_actively_pouring_out)
+
+func can_pour_out_from_mouth() -> bool:
+	if is_consumed or total_liquids <= 0.001:
+		return false
+	if absf(pour_tilt_degrees) <= MIN_POUR_OUT_TILT_DEGREES:
+		return false
+	return visual_helper.is_liquid_touching_mouth()
 
 func get_drink_mix() -> DrinkMix:
 	return drink_mix
@@ -347,7 +357,7 @@ func _update_overflow_streams(delta: float) -> void:
 
 func _update_pour_out_stream() -> void:
 	_ensure_pour_out_stream()
-	if is_pouring_out and total_liquids > 0.001 and absf(pour_tilt_degrees) > 10.0:
+	if is_pouring_out and _is_actively_pouring_out and can_pour_out_from_mouth():
 		var spout_pos := get_pour_spout_world_position()
 		var sp := _get_container_sprite()
 		var outward_x := Vector3.RIGHT
@@ -782,6 +792,8 @@ func _subtract_drink_mix_liquid(id: String, amount: float) -> void:
 
 func start_pour_out(tilt_degrees: float = 80.0) -> void:
 	is_pouring_out = true
+	_is_actively_pouring_out = true
+	visual_helper.set_mouth_monitoring(true)
 	_is_pointer_pressed = false
 	is_balls_dragging = false
 	push_velocity = Vector3.ZERO
@@ -794,6 +806,8 @@ func set_pour_out_tilt(tilt_degrees: float) -> void:
 	_target_pour_tilt_degrees = tilt_degrees
 
 func stop_pour_out() -> void:
+	_is_actively_pouring_out = false
+	visual_helper.set_mouth_monitoring(is_instance_valid(_active_trash))
 	_target_pour_tilt_degrees = 0.0
 	if is_instance_valid(_pour_out_stream):
 		_pour_out_stream.set_stream_active(false)
@@ -823,6 +837,8 @@ func _pushing_glass(other_glass: Area3D) -> void:
 
 func _in_game() -> void:
 	in_game = true
+	_is_actively_pouring_out = false
+	visual_helper.set_mouth_monitoring(false)
 	_snap_point = null
 	_snap_locked = false
 	_snap_blend = 0.0
@@ -862,6 +878,8 @@ func _dranked() -> void:
 	if is_consumed:
 		return
 	is_consumed = true
+	_is_actively_pouring_out = false
+	visual_helper.set_mouth_monitoring(false)
 	if is_instance_valid(_pour_out_stream):
 		_pour_out_stream.set_stream_active(false)
 	_stop_pour_splash()

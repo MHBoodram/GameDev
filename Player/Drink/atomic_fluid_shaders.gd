@@ -457,11 +457,18 @@ const DISPLAY_CLEAR_GLSL := """#version 450
 layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 
 layout(set = 0, binding = 0, std430) buffer InVolume { ivec4 in_volume[]; };
+layout(set = 0, binding = 1, std430) buffer MouthState { uint mouth_data[4]; };
 
 void main() {
 	uint idx = gl_GlobalInvocationID.x;
 	if (idx >= 4096u) return;
 	in_volume[idx] = ivec4(0);
+	if (idx == 0u) {
+		mouth_data[0] = 0u;
+		mouth_data[1] = 0u;
+		mouth_data[2] = 0u;
+		mouth_data[3] = 0u;
+	}
 }
 """
 
@@ -534,6 +541,7 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 layout(set = 0, binding = 0, std430) readonly buffer InVolume { ivec4 in_volume[]; };
 layout(set = 0, binding = 1, std430) readonly buffer WallSDF { vec4 wall_sdf[]; };
 layout(rgba8, set = 0, binding = 2) uniform writeonly image2D out_image;
+layout(set = 0, binding = 3, std430) buffer MouthState { uint mouth_data[4]; };
 
 const int N = 64;
 
@@ -548,6 +556,12 @@ void main() {
 	if (inside < 0.5 || acc.w <= 16) {
 		imageStore(out_image, xy, vec4(0.0));
 		return;
+	}
+
+	if (inside > 1.5 && acc.w >= 96) {
+		atomicAdd(mouth_data[0], 1u);
+		atomicAdd(mouth_data[1], uint(acc.w));
+		atomicMax(mouth_data[2], uint(acc.w));
 	}
 
 	vec3 rgb = clamp(vec3(acc.xyz) / float(acc.w), 0.0, 1.0);

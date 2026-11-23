@@ -5,7 +5,8 @@ class_name Drinks
 
 const POUR_AMOUNT: float = 0.0825
 const POUR_INTERVAL: float = 0.033
-const MAX_POUR_ANGLE_DEGREES: float = 120.0
+const MIN_POUR_ANGLE_DEGREES: float = 5.0
+const MAX_POUR_ANGLE_DEGREES: float = 150.0
 
 @onready var liquid_refresh: Timer = get_node("Liquid_refresh")
 @export var liquid_resource: Liquid
@@ -155,10 +156,18 @@ func _get_target_pour_world_position() -> Vector3:
 		return pouring_into.global_position
 	return _get_spout_world_position() + Vector3(0.0, -0.45, 0.0)
 
+func _can_pour_from_mouth() -> bool:
+	return current_liquid > 0.0 and rotation_degrees.z > MIN_POUR_ANGLE_DEGREES and visual_helper.is_liquid_touching_mouth()
+
+func _get_effective_pour_rate_multiplier() -> float:
+	if not _can_pour_from_mouth():
+		return 0.0
+	return clampf(rotation_degrees.z / (MAX_POUR_ANGLE_DEGREES * 0.5), 0.15, 2.0)
+
 func _update_pour_stream() -> void:
 	_ensure_pour_stream()
-	var rate_mult: float = _get_pour_rate_multiplier()
-	if in_game and is_pouring and current_liquid > 0.0 and rate_mult > 0.02 and rotation_degrees.z > 6.0 and is_instance_valid(pouring_into):
+	var rate_mult: float = _get_effective_pour_rate_multiplier()
+	if in_game and is_pouring and rate_mult > 0.0 and is_instance_valid(pouring_into):
 		var start_pos: Vector3 = _get_spout_world_position()
 		var surface_pos: Vector3 = _get_target_pour_world_position()
 		var rim_pos: Vector3 = surface_pos
@@ -225,8 +234,8 @@ func _pour() -> void:
 
 	if pouring_into:
 		while _is_pour_button_held() and in_game and GameState.player and GameState.player.in_game and current_liquid > 0.0 and is_instance_valid(pouring_into):
-			var rate_mult: float = _get_pour_rate_multiplier()
-			if rate_mult > 0.02 and rotation_degrees.z > 6.0:
+			var rate_mult: float = _get_effective_pour_rate_multiplier()
+			if rate_mult > 0.0:
 				var cost_mult: float = pouring_into.get_resource_usage_multiplier(liquid_resource.id) if pouring_into.has_method("get_resource_usage_multiplier") else 1.0
 				var max_bottle_pour: float = current_liquid / maxf(cost_mult, 0.001)
 				var amount: float = minf(POUR_AMOUNT * rate_mult, max_bottle_pour)
@@ -274,6 +283,7 @@ func _return_original() -> void:
 
 func _in_game() -> void:
 	in_game = true
+	visual_helper.set_mouth_monitoring(true)
 	_is_pointer_pressed = false
 	is_balls_dragging = false
 	if is_instance_valid(_pour_stream):
@@ -285,6 +295,7 @@ func _in_game() -> void:
 
 func _out_of_game() -> void:
 	in_game = false
+	visual_helper.set_mouth_monitoring(false)
 	is_pouring = false
 	rotation_degrees.z = 0.0
 	$CPUParticles3D.emitting = false

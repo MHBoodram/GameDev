@@ -1,7 +1,7 @@
 @tool
 extends Area3D
 
-const MAX_POUR_TILT_DEGREES: float = 120.0
+const MAX_POUR_TILT_DEGREES: float = 135.0
 const POUR_INTERVAL: float = 0.033
 const SFX_INTERVAL_MS: int = 100
 
@@ -122,8 +122,8 @@ func start_pour() -> void:
 		active_glass.start_pour_out(_get_pour_tilt_degrees())
 
 	while _is_pour_button_held() and is_inside_tree():
-		var rate_mult: float = _get_pour_rate_multiplier()
-		if rate_mult > 0.02 and is_instance_valid(active_glass) and active_glass.total_liquids > 0.0:
+		if is_instance_valid(active_glass) and active_glass.total_liquids > 0.0 and active_glass.can_pour_out_from_mouth():
+			var rate_mult: float = clampf(absf(active_glass.pour_tilt_degrees) / (MAX_POUR_TILT_DEGREES * 0.5), 0.15, 2.0)
 			active_glass._pour_out(pour_out_amount * (POUR_INTERVAL / 0.1) * rate_mult)
 			var now_ms := Time.get_ticks_msec()
 			if now_ms - _last_sfx_ms >= SFX_INTERVAL_MS:

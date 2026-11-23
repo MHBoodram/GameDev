@@ -13,6 +13,7 @@ const MAX_GRID_ACCEL := 550.0
 const MAX_IMPULSE_VEL := 65.0
 const EOS_STIFFNESS := 30000.0
 const REST_DENSITY := 1.00
+const MOUTH_WEIGHT_THRESHOLD := 96
 
 # Shared static GPU resources across all containers
 static var _gpu_checked: bool = false
@@ -29,12 +30,15 @@ static var _mask_cache: Dictionary = {}
 
 # Instance state
 var _disposed: bool = false
+var _disposed_rt: bool = false
 var _gpu_initialized: bool = false
 var _flip_flop: bool = false
 var _tex_cleared: bool = false
 
 var _mask_cells: Array[Vector2i] = [] # sorted bottom-to-top up to brim
 var _mask_bytes: PackedByteArray = PackedByteArray()
+var _mouth_mask_bytes: PackedByteArray = PackedByteArray()
+var _mouth_cell_count: int = 0
 var _row_min_x: PackedInt32Array = PackedInt32Array()
 var _row_max_x: PackedInt32Array = PackedInt32Array()
 var _top_rim_y: int = 4
@@ -52,12 +56,20 @@ var _pending_ops: Array[Dictionary] = []
 var _pending_impulse: Vector2 = Vector2.ZERO
 var _last_down_dir: Vector2 = Vector2(0.0, 1.0)
 
+var _monitor_mouth: bool = false
+var _mouth_touching: bool = false
+var _mouth_hits: int = 0
+var _mouth_contact_ratio: float = 0.0
+var _mouth_readback_gen: int = 0
+var _mouth_readback_pending_rt: bool = false
+
 # GPU RIDs owned by this container instance
 var _in_volume_a: RID = RID()
 var _in_volume_b: RID = RID()
 var _density_buf: RID = RID()
 var _particles_buf: RID = RID()
 var _wall_sdf_buf: RID = RID()
+var _mouth_buf: RID = RID()
 var _out_tex_rid: RID = RID()
 
 var _sets: Dictionary = {}
@@ -68,6 +80,8 @@ const CPU_N := 32
 var _cpu_fallback_tex: ImageTexture = null
 var _cpu_img: Image = null
 var _cpu_mask: PackedByteArray = PackedByteArray()
+var _cpu_mouth_mask: PackedByteArray = PackedByteArray()
+var _cpu_mouth_cell_count: int = 0
 var _cpu_sdf_nx: PackedFloat32Array = PackedFloat32Array()
 var _cpu_sdf_ny: PackedFloat32Array = PackedFloat32Array()
 var _cpu_sdf_d: PackedFloat32Array = PackedFloat32Array()
@@ -112,6 +126,29 @@ func get_texture() -> Texture2D:
 	if _gpu_available:
 		return _display_tex_rd
 	return _cpu_fallback_tex
+
+
+func set_mouth_monitoring(enabled: bool) -> void:
+	_monitor_mouth = enabled
+	if not enabled and _active_count <= 0:
+		_reset_mouth_state()
+
+
+func is_liquid_touching_mouth() -> bool:
+	return _active_count > 0 and _mouth_touching
+
+
+func get_mouth_contact_ratio() -> float:
+	if _active_count <= 0 or not _mouth_touching:
+		return 0.0
+	return _mouth_contact_ratio
+
+
+func _reset_mouth_state() -> void:
+	_mouth_readback_gen += 1
+	_mouth_touching = false
+	_mouth_hits = 0
+	_mouth_contact_ratio = 0.0
 
 
 func add_agitation(impulse_grid_vel: Vector2) -> void:
@@ -207,6 +244,7 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 	var target_count := clampi(roundi(fill_ratio * float(_max_particles)), 1, _max_particles)
 
 	if _active_count == 0:
+		_reset_mouth_state()
 		var specs: Array[Dictionary] = []
 		var assigned := 0
 		for i in layer_items.size():
@@ -282,6 +320,7 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 
 
 func _sync_empty() -> void:
+	_reset_mouth_state()
 	if _active_count == 0 and _synced_total <= 0.0:
 		return
 	_active_count = 0
@@ -296,6 +335,11 @@ func _sync_empty() -> void:
 func step(delta: float, local_accel_world: Vector2, viscosity: float) -> void:
 	if _disposed:
 		return
+
+	if _active_count <= 0:
+		_mouth_touching = false
+		_mouth_hits = 0
+		_mouth_contact_ratio = 0.0
 
 	var scale_g := GRID_GRAVITY / 9.8
 	var grid_accel := Vector2(local_accel_world.x * scale_g, -local_accel_world.y * scale_g)
@@ -316,9 +360,15 @@ func step(delta: float, local_accel_world: Vector2, viscosity: float) -> void:
 	var ops_copy := _pending_ops.duplicate()
 	_pending_ops.clear()
 
+	var want_mouth_readback := _active_count > 0 and (
+		_monitor_mouth
+		or absf(local_accel_world.x) > 0.35
+		or local_accel_world.y > -8.8
+	)
+
 	if _gpu_available:
 		RenderingServer.call_on_render_thread(
-			AtomicFluidSim._gpu_step_static.bind(self, clamped_delta, accel_with_imp, clampf(viscosity, 0.0, 1.0), _active_count, _last_down_dir, ops_copy)
+			AtomicFluidSim._gpu_step_static.bind(self, clamped_delta, accel_with_imp, clampf(viscosity, 0.0, 1.0), _active_count, _last_down_dir, ops_copy, want_mouth_readback, _mouth_readback_gen)
 		)
 	else:
 		_cpu_step(clamped_delta, accel_with_imp, clampf(viscosity, 0.0, 1.0), ops_copy)
@@ -328,6 +378,7 @@ func cleanup() -> void:
 	if _disposed:
 		return
 	_disposed = true
+	_reset_mouth_state()
 	_pending_ops.clear()
 
 	if _display_tex_rd:
@@ -343,6 +394,7 @@ func cleanup() -> void:
 	for rid in [_in_volume_a, _in_volume_b, _density_buf, _particles_buf, _wall_sdf_buf, _out_tex_rid]:
 		if rid.is_valid():
 			owned.append(rid)
+	var mouth_buf := _mouth_buf
 	_in_volume_a = RID()
 	_in_volume_b = RID()
 	_density_buf = RID()
@@ -351,8 +403,8 @@ func cleanup() -> void:
 	_out_tex_rid = RID()
 	_sets.clear()
 
-	if _gpu_available and RenderingServer.get_rendering_device() != null and (not owned.is_empty() or not sets_to_free.is_empty()):
-		RenderingServer.call_on_render_thread(AtomicFluidSim._free_rids_on_render_thread.bind(owned, sets_to_free))
+	if _gpu_available and RenderingServer.get_rendering_device() != null and (not owned.is_empty() or not sets_to_free.is_empty() or mouth_buf.is_valid()):
+		RenderingServer.call_on_render_thread(self._cleanup_gpu_rids_rt.bind(owned, sets_to_free, mouth_buf))
 
 
 func _notification(what: int) -> void:
@@ -360,6 +412,7 @@ func _notification(what: int) -> void:
 		if _disposed:
 			return
 		_disposed = true
+		_reset_mouth_state()
 		_pending_ops.clear()
 
 		if _display_tex_rd:
@@ -372,7 +425,7 @@ func _notification(what: int) -> void:
 			if urid.is_valid():
 				sets_to_free.append(urid)
 		var owned: Array[RID] = []
-		for rid in [_in_volume_a, _in_volume_b, _density_buf, _particles_buf, _wall_sdf_buf, _out_tex_rid]:
+		for rid in [_in_volume_a, _in_volume_b, _density_buf, _particles_buf, _wall_sdf_buf, _mouth_buf, _out_tex_rid]:
 			if rid.is_valid():
 				owned.append(rid)
 		_in_volume_a = RID()
@@ -380,6 +433,7 @@ func _notification(what: int) -> void:
 		_density_buf = RID()
 		_particles_buf = RID()
 		_wall_sdf_buf = RID()
+		_mouth_buf = RID()
 		_out_tex_rid = RID()
 		_sets.clear()
 
@@ -387,14 +441,30 @@ func _notification(what: int) -> void:
 			RenderingServer.call_on_render_thread(AtomicFluidSim._free_rids_on_render_thread.bind(owned, sets_to_free))
 
 
+func _cleanup_gpu_rids_rt(rids: Array[RID], uniform_sets: Array[RID], mouth_buf: RID) -> void:
+	_disposed_rt = true
+	var rd := RenderingServer.get_rendering_device()
+	if not rd:
+		return
+	for urid in uniform_sets:
+		if urid.is_valid() and rd.uniform_set_is_valid(urid):
+			rd.free_rid(urid)
+	for rid in rids:
+		if rid.is_valid():
+			rd.free_rid(rid)
+	if mouth_buf.is_valid() and not _mouth_readback_pending_rt:
+		rd.free_rid(mouth_buf)
+		_mouth_buf = RID()
+
+
 static func _gpu_init_static(sim: AtomicFluidSim, sdf_bytes: PackedByteArray) -> void:
 	if sim and not sim._disposed:
 		sim._gpu_init_instance(sdf_bytes)
 
 
-static func _gpu_step_static(sim: AtomicFluidSim, frame_dt: float, accel: Vector2, viscosity: float, active_count: int, down_dir: Vector2, ops: Array) -> void:
+static func _gpu_step_static(sim: AtomicFluidSim, frame_dt: float, accel: Vector2, viscosity: float, active_count: int, down_dir: Vector2, ops: Array, want_mouth_readback: bool, readback_gen: int) -> void:
 	if sim and not sim._disposed:
-		sim._gpu_step(frame_dt, accel, viscosity, active_count, down_dir, ops)
+		sim._gpu_step(frame_dt, accel, viscosity, active_count, down_dir, ops, want_mouth_readback, readback_gen)
 
 
 static func _free_rids_on_render_thread(rids: Array[RID], uniform_sets: Array[RID] = []) -> void:
@@ -407,6 +477,33 @@ static func _free_rids_on_render_thread(rids: Array[RID], uniform_sets: Array[RI
 	for rid in rids:
 		if rid.is_valid():
 			rd.free_rid(rid)
+
+
+func _on_mouth_readback(data: PackedByteArray, gen: int) -> void:
+	call_deferred("_apply_mouth_readback_main", data, gen)
+	RenderingServer.call_on_render_thread(self._mark_mouth_readback_done_rt)
+
+
+func _mark_mouth_readback_done_rt() -> void:
+	_mouth_readback_pending_rt = false
+	if _disposed_rt and _mouth_buf.is_valid():
+		var rd := RenderingServer.get_rendering_device()
+		if rd:
+			rd.free_rid(_mouth_buf)
+		_mouth_buf = RID()
+
+
+func _apply_mouth_readback_main(data: PackedByteArray, gen: int) -> void:
+	if _disposed or gen != _mouth_readback_gen or _active_count <= 0 or data.size() < 12:
+		return
+	var hits := int(data.decode_u32(0))
+	var max_w := int(data.decode_u32(8))
+	_mouth_hits = hits
+	_mouth_touching = hits > 0 and max_w >= MOUTH_WEIGHT_THRESHOLD
+	if _mouth_touching:
+		_mouth_contact_ratio = clampf(float(hits) / maxf(float(_mouth_cell_count) * 0.5, 1.0), 0.0, 1.0)
+	else:
+		_mouth_contact_ratio = 0.0
 
 
 func _encode_particle(bytes: PackedByteArray, pidx: int, px: float, py: float, rho: float, visc: float, col: Color, vx: float, vy: float, inject_vel: float) -> void:
@@ -563,12 +660,79 @@ func _queue_blend(col: Color, target_rho: float, target_visc: float, active_coun
 	})
 
 
+static func _build_mouth_mask(mask: PackedByteArray, row_min_x: PackedInt32Array, row_max_x: PackedInt32Array, top_rim_y: int, bottom_y: int) -> PackedByteArray:
+	var mouth := PackedByteArray()
+	mouth.resize(GRID_CELLS)
+	if bottom_y < top_rim_y:
+		return mouth
+
+	var col_top_y := PackedInt32Array()
+	col_top_y.resize(GRID_SIZE)
+	col_top_y.fill(GRID_SIZE)
+	for x in GRID_SIZE:
+		for y in range(top_rim_y, bottom_y + 1):
+			if mask[x + y * GRID_SIZE] == 1:
+				col_top_y[x] = y
+				break
+
+	var max_body_width := 0
+	for y in range(top_rim_y, bottom_y + 1):
+		if row_max_x[y] >= row_min_x[y]:
+			max_body_width = maxi(max_body_width, row_max_x[y] - row_min_x[y] + 1)
+
+	var cavity_h := maxi(1, bottom_y - top_rim_y)
+	var y_limit := mini(bottom_y, top_rim_y + maxi(2, int(round(float(cavity_h) * 0.08))))
+	var top_w := (row_max_x[top_rim_y] - row_min_x[top_rim_y] + 1) if row_max_x[top_rim_y] >= row_min_x[top_rim_y] else 0
+	var next_y := mini(top_rim_y + 1, bottom_y)
+	var next_w := (row_max_x[next_y] - row_min_x[next_y] + 1) if row_max_x[next_y] >= row_min_x[next_y] else top_w
+	var is_narrow_neck := (next_w <= top_w + 2) and (float(next_w) < float(max_body_width) * 0.5)
+
+	var effective_band_end := top_rim_y
+	for y in range(top_rim_y, y_limit + 1):
+		if row_max_x[y] < row_min_x[y]:
+			break
+		var w_y := row_max_x[y] - row_min_x[y] + 1
+		if y > top_rim_y + 1:
+			if is_narrow_neck and float(w_y) > float(maxi(next_w, 1)) * 1.5:
+				break
+			var prev_w := (row_max_x[y - 1] - row_min_x[y - 1] + 1) if row_max_x[y - 1] >= row_min_x[y - 1] else w_y
+			if float(prev_w) < float(max_body_width) * 0.45 and float(w_y) > float(maxi(prev_w, 1)) * 1.9:
+				break
+		effective_band_end = y
+
+	if not is_narrow_neck and row_max_x[effective_band_end] >= row_min_x[effective_band_end]:
+		var end_w := row_max_x[effective_band_end] - row_min_x[effective_band_end] + 1
+		if float(end_w) < float(max_body_width) * 0.45:
+			effective_band_end = mini(bottom_y, top_rim_y + 2)
+
+	for x in GRID_SIZE:
+		var ty := col_top_y[x]
+		if ty > effective_band_end:
+			continue
+		if mask[x + ty * GRID_SIZE] == 1:
+			mouth[x + ty * GRID_SIZE] = 1
+			if x == GRID_SIZE - 1 and x > 0 and mask[(x - 1) + ty * GRID_SIZE] == 1:
+				mouth[(x - 1) + ty * GRID_SIZE] = 1
+		var max_drop := ty
+		if x > 0 and col_top_y[x - 1] <= effective_band_end and col_top_y[x - 1] > ty + 1:
+			max_drop = maxi(max_drop, col_top_y[x - 1] - 1)
+		if x + 1 < GRID_SIZE and col_top_y[x + 1] <= effective_band_end and col_top_y[x + 1] > ty + 1:
+			max_drop = maxi(max_drop, col_top_y[x + 1] - 1)
+		for y in range(ty + 1, max_drop + 1):
+			if mask[x + y * GRID_SIZE] == 1:
+				mouth[x + y * GRID_SIZE] = 1
+
+	return mouth
+
+
 func _build_container_mask(tex: Texture2D) -> void:
 	var cache_key: int = tex.get_rid().get_id() if tex else -1
 	if cache_key != -1 and _mask_cache.has(cache_key):
 		var cached: Dictionary = _mask_cache[cache_key]
 		_mask_cells = cached["cells"]
 		_mask_bytes = cached["mask_bytes"]
+		_mouth_mask_bytes = cached["mouth_mask_bytes"]
+		_mouth_cell_count = int(cached["mouth_cell_count"])
 		_row_min_x = cached["row_min_x"]
 		_row_max_x = cached["row_max_x"]
 		_top_rim_y = int(cached["top_rim_y"])
@@ -639,6 +803,12 @@ func _build_container_mask(tex: Texture2D) -> void:
 			row_min_x[y] = -1
 			row_max_x[y] = -1
 
+	var mouth_mask := _build_mouth_mask(mask, row_min_x, row_max_x, top_rim_y, bottom_y)
+	var mouth_cell_count := 0
+	for i in GRID_CELLS:
+		if mouth_mask[i] == 1:
+			mouth_cell_count += 1
+
 	var dist_in := PackedFloat32Array()
 	var dist_out := PackedFloat32Array()
 	dist_in.resize(GRID_CELLS)
@@ -684,14 +854,17 @@ func _build_container_mask(tex: Texture2D) -> void:
 				grad = grad.normalized()
 			else:
 				grad = Vector2(0.0, -1.0)
+			var wall_flag := 2.0 if mouth_mask[idx] == 1 else (1.0 if mask[idx] == 1 else 0.0)
 			var off := idx * 16
 			sdf_bytes.encode_float(off + 0, grad.x)
 			sdf_bytes.encode_float(off + 4, grad.y)
 			sdf_bytes.encode_float(off + 8, signed_dist[idx])
-			sdf_bytes.encode_float(off + 12, 1.0 if mask[idx] == 1 else 0.0)
+			sdf_bytes.encode_float(off + 12, wall_flag)
 
 	_mask_cells = cells
 	_mask_bytes = mask
+	_mouth_mask_bytes = mouth_mask
+	_mouth_cell_count = mouth_cell_count
 	_row_min_x = row_min_x
 	_row_max_x = row_max_x
 	_top_rim_y = top_rim_y
@@ -703,6 +876,8 @@ func _build_container_mask(tex: Texture2D) -> void:
 		_mask_cache[cache_key] = {
 			"cells": cells,
 			"mask_bytes": mask,
+			"mouth_mask_bytes": mouth_mask,
+			"mouth_cell_count": mouth_cell_count,
 			"row_min_x": row_min_x,
 			"row_max_x": row_max_x,
 			"top_rim_y": top_rim_y,
@@ -816,7 +991,7 @@ static func _make_uniform_set(rd: RenderingDevice, shader_rid: RID, uniforms: Ar
 
 
 func _gpu_init_instance(sdf_bytes: PackedByteArray) -> void:
-	if _disposed or _gpu_initialized:
+	if _disposed or _disposed_rt or _gpu_initialized:
 		return
 	var rd := RenderingServer.get_rendering_device()
 	if not rd or not _ensure_shared_pipelines(rd):
@@ -836,6 +1011,10 @@ func _gpu_init_instance(sdf_bytes: PackedByteArray) -> void:
 	_particles_buf = rd.storage_buffer_create(part_zero.size(), part_zero)
 
 	_wall_sdf_buf = rd.storage_buffer_create(sdf_bytes.size(), sdf_bytes)
+
+	var mouth_zero := PackedByteArray()
+	mouth_zero.resize(16)
+	_mouth_buf = rd.storage_buffer_create(16, mouth_zero)
 
 	var fmt := RDTextureFormat.new()
 	fmt.format = RenderingDevice.DATA_FORMAT_R8G8B8A8_UNORM
@@ -902,9 +1081,11 @@ func _gpu_init_instance(sdf_bytes: PackedByteArray) -> void:
 
 	_sets["disp_clear_0"] = _make_uniform_set(rd, _shaders["display_clear"], [
 		_ssbo_uniform(0, _in_volume_a),
+		_ssbo_uniform(1, _mouth_buf),
 	])
 	_sets["disp_clear_1"] = _make_uniform_set(rd, _shaders["display_clear"], [
 		_ssbo_uniform(0, _in_volume_b),
+		_ssbo_uniform(1, _mouth_buf),
 	])
 
 	_sets["disp_splat_0"] = _make_uniform_set(rd, _shaders["display_splat"], [
@@ -920,11 +1101,13 @@ func _gpu_init_instance(sdf_bytes: PackedByteArray) -> void:
 		_ssbo_uniform(0, _in_volume_a),
 		_ssbo_uniform(1, _wall_sdf_buf),
 		_img_uniform(2, _out_tex_rid),
+		_ssbo_uniform(3, _mouth_buf),
 	])
 	_sets["disp_resolve_1"] = _make_uniform_set(rd, _shaders["display_resolve"], [
 		_ssbo_uniform(0, _in_volume_b),
 		_ssbo_uniform(1, _wall_sdf_buf),
 		_img_uniform(2, _out_tex_rid),
+		_ssbo_uniform(3, _mouth_buf),
 	])
 
 	_sets["cull_hist"] = _make_uniform_set(rd, _shaders["cull_hist"], [
@@ -978,8 +1161,8 @@ static func _dispatch(rd: RenderingDevice, pip: RID, uset: RID, groups_x: int, g
 	rd.compute_list_end()
 
 
-func _gpu_step(frame_dt: float, accel: Vector2, viscosity: float, active_count: int, down_dir: Vector2, ops: Array) -> void:
-	if _disposed:
+func _gpu_step(frame_dt: float, accel: Vector2, viscosity: float, active_count: int, down_dir: Vector2, ops: Array, want_mouth_readback: bool, readback_gen: int) -> void:
+	if _disposed or _disposed_rt:
 		return
 	var rd := RenderingServer.get_rendering_device()
 	if not rd:
@@ -1056,11 +1239,20 @@ func _gpu_step(frame_dt: float, accel: Vector2, viscosity: float, active_count: 
 	_dispatch(rd, _pipelines["display_resolve"], _sets["disp_resolve_" + disp_idx], int(GRID_SIZE / 8.0), int(GRID_SIZE / 8.0))
 	_tex_cleared = false
 
+	if want_mouth_readback and not _mouth_readback_pending_rt and _mouth_buf.is_valid():
+		_mouth_readback_pending_rt = true
+		var err := rd.buffer_get_data_async(_mouth_buf, _on_mouth_readback.bind(readback_gen))
+		if err != OK:
+			_mouth_readback_pending_rt = false
+
 
 func _init_cpu_fallback(tex: Texture2D) -> void:
 	_cpu_img = Image.create(CPU_N, CPU_N, false, Image.FORMAT_RGBA8)
 	_cpu_fallback_tex = ImageTexture.create_from_image(_cpu_img)
 	_cpu_mask.resize(CPU_N * CPU_N)
+	_cpu_mouth_mask.resize(CPU_N * CPU_N)
+	_cpu_mouth_mask.fill(0)
+	_cpu_mouth_cell_count = 0
 	_cpu_sdf_nx.resize(CPU_N * CPU_N)
 	_cpu_sdf_ny.resize(CPU_N * CPU_N)
 	_cpu_sdf_d.resize(CPU_N * CPU_N)
@@ -1093,6 +1285,25 @@ func _init_cpu_fallback(tex: Texture2D) -> void:
 			for x in range(5, CPU_N - 5):
 				_cpu_mask[x + y * CPU_N] = 1
 
+	for cy in CPU_N:
+		for cx in CPU_N:
+			var idx := cx + cy * CPU_N
+			if _cpu_mask[idx] == 0:
+				continue
+			var has_mouth := false
+			for dy in 2:
+				for dx in 2:
+					var gx := mini(cx * 2 + dx, GRID_SIZE - 1)
+					var gy := mini(cy * 2 + dy, GRID_SIZE - 1)
+					if _mouth_mask_bytes[gx + gy * GRID_SIZE] == 1:
+						has_mouth = true
+						break
+				if has_mouth:
+					break
+			if has_mouth:
+				_cpu_mouth_mask[idx] = 1
+				_cpu_mouth_cell_count += 1
+
 	_cpu_cells.clear()
 	for y in range(CPU_N - 1, -1, -1):
 		for x in CPU_N:
@@ -1111,6 +1322,52 @@ func _init_cpu_fallback(tex: Texture2D) -> void:
 			_cpu_sdf_ny[i] = clampf((float(CPU_N) * 0.5 - float(y)) * 0.1, -1.0, 1.0)
 
 
+func _cpu_cull_particles(new_cnt: int) -> void:
+	var old_cnt := _cpu_pos.size()
+	if new_cnt >= old_cnt:
+		return
+	if new_cnt <= 0:
+		_cpu_pos.clear()
+		_cpu_pvel.clear()
+		_cpu_rho.clear()
+		_cpu_visc.clear()
+		_cpu_col.clear()
+		return
+
+	var indices: Array[int] = []
+	indices.resize(old_cnt)
+	for i in old_cnt:
+		indices[i] = i
+	indices.sort_custom(func(a: int, b: int) -> bool:
+		return _cpu_pos[a].dot(_last_down_dir) > _cpu_pos[b].dot(_last_down_dir)
+	)
+
+	var keep_pos := PackedVector2Array()
+	var keep_pvel := PackedVector2Array()
+	var keep_rho := PackedFloat32Array()
+	var keep_visc := PackedFloat32Array()
+	var keep_col := PackedColorArray()
+	keep_pos.resize(new_cnt)
+	keep_pvel.resize(new_cnt)
+	keep_rho.resize(new_cnt)
+	keep_visc.resize(new_cnt)
+	keep_col.resize(new_cnt)
+
+	for i in new_cnt:
+		var src_i := indices[i]
+		keep_pos[i] = _cpu_pos[src_i]
+		keep_pvel[i] = _cpu_pvel[src_i]
+		keep_rho[i] = _cpu_rho[src_i]
+		keep_visc[i] = _cpu_visc[src_i]
+		keep_col[i] = _cpu_col[src_i]
+
+	_cpu_pos = keep_pos
+	_cpu_pvel = keep_pvel
+	_cpu_rho = keep_rho
+	_cpu_visc = keep_visc
+	_cpu_col = keep_col
+
+
 func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) -> void:
 	for op in ops:
 		match op["op"]:
@@ -1121,6 +1378,9 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 				_cpu_visc.clear()
 				_cpu_col.clear()
 				_cpu_skip_acc = 0
+				_mouth_touching = false
+				_mouth_hits = 0
+				_mouth_contact_ratio = 0.0
 			"init_upload", "append_upload":
 				var bytes: PackedByteArray = op["bytes"]
 				var cnt: int = int(op["count"])
@@ -1150,11 +1410,7 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 					_cpu_col.append(Color(bytes.decode_float(b + 16), bytes.decode_float(b + 20), bytes.decode_float(b + 24), 1.0))
 			"cull":
 				var new_cnt: int = mini(roundi(float(op["new_count"]) * 0.25), _cpu_pos.size())
-				_cpu_pos.resize(new_cnt)
-				_cpu_pvel.resize(new_cnt)
-				_cpu_rho.resize(new_cnt)
-				_cpu_visc.resize(new_cnt)
-				_cpu_col.resize(new_cnt)
+				_cpu_cull_particles(new_cnt)
 			"blend":
 				var col: Color = op["color"]
 				var rho: float = float(op["rho"])
@@ -1165,6 +1421,9 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 					_cpu_visc[i] = visc
 
 	if _cpu_pos.is_empty():
+		_mouth_touching = false
+		_mouth_hits = 0
+		_mouth_contact_ratio = 0.0
 		_cpu_img.fill(Color(0, 0, 0, 0))
 		_cpu_fallback_tex.update(_cpu_img)
 		return
@@ -1265,6 +1524,7 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 			_cpu_pb[idx] += c.b
 			_cpu_pw[idx] += 1.0
 
+	var cpu_mouth_hits := 0
 	_cpu_img.fill(Color(0, 0, 0, 0))
 	for y in CPU_N:
 		for x in CPU_N:
@@ -1272,4 +1532,12 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 			if _cpu_pw[idx] > 0.0 and _cpu_mask[idx] == 1:
 				var w := _cpu_pw[idx]
 				_cpu_img.set_pixel(x, y, Color(_cpu_pr[idx] / w, _cpu_pg[idx] / w, _cpu_pb[idx] / w, 1.0))
+				if _cpu_mouth_mask[idx] == 1:
+					cpu_mouth_hits += 1
+	_mouth_hits = cpu_mouth_hits
+	_mouth_touching = cpu_mouth_hits > 0
+	if _mouth_touching:
+		_mouth_contact_ratio = clampf(float(cpu_mouth_hits) / maxf(float(_cpu_mouth_cell_count) * 0.5, 1.0), 0.0, 1.0)
+	else:
+		_mouth_contact_ratio = 0.0
 	_cpu_fallback_tex.update(_cpu_img)
