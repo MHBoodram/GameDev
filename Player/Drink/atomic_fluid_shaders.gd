@@ -558,7 +558,7 @@ void main() {
 		return;
 	}
 
-	if (inside > 1.5 && acc.w >= 96) {
+	if (inside > 1.5 && acc.w >= 40) {
 		atomicAdd(mouth_data[0], 1u);
 		atomicAdd(mouth_data[1], uint(acc.w));
 		atomicMax(mouth_data[2], uint(acc.w));

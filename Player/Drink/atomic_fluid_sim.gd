@@ -13,7 +13,7 @@ const MAX_GRID_ACCEL := 550.0
 const MAX_IMPULSE_VEL := 65.0
 const EOS_STIFFNESS := 30000.0
 const REST_DENSITY := 1.00
-const MOUTH_WEIGHT_THRESHOLD := 96
+const MOUTH_WEIGHT_THRESHOLD := 40
 
 # Shared static GPU resources across all containers
 static var _gpu_checked: bool = false
@@ -681,30 +681,55 @@ static func _build_mouth_mask(mask: PackedByteArray, row_min_x: PackedInt32Array
 			max_body_width = maxi(max_body_width, row_max_x[y] - row_min_x[y] + 1)
 
 	var cavity_h := maxi(1, bottom_y - top_rim_y)
-	var y_limit := mini(bottom_y, top_rim_y + maxi(2, int(round(float(cavity_h) * 0.08))))
 	var top_w := (row_max_x[top_rim_y] - row_min_x[top_rim_y] + 1) if row_max_x[top_rim_y] >= row_min_x[top_rim_y] else 0
 	var next_y := mini(top_rim_y + 1, bottom_y)
 	var next_w := (row_max_x[next_y] - row_min_x[next_y] + 1) if row_max_x[next_y] >= row_min_x[next_y] else top_w
-	var is_narrow_neck := (next_w <= top_w + 2) and (float(next_w) < float(max_body_width) * 0.5)
+	var probe_y := mini(top_rim_y + 2, bottom_y)
+	var probe_w := (row_max_x[probe_y] - row_min_x[probe_y] + 1) if row_max_x[probe_y] >= row_min_x[probe_y] else next_w
 
+	var is_narrow_neck := (
+		float(top_w) < float(max_body_width) * 0.58
+		and float(next_w) < float(max_body_width) * 0.60
+		and float(probe_w) < float(max_body_width) * 0.65
+	)
+
+	var band_pct := 0.14 if is_narrow_neck else 0.08
+	var min_band := 3 if is_narrow_neck else 2
+	var y_limit := mini(bottom_y, top_rim_y + maxi(min_band, int(round(float(cavity_h) * band_pct))))
+
+	var neck_ref_w := maxi(top_w, next_w)
 	var effective_band_end := top_rim_y
 	for y in range(top_rim_y, y_limit + 1):
 		if row_max_x[y] < row_min_x[y]:
 			break
 		var w_y := row_max_x[y] - row_min_x[y] + 1
 		if y > top_rim_y + 1:
-			if is_narrow_neck and float(w_y) > float(maxi(next_w, 1)) * 1.5:
-				break
-			var prev_w := (row_max_x[y - 1] - row_min_x[y - 1] + 1) if row_max_x[y - 1] >= row_min_x[y - 1] else w_y
-			if float(prev_w) < float(max_body_width) * 0.45 and float(w_y) > float(maxi(prev_w, 1)) * 1.9:
-				break
+			if is_narrow_neck:
+				if y > top_rim_y + 2 and float(w_y) > float(maxi(neck_ref_w, 2)) * 1.65 and float(w_y) >= float(max_body_width) * 0.55:
+					break
+				if float(w_y) >= float(max_body_width) * 0.72:
+					break
+			else:
+				var prev_w := (row_max_x[y - 1] - row_min_x[y - 1] + 1) if row_max_x[y - 1] >= row_min_x[y - 1] else w_y
+				if float(prev_w) < float(max_body_width) * 0.45 and float(w_y) > float(maxi(prev_w, 1)) * 1.9:
+					break
 		effective_band_end = y
 
-	if not is_narrow_neck and row_max_x[effective_band_end] >= row_min_x[effective_band_end]:
+	if is_narrow_neck:
+		for y in range(top_rim_y, effective_band_end + 1):
+			if row_max_x[y] < row_min_x[y]:
+				continue
+			for x in range(row_min_x[y], row_max_x[y] + 1):
+				if mask[x + y * GRID_SIZE] == 1:
+					mouth[x + y * GRID_SIZE] = 1
+		return mouth
+
+	if row_max_x[effective_band_end] >= row_min_x[effective_band_end]:
 		var end_w := row_max_x[effective_band_end] - row_min_x[effective_band_end] + 1
 		if float(end_w) < float(max_body_width) * 0.45:
 			effective_band_end = mini(bottom_y, top_rim_y + 2)
 
+	var has_multi_row_rim := false
 	for x in GRID_SIZE:
 		var ty := col_top_y[x]
 		if ty > effective_band_end:
@@ -718,11 +743,45 @@ static func _build_mouth_mask(mask: PackedByteArray, row_min_x: PackedInt32Array
 			max_drop = maxi(max_drop, col_top_y[x - 1] - 1)
 		if x + 1 < GRID_SIZE and col_top_y[x + 1] <= effective_band_end and col_top_y[x + 1] > ty + 1:
 			max_drop = maxi(max_drop, col_top_y[x + 1] - 1)
+		if max_drop > ty:
+			has_multi_row_rim = true
 		for y in range(ty + 1, max_drop + 1):
 			if mask[x + y * GRID_SIZE] == 1:
 				mouth[x + y * GRID_SIZE] = 1
 
+	if not has_multi_row_rim:
+		for x in GRID_SIZE:
+			var ty := col_top_y[x]
+			if ty < effective_band_end and ty + 1 <= bottom_y and mask[x + (ty + 1) * GRID_SIZE] == 1:
+				mouth[x + (ty + 1) * GRID_SIZE] = 1
+
 	return mouth
+
+
+static func _sample_image_mask(img: Image, grid_n: int) -> PackedByteArray:
+	var mask := PackedByteArray()
+	mask.resize(grid_n * grid_n)
+	if img != null and not img.is_empty():
+		if img.is_compressed():
+			img.decompress()
+		var w := img.get_width()
+		var h := img.get_height()
+		for y in grid_n:
+			var y0 := clampi(int(floor(float(y) / float(grid_n) * float(h))), 0, h - 1)
+			var y1 := clampi(int(ceil(float(y + 1) / float(grid_n) * float(h))) - 1, y0, h - 1)
+			for x in grid_n:
+				var x0 := clampi(int(floor(float(x) / float(grid_n) * float(w))), 0, w - 1)
+				var x1 := clampi(int(ceil(float(x + 1) / float(grid_n) * float(w))) - 1, x0, w - 1)
+				var max_a := 0.0
+				for sy in range(y0, y1 + 1):
+					for sx in range(x0, x1 + 1):
+						max_a = maxf(max_a, img.get_pixel(sx, sy).a)
+						if max_a > 0.1:
+							break
+					if max_a > 0.1:
+						break
+				mask[x + y * grid_n] = 1 if max_a > 0.1 else 0
+	return mask
 
 
 func _build_container_mask(tex: Texture2D) -> void:
@@ -742,21 +801,11 @@ func _build_container_mask(tex: Texture2D) -> void:
 		return
 
 	var mask := PackedByteArray()
-	mask.resize(GRID_CELLS)
-
 	var img: Image = tex.get_image() if tex else null
 	if img != null and not img.is_empty():
-		if img.is_compressed():
-			img.decompress()
-		var w := img.get_width()
-		var h := img.get_height()
-		for y in GRID_SIZE:
-			var py := clampi(int((float(y) + 0.5) / float(GRID_SIZE) * float(h)), 0, h - 1)
-			for x in GRID_SIZE:
-				var px := clampi(int((float(x) + 0.5) / float(GRID_SIZE) * float(w)), 0, w - 1)
-				var a := img.get_pixel(px, py).a
-				mask[x + y * GRID_SIZE] = 1 if a > 0.1 else 0
+		mask = _sample_image_mask(img, GRID_SIZE)
 	else:
+		mask.resize(GRID_CELLS)
 		for y in range(4, GRID_SIZE - 4):
 			for x in range(10, GRID_SIZE - 10):
 				mask[x + y * GRID_SIZE] = 1
@@ -1271,15 +1320,7 @@ func _init_cpu_fallback(tex: Texture2D) -> void:
 
 	var src_img: Image = tex.get_image() if tex else null
 	if src_img and not src_img.is_empty():
-		if src_img.is_compressed():
-			src_img.decompress()
-		var w := src_img.get_width()
-		var h := src_img.get_height()
-		for y in CPU_N:
-			var py := clampi(int((float(y) + 0.5) / float(CPU_N) * float(h)), 0, h - 1)
-			for x in CPU_N:
-				var px := clampi(int((float(x) + 0.5) / float(CPU_N) * float(w)), 0, w - 1)
-				_cpu_mask[x + y * CPU_N] = 1 if src_img.get_pixel(px, py).a > 0.1 else 0
+		_cpu_mask = _sample_image_mask(src_img, CPU_N)
 	else:
 		for y in range(2, CPU_N - 2):
 			for x in range(5, CPU_N - 5):

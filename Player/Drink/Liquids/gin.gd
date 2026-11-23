@@ -178,21 +178,24 @@ func _update_pour_stream() -> void:
 		_pour_stream.set_stream_active(false)
 
 func _process(delta: float) -> void:
+	var inside_node := get_node_or_null("Inside") as Node3D
 	if not in_game:
 		super._process(delta)
 		_face_camera()
 		if is_instance_valid(_pour_stream):
 			_pour_stream.set_stream_active(false)
-	elif is_pouring:
-		var target_angle := _get_pour_angle_degrees()
-		rotation_degrees.z = lerpf(rotation_degrees.z, target_angle, 1.0 - exp(-18.0 * delta))
-		_update_pour_stream()
 	else:
-		rotation_degrees.z = lerpf(rotation_degrees.z, 0.0, 1.0 - exp(-18.0 * delta))
-		if is_instance_valid(_pour_stream):
-			_pour_stream.set_stream_active(false)
+		if inside_node:
+			inside_node.rotation = inside_node.rotation.lerp(Vector3.ZERO, 1.0 - exp(-18.0 * delta))
+		if is_pouring:
+			var target_angle := _get_pour_angle_degrees()
+			rotation_degrees.z = lerpf(rotation_degrees.z, target_angle, 1.0 - exp(-18.0 * delta))
+			_update_pour_stream()
+		else:
+			rotation_degrees.z = lerpf(rotation_degrees.z, 0.0, 1.0 - exp(-18.0 * delta))
+			if is_instance_valid(_pour_stream):
+				_pour_stream.set_stream_active(false)
 
-	var inside_node := get_node_or_null("Inside") as Node3D
 	var track_pos: Vector3 = inside_node.global_position if inside_node else global_position
 	var outside_sprite := get_node_or_null("Inside/Outside") as Node3D
 	visual_helper.update_physics(delta, track_pos, camera, _get_effective_viscosity(), spring_stiffness, base_damping, slosh_sensitivity, max_slosh_angle, wave_frequency, vertical_spring, vertical_damping, vertical_sensitivity, outside_sprite)
