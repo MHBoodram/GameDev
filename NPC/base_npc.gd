@@ -227,24 +227,34 @@ func set_highlight(enabled: bool) -> void:
 	else:
 		modulate = _original_modulate
 
-func show_floating_feedback(message: String) -> void:
-	if not is_inside_tree():
+func show_floating_feedback(message: String, overrides: Dictionary = {}) -> void:
+	if not is_inside_tree() or message == "":
 		return
+	var cfg: Dictionary = IndicatorSettings.get_npc_feedback_config(message, overrides)
+	if not bool(cfg.get("enabled", true)):
+		return
+	var display_text: String = str(cfg.get("text", message))
+	if display_text == "":
+		return
+
 	var label3d := Label3D.new()
-	label3d.text = message
-	label3d.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label3d.no_depth_test = true
-	label3d.font_size = 48
-	label3d.outline_size = 12
-	label3d.modulate = Color(1.0, 0.9, 0.35, 1.0)
+	label3d.text = display_text
+	label3d.billboard = BaseMaterial3D.BILLBOARD_ENABLED if bool(cfg.get("billboard", true)) else BaseMaterial3D.BILLBOARD_DISABLED
+	label3d.no_depth_test = bool(cfg.get("no_depth_test", true))
+	label3d.font_size = int(cfg.get("font_size", 48))
+	label3d.outline_size = int(cfg.get("outline_size", 12))
+	label3d.modulate = cfg.get("color", Color(1.0, 0.9, 0.35, 1.0))
 	var inv := 0.5 / maxf(base_scale.x, 0.1)
-	label3d.scale = Vector3.ONE * minf(1.8, inv)
-	label3d.position = Vector3(0.0, 1.35, 0.1)
+	var max_inv: float = float(cfg.get("max_inv_scale", 1.8))
+	label3d.scale = Vector3.ONE * minf(max_inv, inv)
+	label3d.position = cfg.get("local_offset", Vector3(0.0, 1.35, 0.1))
 	add_child(label3d)
 
+	var float_dist: float = float(cfg.get("float_distance", 0.55))
+	var duration: float = maxf(0.1, float(cfg.get("duration", 1.0)))
 	var tween := create_tween().set_parallel(true)
-	tween.tween_property(label3d, "position:y", label3d.position.y + 0.55, 1.0)
-	tween.tween_property(label3d, "modulate:a", 0.0, 1.0)
+	tween.tween_property(label3d, "position:y", label3d.position.y + float_dist, duration)
+	tween.tween_property(label3d, "modulate:a", 0.0, duration)
 	tween.chain().tween_callback(label3d.queue_free)
 
 func _moving_to(to: Marker3D) -> void:
