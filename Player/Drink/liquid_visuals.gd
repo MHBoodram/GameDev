@@ -1,7 +1,7 @@
 class_name LiquidVisualHelper
 extends RefCounted
 
-# handles glass and bottle fluid physics
+# handles glass and bottle fluid physics and shader
 
 var slosh_angle: float = 0.0
 var slosh_velocity: float = 0.0
@@ -73,7 +73,6 @@ func update_physics(delta: float, current_pos: Vector3, camera: Camera3D, viscos
 	last_global_pos = current_pos
 	last_velocity = frame_velocity
 
-	# calculate lateral acceleration
 	var h_accel: float = frame_accel.dot(camera.global_transform.basis.x) if camera else frame_accel.x
 	var clamped_visc := clampf(viscosity, 0.0, 1.0)
 	var eff_damping := base_damping * (1.0 + clamped_visc * 2.0)
@@ -87,7 +86,6 @@ func update_physics(delta: float, current_pos: Vector3, camera: Camera3D, viscos
 	slosh_angle += slosh_velocity * delta
 	slosh_angle = clampf(slosh_angle, -current_max, current_max)
 
-	# vertical bounce
 	var lateral_agitation := absf(slosh_velocity) * 0.02
 	var v_force := -frame_accel.y * vert_sens + lateral_agitation
 	var v_spring_force := -slosh_vertical_offset * (vert_spring / (1.0 + clamped_visc))
@@ -96,13 +94,11 @@ func update_physics(delta: float, current_pos: Vector3, camera: Camera3D, viscos
 	slosh_vertical_offset += slosh_vertical_velocity * delta
 	slosh_vertical_offset = clampf(slosh_vertical_offset, -0.15, 0.15)
 
-	# waves
 	wave_phase += delta * wave_freq * (1.0 - clamped_visc * 0.6)
 	var agitation_energy := absf(slosh_velocity) * 0.025 + absf(frame_velocity.length()) * 0.015
 	var target_wave := clampf(agitation_energy, 0.0, 0.06 * (1.0 - clamped_visc * 0.6))
 	wave_amplitude = lerpf(wave_amplitude, target_wave, 1.0 - exp(-20.0 * delta))
 
-# passes slosh parameters to the custom glass shader
 func sync_shader_uniforms(fill_ratio: float, config: Dictionary) -> void:
 	if not liquid_shader_mat:
 		return
@@ -111,6 +107,8 @@ func sync_shader_uniforms(fill_ratio: float, config: Dictionary) -> void:
 	liquid_shader_mat.set_shader_parameter("slosh_vertical_offset", slosh_vertical_offset)
 	liquid_shader_mat.set_shader_parameter("wave_phase", wave_phase)
 	liquid_shader_mat.set_shader_parameter("wave_amplitude", wave_amplitude)
+	liquid_shader_mat.set_shader_parameter("liquid_tint_color", _visual_override.get("liquid_tint_color", Color(0.45, 0.92, 1.0, 1.0)))
+	liquid_shader_mat.set_shader_parameter("liquid_tint_strength", float(_visual_override.get("liquid_tint_strength", 0.0)))
 	for uniform_name in config.keys():
 		var val = _visual_override.get(uniform_name, config[uniform_name])
 		liquid_shader_mat.set_shader_parameter(uniform_name, val)
@@ -129,7 +127,6 @@ func rebuild_gradient(liquids: Array, total_liquids: float, glass_size: float, l
 	var tint_col: Color = _visual_override.get("liquid_tint_color", Color.WHITE)
 	var tint_mix: float = float(_visual_override.get("liquid_tint_strength", 0.35))
 
-	# fallback when a standalone cup scene supplies its own liquid_box
 	if liquid_box and label_scene:
 		var children := liquid_box.get_children()
 		if children.size() != liquids.size():
@@ -219,7 +216,6 @@ func get_layer_hsv_color(layer: Array) -> Color:
 		return LIQUID_COLOR.get(str(layer[0]), Color.WHITE)
 	return average_hsv_color(weights)
 
-# HSV color space to prevent blened colors always turning brown
 func average_hsv_color(color_weights: Array) -> Color:
 	if color_weights.is_empty():
 		return Color.WHITE
