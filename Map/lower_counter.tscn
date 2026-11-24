@@ -1,5 +1,0 @@
-[gd_scene format=3 uid="uid://bxfr7apwjdsp8"]
-
-[ext_resource type="PackedScene" uid="uid://ddi6comi7ic2c" path="res://Assets/3D/Lower_counter.glb" id="1_36s7s"]
-
-[node name="Lower_counter" unique_id=370557215 instance=ExtResource("1_36s7s")]
