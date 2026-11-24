@@ -1,0 +1,41 @@
+~ start
+Patron: [[Hi|Hello|Good evening]], I'd like {{_current_order_text()}}.
+do _add_recipt()
+set speaking_title = "mid"
+=> END
+
+~ next_order
+Patron: [[One more, please|Another round]], I want {{_current_order_text()}}.
+do _add_recipt()
+set speaking_title = "mid"
+=> END
+
+~ mid
+Patron: Just waiting on my drink.
+=> END
+
+~ Positive
+set emo = "happy"
+Patron: [[Delicious|Spot on|Exactly what I needed]], thanks!
+do _give_payment()
+=> END
+
+~ Mid
+set emo = "netural"
+Patron: [[Not bad|Works for me|Decent enough]].
+do _give_payment()
+=> END
+
+~ Negative
+set emo = "mad"
+Patron: [[This isn't what I wanted|Tastes awful|Forget it]].
+do _give_payment()
+=> END
+
+~ TimeWarning1
+Patron: Is that drink coming anytime soon?
+=> END
+
+~ afternight_1
+Patron: Busy night, huh?
+=> END

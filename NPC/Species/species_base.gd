@@ -38,19 +38,26 @@ func get_npc_resource() -> NPC:
 	return fallback
 
 func get_fallback_dialogue_resource() -> DialogueResource:
-	var text := get_fallback_dialogue_text()
+	return get_fallback_dialogue_resource_for_name(display_name)
+
+func get_fallback_dialogue_resource_for_name(speaker_name: String) -> DialogueResource:
+	var text := get_fallback_dialogue_text_for_name(speaker_name)
 	if text == "":
 		return null
 	return DialogueManager.create_resource_from_text(text)
 
 func get_fallback_dialogue_text() -> String:
+	return get_fallback_dialogue_text_for_name(display_name)
+
+func get_fallback_dialogue_text_for_name(speaker_name: String) -> String:
+	var s := speaker_name if speaker_name.strip_edges() != "" else display_name
 	return """~ start
-%s: Hi, I want {{_current_order_text()}}
+%s: [[Hi|Hello|Evening]], I want {{_current_order_text()}}
 do _add_recipt()
 set speaking_title = "mid"
 => END
 ~ next_order
-%s: Another one, I want {{_current_order_text()}}
+%s: [[Another one|One more]], I want {{_current_order_text()}}
 do _add_recipt()
 set speaking_title = "mid"
 => END
@@ -71,7 +78,13 @@ set emo = "mad"
 %s: This tastes awful.
 do _give_payment()
 => END
-""" % [display_name, display_name, display_name, display_name, display_name, display_name]
+~ TimeWarning1
+%s: How much longer on that drink?
+=> END
+~ afternight_1
+%s: Good evening.
+=> END
+""" % [s, s, s, s, s, s, s, s]
 
 func can_accept_modifier(modifier_id: String) -> bool:
 	var normalized := modifier_id.to_upper().strip_edges()

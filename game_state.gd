@@ -36,6 +36,9 @@ var can_end_night: bool = true
 var is_dialogue_open: bool = false
 var character_talking: Base_NPC
 
+var story_flags: Dictionary = {}
+var scheduled_npcs: Array[Dictionary] = []
+
 func register_subsystems(main: Node3D, p_player: Node3D, timer: Timer, env: WorldEnvironment, sun_node: DirectionalLight3D, counter_ref: Node3D) -> void:
 	main_node = main
 	player = p_player
@@ -108,3 +111,23 @@ func resume_night() -> void:
 
 func hold_night_end(hold: bool = true) -> void:
 	can_end_night = !hold
+
+# Branching story flags
+func set_story_flag(flag_name: String, value: Variant = true) -> void:
+	story_flags[flag_name] = value
+
+func get_story_flag(flag_name: String, default_value: Variant = false) -> Variant:
+	return story_flags.get(flag_name, default_value)
+
+func has_story_flag(flag_name: String) -> bool:
+	return bool(story_flags.get(flag_name, false))
+
+# Schedule NPCs to appear before nights (trigger_time <= 0) or during nights (trigger_time > 0 in seconds)
+func schedule_npc(npc_source: Variant, target_night: int, trigger_time: float = 0.0, dialogue_title: String = "start", patience: float = 90.0) -> void:
+	scheduled_npcs.append({
+		"source": npc_source,
+		"night": target_night,
+		"trigger_time": trigger_time,
+		"dialogue_title": dialogue_title,
+		"patience": patience
+	})

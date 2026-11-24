@@ -1,5 +1,5 @@
-# All customers are this class - has patience, ordering, payment, dialogue
-#Provides DialogueManager mutation hooks (_tutorial_enabler, _check_tutorial, night_popup)
+# Customers (NOT the NPCs themselves) are this class - has patience, ordering, payment, dialogue
+# Provides DialogueManager mutation hooks (_tutorial_enabler, _check_tutorial, night_popup, tip/rep/order/sprite effects)
 # Consumes DrinkMix instances from Glasses and
 # Gives receipt and seat events to GameState.seat_manager.
 
@@ -24,7 +24,12 @@ var recipt_clicked: bool = true
 var unique_talk: bool = false
 var can_talk: bool = true
 var has_receipt_spawned: bool = false
-var emo: String = "netural"
+var emo: String = "netural":
+	set(value):
+		emo = value
+		_locked_frame = -1
+		if is_inside_tree():
+			_talking(false)
 var customer_satisfaction: float = 1.0
 var _dialouge_paused_patience : float = -1.0
 var max_patience: float = 90.0
@@ -41,6 +46,13 @@ var species_state: Dictionary = {}
 var base_scale: Vector3 = Vector3(0.5, 0.5, 0.5)
 var visual_scale_multiplier: float = 1.0
 var _bounce_factor: float = 1.0
+
+# Dialogue-controlled bonuses
+var dialogue_tip_bonus: float = 0.0
+var dialogue_tip_multiplier: float = 1.0
+var _last_combo_multiplier: float = 1.0
+var _payment_given: bool = false
+var _locked_frame: int = -1
 
 const SATISFACTORY_THRESHOLD := 0.6
 const POSITIVE_SCORE_THRESHOLD := 0.85
@@ -78,6 +90,7 @@ func _ready() -> void:
 		max_patience = npc_resource.patience_time
 		texture = npc_resource.sprite_sheet
 		hframes = npc_resource.hframe
+		vframes = npc_resource.vframe if "vframe" in npc_resource and npc_resource.vframe > 0 else 1
 		dialogue_resource = npc_resource.dialogue_resource
 		species_def = SpeciesRegistry.get_species_or_default(npc_resource.race)
 	else:
@@ -94,8 +107,6 @@ func _ready() -> void:
 
 	if not DialogueManager.dialogue_started.is_connected(_on_dialouge_started):
 		DialogueManager.dialogue_started.connect(_on_dialouge_started)
-
-	patience_timer.start()
 	if not DialogueManager.dialogue_ended.is_connected(_on_dialogue_ended):
 		DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
 
@@ -165,6 +176,10 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 	modulate = Color.WHITE
 	_original_modulate = Color.WHITE
 	_is_highlighted = false
+	_payment_given = false
+	dialogue_tip_bonus = 0.0
+	dialogue_tip_multiplier = 1.0
+	_locked_frame = -1
 	SpeciesRegistry.clear_npc_visuals(self)
 	GameState.play_sfx("play_entranto")
 
@@ -187,6 +202,7 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 	if npc_resource:
 		texture = npc_resource.sprite_sheet
 		hframes = npc_resource.hframe
+		vframes = npc_resource.vframe if "vframe" in npc_resource and npc_resource.vframe > 0 else 1
 		dialogue_resource = npc_resource.dialogue_resource
 		patient_2d._setup(max_patience, npc_resource.race)
 
@@ -584,20 +600,24 @@ func _calculate_payout(drink_score: float, is_satisfactory: bool, combo_data: Di
 			tip = modifier.modify_tip(self, tip, is_satisfactory, drink_score)
 		if species_def:
 			tip = species_def.modify_tip(self, tip, is_satisfactory, drink_score)
-		final_tip = maxf(MIN_SATISFACTORY_TIP, roundf(tip))
+		final_tip = maxf(MIN_SATISFACTORY_TIP, roundf(tip * dialogue_tip_multiplier + dialogue_tip_bonus))
 	else:
-		final_tip = 0.0
+		final_tip = maxf(0.0, roundf(dialogue_tip_bonus)) if dialogue_tip_bonus > 0.0 else 0.0
+
+	dialogue_tip_bonus = 0.0
 
 	payment += final_tip
 	var pre_combo_payment := payment
 	var combo_total: float = float(combo_data.get("total_combo", 0.0))
 	var combo_multiplier: float = 1.0 + combo_total
+	_last_combo_multiplier = combo_multiplier
 	var combo_bonus: float = 0.0
 	if combo_total > 0.0 and pre_combo_payment > 0.0:
 		payment = pre_combo_payment * combo_multiplier
 		combo_bonus = payment - pre_combo_payment
 	payment = roundf(payment)
 	payment_global += payment
+	_payment_given = false
 
 	var drink_num := _served_scores.size()
 	var combo_components: Array = combo_data.get("components", []) if combo_data.get("components", []) is Array else []
@@ -624,7 +644,7 @@ func _calculate_payout(drink_score: float, is_satisfactory: bool, combo_data: Di
 		print("    - Species rep (%s: %.1f): +$%.2f" % [str(tip_info["species_name"]), float(tip_info["species_rep"]), float(tip_info["species_rep_bonus"])])
 		print("  Final Tip: $%.2f" % final_tip)
 	else:
-		print("  Tip: $0.00 (Unsatisfactory drink score %.3f < %.2f)" % [drink_score, SATISFACTORY_THRESHOLD])
+		print("  Tip: $%.2f (Unsatisfactory drink score %.3f < %.2f)" % [final_tip, drink_score, SATISFACTORY_THRESHOLD])
 	if combo_total > 0.0 and not combo_components.is_empty():
 		print("  Combo:")
 		for comp in combo_components:
@@ -677,6 +697,7 @@ func _give_payment() -> void:
 	print("[Payout] Giving final payment: $%.2f" % payment_global)
 	PlayerStats._change_money(PlayerStats.money + payment_global)
 	payment_global = 0.0
+	_payment_given = true
 	var col = get_node_or_null("Area3D/CollisionShape3D")
 	if col and drink_list.size() <= 0:
 		col.disabled = true
@@ -689,6 +710,18 @@ func _want_drink() -> Array:
 		tutorial_order.species_id = species_def.species_id if species_def else "HUMAN"
 		tutorial_order.ingredients["gin"] = 1.0
 		drink_list.push_back(tutorial_order)
+		return drink_list.duplicate()
+
+	if npc_resource and "default_orders" in npc_resource and not npc_resource.default_orders.is_empty():
+		for d in npc_resource.default_orders:
+			var fixed_order := DrinkOrder.new()
+			fixed_order.species_id = species_def.species_id if species_def else "HUMAN"
+			fixed_order.ingredients[str(d).to_lower().strip_edges()] = 1.0
+			drink_list.push_back(fixed_order)
+		if modifier:
+			var typed: Array[DrinkOrder] = []
+			typed.assign(drink_list)
+			modifier.on_generate_orders(self, typed)
 		return drink_list.duplicate()
 
 	if species_def:
@@ -806,6 +839,146 @@ func night_popup(_arg = null) -> void:
 func hold_night_end(hold: bool = true) -> void:
 	GameState.hold_night_end(hold)
 
+# Dialogue hooks
+
+func add_tip(amount: float) -> void:
+	if is_zero_approx(amount):
+		return
+	if drink_list.size() > 0:
+		dialogue_tip_bonus += amount
+	elif not _payment_given:
+		payment_global = maxf(0.0, payment_global + amount * _last_combo_multiplier)
+	else:
+		add_money(amount)
+
+func change_tip(amount: float) -> void:
+	add_tip(amount)
+
+func set_tip_multiplier(mult: float) -> void:
+	dialogue_tip_multiplier = maxf(0.0, mult)
+
+func add_money(amount: float) -> void:
+	if not is_zero_approx(amount):
+		PlayerStats._change_money(maxf(0.0, PlayerStats.money + amount))
+
+func change_money(delta: float) -> void:
+	add_money(delta)
+
+func add_rep(delta: float) -> void:
+	if not is_zero_approx(delta):
+		PlayerStats.change_overall_reputation(delta)
+
+func change_rep(overall_delta: float, species_delta: float = 0.0) -> void:
+	if not is_zero_approx(overall_delta):
+		PlayerStats.change_overall_reputation(overall_delta)
+	if not is_zero_approx(species_delta):
+		add_species_rep(species_delta)
+
+func add_species_rep(delta: float, target_species: String = "") -> void:
+	if is_zero_approx(delta):
+		return
+	var s_name := target_species if target_species != "" else _get_race_display_name()
+	PlayerStats.change_species_reputation(s_name, delta)
+
+func change_species_rep(delta: float, target_species: String = "") -> void:
+	add_species_rep(delta, target_species)
+
+func set_expression(expr_name: String) -> void:
+	emo = expr_name
+	_locked_frame = -1
+	_talking(false)
+
+func set_pose(frame_idx: int) -> void:
+	var total_frames := maxi(1, hframes * vframes)
+	_locked_frame = clampi(frame_idx, 0, total_frames - 1)
+	frame = _locked_frame
+
+func set_sprite_texture(tex_path: Variant) -> void:
+	var new_tex: Texture2D = null
+	if tex_path is Texture2D:
+		new_tex = tex_path as Texture2D
+	elif tex_path is String and ResourceLoader.exists(str(tex_path)):
+		new_tex = load(str(tex_path)) as Texture2D
+	if new_tex:
+		texture = new_tex
+
+func set_tint(color_val: Variant) -> void:
+	var col := Color.WHITE
+	if color_val is Color:
+		col = color_val as Color
+	elif color_val is String:
+		col = Color.from_string(str(color_val), Color.WHITE)
+	_original_modulate = col
+	modulate = col
+
+func reset_tint() -> void:
+	set_tint(Color.WHITE)
+
+func shake_npc(intensity: float = 0.08, duration: float = 0.3) -> void:
+	if not is_inside_tree():
+		return
+	var origin_x := position.x
+	var steps := maxi(2, int(duration / 0.05))
+	var tween := create_tween()
+	for i in steps:
+		var dir := -1.0 if (i % 2 == 0) else 1.0
+		tween.tween_property(self, "position:x", origin_x + dir * intensity, 0.05)
+	tween.tween_property(self, "position:x", origin_x, 0.05)
+
+func hop_npc(height: float = 0.15) -> void:
+	if not is_inside_tree():
+		return
+	var origin_y := position.y
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(self, "position:y", origin_y + height, 0.12).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "position:y", origin_y, 0.12).set_ease(Tween.EASE_IN)
+
+func add_order(drink_name: String) -> void:
+	var order := DrinkOrder.new()
+	order.species_id = species_def.species_id if species_def else "HUMAN"
+	order.ingredients[drink_name.to_lower().strip_edges()] = 1.0
+	drink_list.push_back(order)
+	_sync_orders_and_receipt()
+
+func change_order(drink_name: String) -> void:
+	var order := DrinkOrder.new()
+	order.species_id = species_def.species_id if species_def else "HUMAN"
+	order.ingredients[drink_name.to_lower().strip_edges()] = 1.0
+	if drink_list.is_empty():
+		drink_list.push_back(order)
+	else:
+		drink_list[0] = order
+	_sync_orders_and_receipt()
+
+func clear_orders() -> void:
+	drink_list.clear()
+	_sync_orders_and_receipt()
+
+func _sync_orders_and_receipt() -> void:
+	if GameState.seat_manager:
+		match seat_num:
+			1: GameState.seat1_order = drink_list.duplicate()
+			2: GameState.seat2_order = drink_list.duplicate()
+			3: GameState.seat3_order = drink_list.duplicate()
+		if has_receipt_spawned:
+			GameState.seat_manager.update_receipt(seat_num, _item_print())
+
+func leave() -> void:
+	_leaving()
+
+func set_dialogue(title: String) -> void:
+	speaking_title = title
+
+func set_story_flag(flag_name: String, val: Variant = true) -> void:
+	GameState.set_story_flag(flag_name, val)
+
+func get_story_flag(flag_name: String, default_val: Variant = false) -> Variant:
+	return GameState.get_story_flag(flag_name, default_val)
+
+func has_story_flag(flag_name: String) -> bool:
+	return GameState.has_story_flag(flag_name)
+
 # Input and hover interactions
 func _on_interaction_input_event(camera_node: Node, event: InputEvent, _pos: Vector3, _norm: Vector3, _shape: int) -> void:
 	if Ingredients.active_dragging_item != null:
@@ -865,14 +1038,26 @@ func _on_area_Obtain_drink_entered(area: Area3D) -> void:
 		deliver_cup(glass)
 
 func _talking(open_mouth: bool = false) -> void:
+	var total_frames := maxi(1, hframes * vframes)
+	if _locked_frame >= 0:
+		frame = clampi(_locked_frame, 0, total_frames - 1)
+		return
+
+	if npc_resource and "expressions" in npc_resource and npc_resource.expressions is Dictionary and npc_resource.expressions.has(emo):
+		var base_f := int(npc_resource.expressions[emo])
+		if open_mouth and hframes > 1 and base_f + 1 < total_frames:
+			frame = base_f + 1
+		else:
+			frame = clampi(base_f, 0, total_frames - 1)
+		return
+
 	var frame_check := 0
 	match emo:
-		"netural": frame_check = 0
+		"netural", "neutral": frame_check = 0
 		"happy": frame_check = 2
 		"mad": frame_check = 4
 		_: frame_check = 0
-	if open_mouth:
+	if open_mouth and hframes > 1:
 		frame_check += 1
-	var total_frames := hframes * vframes
 	if frame_check < total_frames:
 		frame = frame_check

@@ -359,6 +359,13 @@ func add_receipt(seat: int, order_text: String, customer_race: String = "", cust
 			var tween := main_root.get_tree().create_tween()
 			tween.tween_property(recipt_node, "global_position", marker_node.global_position, 0.5)
 
+func update_receipt(seat: int, order_text: String) -> void:
+	if not main_root:
+		return
+	var recipt_node := main_root.get_node_or_null("ReciptPaper" + str(seat))
+	if recipt_node and recipt_node.has_method("_write"):
+		recipt_node._write(order_text)
+
 func clear_receipt_for_seat(seat_number: int) -> void:
 	if not main_root:
 		return

@@ -1,0 +1,9 @@
+~ afternight_1
+Yecott: [[Welcome to the shop|Looking to stock up for tomorrow?|Evening, bartender]].
+- Any advice for tomorrow night?
+	set emo = "happy"
+	Yecott: Keep an eye on your shelf stock and grab what brings in the right crowd.
+- Nothing right now.
+	set emo = "netural"
+	Yecott: Take your time browsing.
+=> END

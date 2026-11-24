@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://x8lljjgx2owp"
+path="res://.godot/imported/default_patron.dialogue-419a5f42fa2b402b93a18ebbd7e6a72c.tres"
+
+[deps]
+
+source_file="res://NPC/Dialogue/default_patron.dialogue"
+dest_files=["res://.godot/imported/default_patron.dialogue-419a5f42fa2b402b93a18ebbd7e6a72c.tres"]
+
+[params]
+
+defaults=true

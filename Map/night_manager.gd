@@ -25,6 +25,8 @@ var is_shift_active: bool = false
 var is_shift_ended: bool = false
 var is_night_concluded: bool = false
 
+var _during_night_queue: Array[Dictionary] = []
+
 func setup(timer_node: Timer, env_node: WorldEnvironment, sun_node: DirectionalLight3D) -> void:
 	night_timer = timer_node
 	world_environment = env_node
@@ -32,6 +34,7 @@ func setup(timer_node: Timer, env_node: WorldEnvironment, sun_node: DirectionalL
 	is_shift_active = false
 	is_shift_ended = false
 	is_night_concluded = false
+	_during_night_queue.clear()
 	_setup_lighting()
 	if night_timer and not night_timer.timeout.is_connected(_on_night_timer_timeout):
 		night_timer.timeout.connect(_on_night_timer_timeout)
@@ -43,6 +46,7 @@ func setup(timer_node: Timer, env_node: WorldEnvironment, sun_node: DirectionalL
 func _process(_delta: float) -> void:
 	if is_shift_active and night_timer and GameState.gameplay_ui:
 		GameState.gameplay_ui._change_time(night_timer.time_left)
+	_check_during_night_spawns()
 	update_day_night_cycle()
 
 func _setup_lighting() -> void:
@@ -69,10 +73,17 @@ func setup_night_shift(main_root: Node3D) -> void:
 		start_night_shift()
 
 func start_night_shift() -> void:
-	var active_quota := GameState.get_night_quota(GameState.night)
+	var active_quota: float = GameState.get_night_quota(GameState.night)
 	start_shift(GameState.night_duration, active_quota)
 
 func _configure_night_story(main_root: Node3D) -> void:
+	# Check scheduled before-night npcs
+	var before_npcs: Array[Dictionary] = []
+	for entry in GameState.scheduled_npcs:
+		if entry.get("night") == GameState.night and float(entry.get("trigger_time", 0.0)) <= 0.0:
+			before_npcs.append(entry)
+
+	# Story nights
 	match GameState.night:
 		1:
 			if GameState.seat_manager:
@@ -89,8 +100,15 @@ func _configure_night_story(main_root: Node3D) -> void:
 			GameState.pause_night()
 		_:
 			_clean_tutorial_keys(main_root)
-			GameState.special_state = false
-			GameState.night_paused = false
+			if not before_npcs.is_empty():
+				for item in before_npcs:
+					if GameState.seat_manager:
+						GameState.seat_manager.spawn_customer(item.get("source"), float(item.get("patience", 90.0)), str(item.get("dialogue_title", "start")))
+				GameState.special_state = true
+				GameState.pause_night()
+			else:
+				GameState.special_state = false
+				GameState.night_paused = false
 
 func _clean_tutorial_keys(main_root: Node3D) -> void:
 	if not is_instance_valid(main_root):
@@ -105,6 +123,14 @@ func start_shift(duration: float, quota: float) -> void:
 	is_night_concluded = false
 	GameState.night_paused = false
 	GameState.special_state = false
+
+	# Prepare during-night npcs
+	_during_night_queue.clear()
+	for entry in GameState.scheduled_npcs:
+		if entry.get("night") == GameState.night and float(entry.get("trigger_time", 0.0)) > 0.0:
+			_during_night_queue.append(entry)
+	_during_night_queue.sort_custom(func(a, b): return float(a.get("trigger_time", 0.0)) < float(b.get("trigger_time", 0.0)))
+
 	if GameState.gameplay_ui:
 		GameState.gameplay_ui.set_shift_hud_visible(true)
 		GameState.gameplay_ui._update_quota(quota)
@@ -114,6 +140,17 @@ func start_shift(duration: float, quota: float) -> void:
 		night_timer.wait_time = duration
 		night_timer.start()
 	shift_started.emit()
+
+func _check_during_night_spawns() -> void:
+	if not is_shift_active or is_shift_ended or GameState.night_paused or _during_night_queue.is_empty():
+		return
+	if not night_timer or night_timer.is_stopped():
+		return
+	var elapsed: float = night_timer.wait_time - night_timer.time_left
+	if float(_during_night_queue[0].get("trigger_time", 0.0)) <= elapsed:
+		if GameState.seat_manager and GameState.seat_manager.get_empty_seat_count() > 0:
+			var entry: Dictionary = _during_night_queue.pop_front()
+			GameState.seat_manager.spawn_customer(entry.get("source"), float(entry.get("patience", 90.0)), str(entry.get("dialogue_title", "start")))
 
 func pause_shift() -> void:
 	GameState.night_paused = true
@@ -131,6 +168,7 @@ func resume_shift() -> void:
 func end_shift() -> void:
 	is_shift_active = false
 	is_shift_ended = true
+	_during_night_queue.clear()
 	if night_timer and not night_timer.is_stopped():
 		night_timer.stop()
 	shift_ended.emit()
@@ -139,12 +177,12 @@ func end_shift() -> void:
 func update_day_night_cycle() -> void:
 	if not night_timer or night_timer.is_stopped() or night_timer.paused or not sun:
 		return
-	var elapsed := night_timer.wait_time - night_timer.time_left
-	var raw_progress := (elapsed - dusk_start_seconds) / maxf(dusk_end_seconds - dusk_start_seconds, 0.001)
-	var smooth_weight := smoothstep(0.0, 1.0, clampf(raw_progress, 0.0, 1.0))
+	var elapsed: float = night_timer.wait_time - night_timer.time_left
+	var raw_progress: float = (elapsed - dusk_start_seconds) / maxf(dusk_end_seconds - dusk_start_seconds, 0.001)
+	var smooth_weight: float = smoothstep(0.0, 1.0, clampf(raw_progress, 0.0, 1.0))
 
 	# rotate sun downward and fade out sunlight
-	var pitch_offset := Basis(Vector3.RIGHT, deg_to_rad(night_sun_pitch_degrees * smooth_weight))
+	var pitch_offset: Basis = Basis(Vector3.RIGHT, deg_to_rad(night_sun_pitch_degrees * smooth_weight))
 	sun.transform.basis = initial_sun_transform.basis * pitch_offset
 	sun.light_energy = lerpf(initial_sun_energy, 0.0, smooth_weight)
 	sun.visible = sun.light_energy > 0.001
@@ -157,6 +195,7 @@ func update_day_night_cycle() -> void:
 func _on_night_timer_timeout() -> void:
 	is_shift_active = false
 	is_shift_ended = true
+	_during_night_queue.clear()
 	shift_ended.emit()
 
 func _on_shift_started_internal() -> void:
@@ -186,7 +225,7 @@ func conclude_night() -> void:
 			bar_setting._spotlight_dim()
 		var counter_spot = GameState.main_node.get_node_or_null("Coutner/SpotLight3D")
 		if counter_spot and is_inside_tree():
-			var tween := create_tween()
+			var tween: Tween = create_tween()
 			tween.tween_property(counter_spot, "light_energy", 0.0, 0.5)
 
 	if is_inside_tree():
