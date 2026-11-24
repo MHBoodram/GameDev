@@ -22,39 +22,41 @@ static func ensure_loaded() -> void:
 	_modifiers_by_id.clear()
 	_ordered_modifiers.clear()
 
-	for script_path in _discover_scripts(SPECIES_DIR, ["species_base.gd", "species_registry.gd"]):
+	_ordered_species.assign(_load_registry_entries(
+		SPECIES_DIR,
+		["species_base.gd", "species_registry.gd"],
+		"species_id",
+		_species_by_id,
+		func(inst) -> bool: return inst is SpeciesBase
+	))
+
+	_ordered_modifiers.assign(_load_registry_entries(
+		MODIFIERS_DIR,
+		["modifier_base.gd", "modifier_registry.gd"],
+		"modifier_id",
+		_modifiers_by_id,
+		func(inst) -> bool: return inst is ModifierBase,
+		["NONE"]
+	))
+
+static func _load_registry_entries(dir_path: String, excluded_files: Array[String], id_prop: String, by_id: Dictionary, type_check: Callable, ignored_ids: Array[String] = []) -> Array:
+	var loaded: Array = []
+	for script_path in _discover_scripts(dir_path, excluded_files):
 		var res = load(script_path)
 		if res is GDScript and res.can_instantiate():
 			var instance = res.new()
-			if instance is SpeciesBase:
-				var sp := instance as SpeciesBase
-				var key := sp.species_id.to_upper().strip_edges()
-				if key != "" and not _species_by_id.has(key):
-					_species_by_id[key] = sp
-					_ordered_species.append(sp)
+			if type_check.call(instance):
+				var key := str(instance.get(id_prop)).to_upper().strip_edges()
+				if key != "" and not ignored_ids.has(key) and not by_id.has(key):
+					by_id[key] = instance
+					loaded.append(instance)
 
-	_ordered_species.sort_custom(func(a: SpeciesBase, b: SpeciesBase) -> bool:
+	loaded.sort_custom(func(a, b) -> bool:
 		if a.sort_order != b.sort_order:
 			return a.sort_order < b.sort_order
-		return a.species_id < b.species_id
+		return str(a.get(id_prop)) < str(b.get(id_prop))
 	)
-
-	for script_path in _discover_scripts(MODIFIERS_DIR, ["modifier_base.gd", "modifier_registry.gd"]):
-		var res = load(script_path)
-		if res is GDScript and res.can_instantiate():
-			var instance = res.new()
-			if instance is ModifierBase:
-				var mod := instance as ModifierBase
-				var key := mod.modifier_id.to_upper().strip_edges()
-				if key != "" and key != "NONE" and not _modifiers_by_id.has(key):
-					_modifiers_by_id[key] = mod
-					_ordered_modifiers.append(mod)
-
-	_ordered_modifiers.sort_custom(func(a: ModifierBase, b: ModifierBase) -> bool:
-		if a.sort_order != b.sort_order:
-			return a.sort_order < b.sort_order
-		return a.modifier_id < b.modifier_id
-	)
+	return loaded
 
 static func reload() -> void:
 	_initialized = false
