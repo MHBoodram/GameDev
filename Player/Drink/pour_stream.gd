@@ -18,6 +18,64 @@ const SPLASH_SIZE_MAX := 0.92
 const SPLASH_LIFE_MIN := 0.16
 const SPLASH_LIFE_MAX := 0.30
 
+class SnapZoneHelper extends RefCounted:
+	var active_glass: Glasses = null
+	var glasses_in_area: Array[Glasses] = []
+	var on_glass_activated: Callable = Callable()
+	var on_glass_deactivated: Callable = Callable()
+
+	func _activate(glass: Glasses, snap_target: Node3D, pull_speed: float, release_speed: float, break_distance: float) -> void:
+		active_glass = glass
+		if on_glass_activated.is_valid():
+			on_glass_activated.call(glass)
+		glass.enter_snap_zone(snap_target, pull_speed, release_speed, break_distance)
+
+	func _deactivate(glass: Glasses) -> void:
+		if on_glass_deactivated.is_valid():
+			on_glass_deactivated.call(glass)
+
+	func promote_next(snap_target: Node3D, pull_speed: float, release_speed: float, break_distance: float) -> void:
+		for g in glasses_in_area:
+			if is_instance_valid(g):
+				_activate(g, snap_target, pull_speed, release_speed, break_distance)
+				break
+
+	func _remove_area_entry(area: Area3D) -> void:
+		for i in range(glasses_in_area.size() - 1, -1, -1):
+			var g := glasses_in_area[i]
+			if not is_instance_valid(g) or g == area:
+				glasses_in_area.remove_at(i)
+
+	func handle_area_entered(area: Area3D, snap_target: Node3D, pull_speed: float, release_speed: float, break_distance: float) -> void:
+		if not (area is Glasses) or not area.is_in_group("glass"):
+			return
+		var glass := area as Glasses
+		if not glasses_in_area.has(glass):
+			glasses_in_area.append(glass)
+		if not is_instance_valid(active_glass):
+			_activate(glass, snap_target, pull_speed, release_speed, break_distance)
+
+	func handle_area_exited(area: Area3D, snap_target: Node3D, pull_speed: float, release_speed: float, break_distance: float) -> void:
+		if glasses_in_area.size() > 0:
+			_remove_area_entry(area)
+		if area == active_glass:
+			if is_instance_valid(area):
+				var glass := area as Glasses
+				glass.exit_snap_zone(snap_target)
+				_deactivate(glass)
+				glass._remove_displaying_list()
+			active_glass = null
+			promote_next(snap_target, pull_speed, release_speed, break_distance)
+
+	func release_glass(glass: Glasses) -> void:
+		if not is_instance_valid(glass):
+			return
+		glasses_in_area.erase(glass)
+		if active_glass == glass:
+			active_glass = null
+		_deactivate(glass)
+		glass._remove_displaying_list()
+
 static var _sprite_anchor_cache: Dictionary = {}
 var _mm_instance: MultiMeshInstance3D = null
 var _multi_mesh: MultiMesh = null
@@ -79,6 +137,36 @@ static func find_scene_marker(context: Node, marker_name: String) -> Node3D:
 	if is_instance_valid(GameState.main_node):
 		return GameState.main_node.get_node_or_null(marker_name) as Node3D
 	return null
+
+static func focus_station_camera(context: Node, marker_name: String, duration: float = 0.55) -> Camera3D:
+	if not is_instance_valid(context) or not context.is_inside_tree():
+		return null
+	var cam_rig: Camera3D = get_camera_rig(context.get_viewport())
+	var marker := find_scene_marker(context, marker_name)
+	if not cam_rig or not marker:
+		return null
+	if GameState.gameplay_ui and GameState.gameplay_ui.has_method("_in_down_minigame"):
+		GameState.gameplay_ui._in_down_minigame()
+	cam_rig.call("focus_on_marker", marker, duration)
+	return cam_rig
+
+static func return_station_camera(context: Node, cam_rig: Camera3D, duration: float = 0.55) -> void:
+	if not is_instance_valid(cam_rig) or not is_instance_valid(context) or not context.is_inside_tree():
+		return
+	cam_rig.call("return_from_marker", duration)
+	if cam_rig.has_signal("marker_returned"):
+		await cam_rig.marker_returned
+	if not is_instance_valid(context) or not context.is_inside_tree():
+		return
+	if GameState.gameplay_ui and GameState.gameplay_ui.has_method("_out_down_minigame"):
+		GameState.gameplay_ui._out_down_minigame()
+
+static func play_throttled_pour_sfx(last_sfx_ms: int, interval_ms: int = 100) -> int:
+	var now_ms := Time.get_ticks_msec()
+	if last_sfx_ms < 0 or now_ms - last_sfx_ms >= interval_ms:
+		SFXAudio.play_liquidpour()
+		return now_ms
+	return last_sfx_ms
 
 static func _get_texture_anchors(tex: Texture2D) -> Dictionary:
 	if tex == null:
@@ -197,7 +285,7 @@ static func get_sprite_rim_edges_world_positions(sprite: Sprite3D) -> Dictionary
 		"left": edge_max if sprite.flip_h else edge_min,
 		"right": edge_min if sprite.flip_h else edge_max,
 	}
-	
+
 static func get_sprite_surface_world_position(sprite: Sprite3D, fill_ratio: float, u_override: float = -1.0) -> Vector3:
 	if not is_instance_valid(sprite):
 		return Vector3.ZERO

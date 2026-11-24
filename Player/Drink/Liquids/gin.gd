@@ -5,6 +5,7 @@ class_name Drinks
 
 const POUR_AMOUNT: float = 0.0825
 const POUR_INTERVAL: float = 0.033
+const SFX_INTERVAL_MS: int = 100
 const MIN_POUR_ANGLE_DEGREES: float = 5.0
 const MAX_POUR_ANGLE_DEGREES: float = 150.0
 
@@ -184,7 +185,7 @@ func _pour() -> void:
 		GameState.player._update_hand("holding")
 	$CPUParticles3D.emitting = false
 
-	var sfx_timer: float = 0.1
+	var last_sfx_ms: int = -1
 	if pouring_into:
 		while PourStreamVisual.is_pour_button_held() and in_game and GameState.player and GameState.player.in_game and current_liquid > 0.0 and is_instance_valid(pouring_into):
 			var rate_mult: float = _get_effective_pour_rate_multiplier()
@@ -198,12 +199,9 @@ func _pour() -> void:
 				var poured_variant = pouring_into._pouring(liquid_resource.id, amount, pour_info)
 				var actual_poured: float = float(poured_variant) if (poured_variant is float or poured_variant is int) else amount
 				set_liquid_amount(current_liquid - actual_poured * cost_mult)
-				sfx_timer += POUR_INTERVAL
-				if sfx_timer >= 0.1:
-					sfx_timer -= 0.1
-					SFXAudio.play_liquidpour()
+				last_sfx_ms = PourStreamVisual.play_throttled_pour_sfx(last_sfx_ms, SFX_INTERVAL_MS)
 			else:
-				sfx_timer = 0.1
+				last_sfx_ms = -1
 			await get_tree().create_timer(POUR_INTERVAL).timeout
 			if not is_inside_tree():
 				return

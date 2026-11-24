@@ -17,16 +17,24 @@ const SFX_INTERVAL_MS: int = 100
 @export_group("Pouring")
 @export var pour_out_amount: float = 0.35
 
-var in_pour_zone: Glasses = null
-var _glasses_in_area: Array[Glasses] = []
+var _snap_zone: PourStreamVisual.SnapZoneHelper = PourStreamVisual.SnapZoneHelper.new()
+var in_pour_zone: Glasses:
+	get:
+		return _snap_zone.active_glass
 var _is_pouring: bool = false
 var _active_pouring_glass: Glasses = null
-var _last_sfx_ms: int = 0
+var _last_sfx_ms: int = -1
 
 func _ready() -> void:
 	sync_bounds_from_indicator()
 	if Engine.is_editor_hint():
 		return
+	_snap_zone.on_glass_activated = func(glass: Glasses) -> void:
+		if glass.has_method("set_active_trash"):
+			glass.set_active_trash(self)
+	_snap_zone.on_glass_deactivated = func(glass: Glasses) -> void:
+		if is_instance_valid(glass) and glass.has_method("set_active_trash"):
+			glass.set_active_trash(null)
 	if not area_entered.is_connected(_on_area_entered):
 		area_entered.connect(_on_area_entered)
 	if not area_exited.is_connected(_on_area_exited):
@@ -75,19 +83,11 @@ func _on_trash_input_event(camera: Node, event: InputEvent, event_position: Vect
 func _return_glass_to_previous_location(glass: Glasses) -> void:
 	if not is_instance_valid(glass):
 		return
-	_glasses_in_area.erase(glass)
-	if in_pour_zone == glass:
-		in_pour_zone = null
-	if glass.has_method("set_active_trash"):
-		glass.set_active_trash(null)
-	glass._remove_displaying_list()
+	_snap_zone.release_glass(glass)
 	if glass.has_method("return_to_previous_location"):
 		glass.return_to_previous_location()
-	if not in_pour_zone:
-		for g in _glasses_in_area:
-			if is_instance_valid(g):
-				_set_active_glass(g)
-				break
+	if not is_instance_valid(in_pour_zone):
+		_snap_zone.promote_next(_snap_target(), snap_pull_speed, snap_release_speed, snap_break_distance)
 
 func start_pour() -> void:
 	if _is_pouring:
@@ -96,14 +96,10 @@ func start_pour() -> void:
 		return
 
 	_is_pouring = true
+	_last_sfx_ms = -1
 	var active_glass := in_pour_zone
 	_active_pouring_glass = active_glass
-	var cam_rig: Camera3D = PourStreamVisual.get_camera_rig(get_viewport())
-	var marker := PourStreamVisual.find_scene_marker(self, "sink_camera_marker")
-	if cam_rig and marker:
-		if GameState.gameplay_ui and GameState.gameplay_ui.has_method("_in_down_minigame"):
-			GameState.gameplay_ui._in_down_minigame()
-		cam_rig.call("focus_on_marker", marker, 0.55)
+	var cam_rig: Camera3D = PourStreamVisual.focus_station_camera(self, "sink_camera_marker", 0.55)
 
 	if active_glass.has_method("start_pour_out"):
 		active_glass.start_pour_out(_get_pour_tilt_degrees())
@@ -112,10 +108,7 @@ func start_pour() -> void:
 		if active_glass.can_pour_out_from_mouth():
 			var rate_mult: float = clampf(absf(active_glass.pour_tilt_degrees) / (MAX_POUR_TILT_DEGREES * 0.5), 0.15, 2.0)
 			active_glass._pour_out(pour_out_amount * (POUR_INTERVAL / 0.1) * rate_mult)
-			var now_ms := Time.get_ticks_msec()
-			if now_ms - _last_sfx_ms >= SFX_INTERVAL_MS:
-				_last_sfx_ms = now_ms
-				SFXAudio.play_liquidpour()
+			_last_sfx_ms = PourStreamVisual.play_throttled_pour_sfx(_last_sfx_ms, SFX_INTERVAL_MS)
 		await get_tree().create_timer(POUR_INTERVAL).timeout
 		if not is_inside_tree():
 			_is_pouring = false
@@ -133,46 +126,17 @@ func start_pour() -> void:
 
 	_return_glass_to_previous_location(active_glass)
 
-	if cam_rig and marker:
-		cam_rig.call("return_from_marker", 0.55)
-		if cam_rig.has_signal("marker_returned"):
-			await cam_rig.marker_returned
-		if not is_inside_tree():
-			_is_pouring = false
-			return
-		if GameState.gameplay_ui and GameState.gameplay_ui.has_method("_out_down_minigame"):
-			GameState.gameplay_ui._out_down_minigame()
+	await PourStreamVisual.return_station_camera(self, cam_rig, 0.55)
+	if not is_inside_tree():
+		_is_pouring = false
+		return
 	_is_pouring = false
 
 func _on_area_entered(area: Area3D) -> void:
-	if not (area is Glasses) or not area.is_in_group("glass"):
-		return
-	var glass := area as Glasses
-	if not _glasses_in_area.has(glass):
-		_glasses_in_area.append(glass)
-	if not in_pour_zone:
-		_set_active_glass(glass)
+	_snap_zone.handle_area_entered(area, _snap_target(), snap_pull_speed, snap_release_speed, snap_break_distance)
 
 func _on_area_exited(area: Area3D) -> void:
-	if _glasses_in_area.size() > 0:
-		_glasses_in_area.erase(area)
-	if area == in_pour_zone:
-		if is_instance_valid(area):
-			area.exit_snap_zone(_snap_target())
-			if area.has_method("set_active_trash"):
-				area.set_active_trash(null)
-			area._remove_displaying_list()
-		in_pour_zone = null
-		for g in _glasses_in_area:
-			if is_instance_valid(g):
-				_set_active_glass(g)
-				break
-
-func _set_active_glass(glass: Glasses) -> void:
-	in_pour_zone = glass
-	if glass.has_method("set_active_trash"):
-		glass.set_active_trash(self)
-	glass.enter_snap_zone(_snap_target(), snap_pull_speed, snap_release_speed, snap_break_distance)
+	_snap_zone.handle_area_exited(area, _snap_target(), snap_pull_speed, snap_release_speed, snap_break_distance)
 
 func _on_mouse_entered() -> void:
 	if Ingredients.active_dragging_item != null:
