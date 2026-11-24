@@ -15,11 +15,8 @@ func can_apply_to_species(species_id: String, is_unique: bool = false, stats: No
 	var sp := SpeciesRegistry.get_species(species_id)
 	if sp == null or not sp.can_accept_modifier(modifier_id):
 		return false
-	if stats and "unlocks" in stats:
-		if stats.unlocks.has("Ingredients") and stats.unlocks["Ingredients"].has("Knife"):
-			return stats.has_unlock("Ingredients", "Knife")
-		if stats.unlocks.has("Tools") and stats.unlocks["Tools"].has("Knife"):
-			return stats.has_unlock("Tools", "Knife")
+	if stats and stats.has_method("has_knife_unlock"):
+		return stats.has_knife_unlock(true)
 	return true
 
 func on_npc_setup(npc: Sprite3D) -> void:

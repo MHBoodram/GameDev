@@ -1,5 +1,5 @@
 # Tracks active tool held in hand ("hand", "knife", etc.)
-# Loops through SpeciesRegistry and ModifierRegistry to dispatch tool actions without branching
+# Loops through SpeciesRegistry to dispatch species and modifier tool actions
 # Updates player hand animation states
 class_name ToolController
 extends RefCounted
@@ -14,31 +14,21 @@ func get_tool() -> String:
 
 # triggers species/modifier-registered tool actions when clicking bottom screen edge
 func handle_counter_edge_click(player: Node3D, main_node: Node3D = null) -> bool:
-	if SpeciesRegistry.handle_counter_edge_tool(tool_in_hand, player, main_node):
-		return true
-	return ModifierRegistry.handle_counter_edge_tool(tool_in_hand, player, main_node)
+	return SpeciesRegistry.handle_counter_edge_tool(tool_in_hand, player, main_node)
 
 # triggers species/modifier-registered tool actions when clicking a glass
 func handle_glass_click(glass: Area3D, player: Node3D = null) -> bool:
-	if SpeciesRegistry.handle_glass_tool_click(tool_in_hand, glass, player):
-		return true
-	return ModifierRegistry.handle_glass_tool_click(tool_in_hand, glass, player)
+	return SpeciesRegistry.handle_glass_tool_click(tool_in_hand, glass, player)
 
 func can_highlight_glass(glass: Area3D) -> bool:
-	if not ModifierRegistry.can_highlight_glass(tool_in_hand, glass):
-		return false
 	return SpeciesRegistry.can_highlight_glass(tool_in_hand, glass)
 
 func should_consume_glass_click(glass: Area3D) -> bool:
-	if ModifierRegistry.should_consume_glass_click(tool_in_hand, glass):
-		return true
 	return SpeciesRegistry.should_consume_glass_click(tool_in_hand, glass)
 
 # triggers species/modifier-registered tool actions when clicking a customer NPC
 func handle_npc_click(npc: Sprite3D, player: Node3D = null) -> bool:
-	if SpeciesRegistry.handle_npc_tool_click(npc, tool_in_hand, player):
-		return true
-	return ModifierRegistry.handle_npc_tool_click(npc, tool_in_hand, player)
+	return SpeciesRegistry.handle_npc_tool_click(npc, tool_in_hand, player)
 
 func handle_npc_hover(npc: Sprite3D, is_hovered: bool) -> void:
 	if not is_instance_valid(npc):

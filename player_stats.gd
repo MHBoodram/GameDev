@@ -79,6 +79,13 @@ func has_unlock(category: String, key: String) -> bool:
 			return bool(cat_dict[k])
 	return false
 
+func has_knife_unlock(fallback_when_missing: bool = true) -> bool:
+	if unlocks.has("Ingredients") and unlocks["Ingredients"].has("Knife"):
+		return has_unlock("Ingredients", "Knife")
+	if unlocks.has("Tools") and unlocks["Tools"].has("Knife"):
+		return has_unlock("Tools", "Knife")
+	return fallback_when_missing
+
 func set_species_marketing(species: String, value: float) -> void:
 	var key := _find_species_key(species)
 	species_marketing[key] = value

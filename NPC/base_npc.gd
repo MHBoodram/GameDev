@@ -133,7 +133,6 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 	modulate = Color.WHITE
 	_original_modulate = Color.WHITE
 	_is_highlighted = false
-	ModifierRegistry.clear_npc_visuals(self)
 	SpeciesRegistry.clear_npc_visuals(self)
 	GameState.play_sfx("play_entranto")
 
@@ -168,9 +167,9 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 
 	var race_id := species_def.species_id if species_def else (npc_resource.race if npc_resource else "HUMAN")
 	if forced_modifier != "":
-		modifier = ModifierRegistry.create_modifier_for_species(forced_modifier, race_id, unique_talk, PlayerStats)
+		modifier = SpeciesRegistry.create_modifier_for_species(forced_modifier, race_id, unique_talk, PlayerStats)
 	else:
-		modifier = ModifierRegistry.roll_modifier(race_id, unique_talk, PlayerStats)
+		modifier = SpeciesRegistry.roll_modifier(race_id, unique_talk, PlayerStats)
 
 	if modifier:
 		modifier.on_npc_setup(self)
@@ -264,6 +263,18 @@ func _start_bounce() -> void:
 	_bounce_tween.tween_interval(0.1)
 
 # Serving and payouts
+func deliver_cup(glass: Glasses) -> void:
+	if not is_instance_valid(glass):
+		return
+	receive_drink(glass.drink_mix)
+	var handled := false
+	if modifier and modifier.consume_delivered_cup(self, glass):
+		handled = true
+	elif species_def and species_def.consume_delivered_cup(self, glass):
+		handled = true
+	if not handled:
+		glass._dranked()
+
 func receive_drink(mix: DrinkMix) -> float:
 	var want = drink_list.pop_front()
 	if want == null:
@@ -605,14 +616,7 @@ func _on_area_Obtain_drink_entered(area: Area3D) -> void:
 			return
 		if not can_accept_drink():
 			return
-		receive_drink(glass.drink_mix)
-		var handled := false
-		if modifier and modifier.consume_delivered_cup(self, glass):
-			handled = true
-		elif species_def and species_def.consume_delivered_cup(self, glass):
-			handled = true
-		if not handled:
-			glass._dranked()
+		deliver_cup(glass)
 
 func _talking(open_mouth: bool = false) -> void:
 	var frame_check := 0
@@ -626,4 +630,3 @@ func _talking(open_mouth: bool = false) -> void:
 	var total_frames := hframes * vframes
 	if frame_check < total_frames:
 		frame = frame_check
-		

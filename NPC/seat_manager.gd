@@ -116,16 +116,12 @@ func spawn_customer_by_species(sp: SpeciesBase, patience: float = -1.0, dialogue
 	var effective_patience := patience if patience > 0.0 else sp.default_patience
 	return spawn_customer(sp.get_npc_resource(), effective_patience, dialogue_title, forced_modifier)
 
-func spawn_random_customer() -> Base_NPC:
-	var weighted_entries := SpeciesRegistry.get_spawnable_species_weights(PlayerStats)
+func _pick_weighted_species(weighted_entries: Array[Dictionary]) -> SpeciesBase:
 	if weighted_entries.is_empty():
-		var fallback := SpeciesRegistry.get_species_or_default("HUMAN")
-		return spawn_customer_by_species(fallback)
-
+		return null
 	var total_weight: float = 0.0
 	for entry in weighted_entries:
 		total_weight += float(entry["weight"])
-
 	var roll := randf_range(0.0, total_weight)
 	var acc: float = 0.0
 	var chosen: SpeciesBase = weighted_entries[0]["species"]
@@ -134,7 +130,12 @@ func spawn_random_customer() -> Base_NPC:
 		if roll <= acc:
 			chosen = entry["species"]
 			break
+	return chosen
 
+func spawn_random_customer() -> Base_NPC:
+	var chosen := _pick_weighted_species(SpeciesRegistry.get_spawnable_species_weights(PlayerStats))
+	if chosen == null:
+		chosen = SpeciesRegistry.get_species_or_default("HUMAN")
 	return spawn_customer_by_species(chosen)
 
 func spawn_specific_species(species_name: String) -> Base_NPC:
@@ -142,7 +143,7 @@ func spawn_specific_species(species_name: String) -> Base_NPC:
 	return spawn_customer_by_species(sp)
 
 func spawn_specific_with_modifier(modifier_name: String, species_name: String = "") -> Base_NPC:
-	var mod_proto := ModifierRegistry.get_modifier(modifier_name)
+	var mod_proto := SpeciesRegistry.get_modifier(modifier_name)
 	var chosen: SpeciesBase = null
 
 	if species_name != "":
@@ -152,22 +153,11 @@ func spawn_specific_with_modifier(modifier_name: String, species_name: String = 
 
 	if chosen == null:
 		var eligible_entries: Array[Dictionary] = []
-		var total_weight: float = 0.0
 		for entry in SpeciesRegistry.get_spawnable_species_weights(PlayerStats):
 			var sp: SpeciesBase = entry["species"]
 			if sp and (mod_proto == null or mod_proto.can_apply_to_species(sp.species_id, false, PlayerStats)):
 				eligible_entries.append(entry)
-				total_weight += float(entry["weight"])
-
-		if not eligible_entries.is_empty():
-			var roll := randf_range(0.0, total_weight)
-			var acc: float = 0.0
-			chosen = eligible_entries[0]["species"]
-			for entry in eligible_entries:
-				acc += float(entry["weight"])
-				if roll <= acc:
-					chosen = entry["species"]
-					break
+		chosen = _pick_weighted_species(eligible_entries)
 
 	if chosen == null:
 		for sp in SpeciesRegistry.get_all_species():
@@ -196,20 +186,8 @@ func spawn_custom_customer(species_id: String = "", modifier_id: String = "__NAT
 		if clean_sp != "":
 			chosen = SpeciesRegistry.get_species_or_default(clean_sp)
 		else:
-			var weighted_entries := SpeciesRegistry.get_spawnable_species_weights(PlayerStats)
-			if not weighted_entries.is_empty():
-				var total_weight: float = 0.0
-				for entry in weighted_entries:
-					total_weight += float(entry["weight"])
-				var roll := randf_range(0.0, total_weight)
-				var acc: float = 0.0
-				chosen = weighted_entries[0]["species"]
-				for entry in weighted_entries:
-					acc += float(entry["weight"])
-					if roll <= acc:
-						chosen = entry["species"]
-						break
-			else:
+			chosen = _pick_weighted_species(SpeciesRegistry.get_spawnable_species_weights(PlayerStats))
+			if chosen == null:
 				chosen = SpeciesRegistry.get_species_or_default("HUMAN")
 		return spawn_customer_by_species(chosen, -1.0, "start", "NONE")
 
@@ -338,17 +316,7 @@ func serve_cup_to_npc(drink: Glasses, npc: Base_NPC) -> void:
 		drink.is_delivering = false
 
 	if is_instance_valid(drink) and not drink.is_consumed and is_instance_valid(npc):
-		if npc.has_method("receive_drink"):
-			npc.receive_drink(drink.drink_mix)
-		else:
-			npc._obtain_drink(drink._return_drink())
-		var handled := false
-		if npc.modifier and npc.modifier.consume_delivered_cup(npc, drink):
-			handled = true
-		elif npc.species_def and npc.species_def.consume_delivered_cup(npc, drink):
-			handled = true
-		if not handled:
-			drink._dranked()
+		npc.deliver_cup(drink)
 
 func on_patience_ended(seat_num: int) -> void:
 	if not main_root:

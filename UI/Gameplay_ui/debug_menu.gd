@@ -103,7 +103,7 @@ func _populate_modifier_dropdown() -> void:
 	modifier_option.set_item_metadata(0, "__NATURAL__")
 	modifier_option.add_item("None")
 	modifier_option.set_item_metadata(1, "__NONE__")
-	for mod in ModifierRegistry.get_all_modifiers():
+	for mod in SpeciesRegistry.get_all_modifiers():
 		modifier_option.add_item(mod.display_name)
 		modifier_option.set_item_metadata(modifier_option.item_count - 1, mod.modifier_id)
 	modifier_option.select(0)

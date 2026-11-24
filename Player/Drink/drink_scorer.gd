@@ -1,7 +1,7 @@
 class_name DrinkScorer
 extends RefCounted
 
-# handles base drink scoring and delegates species and modifier drink rules to their registries
+# handles base drink scoring and sends species and modifier drink rules to SpeciesRegistry
 
 const SATISFACTORY_THRESHOLD := 0.6
 const MAX_DIFF := 0.15
@@ -77,7 +77,6 @@ static func score_drink(served: DrinkMix, wanted: DrinkOrder) -> Dictionary:
 	}
 
 	SpeciesRegistry.apply_drink_scoring_hooks(served, wanted, result)
-	ModifierRegistry.apply_drink_scoring_hooks(served, wanted, result)
 
 	result["score"] = clampf(float(result["score"]), 0.0, 1.0)
 	result["is_satisfactory"] = float(result["score"]) >= SATISFACTORY_THRESHOLD
@@ -104,5 +103,3 @@ static func score_legacy(drink_layers: Array, want_array: Array) -> Dictionary:
 	var served := DrinkMix.from_legacy_layers(drink_layers)
 	var wanted := DrinkOrder.from_legacy_want(want_array)
 	return score_drink(served, wanted)
-
-	
