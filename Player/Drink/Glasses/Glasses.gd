@@ -9,11 +9,9 @@ const MIN_POUR_OUT_TILT_DEGREES: float = 5.0
 const SPILL_INDICATOR_COOLDOWN: float = 0.55
 const OVERFLOW_EPSILON: float = 0.0005
 
-@onready var tcmtd := preload("res://Player/Drink/Glasses/liquids_label.tscn")
 @export var liquids: Array = []
 @export var size: float = 1.0
 @export var sprite: Sprite3D
-@export var liquid_box: VBoxContainer = null
 @export var customer_hold_distance: float = 1.0
 
 var drink_mix: DrinkMix = DrinkMix.new()
@@ -30,7 +28,6 @@ var _overflow_timer: float = 0.0
 var _overflow_flow_rate: float = 0.0
 var _overflow_color: Color = Color.WHITE
 
-var drink_list_label: Label
 var total_liquids: float = 0.0
 var is_being_served: bool = false
 var is_delivering: bool = false
@@ -45,31 +42,6 @@ var _previous_counter_position: Vector3 = Vector3.ZERO
 var _skip_initial_snap: bool = false
 var _spill_indicator_cooldown: float = 0.0
 var _spill_accumulated_percent: float = 0.0
-
-@export_group("Liquid Physics")
-@export var viscosity: float = 0.0
-@export var spring_stiffness: float = 75.0
-@export var base_damping: float = 4.0
-@export var slosh_sensitivity: float = 0.28
-@export var max_slosh_angle: float = 0.85
-@export var wave_frequency: float = 16.0
-@export var vertical_spring: float = 90.0
-@export var vertical_damping: float = 5.0
-@export var vertical_sensitivity: float = 0.15
-
-@export_group("Liquid Shading")
-@export var pixel_resolution: float = 48.0
-@export var surface_highlight_color: Color = Color(1.4, 1.4, 1.5, 1.0)
-@export var secondary_highlight_color: Color = Color(0.9, 0.4, 0.95, 0.85)
-@export var surface_highlight_pixels: float = 1.2
-@export var bottom_darkening: float = 0.45
-@export var liquid_transparency: float = 0.9
-@export var caustic_beam_strength: float = 0.35
-@export var sparkle_density: float = 0.7
-@export var glass_reflection_strength: float = 0.28
-@export var meniscus_curve: float = 0.03
-@export var inner_margin_top: float = 0.12
-@export var inner_margin_bottom: float = 0.88
 
 var push_velocity: Vector3 = Vector3.ZERO
 const PUSH_FRICTION: float = 14.0
@@ -254,9 +226,9 @@ func _stop_pour_splash() -> void:
 	if is_instance_valid(_pour_splash_stream):
 		_pour_splash_stream.set_splash_active(false)
 
-func _get_pour_splash_color(id: String) -> Color:
+func _get_blended_stream_color(id: String, top_weight: float) -> Color:
 	var incoming_col: Color = visual_helper.LIQUID_COLOR.get(id, Color.WHITE)
-	var base_col: Color = incoming_col.lerp(get_top_liquid_color(), 0.2) if not liquids.is_empty() else incoming_col
+	var base_col: Color = incoming_col.lerp(get_top_liquid_color(), top_weight) if not liquids.is_empty() else incoming_col
 	if visual_helper and visual_helper._visual_override.has("liquid_tint_color"):
 		var tint_col: Color = visual_helper._visual_override.get("liquid_tint_color", Color.WHITE)
 		var tint_mix: float = float(visual_helper._visual_override.get("liquid_tint_strength", 0.35))
@@ -264,7 +236,7 @@ func _get_pour_splash_color(id: String) -> Color:
 	return base_col
 
 func _trigger_pour_splash(id: String, liquids_num: float, pour_info: Dictionary) -> void:
-	_pour_splash_color = _get_pour_splash_color(id)
+	_pour_splash_color = _get_blended_stream_color(id, 0.2)
 	_pour_splash_entry_u = clampf(float(pour_info.get("entry_u", 0.5)), 0.15, 0.85)
 	var target_flow := clampf(liquids_num / 0.0825, 0.25, 1.8)
 	_pour_splash_flow_rate = lerpf(_pour_splash_flow_rate, target_flow, 0.5) if _pour_splash_timer > 0.0 else target_flow
@@ -306,17 +278,8 @@ func _stop_overflow_streams() -> void:
 	if is_instance_valid(_overflow_stream_right):
 		_overflow_stream_right.set_stream_active(false)
 
-func _get_overflow_liquid_color(id: String) -> Color:
-	var incoming_col: Color = visual_helper.LIQUID_COLOR.get(id, Color.WHITE)
-	var base_col: Color = get_top_liquid_color().lerp(incoming_col, 0.25) if not liquids.is_empty() else incoming_col
-	if visual_helper and visual_helper._visual_override.has("liquid_tint_color"):
-		var tint_col: Color = visual_helper._visual_override.get("liquid_tint_color", Color.WHITE)
-		var tint_mix: float = float(visual_helper._visual_override.get("liquid_tint_strength", 0.35))
-		base_col = base_col.lerp(Color(tint_col.r, tint_col.g, tint_col.b, base_col.a), tint_mix)
-	return base_col
-
 func _trigger_overflow_spilling(id: String, overflow: float) -> void:
-	_overflow_color = _get_overflow_liquid_color(id)
+	_overflow_color = _get_blended_stream_color(id, 0.75)
 	var tick_rate := overflow / 0.033
 	var target_flow := clampf(tick_rate / 2.5, 0.28, 1.35)
 	_overflow_flow_rate = lerpf(_overflow_flow_rate, target_flow, 0.5) if _overflow_timer > 0.0 else target_flow
@@ -666,7 +629,7 @@ func _rebuild_liquid_gradient(show_hud: bool = true) -> void:
 	total_liquids = 0.0
 	for l in liquids:
 		total_liquids += float(l[1])
-	drink_list_label = visual_helper.rebuild_gradient(liquids, total_liquids, size, liquid_box, tcmtd, is_mixed())
+	visual_helper.rebuild_gradient(liquids, total_liquids, size, is_mixed())
 	if show_hud and not liquids.is_empty() and total_liquids > 0.0:
 		var hud := HudIndicators.get_current()
 		if hud:
@@ -968,34 +931,6 @@ func _dranked() -> void:
 	_stop_overflow_streams()
 	queue_free()
 
-func _return_drink() -> Array:
-	var current_total: float = 0.0
-	for layer in liquids:
-		if layer is Array and layer.size() >= 2:
-			current_total += float(layer[1])
-	if current_total <= 0.0:
-		return []
-
-	var scale_to_prop := 1.0 / current_total
-	var normalized: Array = []
-	for layer in liquids:
-		if not (layer is Array and layer.size() >= 2):
-			continue
-		var new_layer: Array = layer.duplicate()
-		new_layer[1] = float(layer[1]) * scale_to_prop
-		if new_layer.size() > 3 and new_layer[3] is Dictionary:
-			var new_dict: Dictionary = {}
-			for k in new_layer[3]:
-				new_dict[k] = float(new_layer[3][k]) * scale_to_prop
-			new_layer[3] = new_dict
-		elif new_layer[0] is Dictionary:
-			var new_dict: Dictionary = {}
-			for k in new_layer[0]:
-				new_dict[k] = float(new_layer[0][k]) * scale_to_prop
-			new_layer[0] = new_dict
-		normalized.append(new_layer)
-	return normalized
-
 func _on_area_3d_area_entered(area: Area3D) -> void:
 	if area.is_in_group("glass") and get_drag_mode() == DragMode.COLLISION and not is_balls_dragging:
 		_pushing_glass(area)
@@ -1074,12 +1009,6 @@ func _remove_displaying_list(immediate: bool = false) -> void:
 	var hud := HudIndicators.get_current()
 	if hud:
 		hud.hide_pouring_indicator(self, immediate)
-	if liquid_box and liquid_box.modulate.a != 0.0:
-		if immediate or not is_inside_tree():
-			liquid_box.modulate.a = 0.0
-		else:
-			var tween := get_tree().create_tween().parallel()
-			tween.tween_property(liquid_box, "modulate:a", 0.0, 1.0)
 
 func get_unique_liquids_ids() -> Array[String]:
 	return drink_mix.get_unique_ingredient_ids()

@@ -10,6 +10,29 @@ const LIQUID_VISCOSITY := AtomicFluidShaders.LIQUID_VISCOSITY
 const UNIFORM_PIXEL_DENSITY: float = 150.0
 const REFERENCE_PIXEL_RESOLUTION: float = 48.0
 
+var viscosity: float = 0.0
+var spring_stiffness: float = 75.0
+var base_damping: float = 4.0
+var slosh_sensitivity: float = 0.28
+var max_slosh_angle: float = 0.85
+var wave_frequency: float = 16.0
+var vertical_spring: float = 90.0
+var vertical_damping: float = 5.0
+var vertical_sensitivity: float = 0.15
+
+var pixel_resolution: float = 48.0
+var surface_highlight_color: Color = Color(1.4, 1.4, 1.5, 1.0)
+var secondary_highlight_color: Color = Color(0.9, 0.4, 0.95, 0.85)
+var surface_highlight_pixels: float = 1.2
+var bottom_darkening: float = 0.45
+var liquid_transparency: float = 0.9
+var caustic_beam_strength: float = 0.35
+var sparkle_density: float = 0.7
+var glass_reflection_strength: float = 0.28
+var meniscus_curve: float = 0.03
+var inner_margin_top: float = 0.12
+var inner_margin_bottom: float = 0.88
+
 var slosh_angle: float = 0.0
 var slosh_velocity: float = 0.0
 var slosh_vertical_offset: float = 0.0
@@ -148,30 +171,32 @@ func sync_bottle_liquid(id: String, current_amount: float, bottle_size: float, c
 	if fluid_sim:
 		fluid_sim.sync_bottle_liquid(id, current_amount, bottle_size, color, eff_buoy, eff_visc)
 
-func update_physics_from_owner(delta: float, current_pos: Vector3, camera: Camera3D, owner_node: Object, viscosity_override: float = -1.0, container_sprite: Node3D = null) -> void:
-	if not is_instance_valid(owner_node):
-		return
-	var eff_visc: float = viscosity_override if viscosity_override >= 0.0 else float(owner_node.get("viscosity"))
+func update_physics_from_owner(delta: float, current_pos: Vector3, camera: Camera3D, owner_node: Object = null, viscosity_override: float = -1.0, container_sprite: Node3D = null) -> void:
+	var eff_visc: float = viscosity
+	if viscosity_override >= 0.0:
+		eff_visc = viscosity_override
+	elif is_instance_valid(owner_node) and "viscosity" in owner_node:
+		eff_visc = float(owner_node.get("viscosity"))
 	update_physics(
 		delta,
 		current_pos,
 		camera,
 		eff_visc,
-		float(owner_node.get("spring_stiffness")),
-		float(owner_node.get("base_damping")),
-		float(owner_node.get("slosh_sensitivity")),
-		float(owner_node.get("max_slosh_angle")),
-		float(owner_node.get("wave_frequency")),
-		float(owner_node.get("vertical_spring")),
-		float(owner_node.get("vertical_damping")),
-		float(owner_node.get("vertical_sensitivity")),
+		spring_stiffness,
+		base_damping,
+		slosh_sensitivity,
+		max_slosh_angle,
+		wave_frequency,
+		vertical_spring,
+		vertical_damping,
+		vertical_sensitivity,
 		container_sprite
 	)
 
-func update_physics(delta: float, current_pos: Vector3, camera: Camera3D, viscosity: float, spring_stiffness: float, base_damping: float, slosh_sens: float, max_slosh: float, wave_freq: float, vert_spring: float, vert_damping: float, vert_sens: float, container_sprite: Node3D = null) -> void:
+func update_physics(delta: float, current_pos: Vector3, camera: Camera3D, p_viscosity: float, p_spring_stiffness: float, p_base_damping: float, slosh_sens: float, max_slosh: float, wave_freq: float, vert_spring: float, vert_damping: float, vert_sens: float, container_sprite: Node3D = null) -> void:
 	if delta <= 0.0:
 		return
-	_last_viscosity = viscosity
+	_last_viscosity = p_viscosity
 
 	var pos_delta := current_pos - last_global_pos
 	if pos_delta.length() > 0.4:
@@ -188,9 +213,9 @@ func update_physics(delta: float, current_pos: Vector3, camera: Camera3D, viscos
 		frame_accel = frame_accel.normalized() * 50.0
 
 	var h_accel: float = frame_accel.dot(camera.global_transform.basis.x) if camera else frame_accel.x
-	var clamped_visc := clampf(viscosity, 0.0, 1.0)
-	var eff_damping := base_damping * (1.0 + clamped_visc * 2.0)
-	var eff_spring := spring_stiffness / (1.0 + clamped_visc * 0.7)
+	var clamped_visc := clampf(p_viscosity, 0.0, 1.0)
+	var eff_damping := p_base_damping * (1.0 + clamped_visc * 2.0)
+	var eff_spring := p_spring_stiffness / (1.0 + clamped_visc * 0.7)
 	var current_max := lerpf(max_slosh, max_slosh * 0.35, clamped_visc)
 
 	var slosh_force := -h_accel * slosh_sens
@@ -228,7 +253,7 @@ func update_physics(delta: float, current_pos: Vector3, camera: Camera3D, viscos
 				if sp.flip_v:
 					axis_y = -axis_y
 			local_accel = Vector2(world_accel.dot(axis_x), world_accel.dot(axis_y))
-		fluid_sim.step(delta, local_accel, viscosity)
+		fluid_sim.step(delta, local_accel, p_viscosity)
 
 func _compute_pixel_grid(base_resolution: float) -> Vector2:
 	if _visual_override.has("pixel_resolution"):
@@ -250,22 +275,20 @@ func _compute_pixel_grid(base_resolution: float) -> Vector2:
 	var fallback := maxf(base_resolution, 8.0)
 	return Vector2(fallback, fallback)
 
-func sync_shader_from_owner(fill_ratio: float, owner_node: Object) -> void:
-	if not is_instance_valid(owner_node):
-		return
+func sync_shader_from_owner(fill_ratio: float, _owner_node: Object = null) -> void:
 	sync_shader_uniforms(fill_ratio, {
-		"pixel_resolution": owner_node.get("pixel_resolution"),
-		"surface_highlight_color": owner_node.get("surface_highlight_color"),
-		"secondary_highlight_color": owner_node.get("secondary_highlight_color"),
-		"surface_highlight_thickness": owner_node.get("surface_highlight_pixels"),
-		"bottom_darkening": owner_node.get("bottom_darkening"),
-		"liquid_transparency": owner_node.get("liquid_transparency"),
-		"caustic_beam_strength": owner_node.get("caustic_beam_strength"),
-		"sparkle_density": owner_node.get("sparkle_density"),
-		"glass_reflection_strength": owner_node.get("glass_reflection_strength"),
-		"meniscus_curve": owner_node.get("meniscus_curve"),
-		"inner_margin_top": owner_node.get("inner_margin_top"),
-		"inner_margin_bottom": owner_node.get("inner_margin_bottom"),
+		"pixel_resolution": pixel_resolution,
+		"surface_highlight_color": surface_highlight_color,
+		"secondary_highlight_color": secondary_highlight_color,
+		"surface_highlight_thickness": surface_highlight_pixels,
+		"bottom_darkening": bottom_darkening,
+		"liquid_transparency": liquid_transparency,
+		"caustic_beam_strength": caustic_beam_strength,
+		"sparkle_density": sparkle_density,
+		"glass_reflection_strength": glass_reflection_strength,
+		"meniscus_curve": meniscus_curve,
+		"inner_margin_top": inner_margin_top,
+		"inner_margin_bottom": inner_margin_bottom,
 	})
 
 func sync_shader_uniforms(_fill_ratio: float, config: Dictionary) -> void:
@@ -282,50 +305,20 @@ func sync_shader_uniforms(_fill_ratio: float, config: Dictionary) -> void:
 	liquid_shader_mat.set_shader_parameter("pixel_grid", grid)
 	liquid_shader_mat.set_shader_parameter("pixel_resolution", (grid.x + grid.y) * 0.5)
 
-func rebuild_gradient(liquids: Array, total_liquids: float, glass_size: float, liquid_box: VBoxContainer = null, label_scene: PackedScene = null, is_mixed_flag: bool = false) -> Label:
-	var last_label: Label = null
-
+func rebuild_gradient(liquids: Array, total_liquids: float, glass_size: float, is_mixed_flag: bool = false) -> void:
 	sync_container_liquids(liquids, glass_size, is_mixed_flag)
 
 	if not liquid_gradient:
-		return last_label
+		return
 
 	if liquids.is_empty() or total_liquids <= 0.0:
 		liquid_gradient.offsets = PackedFloat32Array([0.0, 1.0])
 		liquid_gradient.colors = PackedColorArray([Color(0, 0, 0, 0), Color(0, 0, 0, 0)])
-		return last_label
+		return
 
 	var has_tint := _visual_override.has("liquid_tint_color")
 	var tint_col: Color = _visual_override.get("liquid_tint_color", Color.WHITE)
 	var tint_mix: float = float(_visual_override.get("liquid_tint_strength", 0.35))
-
-	if liquid_box and label_scene:
-		var children := liquid_box.get_children()
-		if children.size() != liquids.size():
-			for c in children:
-				liquid_box.remove_child(c)
-				c.queue_free()
-			for layer in liquids:
-				liquid_box.add_child(label_scene.instantiate())
-		children = liquid_box.get_children()
-		for i in range(mini(children.size(), liquids.size())):
-			var lbl = children[i]
-			var layer: Array = liquids[i]
-			var col := get_layer_color(layer)
-			if has_tint:
-				col = col.lerp(tint_col, tint_mix)
-			if lbl.material:
-				lbl.material.set_shader_parameter("base_color", col)
-			var layer_name := format_layer_name(layer[0])
-			var pct: float = (float(layer[1]) / maxf(glass_size, 0.001)) * 100.0
-			var text_str := layer_name + ": " + str(snappedf(pct, 0.1)) + "%"
-			if lbl.has_method("change_text"):
-				lbl.change_text(text_str)
-			else:
-				lbl.text = text_str
-		if not children.is_empty():
-			last_label = children[children.size() - 1] as Label
-		liquid_box.modulate.a = 1.0
 
 	var offsets := PackedFloat32Array([0.0])
 	var colors := PackedColorArray()
@@ -362,7 +355,6 @@ func rebuild_gradient(liquids: Array, total_liquids: float, glass_size: float, l
 
 	liquid_gradient.offsets = offsets
 	liquid_gradient.colors = colors
-	return last_label
 
 func format_layer_name(layer_id) -> String:
 	if layer_id is Array:

@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://ptx2ek23fpem"]
 
 [ext_resource type="Script" uid="uid://bccoqt1jiegjo" path="res://Player/Drink/Minigame/Blood/blood_minigame.gd" id="1_hsqqf"]
-[ext_resource type="Shader" uid="uid://b5kpwtrmoc3g5" path="res://Shader/shot_cup.gdshader" id="2_rlg7l"]
 [ext_resource type="Texture2D" uid="uid://cwjxfda0sowei" path="res://Assets/Items/Drinks/blood_outline.png" id="3_vg78n"]
 [ext_resource type="Shader" uid="uid://tyhfgk6oy2oi" path="res://Shader/shot_cup_2D.gdshader" id="4_vg78n"]
 [ext_resource type="Texture2D" uid="uid://chodn0xbiyuco" path="res://Assets/Items/Drinks/blood_color.png" id="5_apvkm"]
@@ -43,29 +42,6 @@ _data = {
 &"RESET": SubResource("Animation_hsqqf"),
 &"hurt": SubResource("Animation_fmsg0")
 }
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_vg78n"]
-render_priority = 0
-shader = ExtResource("2_rlg7l")
-shader_parameter/fill_amount = 0.60400002869
-shader_parameter/slosh_angle = 0.0
-shader_parameter/slosh_vertical_offset = 0.0
-shader_parameter/wave_phase = 0.0
-shader_parameter/wave_amplitude = 0.0
-shader_parameter/pixel_resolution = 48.0
-shader_parameter/surface_highlight_color = Color(1.4, 1.4, 1.5, 1)
-shader_parameter/secondary_highlight_color = Color(0.9, 0.4, 0.95, 0.85)
-shader_parameter/surface_highlight_thickness = 1.2
-shader_parameter/bottom_darkening = 0.45
-shader_parameter/liquid_transparency = 0.9
-shader_parameter/inner_margin_top = 0.12
-shader_parameter/inner_margin_bottom = 0.88
-shader_parameter/caustic_beam_strength = 0.35
-shader_parameter/sparkle_density = 0.7
-shader_parameter/glass_reflection_strength = 0.28
-shader_parameter/meniscus_curve = 0.03
-shader_parameter/gradient_offset = 0.0
-shader_parameter/flip_gradient = false
 
 [sub_resource type="Gradient" id="Gradient_apvkm"]
 colors = PackedColorArray(0.48775607, 1.0287948e-06, 3.3691526e-07, 1, 0.4862745, 0, 0, 1)
@@ -132,7 +108,6 @@ position = Vector2(639, 639)
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=913556583]
 texture_filter = 3
-material = SubResource("ShaderMaterial_vg78n")
 position = Vector2(642, 680)
 texture = ExtResource("3_vg78n")
 offset = Vector2(-1, -40)

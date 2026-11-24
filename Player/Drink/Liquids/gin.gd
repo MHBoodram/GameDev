@@ -12,31 +12,6 @@ const MAX_POUR_ANGLE_DEGREES: float = 150.0
 @export var liquid_resource: Liquid
 @export var size: float = 50.0
 
-@export_group("Liquid Physics")
-@export var viscosity: float = 0.0
-@export var spring_stiffness: float = 75.0
-@export var base_damping: float = 4.0
-@export var slosh_sensitivity: float = 0.28
-@export var max_slosh_angle: float = 0.85
-@export var wave_frequency: float = 16.0
-@export var vertical_spring: float = 90.0
-@export var vertical_damping: float = 5.0
-@export var vertical_sensitivity: float = 0.15
-
-@export_group("Liquid Shading")
-@export var pixel_resolution: float = 48.0
-@export var surface_highlight_color: Color = Color(1.4, 1.4, 1.5, 1.0)
-@export var secondary_highlight_color: Color = Color(0.9, 0.4, 0.95, 0.85)
-@export var surface_highlight_pixels: float = 1.2
-@export var bottom_darkening: float = 0.45
-@export var liquid_transparency: float = 0.9
-@export var caustic_beam_strength: float = 0.35
-@export var sparkle_density: float = 0.7
-@export var glass_reflection_strength: float = 0.28
-@export var meniscus_curve: float = 0.03
-@export var inner_margin_top: float = 0.12
-@export var inner_margin_bottom: float = 0.88
-
 var pouring_into: Node3D
 var original_position: Marker3D
 var is_pouring: bool = false
@@ -63,7 +38,7 @@ func _ensure_pour_stream() -> void:
 func _get_effective_viscosity() -> float:
 	var id_str := liquid_resource.id if liquid_resource else "gin"
 	var res_visc := liquid_resource.viscosity if (liquid_resource and liquid_resource.viscosity >= 0.0) else LiquidVisualHelper.get_liquid_viscosity(id_str)
-	return clampf(maxf(viscosity, res_visc), 0.0, 1.0)
+	return clampf(maxf(visual_helper.viscosity, res_visc), 0.0, 1.0)
 
 func ready() -> void:
 	_ensure_pour_stream()

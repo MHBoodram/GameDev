@@ -45,9 +45,9 @@ static func apply_to_glass(glass: Glasses) -> void:
 			"liquid_transparency": 0.5,
 			"surface_highlight_color": Color(0.55, 1.45, 1.65, 1.0),
 			"secondary_highlight_color": Color(0.45, 0.85, 1.5, 0.9),
-			"caustic_beam_strength": maxf(glass.caustic_beam_strength, 0.65),
-			"sparkle_density": maxf(glass.sparkle_density, 1.2),
-			"glass_reflection_strength": maxf(glass.glass_reflection_strength, 0.5)
+			"caustic_beam_strength": maxf(glass.visual_helper.caustic_beam_strength, 0.65),
+			"sparkle_density": maxf(glass.visual_helper.sparkle_density, 1.2),
+			"glass_reflection_strength": maxf(glass.visual_helper.glass_reflection_strength, 0.5)
 		})
 
 	glass._rebuild_liquid_gradient(false)
