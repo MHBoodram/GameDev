@@ -1,4 +1,4 @@
-extends Processor
+extends Ingredients
 class_name Shaker
 
 const SHAKE_SCENE := preload("res://Player/Drink/ShakeMinigame.tscn")
@@ -12,9 +12,20 @@ var _jiggle_home : Dictionary = {}
 var _jiggle_tweens : Dictionary = {}
 var _active_glass : Glasses = null
 
+func is_working_area_item() -> bool:
+	return true
+
 func ready() -> void:
-	super.ready()
+	if area_body == null:
+		area_body = get_node_or_null("CollisionShape3D")
+	rotation = Vector3.ZERO
+	_face_camera()
+	_snap_to_working_area()
+	_last_counter_position = global_position
 	add_to_group("shaker")
+
+func _on_hover(hovered: bool) -> void:
+	set_highlight(hovered)
 
 func can_be_shaken() -> bool:
 	return false

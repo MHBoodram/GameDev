@@ -11,10 +11,6 @@ const MAX_POUR_ANGLE_DEGREES: float = 150.0
 @onready var liquid_refresh: Timer = get_node("Liquid_refresh")
 @export var liquid_resource: Liquid
 @export var size: float = 50.0
-@export var hold_lift: float = 0.2
-@export var snap_to_glass: bool = true
-@export var snap_offset: Vector3 = Vector3(0, 0.5, 0)
-@export var follow_speed: float = 30.0
 
 @export_group("Liquid Physics")
 @export var viscosity: float = 0.0
@@ -44,7 +40,6 @@ const MAX_POUR_ANGLE_DEGREES: float = 150.0
 var pouring_into: Node3D
 var original_position: Marker3D
 var is_pouring: bool = false
-var in_game: bool = false
 
 var color_liquid: Color = Color.WHITE
 var current_liquid: float = 50.0
@@ -54,6 +49,11 @@ var liquid_gradient: Gradient
 var liquid_shader_mat: ShaderMaterial
 var gradient_texture: GradientTexture2D
 var _pour_stream: PourStreamVisual = null
+
+func _init() -> void:
+	hold_lift = 0.2
+	snap_to_glass = true
+	follow_speed = 30.0
 
 func _ensure_pour_stream() -> void:
 	if not is_instance_valid(_pour_stream):
@@ -82,21 +82,6 @@ func ready() -> void:
 		_setup_liquid_shader()
 		_apply_outside_texture()
 		set_liquid_color(liquid_resource.liquid_color)
-
-func _is_drag_blocked() -> bool:
-	return in_game
-
-func _get_drag_follow_speed() -> float:
-	return follow_speed
-
-func _get_drag_hold_lift() -> float:
-	return hold_lift
-
-func _get_free_drag_target(delta: float) -> Vector3:
-	if snap_to_glass and camera and is_instance_valid(current_hovered_target) and can_interact_with(current_hovered_target):
-		var to_cam := (camera.global_position - current_hovered_target.global_position).normalized()
-		return current_hovered_target.global_position + snap_offset + to_cam * hold_lift
-	return super._get_free_drag_target(delta)
 
 func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 	_ensure_pour_stream()
@@ -259,12 +244,6 @@ func _pour() -> void:
 	await get_tree().create_timer(0.25).timeout
 	if is_inside_tree() and in_game and GameState.player and GameState.player.in_game:
 		GameState.player._out_of_game()
-
-func _look_at_sprite(looking_at: Vector3) -> void:
-	if looking_at:
-		var target_flat := looking_at
-		target_flat.y = $Inside.global_position.y
-		$Inside.look_at(target_flat, Vector3.UP)
 
 func _return_original() -> void:
 	if _drag_return_tween and _drag_return_tween.is_valid():

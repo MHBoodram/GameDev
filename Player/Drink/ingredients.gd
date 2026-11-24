@@ -22,9 +22,16 @@ var is_balls_dragging: bool = false:
 var is_selected: bool = false
 var camera: Camera3D
 @export var counter_origin: Node3D
+@export var area_body: CollisionShape3D
+@export var hold_lift: float = 0.25
+@export var snap_to_glass: bool = false
+@export var snap_offset: Vector3 = Vector3(0, 0.5, 0)
+@export var follow_speed: float = 25.0
+
 var base_y_position: float = 1.6
 var drag_height: float = 1.6
-var drag_follow_speed: float = 0.0
+var in_game: bool = false
+var _last_counter_position: Vector3 = Vector3.ZERO
 
 var _pointer_down_pos: Vector2 = Vector2.ZERO
 var _is_pointer_pressed: bool = false
@@ -37,7 +44,6 @@ var _explicit_highlight: Node3D = null
 
 var _drag_grab_depth: float = 0.0
 var _drag_current_depth: float = 0.0
-var _drag_hold_lift: float = 0.25
 var _drag_return_tween: Tween = null
 var _is_returning_to_counter: bool = false
 var _waiting_for_working_area: bool = false
@@ -47,16 +53,6 @@ var _is_mode_transitioning: bool = false
 var _mode_transition_elapsed: float = 0.0
 var _mode_transition_duration: float = 0.35
 var _mode_transition_start_pos: Vector3 = Vector3.ZERO
-
-# backward compatible static bridges for other scripts
-static func get_working_area_bounds(context: Node) -> Variant:
-	return WorkingAreaService.get_working_area_bounds(context)
-
-static func get_working_area_usable_bounds(context: Node) -> Variant:
-	return WorkingAreaService.get_working_area_usable_bounds(context)
-
-static func get_working_area_aabb(context: Node) -> Variant:
-	return WorkingAreaService.get_working_area_bounds(context)
 
 func _ready() -> void:
 	add_to_group("interactable")
@@ -99,13 +95,13 @@ func uses_working_area_drag_plane() -> bool:
 	return get_drag_mode() == DragMode.COLLISION
 
 func _is_drag_blocked() -> bool:
-	return false
+	return in_game
 
 func _get_drag_follow_speed() -> float:
-	return 25.0
+	return follow_speed
 
 func _get_drag_hold_lift() -> float:
-	return _drag_hold_lift
+	return hold_lift
 
 func can_highlight_on_hover() -> bool:
 	return true
@@ -249,6 +245,9 @@ func _get_free_drag_target(delta: float) -> Vector3:
 		camera = get_viewport().get_camera_3d()
 	if not camera:
 		return global_position
+	if snap_to_glass and is_instance_valid(current_hovered_target) and can_interact_with(current_hovered_target):
+		var to_cam := (camera.global_position - current_hovered_target.global_position).normalized()
+		return current_hovered_target.global_position + snap_offset + to_cam * _get_drag_hold_lift()
 	var mouse_pos := get_viewport().get_mouse_position()
 	var target_depth := maxf(_drag_grab_depth - _get_drag_hold_lift(), 0.85)
 	_drag_current_depth = lerpf(_drag_current_depth, target_depth, 1.0 - exp(-12.0 * delta))
@@ -311,11 +310,37 @@ func _return_to_counter_smoothly(target_pos: Vector3, duration: float = 0.3) -> 
 		_on_returned_to_counter(target_pos)
 	)
 
-func _on_returning_to_counter(_target_pos: Vector3) -> void:
-	pass
+func _on_returning_to_counter(target_pos: Vector3) -> void:
+	if is_working_area_item():
+		_last_counter_position = target_pos
 
-func _on_returned_to_counter(_target_pos: Vector3) -> void:
-	pass
+func _on_returned_to_counter(target_pos: Vector3) -> void:
+	if is_working_area_item():
+		_last_counter_position = target_pos
+
+func _in_game() -> void:
+	in_game = true
+	_is_pointer_pressed = false
+	is_balls_dragging = false
+	_is_returning_to_counter = false
+	_is_mode_transitioning = false
+	if _drag_return_tween and _drag_return_tween.is_valid():
+		_drag_return_tween.kill()
+	if area_body:
+		area_body.disabled = true
+
+func _out_of_game() -> void:
+	in_game = false
+	if area_body:
+		area_body.disabled = false
+	if is_working_area_item():
+		var target_pos: Vector3 = _get_saved_counter_position(_last_counter_position)
+		if global_position.distance_to(target_pos) > 0.005:
+			_return_to_counter_smoothly(target_pos)
+		else:
+			global_position = target_pos
+			base_y_position = target_pos.y
+			_last_counter_position = target_pos
 
 func start_drag_from_spawn(press_screen_pos: Vector2, from_shelf: bool = false) -> void:
 	_is_returning_to_counter = false
@@ -374,9 +399,31 @@ func _process(delta: float) -> void:
 
 		_face_camera()
 		_update_drag_hover()
+	elif is_working_area_item() and camera:
+		_face_camera()
 
 	if get_drag_mode() == DragMode.COLLISION and not _is_returning_to_counter and not _is_mode_transitioning:
+		if is_working_area_item():
+			_on_working_area_step(delta)
 		call_deferred("_post_process_counter_constraints")
+
+func _on_working_area_step(delta: float) -> void:
+	if not is_balls_dragging:
+		_settle_on_working_area(delta)
+
+func _settle_on_working_area(delta: float) -> void:
+	if not is_selected:
+		var target_y := get_working_area_surface_y()
+		base_y_position = target_y
+		if absf(global_position.y - target_y) <= 0.002:
+			global_position.y = target_y
+		else:
+			global_position.y = lerpf(global_position.y, target_y, 1.0 - exp(-20.0 * delta))
+	_last_counter_position = global_position
+	_on_working_area_settled()
+
+func _on_working_area_settled() -> void:
+	pass
 
 func _update_drag_hover() -> void:
 	var collider: Object = _get_ray_collider_under_mouse(get_viewport(), get_rid())
@@ -613,4 +660,6 @@ func execute_npc_interaction(_npc: Base_NPC) -> void:
 	pass
 
 func on_drop_failed() -> void:
-	pass
+	if is_working_area_item():
+		var target_pos: Vector3 = _get_counter_drop_position(_last_counter_position) if _has_dragged else _get_saved_counter_position(_last_counter_position)
+		_return_to_counter_smoothly(target_pos)

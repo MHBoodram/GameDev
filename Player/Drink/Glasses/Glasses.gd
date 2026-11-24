@@ -12,7 +12,6 @@ const OVERFLOW_EPSILON: float = 0.0005
 @onready var tcmtd := preload("res://Player/Drink/Glasses/liquids_label.tscn")
 @export var liquids: Array = []
 @export var size: float = 1.0
-@export var area_body: CollisionShape3D
 @export var sprite: Sprite3D
 @export var liquid_box: VBoxContainer = null
 @export var customer_hold_distance: float = 1.0
@@ -33,7 +32,6 @@ var _overflow_color: Color = Color.WHITE
 
 var drink_list_label: Label
 var total_liquids: float = 0.0
-var in_game: bool = false
 var is_being_served: bool = false
 var is_delivering: bool = false
 var is_consumed: bool = false
@@ -43,7 +41,6 @@ var pour_tilt_degrees: float = 0.0
 var _target_pour_tilt_degrees: float = 0.0
 var _pour_tilt_tween: Tween = null
 var _active_trash: Area3D = null
-var _last_counter_position: Vector3 = Vector3.ZERO
 var _previous_counter_position: Vector3 = Vector3.ZERO
 var _skip_initial_snap: bool = false
 var _spill_indicator_cooldown: float = 0.0
@@ -102,7 +99,7 @@ func is_working_area_item() -> bool:
 	return true
 
 func _is_drag_blocked() -> bool:
-	return in_game or is_being_served or is_consumed or is_pouring_out
+	return super._is_drag_blocked() or is_being_served or is_consumed or is_pouring_out
 
 func _on_drag_started() -> void:
 	if not is_instance_valid(_active_trash) and not _is_returning_to_counter and absf(global_position.y - get_working_area_surface_y()) <= 0.15:
@@ -420,7 +417,7 @@ func ready() -> void:
 	if highlight:
 		highlight.modulate = Color(1.5, 1.5, 0.0, 5.0)
 	if camera:
-		_look_at_sprite(camera.global_position)
+		_face_camera()
 	if not _skip_initial_snap:
 		_snap_to_working_area()
 	else:
@@ -456,7 +453,7 @@ func start_drag_from_spawn(press_screen_pos: Vector2, from_shelf: bool = false) 
 	visual_helper.last_global_pos = sprite.global_position if sprite else global_position
 	visual_helper.last_velocity = Vector3.ZERO
 	if camera:
-		_look_at_sprite(camera.global_position)
+		_face_camera()
 	super.start_drag_from_spawn(press_screen_pos, from_shelf)
 
 func _delete() -> void:
@@ -492,8 +489,8 @@ func _process(delta: float) -> void:
 	if is_pouring_out and not (_pour_tilt_tween and _pour_tilt_tween.is_valid()):
 		pour_tilt_degrees = lerpf(pour_tilt_degrees, _target_pour_tilt_degrees, 1.0 - exp(-18.0 * delta))
 
-	if camera and not is_balls_dragging:
-		_look_at_sprite(camera.global_position)
+	if camera and not is_balls_dragging and _is_drag_blocked():
+		_face_camera()
 
 	_update_pour_out_stream()
 	_update_pour_splash(delta)
@@ -511,19 +508,13 @@ func _process(delta: float) -> void:
 	if is_balls_dragging:
 		_update_hand_position(delta)
 
-	if get_drag_mode() == DragMode.COLLISION and not _is_returning_to_counter and not _is_mode_transitioning:
-		_apply_collision_push(delta)
-		if not is_balls_dragging:
-			if not is_selected:
-				var target_y := get_working_area_surface_y()
-				base_y_position = target_y
-				if absf(global_position.y - target_y) <= 0.002:
-					global_position.y = target_y
-				else:
-					global_position.y = lerpf(global_position.y, target_y, 1.0 - exp(-20.0 * delta))
-			_last_counter_position = global_position
-			if not is_instance_valid(_active_trash):
-				_previous_counter_position = global_position
+func _on_working_area_step(delta: float) -> void:
+	_apply_collision_push(delta)
+	super._on_working_area_step(delta)
+
+func _on_working_area_settled() -> void:
+	if not is_instance_valid(_active_trash):
+		_previous_counter_position = global_position
 
 func _post_process_counter_constraints() -> void:
 	if _snap_point and is_instance_valid(_snap_point) and not _snap_suppressed and _snap_blend > 0.0:
@@ -590,7 +581,7 @@ func _update_snap(delta: float) -> void:
 		if _snap_blend >= 0.99:
 			push_velocity = Vector3.ZERO
 		if camera:
-			_look_at_sprite(camera.global_position)
+			_face_camera()
 
 	var locked_now: bool = _snap_blend >= 0.95 and want >= 1.0
 	if locked_now and not _snap_locked:
@@ -648,16 +639,19 @@ func _apply_collision_push(delta: float) -> void:
 		global_position += push_velocity * delta
 		push_velocity = push_velocity.lerp(Vector3.ZERO, 1.0 - exp(-PUSH_FRICTION * delta))
 		if camera:
-			_look_at_sprite(camera.global_position)
+			_face_camera()
 
-func _look_at_sprite(looking_at: Vector3) -> void:
-	if looking_at and sprite:
-		var target_flat := looking_at
-		target_flat.y = sprite.global_position.y
-		if target_flat.distance_squared_to(sprite.global_position) > 0.0001:
-			sprite.look_at(target_flat, Vector3.UP)
+func _face_camera() -> void:
+	if not camera:
+		return
+	var visual: Node3D = sprite if sprite else get_node_or_null("Inside")
+	if visual:
+		var target_flat := camera.global_position
+		target_flat.y = visual.global_position.y
+		if target_flat.distance_squared_to(visual.global_position) > 0.0001:
+			visual.look_at(target_flat, Vector3.UP)
 			if not is_zero_approx(pour_tilt_degrees):
-				sprite.rotate_object_local(Vector3.BACK, deg_to_rad(pour_tilt_degrees))
+				visual.rotate_object_local(Vector3.BACK, deg_to_rad(pour_tilt_degrees))
 
 func _setup_liquid_shader() -> void:
 	var outside_sprite := get_node_or_null("Inside/Outside") as Sprite3D
@@ -905,25 +899,17 @@ func _pushing_glass(other_glass: Area3D) -> void:
 	GameState.play_sfx("play_mugpickup")
 
 func _in_game() -> void:
-	in_game = true
 	_is_actively_pouring_out = false
 	visual_helper.set_mouth_monitoring(false)
 	_snap_point = null
 	_snap_locked = false
 	_snap_blend = 0.0
-	_is_pointer_pressed = false
-	is_balls_dragging = false
-	_is_returning_to_counter = false
-	_is_mode_transitioning = false
 	push_velocity = Vector3.ZERO
 	if is_instance_valid(_pour_out_stream):
 		_pour_out_stream.set_stream_active(false)
 	_stop_pour_splash()
 	_stop_overflow_streams()
-	if _drag_return_tween and _drag_return_tween.is_valid():
-		_drag_return_tween.kill()
-	if area_body:
-		area_body.disabled = true
+	super._in_game()
 
 func return_to_location(target_raw_pos: Vector3, duration: float = 0.3, clear_snap: bool = false) -> void:
 	if clear_snap:
@@ -964,6 +950,11 @@ func _out_of_game() -> void:
 
 func _on_hover(hovered: bool) -> void:
 	set_highlight(hovered)
+
+func _giving_drink() -> void:
+	if input_event.is_connected(_on_area_3d_input_event):
+		input_event.disconnect(_on_area_3d_input_event)
+	is_balls_dragging = false
 
 func _dranked() -> void:
 	if is_consumed:
@@ -1067,16 +1058,15 @@ func on_drop_failed() -> void:
 		_last_counter_position = Vector3(_snap_point.global_position.x, get_working_area_surface_y(), _snap_point.global_position.z)
 		base_y_position = _last_counter_position.y
 		return
-	var target_pos := _get_counter_drop_position(_last_counter_position) if _has_dragged else _get_saved_counter_position(_last_counter_position)
-	_return_to_counter_smoothly(target_pos)
+	super.on_drop_failed()
 
 func _on_returning_to_counter(target_pos: Vector3) -> void:
-	_last_counter_position = target_pos
+	super._on_returning_to_counter(target_pos)
 	if not is_instance_valid(_active_trash):
 		_previous_counter_position = target_pos
 
 func _on_returned_to_counter(target_pos: Vector3) -> void:
-	_last_counter_position = target_pos
+	super._on_returned_to_counter(target_pos)
 	if not is_instance_valid(_active_trash):
 		_previous_counter_position = target_pos
 

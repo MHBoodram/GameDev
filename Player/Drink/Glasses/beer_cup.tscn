@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bntn4wke5bchf"]
 
 [ext_resource type="Texture2D" uid="uid://1yul4dtngbg4" path="res://Assets/Items/beer.png" id="1_isq7m"]
-[ext_resource type="Script" uid="uid://dc30lcc5336nc" path="res://Player/Drink/Glasses/shot_cup.gd" id="2_isq7m"]
+[ext_resource type="Script" path="res://Player/Drink/Glasses/Glasses.gd" id="2_isq7m"]
 [ext_resource type="Shader" uid="uid://b5kpwtrmoc3g5" path="res://Shader/shot_cup.gdshader" id="3_pq6lo"]
 [ext_resource type="Texture2D" uid="uid://d1lg7pdai3jyu" path="res://Assets/Items/beer_outside.png" id="5_pq6lo"]
 
