@@ -1,3 +1,4 @@
+@tool
 class_name WorkingAreaService
 extends RefCounted
 
@@ -6,6 +7,8 @@ extends RefCounted
 const MARGIN_RATIO_X := 0.05
 const MARGIN_RATIO_Z := 0.10
 const BAR_COLLISION_TARGETS := ["leftshelf", "rightshelf", "pillar009"]
+const DRAG_COLLISION_LAYER := 1 << 7
+const WORKING_AREA_WALL_HEIGHT := 1.0
 
 static var _cached_working_node: Node3D = null
 static var _cached_working_xf: Transform3D = Transform3D.IDENTITY
@@ -18,6 +21,106 @@ static var _obstacle_meshes: Array[MeshInstance3D] = []
 static var _obstacle_xfs: Array[Transform3D] = []
 static var _obstacle_obbs: Array[Dictionary] = []
 
+static func setup_drag_collisions(root: Node3D) -> void:
+	if not is_instance_valid(root):
+		return
+	for node in root.find_children("*", "Node3D", true, false):
+		var compact_name: String = node.name.to_lower().replace("_", "").replace(".", "").replace(" ", "")
+		if not BAR_COLLISION_TARGETS.has(compact_name):
+			continue
+		node.add_to_group("bar_drag_obstacle")
+
+		var meshes: Array[MeshInstance3D] = []
+		if node is MeshInstance3D:
+			meshes.append(node)
+		for child in node.find_children("*", "MeshInstance3D", true, false):
+			if child is MeshInstance3D and not meshes.has(child):
+				meshes.append(child)
+
+		for mesh_inst in meshes:
+			if not mesh_inst.mesh or mesh_inst.get_node_or_null("DragCollisionBody") != null:
+				continue
+			var body := StaticBody3D.new()
+			body.name = "DragCollisionBody"
+			body.input_ray_pickable = false
+			body.collision_layer = DRAG_COLLISION_LAYER
+			body.collision_mask = 0
+
+			var col := CollisionShape3D.new()
+			var shape: Shape3D = mesh_inst.mesh.create_convex_shape(true, false)
+			if shape == null:
+				var aabb: AABB = mesh_inst.mesh.get_aabb()
+				var box := BoxShape3D.new()
+				box.size = aabb.size
+				col.position = aabb.get_center()
+				shape = box
+			col.shape = shape
+			body.add_child(col)
+			mesh_inst.add_child(body)
+
+static func setup_working_area_walls(root: Node3D) -> void:
+	if not is_instance_valid(root) or not root.is_inside_tree():
+		return
+	if root.get_node_or_null("WorkingAreaInvisibleWalls") != null:
+		return
+
+	var working_area := find_working_area_node(root)
+	if not is_instance_valid(working_area):
+		return
+
+	var raw_bounds = compute_node_world_bounds(working_area)
+	if not (raw_bounds is AABB):
+		return
+	var bounds: AABB = raw_bounds
+	if bounds.size.x <= 0.001 or bounds.size.z <= 0.001:
+		return
+
+	var near_is_min_z: bool = is_near_side_min_z(root, bounds)
+	var margin_x: float = bounds.size.x * MARGIN_RATIO_X
+	var margin_z: float = bounds.size.z * MARGIN_RATIO_Z
+	var wall_y: float = bounds.end.y + WORKING_AREA_WALL_HEIGHT * 0.5
+	var center: Vector3 = bounds.get_center()
+
+	var walls_root := Node3D.new()
+	walls_root.name = "WorkingAreaInvisibleWalls"
+	root.add_child(walls_root)
+
+	_create_invisible_wall(
+		walls_root,
+		"LeftMarginWall",
+		Vector3(bounds.position.x + margin_x * 0.5, wall_y, center.z),
+		Vector3(margin_x, WORKING_AREA_WALL_HEIGHT, bounds.size.z)
+	)
+	_create_invisible_wall(
+		walls_root,
+		"RightMarginWall",
+		Vector3(bounds.end.x - margin_x * 0.5, wall_y, center.z),
+		Vector3(margin_x, WORKING_AREA_WALL_HEIGHT, bounds.size.z)
+	)
+
+	var far_wall_z: float = (bounds.end.z - margin_z * 0.5) if near_is_min_z else (bounds.position.z + margin_z * 0.5)
+	_create_invisible_wall(
+		walls_root,
+		"FarMarginWall",
+		Vector3(center.x, wall_y, far_wall_z),
+		Vector3(bounds.size.x, WORKING_AREA_WALL_HEIGHT, margin_z)
+	)
+
+static func _create_invisible_wall(parent_node: Node3D, wall_name: String, world_center: Vector3, box_size: Vector3) -> void:
+	var body := StaticBody3D.new()
+	body.name = wall_name
+	body.input_ray_pickable = false
+	body.collision_layer = DRAG_COLLISION_LAYER
+	body.collision_mask = 0
+
+	var col := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = box_size
+	col.shape = box
+	body.add_child(col)
+	parent_node.add_child(body)
+	body.global_position = world_center
+
 # literally searches for the working area node
 static func find_working_area_node(search_root: Node) -> Node3D:
 	if not is_instance_valid(search_root):
@@ -27,7 +130,11 @@ static func find_working_area_node(search_root: Node) -> Node3D:
 		return direct
 	for child in search_root.find_children("*", "Node3D", true, false):
 		var n: String = child.name.to_lower().replace("_", " ").strip_edges()
-		if n == "working area" or n.begins_with("working area"):
+		if n == "working area":
+			return child
+	for child in search_root.find_children("*", "Node3D", true, false):
+		var n: String = child.name.to_lower().replace("_", " ").strip_edges()
+		if n.begins_with("working area"):
 			return child
 	return null
 
