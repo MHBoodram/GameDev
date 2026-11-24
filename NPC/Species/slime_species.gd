@@ -2,6 +2,8 @@ class_name SlimeSpecies
 extends SpeciesBase
 
 const SPLIT_SCALE_MULTIPLIER := 0.75
+const SATISFACTORY_BONUS_MULTIPLIER := 1.0
+const UNSATISFACTORY_BONUS_MULTIPLIER := 0.0
 
 func _init() -> void:
 	species_id = "SLIME"
@@ -33,9 +35,10 @@ func get_drink_pool(stats: Node = null) -> Array[String]:
 	return super.get_drink_pool(stats)
 
 func modify_payout(_npc: Sprite3D, base_price: float, is_satisfactory: bool, _drink_score: float, current_payment: float) -> float:
-	if is_satisfactory:
-		return current_payment + base_price
-	return current_payment
+	var mult := SATISFACTORY_BONUS_MULTIPLIER if is_satisfactory else UNSATISFACTORY_BONUS_MULTIPLIER
+	var bonus := base_price * mult
+	print("  [SlimePayout] bonus: $%.2f (base_price=$%.2f * mult=%.2f)" % [bonus, base_price, mult])
+	return current_payment + bonus
 
 func on_npc_setup(npc: Sprite3D) -> void:
 	if not is_instance_valid(npc):

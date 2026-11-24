@@ -1,6 +1,10 @@
 class_name GhostModifier
 extends ModifierBase
 
+const SPECTRAL_REP_MULTIPLIER := 2.0
+const SPECTRAL_TIP_MULTIPLIER := 1.5
+const REJECTED_TIP_MULTIPLIER := 0.0
+
 var ghost_fell_through: bool = false
 
 func _init() -> void:
@@ -103,13 +107,14 @@ func on_drink_served(npc: Sprite3D, _mix: DrinkMix, _wanted: DrinkOrder, score_d
 
 func modify_species_reputation_delta(_npc: Sprite3D, _race_name: String, base_delta: float, is_satisfactory: bool, _drink_score: float) -> float:
 	if is_satisfactory and not ghost_fell_through:
-		return base_delta * 2.0
+		return base_delta * SPECTRAL_REP_MULTIPLIER
 	return base_delta
 
 func modify_tip(_npc: Sprite3D, current_tip: float, _is_satisfactory: bool, _drink_score: float) -> float:
-	if ghost_fell_through:
-		return 0.0
-	return current_tip * 1.5
+	var mult := REJECTED_TIP_MULTIPLIER if ghost_fell_through else SPECTRAL_TIP_MULTIPLIER
+	var adjusted_tip := current_tip * mult
+	print("  [GhostTip] tip=$%.2f * mult=%.2f -> $%.2f (fell_through=%s)" % [current_tip, mult, adjusted_tip, str(ghost_fell_through)])
+	return adjusted_tip
 
 func can_highlight_glass(tool_id: String, glass: Area3D) -> int:
 	if tool_id != "knife" or not (glass is Glasses):
