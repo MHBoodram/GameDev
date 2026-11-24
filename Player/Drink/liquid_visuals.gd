@@ -148,6 +148,26 @@ func sync_bottle_liquid(id: String, current_amount: float, bottle_size: float, c
 	if fluid_sim:
 		fluid_sim.sync_bottle_liquid(id, current_amount, bottle_size, color, eff_buoy, eff_visc)
 
+func update_physics_from_owner(delta: float, current_pos: Vector3, camera: Camera3D, owner_node: Object, viscosity_override: float = -1.0, container_sprite: Node3D = null) -> void:
+	if not is_instance_valid(owner_node):
+		return
+	var eff_visc: float = viscosity_override if viscosity_override >= 0.0 else float(owner_node.get("viscosity"))
+	update_physics(
+		delta,
+		current_pos,
+		camera,
+		eff_visc,
+		float(owner_node.get("spring_stiffness")),
+		float(owner_node.get("base_damping")),
+		float(owner_node.get("slosh_sensitivity")),
+		float(owner_node.get("max_slosh_angle")),
+		float(owner_node.get("wave_frequency")),
+		float(owner_node.get("vertical_spring")),
+		float(owner_node.get("vertical_damping")),
+		float(owner_node.get("vertical_sensitivity")),
+		container_sprite
+	)
+
 func update_physics(delta: float, current_pos: Vector3, camera: Camera3D, viscosity: float, spring_stiffness: float, base_damping: float, slosh_sens: float, max_slosh: float, wave_freq: float, vert_spring: float, vert_damping: float, vert_sens: float, container_sprite: Node3D = null) -> void:
 	if delta <= 0.0:
 		return
@@ -229,6 +249,24 @@ func _compute_pixel_grid(base_resolution: float) -> Vector2:
 
 	var fallback := maxf(base_resolution, 8.0)
 	return Vector2(fallback, fallback)
+
+func sync_shader_from_owner(fill_ratio: float, owner_node: Object) -> void:
+	if not is_instance_valid(owner_node):
+		return
+	sync_shader_uniforms(fill_ratio, {
+		"pixel_resolution": owner_node.get("pixel_resolution"),
+		"surface_highlight_color": owner_node.get("surface_highlight_color"),
+		"secondary_highlight_color": owner_node.get("secondary_highlight_color"),
+		"surface_highlight_thickness": owner_node.get("surface_highlight_pixels"),
+		"bottom_darkening": owner_node.get("bottom_darkening"),
+		"liquid_transparency": owner_node.get("liquid_transparency"),
+		"caustic_beam_strength": owner_node.get("caustic_beam_strength"),
+		"sparkle_density": owner_node.get("sparkle_density"),
+		"glass_reflection_strength": owner_node.get("glass_reflection_strength"),
+		"meniscus_curve": owner_node.get("meniscus_curve"),
+		"inner_margin_top": owner_node.get("inner_margin_top"),
+		"inner_margin_bottom": owner_node.get("inner_margin_bottom"),
+	})
 
 func sync_shader_uniforms(_fill_ratio: float, config: Dictionary) -> void:
 	if not liquid_shader_mat:

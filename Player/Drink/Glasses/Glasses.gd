@@ -125,9 +125,7 @@ func get_drink_mix() -> DrinkMix:
 	return drink_mix
 
 func get_resource_usage_multiplier(liquid_id: String = "") -> float:
-	var sp_mult := SpeciesRegistry.get_glass_resource_multiplier(self, liquid_id)
-	var mod_mult := ModifierRegistry.get_glass_resource_multiplier(self, liquid_id)
-	return maxf(0.05, sp_mult * mod_mult)
+	return SpeciesRegistry.get_glass_resource_multiplier(self, liquid_id)
 
 func _get_tool_controller() -> ToolController:
 	if GameState.player:
@@ -141,7 +139,7 @@ func can_highlight_on_hover() -> bool:
 	if tool_ctrl:
 		return tool_ctrl.can_highlight_glass(self)
 	var active_tool: String = GameState.player.return_tool() if GameState.player and GameState.player.has_method("return_tool") else "hand"
-	return ModifierRegistry.can_highlight_glass(active_tool, self) and SpeciesRegistry.can_highlight_glass(active_tool, self)
+	return SpeciesRegistry.can_highlight_glass(active_tool, self)
 
 func handle_immediate_tool_click() -> bool:
 	if GameState.is_dialogue_open or ShakerMinigame.active or _is_drag_blocked():
@@ -503,7 +501,7 @@ func _process(delta: float) -> void:
 
 	var track_pos: Vector3 = sprite.global_position if sprite else global_position
 	var outside_sprite := get_node_or_null("Inside/Outside") as Node3D
-	visual_helper.update_physics(delta, track_pos, camera, viscosity, spring_stiffness, base_damping, slosh_sensitivity, max_slosh_angle, wave_frequency, vertical_spring, vertical_damping, vertical_sensitivity, outside_sprite)
+	visual_helper.update_physics_from_owner(delta, track_pos, camera, self, -1.0, outside_sprite)
 	if not is_consumed:
 		_update_shader_parameters()
 
@@ -668,20 +666,7 @@ func _setup_liquid_shader() -> void:
 
 func _update_shader_parameters() -> void:
 	var fill_ratio := clampf(total_liquids / maxf(size, 0.001), 0.0, 1.0)
-	visual_helper.sync_shader_uniforms(fill_ratio, {
-		"pixel_resolution": pixel_resolution,
-		"surface_highlight_color": surface_highlight_color,
-		"secondary_highlight_color": secondary_highlight_color,
-		"surface_highlight_thickness": surface_highlight_pixels,
-		"bottom_darkening": bottom_darkening,
-		"liquid_transparency": liquid_transparency,
-		"caustic_beam_strength": caustic_beam_strength,
-		"sparkle_density": sparkle_density,
-		"glass_reflection_strength": glass_reflection_strength,
-		"meniscus_curve": meniscus_curve,
-		"inner_margin_top": inner_margin_top,
-		"inner_margin_bottom": inner_margin_bottom
-	})
+	visual_helper.sync_shader_from_owner(fill_ratio, self)
 
 func _rebuild_liquid_gradient(show_hud: bool = true) -> void:
 	total_liquids = 0.0
