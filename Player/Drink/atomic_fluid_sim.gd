@@ -12,8 +12,22 @@ const GRID_GRAVITY := 65.0
 const MAX_GRID_ACCEL := 550.0
 const MAX_IMPULSE_VEL := 65.0
 const EOS_STIFFNESS := 30000.0
+const CFL_PRESSURE_LIMIT := 0.05
 const REST_DENSITY := 1.00
 const MOUTH_WEIGHT_THRESHOLD := 40
+
+const STEPS_PER_SECOND := 1250.0
+const STEP_SKIP := 2
+const MIN_SUBSTEPS := 6
+const MAX_SUBSTEPS := 28
+const MIN_FRAME_DELTA := 0.001
+const MAX_FRAME_DELTA := 0.033
+
+const CPU_STEPS_PER_SECOND := 240.0
+const CPU_MIN_SUBSTEPS := 2
+const CPU_MAX_SUBSTEPS := 8
+const CPU_PRESSURE_STIFFNESS := 65.0
+const CPU_CFL_PRESSURE_LIMIT := 0.0045
 
 # Shared static GPU resources across all containers
 static var _gpu_checked: bool = false
@@ -355,11 +369,14 @@ func step(delta: float, local_accel_world: Vector2, viscosity: float) -> void:
 	if grid_accel.length_squared() > 0.01:
 		_last_down_dir = grid_accel.normalized()
 
-	var clamped_delta := clampf(delta, 0.001, 0.033)
-	var accel_with_imp := grid_accel + imp / maxf(clamped_delta, 0.008)
+	var clamped_delta := clampf(delta, MIN_FRAME_DELTA, MAX_FRAME_DELTA)
+	var sim_dt := clamped_delta * float(maxi(STEP_SKIP, 1))
+	var accel_with_imp := grid_accel + imp / maxf(sim_dt, 0.008)
 
-	var ops_copy := _pending_ops.duplicate()
-	_pending_ops.clear()
+	var ops_copy: Array = []
+	if not _pending_ops.is_empty():
+		ops_copy = _pending_ops.duplicate()
+		_pending_ops.clear()
 
 	var want_mouth_readback := _active_count > 0 and (
 		_monitor_mouth
@@ -1277,10 +1294,12 @@ func _gpu_step(frame_dt: float, accel: Vector2, viscosity: float, active_count: 
 			_tex_cleared = true
 		return
 
-	var substeps := clampi(int(ceili(frame_dt / 0.0008)), 10, 28)
-	var sub_dt := frame_dt / float(substeps)
+	var substeps := clampi(int(ceili(frame_dt * STEPS_PER_SECOND)), MIN_SUBSTEPS, MAX_SUBSTEPS)
+	var sim_dt := frame_dt * float(maxi(STEP_SKIP, 1))
+	var sub_dt := sim_dt / float(substeps)
+	var effective_stiffness := minf(EOS_STIFFNESS, CFL_PRESSURE_LIMIT / maxf(sub_dt * sub_dt, 0.0000001))
 	var part_groups: int = _groups_for(active_count)
-	var pc := _pack_pc(sub_dt, accel.x, accel.y, viscosity, GRID_GRAVITY, EOS_STIFFNESS, REST_DENSITY, active_count)
+	var pc := _pack_pc(sub_dt, accel.x, accel.y, viscosity, GRID_GRAVITY, effective_stiffness, REST_DENSITY, active_count)
 
 	for _s in substeps:
 		_flip_flop = not _flip_flop
@@ -1479,10 +1498,13 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 		return
 
 	var n := _cpu_pos.size()
-	var dt := clampf(frame_dt * 0.25, 0.001, 0.008)
+	var cpu_substeps := clampi(int(ceili(frame_dt * CPU_STEPS_PER_SECOND)), CPU_MIN_SUBSTEPS, CPU_MAX_SUBSTEPS)
+	var sim_dt := frame_dt * float(maxi(STEP_SKIP, 1))
+	var dt := clampf(sim_dt / float(cpu_substeps), 0.001, 0.018)
+	var cpu_stiffness := minf(CPU_PRESSURE_STIFFNESS, CPU_CFL_PRESSURE_LIMIT / maxf(dt * dt, 0.00001))
 	var half_accel := accel * 0.5
 
-	for _sub in 4:
+	for _sub in cpu_substeps:
 		_cpu_mass.fill(0.0)
 		_cpu_vol.fill(0.0)
 		_cpu_cell_visc.fill(0.0)
@@ -1501,14 +1523,14 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 			_cpu_cell_visc[idx] += m * p_v
 
 		for idx in CPU_N * CPU_N:
-			_cpu_cell_p[idx] = clampf(maxf(0.0, _cpu_vol[idx] - REST_DENSITY) * 65.0, 0.0, 120.0)
+			_cpu_cell_p[idx] = clampf(maxf(0.0, _cpu_vol[idx] - REST_DENSITY) * cpu_stiffness, 0.0, 120.0)
 
 		for y in CPU_N:
 			for x in CPU_N:
 				var idx := x + y * CPU_N
 				if _cpu_mask[idx] == 1 and _cpu_mass[idx] > 0.001:
 					var cell_visc := clampf(_cpu_cell_visc[idx] / _cpu_mass[idx], 0.0, 1.0)
-					var cell_damp := maxf(0.0, 1.0 - (0.25 + cell_visc * 8.0) * dt)
+					var cell_damp := exp(-(0.25 + cell_visc * 8.0) * dt)
 					var grad_px := 0.0
 					var grad_py := 0.0
 					if x > 0 and x < CPU_N - 1 and y > 0 and y < CPU_N - 1:
@@ -1534,7 +1556,7 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 			var p := _cpu_pos[i]
 			var pv := _cpu_pvel[i]
 			var p_visc := clampf(maxf(_cpu_visc[i], viscosity), 0.0, 1.0)
-			var p_damp := maxf(0.0, 1.0 - (0.25 + p_visc * 8.0) * dt)
+			var p_damp := exp(-(0.25 + p_visc * 8.0) * dt)
 			var cx := clampi(int(p.x), 1, CPU_N - 2)
 			var cy := clampi(int(p.y), 1, CPU_N - 2)
 			var idx := cx + cy * CPU_N

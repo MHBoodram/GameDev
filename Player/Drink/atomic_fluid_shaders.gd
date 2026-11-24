@@ -157,7 +157,7 @@ void main() {
 		cell_visc = clamp(max(pc.viscosity, visc_mom / mass), 0.0, 1.0);
 		v = mom / mass;
 		float base_damp = 0.25 + cell_visc * 8.0;
-		v *= max(0.0, 1.0 - base_damp * pc.dt);
+		v *= exp(-base_damp * pc.dt);
 		v += pc.dt * vec2(pc.accel_x, pc.accel_y);
 	}
 
@@ -460,7 +460,8 @@ void main() {
 	particles[pid].pos_props.xy = pos;
 
 	float d_rho = max(0.0, vol_den - pc.rest_density);
-	float pressure = clamp(pc.stiffness * (d_rho + 1.2 * d_rho * d_rho), 0.0, 40000.0);
+	float max_pressure = min(40000.0, 35.0 / max(4.0 * pc.dt * vol_w, 0.0001));
+	float pressure = clamp(pc.stiffness * (d_rho + 1.2 * d_rho * d_rho), 0.0, max_pressure);
 	float m_p = vol_w * rho_p;
 
 	// Stop divergence
