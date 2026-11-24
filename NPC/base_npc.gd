@@ -266,6 +266,13 @@ func _start_bounce() -> void:
 func deliver_cup(glass: Glasses) -> void:
 	if not is_instance_valid(glass):
 		return
+	glass.drink_mix.cup_capacity = glass.size
+	if glass.drink_mix.glass_type == "":
+		var glass_hint := (glass.scene_file_path + " " + str(glass.name)).to_lower()
+		if "shot" in glass_hint:
+			glass.drink_mix.glass_type = "shot"
+		elif "beer" in glass_hint:
+			glass.drink_mix.glass_type = "beer"
 	receive_drink(glass.drink_mix)
 	var handled := false
 	if modifier and modifier.consume_delivered_cup(self, glass):

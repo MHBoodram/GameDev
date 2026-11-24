@@ -7,6 +7,7 @@ var ingredients: Dictionary = {} # name -> amount (float)
 var garnishes: Array[String] = []
 var processing_tags: Array[String] = [] # ex. "shaken", "spectral"
 var glass_type: String = ""
+var cup_capacity: float = 0.0 # <= 0.0 means capacity was not explicitly set
 var is_tiny: bool = false
 var overfill_percent: float = 0.0
 var max_garnishes = 2
@@ -57,8 +58,17 @@ func has_processing(tag: String) -> bool:
 func get_total_amount() -> float:
 	var total: float = 0.0
 	for amt in ingredients.values():
-		total += float(amt)
+		var val := float(amt)
+		if val > 0.001:
+			total += val
 	return total
+
+func get_fill_ratio() -> float:
+	var total := get_total_amount()
+	if total <= 0.001:
+		return 0.0
+	var effective_capacity := cup_capacity if cup_capacity > 0.001 else maxf(1.0, total)
+	return clampf(total / effective_capacity, 0.0, 1.0)
 
 func is_empty() -> bool:
 	return ingredients.is_empty() or get_total_amount() <= 0.001
@@ -67,22 +77,27 @@ func is_empty() -> bool:
 func get_normalized_ingredients() -> Dictionary:
 	var total = get_total_amount()
 	var result: Dictionary = {}
-	if total <= 0.0001:
+	if total <= 0.001:
 		return result
 	for id in ingredients.keys():
-		result[id] = float(ingredients[id]) / total
+		var amt := float(ingredients[id])
+		if amt > 0.001:
+			result[id] = amt / total
 	return result
 
 func get_unique_ingredient_ids() -> Array[String]:
 	var ids: Array[String] = []
 	for id in ingredients.keys():
-		ids.append(str(id))
+		if float(ingredients[id]) > 0.001:
+			ids.append(str(id))
 	ids.sort()
 	return ids
 
 # parses the older nested array format from Glasses.gd / _return_drink() so existing cups and scenes work for now
-static func from_legacy_layers(layers: Array) -> DrinkMix:
+static func from_legacy_layers(layers: Array, capacity: float = 0.0) -> DrinkMix:
 	var mix := DrinkMix.new()
+	if capacity > 0.0:
+		mix.cup_capacity = capacity
 	if layers.is_empty():
 		return mix
 

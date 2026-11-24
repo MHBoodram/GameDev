@@ -11,6 +11,7 @@ const OVERFLOW_EPSILON: float = 0.0005
 
 @export var liquids: Array = []
 @export var size: float = 1.0
+@export var glass_type: String = ""
 @export var sprite: Sprite3D
 @export var customer_hold_distance: float = 1.0
 
@@ -90,7 +91,13 @@ func can_pour_out_from_mouth() -> bool:
 		return false
 	return visual_helper.is_liquid_touching_mouth()
 
+func _sync_drink_mix_metadata() -> void:
+	drink_mix.cup_capacity = size
+	if glass_type != "" and drink_mix.glass_type == "":
+		drink_mix.glass_type = glass_type
+
 func get_drink_mix() -> DrinkMix:
+	_sync_drink_mix_metadata()
 	return drink_mix
 
 func get_resource_usage_multiplier(liquid_id: String = "") -> float:
@@ -370,6 +377,7 @@ func _update_pour_out_stream() -> void:
 
 func ready() -> void:
 	rotation = Vector3.ZERO
+	_sync_drink_mix_metadata()
 	if sprite:
 		_inside_base_scale = sprite.scale
 		_inside_base_pos = sprite.position
@@ -639,6 +647,8 @@ func _pouring(id: String, liquids_num: float, pour_info: Dictionary = {}) -> flo
 	if liquids_num <= 0.0:
 		return 0.0
 
+	_sync_drink_mix_metadata()
+
 	var current_total: float = 0.0
 	for l in liquids:
 		current_total += float(l[1])
@@ -702,6 +712,7 @@ func reset_cup(show_empty_indicator: bool = false) -> void:
 	liquids.clear()
 	total_liquids = 0.0
 	drink_mix.reset()
+	_sync_drink_mix_metadata()
 	if visual_helper:
 		visual_helper.set_visual_override({})
 		visual_helper.wave_amplitude = 0.0
@@ -754,8 +765,11 @@ func _pour_out(liquids_num: float) -> float:
 		var top_layer = liquids[top_idx]
 		var layer_amt := float(top_layer[1])
 		var remove_amt := minf(remaining_to_remove, layer_amt)
-		var keep_ratio := clampf((layer_amt - remove_amt) / layer_amt, 0.0, 1.0)
-		top_layer[1] = layer_amt - remove_amt
+		var new_layer_amt := layer_amt - remove_amt
+		var remove_layer := new_layer_amt <= 0.001
+		var actual_layer_remove := layer_amt if remove_layer else remove_amt
+		var keep_ratio := 0.0 if remove_layer else clampf(new_layer_amt / layer_amt, 0.0, 1.0)
+		top_layer[1] = 0.0 if remove_layer else new_layer_amt
 
 		if top_layer.size() > 3 and top_layer[3] is Dictionary and not (top_layer[3] as Dictionary).is_empty():
 			var ing_dict: Dictionary = top_layer[3]
@@ -766,7 +780,7 @@ func _pour_out(liquids_num: float) -> float:
 				_subtract_drink_mix_liquid(str(ing_key), prev_ing - new_ing)
 		elif top_layer[0] is Array:
 			var ing_arr: Array = top_layer[0]
-			var per_ing_remove := remove_amt / maxf(float(ing_arr.size()), 1.0)
+			var per_ing_remove := actual_layer_remove / maxf(float(ing_arr.size()), 1.0)
 			for ing_key in ing_arr:
 				_subtract_drink_mix_liquid(str(ing_key), per_ing_remove)
 		elif top_layer[0] is Dictionary:
@@ -777,9 +791,9 @@ func _pour_out(liquids_num: float) -> float:
 				ing_dict[ing_key] = new_ing
 				_subtract_drink_mix_liquid(str(ing_key), prev_ing - new_ing)
 		else:
-			_subtract_drink_mix_liquid(str(top_layer[0]), remove_amt)
+			_subtract_drink_mix_liquid(str(top_layer[0]), actual_layer_remove)
 
-		if float(top_layer[1]) <= 0.001:
+		if remove_layer:
 			liquids.remove_at(top_idx)
 
 		remaining_to_remove -= remove_amt
