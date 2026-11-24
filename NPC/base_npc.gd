@@ -41,9 +41,9 @@ var base_scale: Vector3 = Vector3(0.5, 0.5, 0.5)
 var visual_scale_multiplier: float = 1.0
 var _bounce_factor: float = 1.0
 
-const SATISFACTORY_THRESHOLD := 0.65
+const SATISFACTORY_THRESHOLD := 0.6
 const POSITIVE_SCORE_THRESHOLD := 0.85
-const MID_SCORE_THRESHOLD := 0.65
+const MID_SCORE_THRESHOLD := 0.6
 const REPLENISH_BASE_TIME := 30.0
 
 const BASE_DRINK_PRICE := 10.0
