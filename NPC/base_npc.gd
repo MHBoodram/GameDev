@@ -30,6 +30,7 @@ var _dialouge_paused_patience : float = -1.0
 var max_patience: float = 90.0
 var payment_global: float = 0.0
 var _served_scores: Array[float] = []
+var _drink_combo_logs: Array[String] = []
 var is_leaving: bool = false
 var _is_highlighted: bool = false
 var _original_modulate: Color = Color.WHITE
@@ -59,6 +60,10 @@ const MIN_SATISFACTORY_TIP := 1.0
 const TIP_OVERALL_REP_MULTIPLIER := 0.20
 const TIP_SPECIES_REP_MULTIPLIER := 0.50
 const PATIENCE_TIMEOUT_PAYOUT := 0.0
+
+const COMBO_MIN_INGREDIENTS := 2
+const COMBO_PER_EXTRA_INGREDIENT := 0.1
+const COMBO_SHAKEN_BONUS := 0.1
 
 const LOW_PATIENCE_THRESHOLD_RATIO := 0.25
 const LOW_PATIENCE_SATISFACTION_DRAIN_RATE := 0.05
@@ -152,6 +157,7 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 	has_receipt_spawned = false
 	payment_global = 0.0
 	_served_scores.clear()
+	_drink_combo_logs.clear()
 	emo = "netural"
 	is_leaving = false
 	species_state.clear()
@@ -293,6 +299,13 @@ func _show_drink_score_indicator(drink_score: float) -> void:
 	if hud:
 		hud.show_drink_score_indicator(drink_score)
 
+func _show_combo_indicators(combo_data: Dictionary) -> void:
+	if float(combo_data.get("total_combo", 0.0)) <= 0.0:
+		return
+	var hud := HudIndicators.get_current()
+	if hud and hud.has_method("show_combo_indicators"):
+		hud.show_combo_indicators(combo_data)
+
 # Serving and payouts
 func deliver_cup(glass: Glasses) -> void:
 	if not is_instance_valid(glass):
@@ -364,7 +377,9 @@ func receive_drink(mix: DrinkMix) -> float:
 	_show_drink_score_indicator(drink_score)
 	_replenish_patience(drink_score)
 	_apply_reputation_impact(is_satisfactory, drink_score)
-	_calculate_payout(drink_score, is_satisfactory)
+	var combo_data := _calculate_combo(mix, wanted_order, is_satisfactory)
+	_calculate_payout(drink_score, is_satisfactory, combo_data)
+	_show_combo_indicators(combo_data)
 
 	has_receipt_spawned = false
 
@@ -424,6 +439,59 @@ func _apply_reputation_impact(is_satisfactory: bool, drink_score: float) -> void
 			species_delta = modifier.modify_species_reputation_delta(self, race_name, species_delta, false, drink_score)
 		PlayerStats.change_species_reputation(race_name, species_delta)
 
+func _calculate_combo(mix: DrinkMix, wanted_order: DrinkOrder, is_satisfactory: bool) -> Dictionary:
+	var result := {
+		"ingredient_count": 0,
+		"extra_ingredients": 0,
+		"ingredients_combo": 0.0,
+		"is_shaken": false,
+		"shaken_combo": 0.0,
+		"total_combo": 0.0,
+		"multiplier": 1.0,
+		"components": []
+	}
+	if not is_satisfactory or mix == null:
+		return result
+
+	var ingredient_count := 0
+	for ing_id in mix.get_unique_ingredient_ids():
+		if wanted_order == null or wanted_order.ingredients.is_empty() or wanted_order.ingredients.has(ing_id):
+			ingredient_count += 1
+
+	var extra_ingredients := maxi(0, ingredient_count - COMBO_MIN_INGREDIENTS)
+	var ingredients_combo := snappedf(float(extra_ingredients) * COMBO_PER_EXTRA_INGREDIENT, 0.0001)
+
+	var is_shaken := mix.has_processing("shaken")
+	var shaken_combo := COMBO_SHAKEN_BONUS if is_shaken else 0.0
+
+	var total_combo := snappedf(ingredients_combo + shaken_combo, 0.0001)
+	var components: Array[Dictionary] = []
+
+	if ingredients_combo > 0.0:
+		components.append({
+			"id": "ingredients",
+			"label": "+%d%% ingredients" % roundi(ingredients_combo * 100.0),
+			"value": ingredients_combo,
+			"detail": "%d ingredients, %d after %d" % [ingredient_count, extra_ingredients, COMBO_MIN_INGREDIENTS]
+		})
+	if shaken_combo > 0.0:
+		components.append({
+			"id": "shaken",
+			"label": "+%d%% shaken" % roundi(shaken_combo * 100.0),
+			"value": shaken_combo,
+			"detail": "Shaken"
+		})
+
+	result["ingredient_count"] = ingredient_count
+	result["extra_ingredients"] = extra_ingredients
+	result["ingredients_combo"] = ingredients_combo
+	result["is_shaken"] = is_shaken
+	result["shaken_combo"] = shaken_combo
+	result["total_combo"] = total_combo
+	result["multiplier"] = 1.0 + total_combo
+	result["components"] = components
+	return result
+
 func _get_tip_breakdown(drink_score: float, is_satisfactory: bool) -> Dictionary:
 	if not is_satisfactory or drink_score < SATISFACTORY_THRESHOLD:
 		return {
@@ -465,7 +533,7 @@ func _get_tip_breakdown(drink_score: float, is_satisfactory: bool) -> Dictionary
 		"raw_tip": raw_tip
 	}
 
-func _calculate_payout(drink_score: float, is_satisfactory: bool) -> void:
+func _calculate_payout(drink_score: float, is_satisfactory: bool, combo_data: Dictionary = {}) -> void:
 	var race_name := _get_race_display_name()
 	var score_factor := drink_score if SCALE_BASE_PAYOUT_BY_SCORE else 1.0
 	var quality_mult := SATISFACTORY_PAYOUT_MULTIPLIER if is_satisfactory else UNSATISFACTORY_PAYOUT_MULTIPLIER
@@ -499,8 +567,29 @@ func _calculate_payout(drink_score: float, is_satisfactory: bool) -> void:
 		final_tip = 0.0
 
 	payment += final_tip
+	var pre_combo_payment := payment
+	var combo_total: float = float(combo_data.get("total_combo", 0.0))
+	var combo_multiplier: float = 1.0 + combo_total
+	var combo_bonus: float = 0.0
+	if combo_total > 0.0 and pre_combo_payment > 0.0:
+		payment = pre_combo_payment * combo_multiplier
+		combo_bonus = payment - pre_combo_payment
 	payment = roundf(payment)
 	payment_global += payment
+
+	var drink_num := _served_scores.size()
+	var combo_components: Array = combo_data.get("components", []) if combo_data.get("components", []) is Array else []
+	var combo_pct := roundi(combo_total * 100.0)
+	if combo_total > 0.0 and not combo_components.is_empty():
+		var parts := PackedStringArray()
+		for comp in combo_components:
+			if comp is Dictionary:
+				parts.append(str(comp.get("label", "")))
+		_drink_combo_logs.append("Drink #%d: %s -> +%d%% (x%.2f) | $%.2f -> $%.2f (+$%.2f)" % [
+			drink_num, ", ".join(parts), combo_pct, combo_multiplier, pre_combo_payment, payment, payment - pre_combo_payment
+		])
+	else:
+		_drink_combo_logs.append("Drink #%d: None (0%%, x1.00) | $%.2f" % [drink_num, payment])
 
 	print("Payout (Seat #%d, %s)" % [seat_num, race_name])
 	print("  Base Drink Price: $%.2f (score=%.3f, score_factor=%.3f, quality_mult=%.2f, satisfactory=%s)" % [base_payout, drink_score, score_factor, quality_mult, str(is_satisfactory)])
@@ -514,6 +603,14 @@ func _calculate_payout(drink_score: float, is_satisfactory: bool) -> void:
 		print("  Final Tip: $%.2f" % final_tip)
 	else:
 		print("  Tip: $0.00 (Unsatisfactory drink score %.3f < %.2f)" % [drink_score, SATISFACTORY_THRESHOLD])
+	if combo_total > 0.0 and not combo_components.is_empty():
+		print("  Combo:")
+		for comp in combo_components:
+			if comp is Dictionary:
+				print("    - %s (%s)" % [str(comp.get("label", "")), str(comp.get("detail", ""))])
+		print("    - Total Combo: +%d%% (x%.2f) | Pre-Combo: $%.2f -> Combo Bonus: +$%.2f -> Post-Combo: $%.2f" % [combo_pct, combo_multiplier, pre_combo_payment, combo_bonus, payment])
+	else:
+		print("  Combo: None (+0%, x1.00)")
 	print("  This Drink Total: $%.2f | Accrued Session Total: $%.2f" % [payment, payment_global])
 
 func _on_all_orders_completed(drink_score: float) -> void:
@@ -550,6 +647,11 @@ func _update_speaking_title(drink_score: float) -> void:
 			speaking_title = "introduction_mid_bad"
 
 func _give_payment() -> void:
+	if not _drink_combo_logs.is_empty():
+		print("[Payout] Combo:")
+		for entry in _drink_combo_logs:
+			print("  " + entry)
+		_drink_combo_logs.clear()
 	print("[Payout] Giving final payment: $%.2f" % payment_global)
 	PlayerStats._change_money(PlayerStats.money + payment_global)
 	payment_global = 0.0

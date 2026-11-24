@@ -12,6 +12,18 @@ const CLEAN_COLOR: Color = Color(0.55, 0.92, 1.0, 1.0)
 const OUTLINE_COLOR: Color = Color(0.0, 0.0, 0.0, 1.0)
 const SHADOW_COLOR: Color = Color(0.0, 0.0, 0.0, 0.75)
 
+const COMBO_COMPONENT_COLOR: Color = Color(1.0, 0.82, 0.24, 1.0)
+const COMBO_FINAL_COLOR: Color = Color(1.0, 0.62, 0.16, 1.0)
+const COMBO_INITIAL_DELAY: float = 0.0
+const COMBO_COMPONENT_DELAY: float = 0.35
+const COMBO_FINAL_DELAY: float = 0.35
+const COMBO_DURATION: float = 1.45
+const COMBO_FLOAT_DISTANCE: float = 64.0
+const COMBO_COMPONENT_FONT_SIZE: int = 44
+const COMBO_FINAL_FONT_SIZE: int = 56
+const COMBO_COMPONENT_SCALE_PUNCH: float = 1.28
+const COMBO_FINAL_SCALE_PUNCH: float = 1.48
+
 const SCORE_THRESHOLD_PERFECT: float = 0.95
 const SCORE_THRESHOLD_GOOD: float = 0.85
 const SCORE_THRESHOLD_OK: float = 0.65
@@ -240,6 +252,76 @@ func show_drink_score_indicator(drink_score: float, options: Dictionary = {}) ->
 	if not merged.has("channel"):
 		merged["channel"] = "drink_score"
 	return show_floating_text(rating_text, rating_color, merged)
+
+func show_combo_indicators(combo_data: Dictionary, options: Dictionary = {}) -> void:
+	if not is_inside_tree():
+		return
+	var total_combo: float = float(combo_data.get("total_combo", 0.0))
+	if total_combo <= 0.0:
+		return
+
+	var raw_components: Variant = combo_data.get("components", [])
+	var components: Array = raw_components.duplicate(true) if raw_components is Array else []
+	if components.is_empty():
+		return
+
+	var initial_delay: float = maxf(0.0, float(options.get("initial_delay", COMBO_INITIAL_DELAY)))
+	var component_delay: float = maxf(0.0, float(options.get("component_delay", COMBO_COMPONENT_DELAY)))
+	var final_delay: float = maxf(0.0, float(options.get("final_delay", COMBO_FINAL_DELAY)))
+
+	if initial_delay > 0.0:
+		await get_tree().create_timer(initial_delay, false).timeout
+		if not is_inside_tree():
+			return
+
+	for i in components.size():
+		if i > 0 and component_delay > 0.0:
+			await get_tree().create_timer(component_delay, false).timeout
+			if not is_inside_tree():
+				return
+		if not (components[i] is Dictionary):
+			continue
+		var comp: Dictionary = components[i]
+		var comp_text: String = str(comp.get("label", ""))
+		if comp_text == "":
+			continue
+		var comp_opts: Dictionary = options.duplicate()
+		comp_opts["channel"] = "combo"
+		if not comp_opts.has("font_size"):
+			comp_opts["font_size"] = COMBO_COMPONENT_FONT_SIZE
+		if not comp_opts.has("scale_punch"):
+			comp_opts["scale_punch"] = COMBO_COMPONENT_SCALE_PUNCH
+		if not comp_opts.has("duration"):
+			comp_opts["duration"] = COMBO_DURATION
+		if not comp_opts.has("float_distance"):
+			comp_opts["float_distance"] = COMBO_FLOAT_DISTANCE
+		if not comp_opts.has("jitter_x"):
+			comp_opts["jitter_x"] = 0.0
+		show_floating_text(comp_text, COMBO_COMPONENT_COLOR, comp_opts)
+		# SFXAudio.play_combo_component()
+		# GameState.play_sfx("play_combo_component")
+
+	if final_delay > 0.0:
+		await get_tree().create_timer(final_delay, false).timeout
+		if not is_inside_tree():
+			return
+
+	var final_text := "x %d%% combo" % roundi(total_combo * 100.0)
+	var final_opts: Dictionary = options.duplicate()
+	final_opts["channel"] = "combo"
+	if not final_opts.has("font_size"):
+		final_opts["font_size"] = COMBO_FINAL_FONT_SIZE
+	if not final_opts.has("scale_punch"):
+		final_opts["scale_punch"] = COMBO_FINAL_SCALE_PUNCH
+	if not final_opts.has("duration"):
+		final_opts["duration"] = COMBO_DURATION
+	if not final_opts.has("float_distance"):
+		final_opts["float_distance"] = COMBO_FLOAT_DISTANCE
+	if not final_opts.has("jitter_x"):
+		final_opts["jitter_x"] = 0.0
+	show_floating_text(final_text, COMBO_FINAL_COLOR, final_opts)
+	# SFXAudio.play_combo_final()
+	# GameState.play_sfx("play_combo_final")
 
 func show_money_change(delta: float, suffix: String = "", options: Dictionary = {}) -> Label:
 	if absf(delta) < 0.005:
