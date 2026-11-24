@@ -1,7 +1,6 @@
 class_name SlimeSpecies
 extends SpeciesBase
 
-const SLIME_SFX_PATH := "res://Assets/Audio/SFX/Slime.wav"
 const SPLIT_SCALE_MULTIPLIER := 0.75
 
 func _init() -> void:
@@ -128,22 +127,9 @@ func _can_slice(npc: Sprite3D) -> bool:
 	var state: Dictionary = raw_state
 	return not state.get("sliced", false) and not state.get("is_split_child", false)
 
-func _play_slime_sfx(context_node: Node) -> void:
+func _play_slime_sfx(_context_node: Node = null) -> void:
 	GameState.play_sfx("play_stab")
-	if not ResourceLoader.exists(SLIME_SFX_PATH):
-		return
-	var stream := load(SLIME_SFX_PATH) as AudioStream
-	if stream == null or not is_instance_valid(context_node) or not context_node.is_inside_tree():
-		return
-	var host: Node = context_node.get_tree().current_scene
-	if host == null:
-		host = context_node
-	var audio_player := AudioStreamPlayer.new()
-	audio_player.stream = stream
-	audio_player.bus = &"SFX" if AudioServer.get_bus_index(&"SFX") != -1 else &"Master"
-	host.add_child(audio_player)
-	audio_player.finished.connect(audio_player.queue_free)
-	audio_player.play()
+	GameState.play_sfx("play_slime")
 
 func _animate_split(parent_npc: Sprite3D, child_npc: Base_NPC) -> void:
 	if is_instance_valid(parent_npc):

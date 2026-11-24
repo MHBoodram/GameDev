@@ -237,12 +237,23 @@ func free_seat(seat_number: int) -> void:
 	if is_completely_empty() and GameState.night_manager:
 		GameState.night_manager.check_night_concluded(true)
 
-func clear_all_customers() -> void:
+func clear_all_customers(immediate: bool = false, unique_only: bool = false) -> void:
 	for seat_idx in seats.size():
 		var npc := seats[seat_idx]
-		if npc:
+		if not is_instance_valid(npc):
 			seats[seat_idx] = null
-			clear_receipt_for_seat(seat_idx + 1)
+			continue
+		if unique_only and not npc.unique_talk:
+			continue
+		seats[seat_idx] = null
+		clear_receipt_for_seat(npc.seat_num if npc.seat_num > 0 else (seat_idx + 1))
+		if immediate:
+			if npc.patience_timer:
+				npc.patience_timer.stop()
+			if npc._bounce_tween and npc._bounce_tween.is_valid():
+				npc._bounce_tween.kill()
+			npc.queue_free()
+		else:
 			npc._leaving()
 
 func add_receipt(seat: int, order_text: String, customer_race: String = "", customer_icon: Texture2D = null) -> void:

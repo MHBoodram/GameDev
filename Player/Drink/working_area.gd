@@ -21,6 +21,15 @@ static var _obstacle_meshes: Array[MeshInstance3D] = []
 static var _obstacle_xfs: Array[Transform3D] = []
 static var _obstacle_obbs: Array[Dictionary] = []
 
+static func setup_bar_area(root: Node3D) -> void:
+	if Engine.is_editor_hint() or not is_instance_valid(root):
+		return
+	setup_drag_collisions(root)
+	(func():
+		if is_instance_valid(root):
+			setup_working_area_walls(root)
+	).call_deferred()
+
 static func setup_drag_collisions(root: Node3D) -> void:
 	if not is_instance_valid(root):
 		return

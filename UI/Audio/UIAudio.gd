@@ -12,32 +12,30 @@ var _pause_player: AudioStreamPlayer
 func _ready() -> void:
 	# AudioStreamPlayers stop when the tree is paused unless they can process
 	# while paused, so this node (and all it's children nodes) must always process
-	_click_player = _make_player(click_stream)
-	_pause_player = _make_player(pause_stream)
+	_click_player = create_bus_player(self, click_stream, bus_name, &"UIAudio")
+	_pause_player = create_bus_player(self, pause_stream, bus_name, &"UIAudio")
 
-func _make_player(stream: AudioStream) -> AudioStreamPlayer:
+static func create_bus_player(parent: Node, stream: AudioStream, target_bus: StringName, owner_tag: StringName = &"Audio") -> AudioStreamPlayer:
 	var player := AudioStreamPlayer.new()
 	player.stream = stream
-	if AudioServer.get_bus_index(bus_name) != -1:
-		player.bus = bus_name
+	if AudioServer.get_bus_index(target_bus) != -1:
+		player.bus = target_bus
 	else:
-		push_warning("UIAudio: bus '%s' not found, falling back to Master." % bus_name)
+		push_warning("%s: bus '%s' not found, falling back to Master." % [owner_tag, target_bus])
 		player.bus = &"Master"
-	add_child(player)
+	if is_instance_valid(parent):
+		parent.add_child(player)
 	return player
 
-func _change_bus_volume(n_bus: String, value: float) -> void: #Not working currently
-	SettingState.set_bus_volume(n_bus, value)
-
-func play_click() -> void:
-	_play(_click_player)
-
-func play_pause() -> void:
-	_play(_pause_player)
-
-func _play(player: AudioStreamPlayer) -> void:
+static func play_player(player: AudioStreamPlayer) -> void:
 	if player and player.stream:
 		player.play()
+
+func play_click() -> void:
+	play_player(_click_player)
+
+func play_pause() -> void:
+	play_player(_pause_player)
 
 func hook_buttons(root: Node) -> void:
 	for node in root.find_children("*", "BaseButton", true, false):

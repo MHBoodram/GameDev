@@ -3,12 +3,7 @@ extends Node3D
 
 func _ready() -> void:
 	_clear_pixel_shader()
-	if not Engine.is_editor_hint():
-		WorkingAreaService.setup_drag_collisions(self)
-		(func():
-			if is_instance_valid(self):
-				WorkingAreaService.setup_working_area_walls(self)
-		).call_deferred()
+	WorkingAreaService.setup_bar_area(self)
 
 func _clear_pixel_shader() -> void:
 	for mesh in find_children("*", "GeometryInstance3D"):
