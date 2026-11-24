@@ -145,3 +145,81 @@ func _reset_to_default_controls():
 			setting_dic["Control"][key] = DEFAULT_SETTING["Control"][key]
 		else:
 			setting_dic["Control"].erase(key)
+
+func set_fullscreen(enabled: bool) -> void:
+	if enabled:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	else:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	setting_dic["Video"]["FullScreen"] = enabled
+
+func set_world_environment(enabled: bool) -> void:
+	setting_dic["Video"]["WorldEnvironment"] = enabled
+	apply_world_environment()
+
+func set_audio_setting(key: String, buses: Array, value: float) -> void:
+	for bus_name in buses:
+		set_bus_volume(str(bus_name), value)
+	setting_dic["Audio"][key] = value
+	if key == "UI_value":
+		setting_dic["Audio"]["SFX_value"] = value
+
+func reset_audio_settings(sliders: Array = []) -> void:
+	for bus_name in ["Master", "Music", "UI", "SFX"]:
+		set_bus_volume(bus_name, 0.0)
+	setting_dic["Audio"]["Master_value"] = 0
+	setting_dic["Audio"]["Music_value"] = 0
+	setting_dic["Audio"]["UI_value"] = 0
+	setting_dic["Audio"]["SFX_value"] = 0
+	for slider in sliders:
+		if is_instance_valid(slider):
+			slider.value = 0
+
+func apply_settings_to_ui(
+	master_slider: Range,
+	ui_slider: Range,
+	music_slider: Range,
+	fullscreen_btn: BaseButton,
+	world_env_btn: BaseButton,
+	control_buttons: Dictionary
+) -> void:
+	if is_instance_valid(master_slider):
+		master_slider.value = setting_dic["Audio"]["Master_value"]
+	if is_instance_valid(ui_slider):
+		ui_slider.value = setting_dic["Audio"]["UI_value"]
+	if is_instance_valid(music_slider):
+		music_slider.value = setting_dic["Audio"]["Music_value"]
+
+	var fullscreen_enabled: bool = bool(setting_dic["Video"]["FullScreen"])
+	if is_instance_valid(fullscreen_btn):
+		fullscreen_btn.button_pressed = fullscreen_enabled
+	set_fullscreen(fullscreen_enabled)
+
+	var world_env_enabled: bool = bool(setting_dic["Video"].get("WorldEnvironment", true))
+	if is_instance_valid(world_env_btn):
+		world_env_btn.button_pressed = world_env_enabled
+	apply_world_environment()
+
+	for action_name in control_buttons:
+		var btn := control_buttons[action_name] as Button
+		if is_instance_valid(btn):
+			btn.text = _key_to_string(str(action_name))
+
+func handle_rebind_input(event: InputEvent, action_name: String, target_button: Button) -> bool:
+	if not (event is InputEventKey and event.pressed):
+		return true
+	if event.physical_keycode == KEY_ESCAPE:
+		if is_instance_valid(target_button):
+			target_button.text = _key_to_string(action_name)
+		return false
+	rebind_action(action_name, event)
+	if is_instance_valid(target_button):
+		target_button.text = event.as_text()
+	return false
+
+func reset_controls_to_ui(control_buttons: Dictionary) -> void:
+	_reset_to_default_controls()
+	for action_name in control_buttons:
+		var btn := control_buttons[action_name] as Button
+		if is_instance_valid(btn):
+			btn.text = str(DEFAULT_SETTING["Control"].get(str(action_name), _key_to_string(str(action_name))))
