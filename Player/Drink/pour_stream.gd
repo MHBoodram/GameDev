@@ -1,3 +1,4 @@
+@tool
 class_name PourStreamVisual
 extends Node3D
 # Renders mid-pour liquid
@@ -43,6 +44,41 @@ var _snap_to_target: bool = true
 var _enable_splash: bool = true
 var _arrival_vel: Vector3 = Vector3(0.0, -1.5, 0.0)
 var _spawn_accum: float = 0.0
+
+static func is_pour_button_held() -> bool:
+	return Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.get_action_strength("Left_click") > 0.0
+
+static func get_pour_height_ratio(viewport: Viewport) -> float:
+	if not viewport:
+		return 0.5
+	var vp_height: float = viewport.get_visible_rect().size.y
+	if vp_height <= 1.0:
+		return 0.5
+	var mouse_y: float = viewport.get_mouse_position().y
+	var raw_height: float = 1.0 - clampf(mouse_y / vp_height, 0.0, 1.0)
+	return clampf((raw_height - 0.1) / 0.8, 0.0, 1.0)
+
+static func get_pour_rate_multiplier(viewport: Viewport) -> float:
+	return get_pour_height_ratio(viewport) * 2.0
+
+static func get_camera_rig(viewport: Viewport) -> Camera3D:
+	if not viewport:
+		return null
+	var cam: Camera3D = viewport.get_camera_3d()
+	if cam and cam.has_method("focus_on_marker") and cam.has_method("return_from_marker"):
+		return cam
+	return null
+
+static func find_scene_marker(context: Node, marker_name: String) -> Node3D:
+	if is_instance_valid(context) and context.is_inside_tree():
+		var scene_root := context.get_tree().current_scene
+		if is_instance_valid(scene_root):
+			var marker := scene_root.get_node_or_null(marker_name) as Node3D
+			if marker:
+				return marker
+	if is_instance_valid(GameState.main_node):
+		return GameState.main_node.get_node_or_null(marker_name) as Node3D
+	return null
 
 static func _get_texture_anchors(tex: Texture2D) -> Dictionary:
 	if tex == null:
@@ -198,6 +234,8 @@ static func world_vel_to_grid_vel(sprite: Sprite3D, world_vel: Vector3) -> Vecto
 	return Vector2(world_vel.dot(axis_x) * scale_vel, -world_vel.dot(axis_y) * scale_vel)
 
 func _ready() -> void:
+	if Engine.is_editor_hint():
+		return
 	top_level = true
 	global_transform = Transform3D.IDENTITY
 	_p_pos.resize(MAX_PIXELS)
@@ -330,6 +368,8 @@ func _vary_pixel_color(base: Color) -> Color:
 	return base
 
 func _process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
 	if not is_inside_tree():
 		return
 	var dt := minf(delta, 0.05)

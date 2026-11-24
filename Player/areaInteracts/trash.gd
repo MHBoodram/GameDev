@@ -45,22 +45,8 @@ func _process(_delta: float) -> void:
 		if _active_pouring_glass.has_method("set_pour_out_tilt"):
 			_active_pouring_glass.set_pour_out_tilt(_get_pour_tilt_degrees())
 
-func _get_pour_height_ratio() -> float:
-	var viewport := get_viewport()
-	if not viewport:
-		return 0.5
-	var vp_height: float = viewport.get_visible_rect().size.y
-	if vp_height <= 1.0:
-		return 0.5
-	var mouse_y: float = viewport.get_mouse_position().y
-	var raw_height: float = 1.0 - clampf(mouse_y / vp_height, 0.0, 1.0)
-	return clampf((raw_height - 0.1) / 0.8, 0.0, 1.0)
-
-func _get_pour_rate_multiplier() -> float:
-	return _get_pour_height_ratio() * 2.0
-
 func _get_pour_tilt_degrees() -> float:
-	var ratio: float = _get_pour_height_ratio()
+	var ratio: float = PourStreamVisual.get_pour_height_ratio(get_viewport())
 	if ratio <= 0.001:
 		return 0.0
 	return lerpf(42.0, MAX_POUR_TILT_DEGREES, ratio)
@@ -73,25 +59,6 @@ func _snap_target() -> Node3D:
 	if is_instance_valid(col):
 		return col
 	return self
-
-func _get_camera_rig() -> Camera3D:
-	var cam: Camera3D = get_viewport().get_camera_3d()
-	if cam and cam.has_method("focus_on_marker") and cam.has_method("return_from_marker"):
-		return cam
-	return null
-
-func _get_sink_camera_marker() -> Node3D:
-	var scene_root := get_tree().current_scene
-	if is_instance_valid(scene_root):
-		var marker := scene_root.get_node_or_null("sink_camera_marker") as Node3D
-		if marker:
-			return marker
-	if is_instance_valid(GameState.main_node):
-		return GameState.main_node.get_node_or_null("sink_camera_marker") as Node3D
-	return null
-
-func _is_pour_button_held() -> bool:
-	return Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.get_action_strength("Left_click") > 0.0
 
 func can_pour_glass(glass: Glasses) -> bool:
 	if _is_pouring:
@@ -131,8 +98,8 @@ func start_pour() -> void:
 	_is_pouring = true
 	var active_glass := in_pour_zone
 	_active_pouring_glass = active_glass
-	var cam_rig: Camera3D = _get_camera_rig()
-	var marker := _get_sink_camera_marker()
+	var cam_rig: Camera3D = PourStreamVisual.get_camera_rig(get_viewport())
+	var marker := PourStreamVisual.find_scene_marker(self, "sink_camera_marker")
 	if cam_rig and marker:
 		if GameState.gameplay_ui and GameState.gameplay_ui.has_method("_in_down_minigame"):
 			GameState.gameplay_ui._in_down_minigame()
@@ -141,7 +108,7 @@ func start_pour() -> void:
 	if active_glass.has_method("start_pour_out"):
 		active_glass.start_pour_out(_get_pour_tilt_degrees())
 
-	while _is_pour_button_held() and is_inside_tree() and is_instance_valid(active_glass) and active_glass.total_liquids > 0.0:
+	while PourStreamVisual.is_pour_button_held() and is_inside_tree() and is_instance_valid(active_glass) and active_glass.total_liquids > 0.0:
 		if active_glass.can_pour_out_from_mouth():
 			var rate_mult: float = clampf(absf(active_glass.pour_tilt_degrees) / (MAX_POUR_TILT_DEGREES * 0.5), 0.15, 2.0)
 			active_glass._pour_out(pour_out_amount * (POUR_INTERVAL / 0.1) * rate_mult)

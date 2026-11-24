@@ -197,7 +197,7 @@ func _process(delta: float) -> void:
 
 	var track_pos: Vector3 = inside_node.global_position if inside_node else global_position
 	var outside_sprite := get_node_or_null("Inside/Outside") as Node3D
-	visual_helper.update_physics(delta, track_pos, camera, _get_effective_viscosity(), spring_stiffness, base_damping, slosh_sensitivity, max_slosh_angle, wave_frequency, vertical_spring, vertical_damping, vertical_sensitivity, outside_sprite)
+	visual_helper.update_physics_from_owner(delta, track_pos, camera, self, _get_effective_viscosity(), outside_sprite)
 	_update_liquid_shader()
 
 func _on_area_3d_input_event(camera_node: Node, event: InputEvent, event_pos: Vector3, normal: Vector3, shape_idx: int) -> void:
@@ -210,22 +210,8 @@ func _on_area_3d_input_event(camera_node: Node, event: InputEvent, event_pos: Ve
 	if left_pressed and not is_pouring:
 		await _pour()
 
-func _get_pour_height_ratio() -> float:
-	var viewport := get_viewport()
-	if not viewport:
-		return 0.5
-	var vp_height: float = viewport.get_visible_rect().size.y
-	if vp_height <= 1.0:
-		return 0.5
-	var mouse_y: float = viewport.get_mouse_position().y
-	var raw_height: float = 1.0 - clampf(mouse_y / vp_height, 0.0, 1.0)
-	return clampf((raw_height - 0.1) / 0.8, 0.0, 1.0)
-
-func _get_pour_rate_multiplier() -> float:
-	return _get_pour_height_ratio() * 2.0
-
 func _get_pour_angle_degrees() -> float:
-	var ratio: float = _get_pour_height_ratio()
+	var ratio: float = PourStreamVisual.get_pour_height_ratio(get_viewport())
 	if ratio <= 0.001:
 		return 0.0
 	return lerpf(32.0, MAX_POUR_ANGLE_DEGREES, ratio)
@@ -240,7 +226,7 @@ func _pour() -> void:
 
 	var sfx_timer: float = 0.1
 	if pouring_into:
-		while _is_pour_button_held() and in_game and GameState.player and GameState.player.in_game and current_liquid > 0.0 and is_instance_valid(pouring_into):
+		while PourStreamVisual.is_pour_button_held() and in_game and GameState.player and GameState.player.in_game and current_liquid > 0.0 and is_instance_valid(pouring_into):
 			var rate_mult: float = _get_effective_pour_rate_multiplier()
 			if rate_mult > 0.0:
 				var cost_mult: float = pouring_into.get_resource_usage_multiplier(liquid_resource.id) if pouring_into.has_method("get_resource_usage_multiplier") else 1.0
@@ -273,9 +259,6 @@ func _pour() -> void:
 	await get_tree().create_timer(0.25).timeout
 	if is_inside_tree() and in_game and GameState.player and GameState.player.in_game:
 		GameState.player._out_of_game()
-
-func _is_pour_button_held() -> bool:
-	return Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.get_action_strength("Left_click") > 0.0
 
 func _look_at_sprite(looking_at: Vector3) -> void:
 	if looking_at:
@@ -368,20 +351,7 @@ func _update_liquid_shader() -> void:
 	if size <= 0.0:
 		return
 	var fill := clampf(current_liquid / size, 0.0, 1.0)
-	visual_helper.sync_shader_uniforms(fill, {
-		"pixel_resolution": pixel_resolution,
-		"surface_highlight_color": surface_highlight_color,
-		"secondary_highlight_color": secondary_highlight_color,
-		"surface_highlight_thickness": surface_highlight_pixels,
-		"bottom_darkening": bottom_darkening,
-		"liquid_transparency": liquid_transparency,
-		"caustic_beam_strength": caustic_beam_strength,
-		"sparkle_density": sparkle_density,
-		"glass_reflection_strength": glass_reflection_strength,
-		"meniscus_curve": meniscus_curve,
-		"inner_margin_top": inner_margin_top,
-		"inner_margin_bottom": inner_margin_bottom
-	})
+	visual_helper.sync_shader_from_owner(fill, self)
 
 func refill() -> void:
 	set_liquid_amount(size)
