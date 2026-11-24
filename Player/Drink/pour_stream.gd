@@ -5,6 +5,20 @@ extends Node3D
 const MAX_PIXELS := 280
 const GRAVITY := 5.4
 
+const POUR_SIZE_MIN_SHALLOW := 0.38
+const POUR_SIZE_MAX_SHALLOW := 0.88
+const POUR_SIZE_MIN_SHARP := 0.75
+const POUR_SIZE_MAX_SHARP := 1.70
+const POUR_PPS_SHALLOW := 24.0
+const POUR_PPS_SHARP := 125.0
+const POUR_SPREAD_SHALLOW := 0.0055
+const POUR_SPREAD_SHARP := 0.0110
+
+const SPILL_SIZE_MIN := 0.45
+const SPILL_SIZE_MAX := 1.05
+const SPILL_PPS := 55.0
+const SPILL_SPREAD := 0.0050
+
 const SPLASH_PIXELS_PER_SEC_MIN := 36.0
 const SPLASH_PIXELS_PER_SEC_MAX := 85.0
 const SPLASH_HORIZ_SPEED := 0.16
@@ -92,6 +106,7 @@ var _p_is_snapped: PackedByteArray = PackedByteArray()
 var _active_count: int = 0
 var _active: bool = false
 var _splash_mode: bool = false
+var _is_spill: bool = false
 var _start_pos: Vector3 = Vector3.ZERO
 var _end_pos: Vector3 = Vector3.ZERO
 var _rim_pos: Vector3 = Vector3.ZERO
@@ -105,6 +120,7 @@ var _splash_max_radius: float = -1.0
 var _splash_max_top_y: float = 9999.0
 var _arrival_vel: Vector3 = Vector3(0.0, -1.5, 0.0)
 var _spawn_accum: float = 0.0
+var _next_spawn_interval: float = 0.0
 
 static func is_pour_button_held() -> bool:
 	return Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.get_action_strength("Left_click") > 0.0
@@ -368,7 +384,8 @@ func set_stream_active(
 	eject_dir: Vector3 = Vector3.DOWN,
 	snap_to_target: bool = true,
 	enable_splash: bool = true,
-	rim_pos: Variant = null
+	rim_pos: Variant = null,
+	is_spill: bool = false
 ) -> void:
 	_splash_mode = false
 	_active = active and flow_rate > 0.01
@@ -382,8 +399,10 @@ func set_stream_active(
 		_eject_dir = eject_dir.normalized() if eject_dir.length_squared() > 0.0001 else Vector3.DOWN
 		_snap_to_target = snap_to_target
 		_enable_splash = enable_splash
+		_is_spill = is_spill
 	if not _active:
 		_spawn_accum = 0.0
+		_next_spawn_interval = 0.0
 
 func set_splash_active(
 	active: bool,
@@ -407,20 +426,21 @@ func set_splash_active(
 		_splash_max_top_y = max_top_y
 	if not _active:
 		_spawn_accum = 0.0
+		_next_spawn_interval = 0.0
 
 func get_arrival_velocity() -> Vector3:
 	return _arrival_vel
 
 func _compute_snapped_flight_time() -> float:
 	var arc_len := maxf(_start_pos.distance_to(_end_pos), 0.04)
-	var down_speed := lerpf(0.35, 0.85, clampf(_flow_rate * 0.5, 0.0, 1.0))
+	var down_speed := 0.55 if _is_spill else lerpf(0.35, 0.85, clampf(_flow_rate * 0.5, 0.0, 1.0))
 	var flight_time := (-down_speed + sqrt(down_speed * down_speed + 2.0 * GRAVITY * arc_len)) / GRAVITY
 	return clampf(flight_time, 0.06, 0.45)
 
 func _compute_launch_velocity() -> Vector3:
 	if _snap_to_target:
 		var flight_time := _compute_snapped_flight_time()
-		var down_speed := lerpf(0.35, 0.85, clampf(_flow_rate * 0.5, 0.0, 1.0))
+		var down_speed := 0.55 if _is_spill else lerpf(0.35, 0.85, clampf(_flow_rate * 0.5, 0.0, 1.0))
 		var arrival_speed := down_speed + GRAVITY * flight_time
 		_arrival_vel = Vector3(0.0, -arrival_speed, 0.0)
 		return Vector3(0.0, -down_speed, 0.0)
@@ -468,6 +488,98 @@ func _vary_pixel_color(base: Color) -> Color:
 		return base.darkened(0.14)
 	return base
 
+func _spawn_particles(dt: float, px_size: float) -> void:
+	var flow_t := clampf(_flow_rate * 0.5, 0.0, 1.0)
+	var cam_spawn := get_viewport().get_camera_3d()
+	var cam_right := cam_spawn.global_transform.basis.x.normalized() if cam_spawn else Vector3.RIGHT
+	var cam_fwd := cam_spawn.global_transform.basis.z.normalized() if cam_spawn else Vector3.BACK
+	_spawn_accum += dt
+
+	if _splash_mode:
+		var pixels_per_sec := lerpf(SPLASH_PIXELS_PER_SEC_MIN, SPLASH_PIXELS_PER_SEC_MAX, flow_t)
+		var avg_interval := 1.0 / maxf(pixels_per_sec, 1.0)
+		var flow_scale := lerpf(SPLASH_FLOW_SCALE_MIN, SPLASH_FLOW_SCALE_MAX, flow_t)
+		var surface_y := _end_pos.y
+		while _spawn_accum >= _next_spawn_interval:
+			_spawn_accum -= _next_spawn_interval
+			var age := clampf(_spawn_accum, 0.0, dt)
+			_next_spawn_interval = maxf(avg_interval * randf_range(0.35, 1.85), 0.001)
+			if _active_count >= MAX_PIXELS:
+				break
+			var horiz_speed := randf_range(-SPLASH_HORIZ_SPEED, SPLASH_HORIZ_SPEED) * flow_scale
+			var up_speed := randf_range(SPLASH_UP_SPEED_MIN, SPLASH_UP_SPEED_MAX) * flow_scale
+			var depth_speed := randf_range(-SPLASH_DEPTH_SPEED, SPLASH_DEPTH_SPEED) * flow_scale
+			var v := cam_right * horiz_speed + Vector3.UP * up_speed + cam_fwd * depth_speed
+			var p := _start_pos + cam_right * randf_range(-0.004, 0.004) + Vector3.UP * randf_range(0.001, 0.004) + cam_fwd * 0.002 + v * (age - dt)
+			_add_pixel(
+				p,
+				v,
+				_vary_pixel_color(_color).lightened(0.16),
+				px_size * randf_range(SPLASH_SIZE_MIN, SPLASH_SIZE_MAX),
+				randf_range(SPLASH_LIFE_MIN, SPLASH_LIFE_MAX),
+				surface_y,
+				-9999.0,
+				true,
+				false,
+				age - dt
+			)
+		return
+
+	var angle_t := clampf((_flow_rate - 0.2) / 1.8, 0.0, 1.0)
+	var stream_pixels_per_sec := SPILL_PPS if _is_spill else lerpf(POUR_PPS_SHALLOW, POUR_PPS_SHARP, angle_t)
+	var stream_avg_interval := 1.0 / maxf(stream_pixels_per_sec, 1.0)
+	var size_min := SPILL_SIZE_MIN if _is_spill else lerpf(POUR_SIZE_MIN_SHALLOW, POUR_SIZE_MIN_SHARP, angle_t)
+	var size_max := SPILL_SIZE_MAX if _is_spill else lerpf(POUR_SIZE_MAX_SHALLOW, POUR_SIZE_MAX_SHARP, angle_t)
+	var horiz_spread := SPILL_SPREAD if _is_spill else lerpf(POUR_SPREAD_SHALLOW, POUR_SPREAD_SHARP, angle_t)
+	var vert_spread := 0.0020 if _is_spill else lerpf(0.0015, 0.0035, angle_t)
+	var depth_spread := 0.0020
+
+	if _snap_to_target:
+		var flight_time := _compute_snapped_flight_time()
+		var down_speed := 0.55 if _is_spill else lerpf(0.35, 0.85, flow_t)
+		_arrival_vel = Vector3(0.0, -(down_speed + GRAVITY * flight_time), 0.0)
+		var target_y := _end_pos.y
+		var rim_y := _rim_pos.y if _has_rim_pos else target_y
+		while _spawn_accum >= _next_spawn_interval:
+			_spawn_accum -= _next_spawn_interval
+			var age := clampf(_spawn_accum, 0.0, dt)
+			_next_spawn_interval = maxf(stream_avg_interval * randf_range(0.25, 2.20), 0.001)
+			if _active_count >= MAX_PIXELS:
+				break
+			var jitter_offset := (
+				cam_right * randf_range(-horiz_spread, horiz_spread)
+				+ Vector3.UP * randf_range(-vert_spread, vert_spread)
+				+ cam_fwd * randf_range(-depth_spread, depth_spread)
+			)
+			var p_life := flight_time * randf_range(0.86, 1.16)
+			var p_size := px_size * randf_range(size_min, size_max)
+			_add_pixel(_start_pos + jitter_offset, jitter_offset, _vary_pixel_color(_color), p_size, p_life, target_y, rim_y, false, true, age - dt)
+	else:
+		var base_vel := _compute_launch_velocity()
+		var use_end_y := _enable_splash or _end_pos != Vector3.ZERO
+		var target_y := _end_pos.y if use_end_y else (_start_pos.y - 2.2)
+		var rim_y := -9999.0
+		while _spawn_accum >= _next_spawn_interval:
+			_spawn_accum -= _next_spawn_interval
+			var age := clampf(_spawn_accum, 0.0, dt)
+			_next_spawn_interval = maxf(stream_avg_interval * randf_range(0.25, 2.20), 0.001)
+			if _active_count >= MAX_PIXELS:
+				break
+			var jitter_pos := (
+				cam_right * randf_range(-horiz_spread, horiz_spread)
+				+ Vector3.UP * randf_range(-vert_spread, vert_spread)
+				+ cam_fwd * randf_range(-depth_spread, depth_spread)
+			)
+			var jitter_vel := Vector3(
+				randf_range(-0.025, 0.025),
+				randf_range(-0.06, 0.06),
+				randf_range(-0.012, 0.012)
+			)
+			var v := base_vel + jitter_vel
+			var p := _start_pos + jitter_pos + v * (age - dt)
+			var p_size := px_size * randf_range(size_min, size_max)
+			_add_pixel(p, v, _vary_pixel_color(_color), p_size, 0.9, target_y, rim_y, false, false, age - dt)
+
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
@@ -476,77 +588,7 @@ func _process(delta: float) -> void:
 	var dt := minf(delta, 0.05)
 	if _active:
 		var px_size := 1.0 / LiquidVisualHelper.UNIFORM_PIXEL_DENSITY
-		if _splash_mode:
-			var flow_t := clampf(_flow_rate * 0.5, 0.0, 1.0)
-			var pixels_per_sec := lerpf(SPLASH_PIXELS_PER_SEC_MIN, SPLASH_PIXELS_PER_SEC_MAX, flow_t)
-			_spawn_accum += pixels_per_sec * dt
-			var to_spawn := int(_spawn_accum)
-			_spawn_accum -= float(to_spawn)
-			var cam_spawn := get_viewport().get_camera_3d()
-			var cam_right := cam_spawn.global_transform.basis.x.normalized() if cam_spawn else Vector3.RIGHT
-			var cam_fwd := cam_spawn.global_transform.basis.z.normalized() if cam_spawn else Vector3.BACK
-			var flow_scale := lerpf(SPLASH_FLOW_SCALE_MIN, SPLASH_FLOW_SCALE_MAX, flow_t)
-			var surface_y := _end_pos.y
-			for _s_i in to_spawn:
-				var horiz_speed := randf_range(-SPLASH_HORIZ_SPEED, SPLASH_HORIZ_SPEED) * flow_scale
-				var up_speed := randf_range(SPLASH_UP_SPEED_MIN, SPLASH_UP_SPEED_MAX) * flow_scale
-				var depth_speed := randf_range(-SPLASH_DEPTH_SPEED, SPLASH_DEPTH_SPEED) * flow_scale
-				var v := cam_right * horiz_speed + Vector3.UP * up_speed + cam_fwd * depth_speed
-				var p := _start_pos + cam_right * randf_range(-0.004, 0.004) + Vector3.UP * randf_range(0.001, 0.004) + cam_fwd * 0.002
-				_add_pixel(
-					p,
-					v,
-					_vary_pixel_color(_color).lightened(0.16),
-					px_size * randf_range(SPLASH_SIZE_MIN, SPLASH_SIZE_MAX),
-					randf_range(SPLASH_LIFE_MIN, SPLASH_LIFE_MAX),
-					surface_y,
-					-9999.0,
-					true
-				)
-		elif _snap_to_target:
-			var flight_time := _compute_snapped_flight_time()
-			var down_speed := lerpf(0.35, 0.85, clampf(_flow_rate * 0.5, 0.0, 1.0))
-			_arrival_vel = Vector3(0.0, -(down_speed + GRAVITY * flight_time), 0.0)
-			var pixels_per_sec := lerpf(60.0, 175.0, clampf(_flow_rate * 0.5, 0.0, 1.0))
-			_spawn_accum += pixels_per_sec * dt
-			var to_spawn := int(_spawn_accum)
-			_spawn_accum -= float(to_spawn)
-			var stream_radius := lerpf(0.0015, 0.0032, clampf(_flow_rate * 0.5, 0.0, 1.0))
-			var target_y := _end_pos.y
-			var rim_y := _rim_pos.y if _has_rim_pos else target_y
-			for s_i in to_spawn:
-				var spawn_life := -(float(s_i) / maxf(float(to_spawn), 1.0)) * dt
-				var jitter_offset := Vector3(
-					randf_range(-stream_radius, stream_radius),
-					randf_range(-stream_radius * 0.4, stream_radius * 0.4),
-					randf_range(-stream_radius, stream_radius)
-				)
-				_add_pixel(_start_pos + jitter_offset, jitter_offset, _vary_pixel_color(_color), px_size, flight_time, target_y, rim_y, false, true, spawn_life)
-		else:
-			var base_vel := _compute_launch_velocity()
-			var pixels_per_sec := lerpf(60.0, 175.0, clampf(_flow_rate * 0.5, 0.0, 1.0))
-			_spawn_accum += pixels_per_sec * dt
-			var to_spawn := int(_spawn_accum)
-			_spawn_accum -= float(to_spawn)
-			var nozzle_spread := lerpf(0.0020, 0.0045, clampf(_flow_rate * 0.5, 0.0, 1.0))
-			var use_end_y := _enable_splash or _end_pos != Vector3.ZERO
-			var target_y := _end_pos.y if use_end_y else (_start_pos.y - 2.2)
-			var rim_y := -9999.0
-			for s_i in to_spawn:
-				var sub_t := (float(s_i) / maxf(float(to_spawn), 1.0)) * dt
-				var jitter_pos := Vector3(
-					randf_range(-nozzle_spread, nozzle_spread),
-					randf_range(-nozzle_spread * 0.5, nozzle_spread * 0.5),
-					randf_range(-nozzle_spread, nozzle_spread)
-				)
-				var jitter_vel := Vector3(
-					randf_range(-0.018, 0.018),
-					randf_range(-0.05, 0.05),
-					randf_range(-0.012, 0.012)
-				)
-				var v := base_vel + jitter_vel
-				var p := _start_pos + jitter_pos + v * sub_t
-				_add_pixel(p, v, _vary_pixel_color(_color), px_size, 0.9, target_y, rim_y, false)
+		_spawn_particles(dt, px_size)
 
 	var p0 := _start_pos
 	var p3 := _end_pos
@@ -567,12 +609,12 @@ func _process(delta: float) -> void:
 		if not splash and _p_is_snapped[i] == 1:
 			if _p_life[i] >= _p_max_life[i]:
 				if _enable_splash:
-					_p_pos[i] = Vector3(p3.x, p3.y + 0.002, p3.z)
-					_p_vel[i] = Vector3(randf_range(-SPLASH_HORIZ_SPEED, SPLASH_HORIZ_SPEED), randf_range(SPLASH_UP_SPEED_MIN, SPLASH_UP_SPEED_MAX), randf_range(-0.01, 0.01))
+					_p_pos[i] = Vector3(p3.x + _p_vel[i].x * 0.5, p3.y + 0.002, p3.z + _p_vel[i].z * 0.5)
+					_p_vel[i] = Vector3(randf_range(-SPLASH_HORIZ_SPEED, SPLASH_HORIZ_SPEED) * 0.55, randf_range(SPLASH_UP_SPEED_MIN, SPLASH_UP_SPEED_MAX) * 0.45, randf_range(-0.01, 0.01))
 					_p_col[i] = _p_col[i].lightened(0.16)
-					_p_size[i] = _p_size[i] * randf_range(SPLASH_SIZE_MIN, SPLASH_SIZE_MAX)
+					_p_size[i] = _p_size[i] * randf_range(0.65, 0.90)
 					_p_life[i] = 0.0
-					_p_max_life[i] = randf_range(SPLASH_LIFE_MIN, SPLASH_LIFE_MAX)
+					_p_max_life[i] = randf_range(0.08, 0.15)
 					_p_target_y[i] = p3.y
 					_p_is_splash[i] = 1
 					_p_is_snapped[i] = 0
@@ -588,7 +630,7 @@ func _process(delta: float) -> void:
 			var b2 := 3.0 * omt * s * s
 			var b3 := s * s * s
 			var curve_pos := p0 * b0 + p1 * b1 + p2 * b2 + p3 * b3
-			_p_pos[i] = curve_pos + _p_vel[i] * lerpf(1.0, 0.45, s)
+			_p_pos[i] = curve_pos + _p_vel[i] * lerpf(0.85, 0.70, s)
 			i += 1
 			continue
 
@@ -619,11 +661,11 @@ func _process(delta: float) -> void:
 			if p.y <= _p_target_y[i] or _p_life[i] >= _p_max_life[i]:
 				if _enable_splash and p.y <= _p_target_y[i]:
 					_p_pos[i] = Vector3(p.x, _p_target_y[i] + 0.002, p.z)
-					_p_vel[i] = Vector3(randf_range(-SPLASH_HORIZ_SPEED, SPLASH_HORIZ_SPEED), randf_range(SPLASH_UP_SPEED_MIN, SPLASH_UP_SPEED_MAX), randf_range(-0.01, 0.01))
+					_p_vel[i] = Vector3(randf_range(-SPLASH_HORIZ_SPEED, SPLASH_HORIZ_SPEED) * 0.55, randf_range(SPLASH_UP_SPEED_MIN, SPLASH_UP_SPEED_MAX) * 0.45, randf_range(-0.01, 0.01))
 					_p_col[i] = _p_col[i].lightened(0.16)
-					_p_size[i] = _p_size[i] * randf_range(SPLASH_SIZE_MIN, SPLASH_SIZE_MAX)
+					_p_size[i] = _p_size[i] * randf_range(0.65, 0.90)
 					_p_life[i] = 0.0
-					_p_max_life[i] = randf_range(SPLASH_LIFE_MIN, SPLASH_LIFE_MAX)
+					_p_max_life[i] = randf_range(0.08, 0.15)
 					_p_is_splash[i] = 1
 					i += 1
 					continue

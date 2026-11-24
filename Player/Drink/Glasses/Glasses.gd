@@ -263,11 +263,17 @@ func _update_pour_splash(delta: float) -> void:
 		return
 
 	var fill_ratio := clampf(total_liquids / maxf(size, 0.001), 0.05, 0.96)
-	var impact_pos := PourStreamVisual.get_sprite_surface_world_position(sp, fill_ratio, _pour_splash_entry_u)
+	var impact_pos := PourStreamVisual.get_sprite_surface_world_position(sp, fill_ratio)
+	var edges: Dictionary = PourStreamVisual.get_sprite_rim_edges_world_positions(sp)
+	var edge_left: Vector3 = edges.get("left", Vector3.ZERO)
+	var edge_right: Vector3 = edges.get("right", Vector3.ZERO)
+	var center_edge: Vector3 = edges.get("center", Vector3.ZERO)
+	var cup_half_width: float = edge_left.distance_to(edge_right) * 0.35
+	var rim_y: float = center_edge.y
 	var active_cam := camera if is_instance_valid(camera) else get_viewport().get_camera_3d()
 	var cam_dir := (active_cam.global_position - impact_pos).normalized() if is_instance_valid(active_cam) else -sp.global_transform.basis.z.normalized()
-	var spawn_pos := impact_pos + cam_dir * 0.008
-	_pour_splash_stream.set_splash_active(true, spawn_pos, _pour_splash_color, _pour_splash_flow_rate, impact_pos.y)
+	var spawn_pos := impact_pos + cam_dir * 0.0015
+	_pour_splash_stream.set_splash_active(true, spawn_pos, _pour_splash_color, _pour_splash_flow_rate, impact_pos.y, cup_half_width, rim_y)
 
 func _ensure_overflow_streams() -> void:
 	if not is_instance_valid(_overflow_stream_left):
@@ -334,7 +340,7 @@ func _update_overflow_streams(delta: float) -> void:
 	var right_edge: Vector3 = edges["right"]
 
 	var is_on_counter := not in_game and absf(global_position.y - get_working_area_surface_y()) <= 0.08
-	var floor_y := left_edge.y - 2.2
+	var floor_y := left_edge.y - 0.50
 	if is_on_counter:
 		var bounds = WorkingAreaService.get_working_area_bounds(self)
 		floor_y = ((bounds as AABB).end.y + 0.002) if (bounds is AABB) else PourStreamVisual.get_sprite_surface_world_position(sp, 0.0).y
@@ -350,14 +356,19 @@ func _update_overflow_streams(delta: float) -> void:
 	var left_spawn := left_edge + left_outward * 0.003 + cam_dir * 0.004
 	var right_spawn := right_edge + right_outward * 0.003 + cam_dir * 0.004
 
-	var left_end := Vector3(left_spawn.x, floor_y if is_on_counter else (left_spawn.y - 2.2), left_spawn.z)
-	var right_end := Vector3(right_spawn.x, floor_y if is_on_counter else (right_spawn.y - 2.2), right_spawn.z)
+	var cup_width := left_edge.distance_to(right_edge)
+	var spill_out := clampf(cup_width * (0.38 if is_on_counter else 0.45), 0.015, 0.032)
+	var left_target_y := floor_y if is_on_counter else (left_spawn.y - 0.50)
+	var right_target_y := floor_y if is_on_counter else (right_spawn.y - 0.50)
+
+	var left_end := Vector3(left_spawn.x + left_outward.x * spill_out, left_target_y, left_spawn.z + left_outward.z * spill_out)
+	var right_end := Vector3(right_spawn.x + right_outward.x * spill_out, right_target_y, right_spawn.z + right_outward.z * spill_out)
 
 	var left_dir := (left_outward * 0.48 + Vector3.DOWN * 0.88).normalized()
 	var right_dir := (right_outward * 0.48 + Vector3.DOWN * 0.88).normalized()
 
-	_overflow_stream_left.set_stream_active(true, left_spawn, left_end, _overflow_color, _overflow_flow_rate, left_dir, false, false)
-	_overflow_stream_right.set_stream_active(true, right_spawn, right_end, _overflow_color, _overflow_flow_rate, right_dir, false, false)
+	_overflow_stream_left.set_stream_active(true, left_spawn, left_end, _overflow_color, _overflow_flow_rate, left_dir, true, is_on_counter, null, true)
+	_overflow_stream_right.set_stream_active(true, right_spawn, right_end, _overflow_color, _overflow_flow_rate, right_dir, true, is_on_counter, null, true)
 
 func _update_pour_out_stream() -> void:
 	_ensure_pour_out_stream()
