@@ -344,6 +344,8 @@ func receive_drink(mix: DrinkMix) -> float:
 			customer_satisfaction = 0.0
 		if attempt_override.get("clear_orders", false):
 			drink_list.clear()
+		if not (unique_talk and GameState.special_state) and GameState.seat_manager:
+			GameState.seat_manager.register_order_served(false)
 		_served_scores.append(override_score)
 		_show_drink_score_indicator(override_score)
 		_apply_reputation_impact(false, override_score)
@@ -377,7 +379,10 @@ func receive_drink(mix: DrinkMix) -> float:
 	_show_drink_score_indicator(drink_score)
 	_replenish_patience(drink_score)
 	_apply_reputation_impact(is_satisfactory, drink_score)
-	var combo_data := _calculate_combo(mix, wanted_order, is_satisfactory)
+	var serve_combo_data: Dictionary = {}
+	if not (unique_talk and GameState.special_state) and GameState.seat_manager:
+		serve_combo_data = GameState.seat_manager.register_order_served(is_satisfactory)
+	var combo_data := _calculate_combo(mix, wanted_order, is_satisfactory, serve_combo_data)
 	_calculate_payout(drink_score, is_satisfactory, combo_data)
 	_show_combo_indicators(combo_data)
 
@@ -439,13 +444,16 @@ func _apply_reputation_impact(is_satisfactory: bool, drink_score: float) -> void
 			species_delta = modifier.modify_species_reputation_delta(self, race_name, species_delta, false, drink_score)
 		PlayerStats.change_species_reputation(race_name, species_delta)
 
-func _calculate_combo(mix: DrinkMix, wanted_order: DrinkOrder, is_satisfactory: bool) -> Dictionary:
+func _calculate_combo(mix: DrinkMix, wanted_order: DrinkOrder, is_satisfactory: bool, serve_combo_data: Dictionary = {}) -> Dictionary:
 	var result := {
 		"ingredient_count": 0,
 		"extra_ingredients": 0,
 		"ingredients_combo": 0.0,
 		"is_shaken": false,
 		"shaken_combo": 0.0,
+		"serve_combo_streak": 0,
+		"serve_combo_stacks": 0,
+		"serve_combo": 0.0,
 		"total_combo": 0.0,
 		"multiplier": 1.0,
 		"components": []
@@ -464,7 +472,11 @@ func _calculate_combo(mix: DrinkMix, wanted_order: DrinkOrder, is_satisfactory: 
 	var is_shaken := mix.has_processing("shaken")
 	var shaken_combo := COMBO_SHAKEN_BONUS if is_shaken else 0.0
 
-	var total_combo := snappedf(ingredients_combo + shaken_combo, 0.0001)
+	var serve_combo_streak: int = int(serve_combo_data.get("streak", 0))
+	var serve_combo_stacks: int = int(serve_combo_data.get("stacks", 0))
+	var serve_combo: float = snappedf(float(serve_combo_data.get("bonus", 0.0)), 0.0001)
+
+	var total_combo := snappedf(ingredients_combo + shaken_combo + serve_combo, 0.0001)
 	var components: Array[Dictionary] = []
 
 	if ingredients_combo > 0.0:
@@ -481,12 +493,22 @@ func _calculate_combo(mix: DrinkMix, wanted_order: DrinkOrder, is_satisfactory: 
 			"value": shaken_combo,
 			"detail": "Shaken"
 		})
+	if serve_combo > 0.0:
+		components.append({
+			"id": "serve_combo",
+			"label": "+%d%% serve combo" % roundi(serve_combo * 100.0),
+			"value": serve_combo,
+			"detail": "%d in succession (%d stack%s)" % [serve_combo_streak, serve_combo_stacks, "" if serve_combo_stacks == 1 else "s"]
+		})
 
 	result["ingredient_count"] = ingredient_count
 	result["extra_ingredients"] = extra_ingredients
 	result["ingredients_combo"] = ingredients_combo
 	result["is_shaken"] = is_shaken
 	result["shaken_combo"] = shaken_combo
+	result["serve_combo_streak"] = serve_combo_streak
+	result["serve_combo_stacks"] = serve_combo_stacks
+	result["serve_combo"] = serve_combo
 	result["total_combo"] = total_combo
 	result["multiplier"] = 1.0 + total_combo
 	result["components"] = components

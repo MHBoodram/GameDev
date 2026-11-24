@@ -41,6 +41,14 @@ var _active_floating_groups: Dictionary = {}
 var _status_groups: Dictionary = {}
 var _fallback_visual_helper: LiquidVisualHelper = LiquidVisualHelper.new()
 
+var _serve_combo_box: VBoxContainer = null
+var _serve_combo_label: Label = null
+var _serve_combo_bar: ProgressBar = null
+var _serve_combo_fill_style: StyleBoxFlat = null
+var _serve_combo_fade_tween: Tween = null
+var _serve_combo_punch_tween: Tween = null
+var _last_serve_combo_streak: int = 0
+
 static func get_current() -> HudIndicators:
 	if is_instance_valid(current) and current.is_inside_tree():
 		return current
@@ -84,6 +92,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_register_default_channels()
 	_ensure_pouring_group()
+	_ensure_serve_combo_ui()
 	_connect_player_stats()
 
 func _process(_delta: float) -> void:
@@ -298,8 +307,6 @@ func show_combo_indicators(combo_data: Dictionary, options: Dictionary = {}) -> 
 		if not comp_opts.has("jitter_x"):
 			comp_opts["jitter_x"] = 0.0
 		show_floating_text(comp_text, COMBO_COMPONENT_COLOR, comp_opts)
-		# SFXAudio.play_combo_component()
-		# GameState.play_sfx("play_combo_component")
 
 	if final_delay > 0.0:
 		await get_tree().create_timer(final_delay, false).timeout
@@ -320,8 +327,6 @@ func show_combo_indicators(combo_data: Dictionary, options: Dictionary = {}) -> 
 	if not final_opts.has("jitter_x"):
 		final_opts["jitter_x"] = 0.0
 	show_floating_text(final_text, COMBO_FINAL_COLOR, final_opts)
-	# SFXAudio.play_combo_final()
-	# GameState.play_sfx("play_combo_final")
 
 func show_money_change(delta: float, suffix: String = "", options: Dictionary = {}) -> Label:
 	if absf(delta) < 0.005:
@@ -714,6 +719,108 @@ func update_pouring_indicator(glass: Node, liquids: Array, glass_size: float, vi
 
 func hide_pouring_indicator(glass: Node = null, immediate: bool = false) -> void:
 	hide_status_group("pouring", glass, immediate, 1.0)
+
+func _ensure_serve_combo_ui() -> void:
+	if is_instance_valid(_serve_combo_box):
+		return
+	_serve_combo_box = VBoxContainer.new()
+	_serve_combo_box.name = "ServeComboIndicator"
+	_serve_combo_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_serve_combo_box.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	_serve_combo_box.offset_left = 27.0
+	_serve_combo_box.offset_top = 210.0
+	_serve_combo_box.offset_right = 240.0
+	_serve_combo_box.offset_bottom = 265.0
+	_serve_combo_box.grow_horizontal = Control.GROW_DIRECTION_END
+	_serve_combo_box.modulate.a = 0.0
+	_serve_combo_box.visible = false
+	add_child(_serve_combo_box)
+
+	_serve_combo_label = _create_styled_label("Serve combo", COMBO_FINAL_COLOR, 32, OUTLINE_COLOR, 4)
+	_serve_combo_label.name = "ServeComboLabel"
+	_serve_combo_box.add_child(_serve_combo_label)
+
+	_serve_combo_bar = ProgressBar.new()
+	_serve_combo_bar.name = "ServeComboBar"
+	_serve_combo_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_serve_combo_bar.show_percentage = false
+	_serve_combo_bar.custom_minimum_size = Vector2(0.0, 10.0)
+
+	var bg_style := StyleBoxFlat.new()
+	bg_style.bg_color = Color(0.12, 0.12, 0.14, 0.85)
+	bg_style.set_corner_radius_all(2)
+	_serve_combo_bar.add_theme_stylebox_override("background", bg_style)
+
+	_serve_combo_fill_style = StyleBoxFlat.new()
+	_serve_combo_fill_style.bg_color = COMBO_FINAL_COLOR
+	_serve_combo_fill_style.set_corner_radius_all(2)
+	_serve_combo_bar.add_theme_stylebox_override("fill", _serve_combo_fill_style)
+
+	_serve_combo_box.add_child(_serve_combo_bar)
+	_set_mouse_ignore_recursive(_serve_combo_box)
+
+func update_serve_combo_indicator(streak: int, grace_left: float, grace_max: float, current_bonus: float, next_step_bonus: float) -> void:
+	if not is_inside_tree() or streak <= 0 or grace_left <= 0.0:
+		hide_serve_combo_indicator(true)
+		return
+
+	_ensure_serve_combo_ui()
+
+	if _serve_combo_fade_tween and _serve_combo_fade_tween.is_valid():
+		_serve_combo_fade_tween.kill()
+		_serve_combo_fade_tween = null
+
+	_serve_combo_box.visible = true
+	_serve_combo_box.modulate.a = 1.0
+
+	var pct := clampf(grace_left / maxf(grace_max, 0.001), 0.0, 1.0)
+	_serve_combo_bar.max_value = grace_max
+	_serve_combo_bar.value = grace_left
+
+	if _serve_combo_fill_style:
+		var bar_col := COMBO_FINAL_COLOR if pct > 0.3 else DECREASE_COLOR.lerp(COMBO_FINAL_COLOR, pct / 0.3)
+		_serve_combo_fill_style.bg_color = bar_col
+
+	var title_text := ""
+	if current_bonus > 0.0:
+		var bonus_pct := roundi(current_bonus * 100.0)
+		title_text = "Serve Combo x%d" % streak
+	else:
+		var next_pct := roundi(next_step_bonus * 100.0)
+		title_text = "Serve Combo"
+
+	_serve_combo_label.text = title_text
+
+	if streak > _last_serve_combo_streak:
+		_last_serve_combo_streak = streak
+		if _serve_combo_punch_tween and _serve_combo_punch_tween.is_valid():
+			_serve_combo_punch_tween.kill()
+		_serve_combo_box.scale = Vector2(1.15, 1.15)
+		_serve_combo_punch_tween = create_tween()
+		_serve_combo_punch_tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		_serve_combo_punch_tween.tween_property(_serve_combo_box, "scale", Vector2.ONE, 0.18)
+
+func hide_serve_combo_indicator(immediate: bool = false) -> void:
+	_last_serve_combo_streak = 0
+	if not is_instance_valid(_serve_combo_box):
+		return
+	if _serve_combo_fade_tween and _serve_combo_fade_tween.is_valid():
+		_serve_combo_fade_tween.kill()
+		_serve_combo_fade_tween = null
+	if immediate or not is_inside_tree():
+		_serve_combo_box.modulate.a = 0.0
+		_serve_combo_box.visible = false
+		return
+	if not _serve_combo_box.visible or _serve_combo_box.modulate.a <= 0.0:
+		_serve_combo_box.visible = false
+		return
+	_serve_combo_fade_tween = create_tween()
+	_serve_combo_fade_tween.tween_property(_serve_combo_box, "modulate:a", 0.0, 0.35)
+	_serve_combo_fade_tween.tween_callback(func():
+		if is_instance_valid(_serve_combo_box):
+			_serve_combo_box.visible = false
+			_serve_combo_box.scale = Vector2.ONE
+	)
 
 func _set_mouse_ignore_recursive(node: Node) -> void:
 	if node is Control:

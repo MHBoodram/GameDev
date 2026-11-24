@@ -7,12 +7,20 @@ extends Node
 const BASE_NPC_SCENE := preload("res://NPC/base npc.tscn")
 const RECEIPT_SCENE := preload("res://NPC/Recipt/recipt_scene.tscn")
 
+const SERVE_COMBO_GRACE_PERIOD := 8.0
+const SERVE_COMBO_PER_ORDER := 0.20
+
 var seats: Array[Base_NPC] = [null, null, null]
 var receipt_board: ReceiptBoard = ReceiptBoard.new()
 var main_root: Node3D
 
 var is_spawning_allowed: bool = false
 var spawn_timer_acc: float = 0.0
+var serve_combo_streak: int = 0
+var serve_combo_grace_left: float = 0.0
+
+func _exit_tree() -> void:
+	reset_serve_combo(true)
 
 func setup(host: Node3D) -> void:
 	main_root = host
@@ -25,11 +33,13 @@ func setup(host: Node3D) -> void:
 func start_spawning() -> void:
 	is_spawning_allowed = true
 	spawn_timer_acc = 16.0
+	reset_serve_combo(true)
 
 func stop_spawning() -> void:
 	is_spawning_allowed = false
 
 func _process(delta: float) -> void:
+	_update_serve_combo_timer(delta)
 	if not is_spawning_allowed or GameState.special_state or GameState.night_paused:
 		return
 	if get_empty_seat_count() <= 0:
@@ -40,6 +50,57 @@ func _process(delta: float) -> void:
 	if spawn_timer_acc >= spawn_interval:
 		spawn_timer_acc = 0.0
 		spawn_random_customer()
+
+func _update_serve_combo_timer(delta: float) -> void:
+	if serve_combo_grace_left <= 0.0:
+		return
+	if GameState.is_dialogue_open:
+		return
+	serve_combo_grace_left = maxf(0.0, serve_combo_grace_left - delta)
+	if serve_combo_grace_left <= 0.0:
+		reset_serve_combo()
+	else:
+		_sync_serve_combo_hud()
+
+func register_order_served(is_satisfactory: bool) -> Dictionary:
+	if not is_satisfactory:
+		reset_serve_combo()
+		return {
+			"streak": 0,
+			"stacks": 0,
+			"bonus": 0.0,
+			"grace_left": 0.0
+		}
+
+	if serve_combo_grace_left > 0.0 and serve_combo_streak > 0:
+		serve_combo_streak += 1
+	else:
+		serve_combo_streak = 1
+
+	serve_combo_grace_left = SERVE_COMBO_GRACE_PERIOD
+	var stacks := maxi(0, serve_combo_streak - 1)
+	var bonus := snappedf(float(stacks) * SERVE_COMBO_PER_ORDER, 0.0001)
+	_sync_serve_combo_hud()
+	return {
+		"streak": serve_combo_streak,
+		"stacks": stacks,
+		"bonus": bonus,
+		"grace_left": serve_combo_grace_left
+	}
+
+func reset_serve_combo(immediate: bool = false) -> void:
+	serve_combo_streak = 0
+	serve_combo_grace_left = 0.0
+	var hud := HudIndicators.get_current()
+	if hud and hud.has_method("hide_serve_combo_indicator"):
+		hud.hide_serve_combo_indicator(immediate)
+
+func _sync_serve_combo_hud() -> void:
+	var hud := HudIndicators.get_current()
+	if hud and hud.has_method("update_serve_combo_indicator"):
+		var stacks := maxi(0, serve_combo_streak - 1)
+		var current_bonus := snappedf(float(stacks) * SERVE_COMBO_PER_ORDER, 0.0001)
+		hud.update_serve_combo_indicator(serve_combo_streak, serve_combo_grace_left, SERVE_COMBO_GRACE_PERIOD, current_bonus, SERVE_COMBO_PER_ORDER)
 
 func _on_dialogue_started(_resource) -> void:
 	GameState.is_dialogue_open = true
@@ -255,6 +316,8 @@ func clear_all_customers(immediate: bool = false, unique_only: bool = false) -> 
 			npc.queue_free()
 		else:
 			npc._leaving()
+	if not unique_only:
+		reset_serve_combo(immediate)
 
 func add_receipt(seat: int, order_text: String, customer_race: String = "", customer_icon: Texture2D = null) -> void:
 	if not main_root:
