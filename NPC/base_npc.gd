@@ -288,6 +288,11 @@ func _start_bounce() -> void:
 	_bounce_tween.tween_method(_apply_bounce_scale, 1.01, 1.0, 0.4)
 	_bounce_tween.tween_interval(0.1)
 
+func _show_drink_score_indicator(drink_score: float) -> void:
+	var hud := HudIndicators.get_current()
+	if hud:
+		hud.show_drink_score_indicator(drink_score)
+
 # Serving and payouts
 func deliver_cup(glass: Glasses) -> void:
 	if not is_instance_valid(glass):
@@ -327,6 +332,7 @@ func receive_drink(mix: DrinkMix) -> float:
 		if attempt_override.get("clear_orders", false):
 			drink_list.clear()
 		_served_scores.append(override_score)
+		_show_drink_score_indicator(override_score)
 		_apply_reputation_impact(false, override_score)
 		_calculate_payout(override_score, false)
 		has_receipt_spawned = false
@@ -355,6 +361,7 @@ func receive_drink(mix: DrinkMix) -> float:
 		customer_satisfaction = maxf(0.0, customer_satisfaction - (1.0 - drink_score))
 
 	_served_scores.append(drink_score)
+	_show_drink_score_indicator(drink_score)
 	_replenish_patience(drink_score)
 	_apply_reputation_impact(is_satisfactory, drink_score)
 	_calculate_payout(drink_score, is_satisfactory)

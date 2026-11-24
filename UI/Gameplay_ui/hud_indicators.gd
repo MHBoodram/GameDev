@@ -6,9 +6,15 @@ const LIQUIDS_LABEL_SCENE: PackedScene = preload("res://Player/Drink/Glasses/liq
 
 const INCREASE_COLOR: Color = Color(0.28, 0.96, 0.36, 1.0)
 const DECREASE_COLOR: Color = Color(1.0, 0.25, 0.25, 1.0)
+const OK_COLOR: Color = Color(1.0, 0.82, 0.24, 1.0)
+const PERFECT_COLOR: Color = Color(0.38, 0.94, 1.0, 1.0)
 const CLEAN_COLOR: Color = Color(0.55, 0.92, 1.0, 1.0)
 const OUTLINE_COLOR: Color = Color(0.0, 0.0, 0.0, 1.0)
 const SHADOW_COLOR: Color = Color(0.0, 0.0, 0.0, 0.75)
+
+const SCORE_THRESHOLD_PERFECT: float = 0.95
+const SCORE_THRESHOLD_GOOD: float = 0.85
+const SCORE_THRESHOLD_OK: float = 0.65
 
 const DEFAULT_FONT_SIZE: int = 50
 const DEFAULT_OUTLINE_SIZE: int = 8
@@ -77,6 +83,18 @@ func _process(_delta: float) -> void:
 			hide_status_group("pouring", null, false, 1.0)
 
 func _register_default_channels() -> void:
+	register_channel("drink_score", {
+		"stack_group": "right_hud",
+		"align": "right",
+		"y_offset_below_money": 4.0,
+		"fallback_y": 98.0,
+		"font_size": DEFAULT_FONT_SIZE,
+		"float_distance": DEFAULT_FLOAT_DISTANCE,
+		"duration": DEFAULT_DURATION,
+		"scale_punch": 1.32,
+		"positive_color": INCREASE_COLOR,
+		"negative_color": DECREASE_COLOR
+	})
 	register_channel("money", {
 		"stack_group": "right_hud",
 		"align": "right",
@@ -202,6 +220,27 @@ func _on_overall_reputation_changed(_new_value: float, delta: float) -> void:
 func _on_species_reputation_changed(species_name: String, _new_value: float, delta: float) -> void:
 	show_species_rep_change(species_name, delta)
 
+func show_drink_score_indicator(drink_score: float, options: Dictionary = {}) -> Label:
+	var rating_text: String
+	var rating_color: Color
+	if drink_score >= SCORE_THRESHOLD_PERFECT:
+		rating_text = "Perfect!"
+		rating_color = PERFECT_COLOR
+	elif drink_score >= SCORE_THRESHOLD_GOOD:
+		rating_text = "Good!"
+		rating_color = INCREASE_COLOR
+	elif drink_score >= SCORE_THRESHOLD_OK:
+		rating_text = "Ok"
+		rating_color = OK_COLOR
+	else:
+		rating_text = "Bad!"
+		rating_color = DECREASE_COLOR
+
+	var merged: Dictionary = options.duplicate()
+	if not merged.has("channel"):
+		merged["channel"] = "drink_score"
+	return show_floating_text(rating_text, rating_color, merged)
+
 func show_money_change(delta: float, suffix: String = "", options: Dictionary = {}) -> Label:
 	if absf(delta) < 0.005:
 		return null
@@ -226,7 +265,7 @@ func show_species_rep_change(species_name: String, delta: float, suffix: String 
 	var amount_str: String = format_number(delta, false)
 	return show_delta_indicator("species_rep", delta, amount_str + " " + display_species + " Rep" + suffix, options)
 
-func show_cup_spill_indicator(glass: Node3D, spilled_percent: float = 0.0, options: Dictionary = {}) -> Label:
+func show_cup_spill_indicator(glass: Node3D, _spilled_percent: float = 0.0, options: Dictionary = {}) -> Label:
 	var vp_size: Vector2 = _get_viewport_size()
 	var fallback := Vector2(vp_size.x * 0.5, vp_size.y * 0.35)
 	var merged: Dictionary = options.duplicate()
@@ -238,8 +277,6 @@ func show_cup_spill_indicator(glass: Node3D, spilled_percent: float = 0.0, optio
 		merged["stack_group"] = "cup_" + str(glass.get_instance_id())
 	if not merged.has("jitter_x"):
 		merged["jitter_x"] = 0.0
-	if spilled_percent >= 0.05:
-		return show_delta_indicator("cup_spill", -spilled_percent, format_number(spilled_percent) + "% Spill!", merged)
 	return show_floating_text("Spilling!", DECREASE_COLOR, merged)
 
 func show_cup_empty_indicator(glass: Node3D, options: Dictionary = {}) -> Label:
@@ -586,7 +623,7 @@ func update_pouring_indicator(glass: Node, liquids: Array, glass_size: float, vi
 	var dm: Variant = glass.get("drink_mix") if is_instance_valid(glass) else null
 	if dm is DrinkMix and (dm as DrinkMix).overfill_percent > 0.05:
 		entries.append({
-			"text": "Spilled: -" + format_number((dm as DrinkMix).overfill_percent) + "%",
+			"text": "Spilled!",
 			"color": DECREASE_COLOR,
 			"secondary_color": DECREASE_COLOR
 		})
