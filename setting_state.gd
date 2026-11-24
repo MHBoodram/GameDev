@@ -23,28 +23,102 @@ const DEFAULT_SETTING = {
 		}
 }
 
-var setting_dic = {
-	"Video" :
-		{
-		"FullScreen" : false,
-		"Resolution" : false,
-		"WorldEnvironment" : true
-		},
-	"Control" :
-		{
-		"Up" : "w",
-		"Down" : "s",
-		"Left" : "a",
-		"Right" : "d",
-		},
-	"Audio" :
-		{
-		"Master_value" : 0,
-		"UI_value" : 0,
-		"SFX_value" : 0,
-		"Music_value" : 0
-		}
-}
+var setting_dic: Dictionary = DEFAULT_SETTING.duplicate(true)
+var waiting_keybind: bool = false
+var action_to_rebind: String = "Up"
+var _active_control_buttons: Dictionary = {}
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+
+func _input(event: InputEvent) -> void:
+	if not waiting_keybind:
+		return
+	var btn := _active_control_buttons.get(action_to_rebind) as Button
+	waiting_keybind = handle_rebind_input(event, action_to_rebind, btn)
+
+func begin_rebind(action_name: String, control_buttons: Dictionary = {}) -> void:
+	if not control_buttons.is_empty():
+		_active_control_buttons = control_buttons
+	var btn := _active_control_buttons.get(action_name) as Button
+	if is_instance_valid(btn):
+		btn.text = "awaiting"
+	action_to_rebind = action_name
+	waiting_keybind = true
+
+func cancel_rebind() -> void:
+	if waiting_keybind:
+		var btn := _active_control_buttons.get(action_to_rebind) as Button
+		if is_instance_valid(btn):
+			btn.text = _key_to_string(action_to_rebind)
+		waiting_keybind = false
+
+func bind_settings_panel(config: Dictionary) -> void:
+	cancel_rebind()
+	var master_slider := config.get("master_slider") as Range
+	var ui_slider := config.get("ui_slider") as Range
+	var music_slider := config.get("music_slider") as Range
+	var sfx_slider := config.get("sfx_slider") as Range
+	var fullscreen_btn := config.get("fullscreen_btn") as BaseButton
+	var world_env_btn := config.get("world_env_btn") as BaseButton
+	var audio_reset_btn := config.get("audio_reset_btn") as BaseButton
+	var control_reset_btn := config.get("control_reset_btn") as BaseButton
+	var control_buttons: Dictionary = config.get("control_buttons", {})
+
+	_active_control_buttons = control_buttons
+	apply_settings_to_ui(master_slider, ui_slider, music_slider, fullscreen_btn, world_env_btn, control_buttons)
+
+	if is_instance_valid(master_slider) and not master_slider.get_meta("_setting_state_bound", false):
+		master_slider.set_meta("_setting_state_bound", true)
+		master_slider.value_changed.connect(func(v: float) -> void:
+			set_audio_setting("Master_value", ["Master"], v)
+		)
+
+	if is_instance_valid(ui_slider) and not ui_slider.get_meta("_setting_state_bound", false):
+		ui_slider.set_meta("_setting_state_bound", true)
+		ui_slider.value_changed.connect(func(v: float) -> void:
+			set_audio_setting("UI_value", ["UI", "SFX"], v)
+		)
+
+	if is_instance_valid(music_slider) and not music_slider.get_meta("_setting_state_bound", false):
+		music_slider.set_meta("_setting_state_bound", true)
+		music_slider.value_changed.connect(func(v: float) -> void:
+			set_audio_setting("Music_value", ["Music"], v)
+		)
+
+	if is_instance_valid(audio_reset_btn) and not audio_reset_btn.get_meta("_setting_state_bound", false):
+		audio_reset_btn.set_meta("_setting_state_bound", true)
+		var sliders: Array = [sfx_slider, music_slider, master_slider, ui_slider]
+		audio_reset_btn.pressed.connect(func() -> void:
+			reset_audio_settings(sliders)
+		)
+
+	if is_instance_valid(fullscreen_btn) and not fullscreen_btn.get_meta("_setting_state_bound", false):
+		fullscreen_btn.set_meta("_setting_state_bound", true)
+		fullscreen_btn.pressed.connect(func() -> void:
+			set_fullscreen(fullscreen_btn.button_pressed)
+		)
+
+	if is_instance_valid(world_env_btn) and not world_env_btn.get_meta("_setting_state_bound", false):
+		world_env_btn.set_meta("_setting_state_bound", true)
+		world_env_btn.pressed.connect(func() -> void:
+			set_world_environment(world_env_btn.button_pressed)
+		)
+
+	for action_name in control_buttons:
+		var btn := control_buttons[action_name] as Button
+		if is_instance_valid(btn) and not btn.get_meta("_setting_state_bound", false):
+			btn.set_meta("_setting_state_bound", true)
+			var action_str := str(action_name)
+			btn.pressed.connect(func() -> void:
+				begin_rebind(action_str, control_buttons)
+			)
+
+	if is_instance_valid(control_reset_btn) and not control_reset_btn.get_meta("_setting_state_bound", false):
+		control_reset_btn.set_meta("_setting_state_bound", true)
+		control_reset_btn.pressed.connect(func() -> void:
+			reset_controls_to_ui(control_buttons)
+		)
 
 func _saving_setting():
 	var file = FileAccess.open(SAVE_PATH,FileAccess.WRITE)
@@ -211,6 +285,7 @@ func handle_rebind_input(event: InputEvent, action_name: String, target_button: 
 	if event.physical_keycode == KEY_ESCAPE:
 		if is_instance_valid(target_button):
 			target_button.text = _key_to_string(action_name)
+		get_viewport().set_input_as_handled()
 		return false
 	rebind_action(action_name, event)
 	if is_instance_valid(target_button):
@@ -218,6 +293,7 @@ func handle_rebind_input(event: InputEvent, action_name: String, target_button: 
 	return false
 
 func reset_controls_to_ui(control_buttons: Dictionary) -> void:
+	waiting_keybind = false
 	_reset_to_default_controls()
 	for action_name in control_buttons:
 		var btn := control_buttons[action_name] as Button
