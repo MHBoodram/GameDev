@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://d35b6bj2mv0a3" path="res://Map/afternight.tscn" id="1_bps6g"]
 [ext_resource type="Script" uid="uid://ciwnqc6giiiy6" path="res://UI/After_night/afternight.gd" id="1_sxjop"]
 [ext_resource type="PackedScene" uid="uid://cidirpdmn2j5" path="res://Player/After_Night_Player/AfterNightPlayer.tscn" id="3_myvk3"]
-[ext_resource type="Script" uid="uid://ilqlfi7mgoyf" path="res://Player/Dynamic_camera.gd" id="4_n4i4h"]
+[ext_resource type="Script" path="res://Player/camera.gd" id="4_n4i4h"]
 [ext_resource type="PackedScene" uid="uid://sx4hrn3cgwy1" path="res://Player/Coutner.tscn" id="4_reyg2"]
 [ext_resource type="Texture2D" uid="uid://d1lg7pdai3jyu" path="res://Assets/Items/beer_outside.png" id="5_sxjop"]
 [ext_resource type="Texture2D" uid="uid://1yul4dtngbg4" path="res://Assets/Items/beer.png" id="6_n4i4h"]

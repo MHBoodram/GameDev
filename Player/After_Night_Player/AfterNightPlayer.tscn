@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cidirpdmn2j5"]
 
 [ext_resource type="Script" uid="uid://bb47ejc8w3kgp" path="res://Player/After_Night_Player/after_night_player.gd" id="1_g5rpj"]
-[ext_resource type="Script" uid="uid://ilqlfi7mgoyf" path="res://Player/Dynamic_camera.gd" id="2_luurr"]
+[ext_resource type="Script" path="res://Player/camera.gd" id="2_luurr"]
 [ext_resource type="PackedScene" uid="uid://bj1r8mex1y0rh" path="res://UI/After_night/AfterNightGameplay_UI.tscn" id="3_g5rpj"]
 [ext_resource type="Texture2D" uid="uid://6sfbebk1yfeh" path="res://Assets/UI/Hand-Sheet.png" id="4_7dlo3"]
 

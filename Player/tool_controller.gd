@@ -51,12 +51,11 @@ func can_npc_interact_with_tool(npc: Sprite3D, interaction_type: String) -> bool
 		return false
 	return true
 
-# updates the hand sprite animation based on selected tool and hovering state
-func update_hand_visual(anim_player: AnimationPlayer, action_state: String) -> void:
+static func apply_hand_animation(anim_player: AnimationPlayer, action_state: String, tool_id: String = "hand") -> void:
 	if not anim_player:
 		return
 
-	if tool_in_hand == "knife":
+	if tool_id == "knife":
 		if anim_player.has_animation("knife_idle") and anim_player.current_animation != "knife_idle":
 			anim_player.play("knife_idle")
 	else:
@@ -70,3 +69,7 @@ func update_hand_visual(anim_player: AnimationPlayer, action_state: String) -> v
 			_:
 				if anim_player.current_animation != "idle":
 					anim_player.play("idle")
+
+# updates the hand sprite animation based on selected tool and hovering state
+func update_hand_visual(anim_player: AnimationPlayer, action_state: String) -> void:
+	apply_hand_animation(anim_player, action_state, tool_in_hand)
