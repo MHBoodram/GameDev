@@ -29,6 +29,7 @@ var customer_satisfaction: float = 1.0
 var _dialouge_paused_patience : float = -1.0
 var max_patience: float = 90.0
 var payment_global: float = 0.0
+var _served_scores: Array[float] = []
 var is_leaving: bool = false
 var _is_highlighted: bool = false
 var _original_modulate: Color = Color.WHITE
@@ -40,19 +41,23 @@ var base_scale: Vector3 = Vector3(0.5, 0.5, 0.5)
 var visual_scale_multiplier: float = 1.0
 var _bounce_factor: float = 1.0
 
-const SATISFACTORY_THRESHOLD := 0.6
-const POSITIVE_SCORE_THRESHOLD := 0.75
-const MID_SCORE_THRESHOLD := 0.5
+const SATISFACTORY_THRESHOLD := 0.65
+const POSITIVE_SCORE_THRESHOLD := 0.85
+const MID_SCORE_THRESHOLD := 0.65
 const REPLENISH_BASE_TIME := 30.0
 
 const BASE_DRINK_PRICE := 10.0
 const SCALE_BASE_PAYOUT_BY_SCORE := true
 const SATISFACTORY_PAYOUT_MULTIPLIER := 1.0
 const UNSATISFACTORY_PAYOUT_MULTIPLIER := 0.0
-const TIP_OVERALL_REP_MULTIPLIER := 1.0
-const TIP_SPECIES_REP_MULTIPLIER := 1.0
-const SATISFACTORY_TIP_MULTIPLIER := 1.0
-const UNSATISFACTORY_TIP_MULTIPLIER := 0.0
+
+const TIP_MIN_AT_THRESHOLD := 1.0
+const TIP_MAX_AT_THRESHOLD := 5.0
+const TIP_MIN_AT_PERFECT := 18.0
+const TIP_MAX_AT_PERFECT := 22.0
+const MIN_SATISFACTORY_TIP := 1.0
+const TIP_OVERALL_REP_MULTIPLIER := 0.20
+const TIP_SPECIES_REP_MULTIPLIER := 0.50
 const PATIENCE_TIMEOUT_PAYOUT := 0.0
 
 const LOW_PATIENCE_THRESHOLD_RATIO := 0.25
@@ -145,6 +150,10 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 	seat_num = seat
 	recipt_marker = rec_marker
 	has_receipt_spawned = false
+	payment_global = 0.0
+	_served_scores.clear()
+	emo = "netural"
+	is_leaving = false
 	species_state.clear()
 	pixel_size = 0.01
 	modulate = Color.WHITE
@@ -317,6 +326,7 @@ func receive_drink(mix: DrinkMix) -> float:
 			customer_satisfaction = 0.0
 		if attempt_override.get("clear_orders", false):
 			drink_list.clear()
+		_served_scores.append(override_score)
 		_apply_reputation_impact(false, override_score)
 		_calculate_payout(override_score, false)
 		has_receipt_spawned = false
@@ -332,18 +342,19 @@ func receive_drink(mix: DrinkMix) -> float:
 	if modifier:
 		modifier.on_score_drink(self, mix, wanted_order, score_data)
 		score_data["score"] = clampf(float(score_data["score"]), 0.0, 1.0)
-		score_data["is_satisfactory"] = float(score_data["score"]) >= DrinkScorer.SATISFACTORY_THRESHOLD
-	var drink_score: float = score_data["score"]
+	var drink_score: float = float(score_data["score"])
+	var is_satisfactory: bool = drink_score >= SATISFACTORY_THRESHOLD
+	score_data["is_satisfactory"] = is_satisfactory
 
 	if species_def:
 		species_def.on_drink_served(self, mix, wanted_order, score_data)
 	if modifier:
 		modifier.on_drink_served(self, mix, wanted_order, score_data)
 
-	var is_satisfactory: bool = drink_score >= SATISFACTORY_THRESHOLD
 	if not is_satisfactory:
 		customer_satisfaction = maxf(0.0, customer_satisfaction - (1.0 - drink_score))
 
+	_served_scores.append(drink_score)
 	_replenish_patience(drink_score)
 	_apply_reputation_impact(is_satisfactory, drink_score)
 	_calculate_payout(drink_score, is_satisfactory)
@@ -406,9 +417,49 @@ func _apply_reputation_impact(is_satisfactory: bool, drink_score: float) -> void
 			species_delta = modifier.modify_species_reputation_delta(self, race_name, species_delta, false, drink_score)
 		PlayerStats.change_species_reputation(race_name, species_delta)
 
-func _calculate_payout(drink_score: float, is_satisfactory: bool) -> void:
+func _get_tip_breakdown(drink_score: float, is_satisfactory: bool) -> Dictionary:
+	if not is_satisfactory or drink_score < SATISFACTORY_THRESHOLD:
+		return {
+			"is_satisfactory": false,
+			"score_t": 0.0,
+			"min_tip": 0.0,
+			"max_tip": 0.0,
+			"score_tip": 0.0,
+			"overall_rep": PlayerStats.overall_reputation,
+			"overall_rep_bonus": 0.0,
+			"species_name": _get_race_display_name(),
+			"species_rep": 0.0,
+			"species_rep_bonus": 0.0,
+			"raw_tip": 0.0
+		}
+
+	var t := clampf((drink_score - SATISFACTORY_THRESHOLD) / (1.0 - SATISFACTORY_THRESHOLD), 0.0, 1.0)
+	var min_tip := lerpf(TIP_MIN_AT_THRESHOLD, TIP_MIN_AT_PERFECT, t)
+	var max_tip := lerpf(TIP_MAX_AT_THRESHOLD, TIP_MAX_AT_PERFECT, t)
+	var score_tip := randf_range(min_tip, max_tip)
+
 	var race_name := _get_race_display_name()
 	var group_rep: float = PlayerStats.get_species_reputation(race_name)
+	var overall_bonus := PlayerStats.overall_reputation * TIP_OVERALL_REP_MULTIPLIER
+	var species_bonus := group_rep * TIP_SPECIES_REP_MULTIPLIER
+	var raw_tip := score_tip + overall_bonus + species_bonus
+
+	return {
+		"is_satisfactory": true,
+		"score_t": t,
+		"min_tip": min_tip,
+		"max_tip": max_tip,
+		"score_tip": score_tip,
+		"overall_rep": PlayerStats.overall_reputation,
+		"overall_rep_bonus": overall_bonus,
+		"species_name": race_name,
+		"species_rep": group_rep,
+		"species_rep_bonus": species_bonus,
+		"raw_tip": raw_tip
+	}
+
+func _calculate_payout(drink_score: float, is_satisfactory: bool) -> void:
+	var race_name := _get_race_display_name()
 	var score_factor := drink_score if SCALE_BASE_PAYOUT_BY_SCORE else 1.0
 	var quality_mult := SATISFACTORY_PAYOUT_MULTIPLIER if is_satisfactory else UNSATISFACTORY_PAYOUT_MULTIPLIER
 	var base_payout := BASE_DRINK_PRICE * score_factor * quality_mult
@@ -426,50 +477,50 @@ func _calculate_payout(drink_score: float, is_satisfactory: bool) -> void:
 	var mod_payout_delta := after_mod_payout - payment
 	payment = after_mod_payout
 
-	var overall_tip_part := 0.0
-	var species_tip_part := 0.0
-	var tip_quality_mult := SATISFACTORY_TIP_MULTIPLIER if is_satisfactory else UNSATISFACTORY_TIP_MULTIPLIER
-	var raw_tip := 0.0
-	var mod_tip_delta := 0.0
-	var species_tip_delta := 0.0
+	var tip_info := _get_tip_breakdown(drink_score, is_satisfactory)
+	var raw_tip: float = float(tip_info["raw_tip"])
 	var final_tip := 0.0
 
-	if drink_list.size() <= 0:
-		overall_tip_part = PlayerStats.overall_reputation * TIP_OVERALL_REP_MULTIPLIER
-		species_tip_part = group_rep * TIP_SPECIES_REP_MULTIPLIER
-		raw_tip = (overall_tip_part + species_tip_part) * customer_satisfaction * tip_quality_mult
+	if is_satisfactory and raw_tip > 0.0:
 		var tip := raw_tip
 		if modifier:
-			var after_mod_tip := modifier.modify_tip(self, tip, is_satisfactory, drink_score)
-			mod_tip_delta = after_mod_tip - tip
-			tip = after_mod_tip
+			tip = modifier.modify_tip(self, tip, is_satisfactory, drink_score)
 		if species_def:
-			var after_sp_tip := species_def.modify_tip(self, tip, is_satisfactory, drink_score)
-			species_tip_delta = after_sp_tip - tip
-			tip = after_sp_tip
-		final_tip = tip
-		payment += final_tip
+			tip = species_def.modify_tip(self, tip, is_satisfactory, drink_score)
+		final_tip = maxf(MIN_SATISFACTORY_TIP, roundf(tip))
+	else:
+		final_tip = 0.0
 
+	payment += final_tip
+	payment = roundf(payment)
 	payment_global += payment
 
-	print("Payout (%s, seat #%d)" % [race_name, seat_num])
-	print("  options: BASE_DRINK_PRICE: $%.2f | SCALE_BY_SCORE: %s | SAT_MULT: %.2f | UNSAT_MULT: %.2f | TIMEOUT: $%.2f" % [BASE_DRINK_PRICE, str(SCALE_BASE_PAYOUT_BY_SCORE), SATISFACTORY_PAYOUT_MULTIPLIER, UNSATISFACTORY_PAYOUT_MULTIPLIER, PATIENCE_TIMEOUT_PAYOUT])
-	print("  options: TIP_OVERALL_MULT: %.2f | TIP_SPECIES_MULT: %.2f | SAT_TIP_MULT: %.2f | UNSAT_TIP_MULT: %.2f" % [TIP_OVERALL_REP_MULTIPLIER, TIP_SPECIES_REP_MULTIPLIER, SATISFACTORY_TIP_MULTIPLIER, UNSATISFACTORY_TIP_MULTIPLIER])
-	print("  base_payout: $%.2f (score=%.3f, score_factor=%.3f, quality_mult=%.2f, satisfactory=%s)" % [base_payout, drink_score, score_factor, quality_mult, str(is_satisfactory)])
-	print("  species_payout_delta: %+.2f | modifier_payout_delta: %+.2f" % [species_payout_delta, mod_payout_delta])
-	if drink_list.size() <= 0:
-		print("  tip_raw: $%.2f (overall=%.2f -> %.2f, species=%.2f -> %.2f, satisfaction=%.2f, tip_mult=%.2f)" % [raw_tip, PlayerStats.overall_reputation, overall_tip_part, group_rep, species_tip_part, customer_satisfaction, tip_quality_mult])
-		print("  modifier_tip_delta: %+.2f | species_tip_delta: %+.2f | final_tip: $%.2f" % [mod_tip_delta, species_tip_delta, final_tip])
+	print("Payout (Seat #%d, %s)" % [seat_num, race_name])
+	print("  Base Drink Price: $%.2f (score=%.3f, score_factor=%.3f, quality_mult=%.2f, satisfactory=%s)" % [base_payout, drink_score, score_factor, quality_mult, str(is_satisfactory)])
+	if not is_zero_approx(species_payout_delta) or not is_zero_approx(mod_payout_delta):
+		print("  Payout Modifiers: species=%+.2f, modifier=%+.2f" % [species_payout_delta, mod_payout_delta])
+	if is_satisfactory:
+		print("  Tip Modifiers:")
+		print("    - Drink score (%.3f): $%.2f [range: $%.2f - $%.2f]" % [drink_score, float(tip_info["score_tip"]), float(tip_info["min_tip"]), float(tip_info["max_tip"])])
+		print("    - Overall rep (%.1f): +$%.2f" % [float(tip_info["overall_rep"]), float(tip_info["overall_rep_bonus"])])
+		print("    - Species rep (%s: %.1f): +$%.2f" % [str(tip_info["species_name"]), float(tip_info["species_rep"]), float(tip_info["species_rep_bonus"])])
+		print("  Final Tip: $%.2f" % final_tip)
 	else:
-		print("  tip: deferred (%d order(s) remaining)" % drink_list.size())
-	print("  this_drink_payment: $%.2f | total_payment_global: $%.2f" % [payment, payment_global])
+		print("  Tip: $0.00 (Unsatisfactory drink score %.3f < %.2f)" % [drink_score, SATISFACTORY_THRESHOLD])
+	print("  This Drink Total: $%.2f | Accrued Session Total: $%.2f" % [payment, payment_global])
 
 func _on_all_orders_completed(drink_score: float) -> void:
 	var col = get_node_or_null("Area3D/CollisionShape3D")
 	if col:
 		col.disabled = false
 	can_talk = true
-	_update_speaking_title(drink_score)
+	var effective_score := drink_score
+	if not _served_scores.is_empty():
+		var total_score := 0.0
+		for s in _served_scores:
+			total_score += s
+		effective_score = total_score / float(_served_scores.size())
+	_update_speaking_title(effective_score)
 	if is_instance_valid(patient_2d):
 		patient_2d._recipt_obtain()
 
