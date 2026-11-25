@@ -104,5 +104,3 @@ static func score_legacy(drink_layers: Array, want_array: Array) -> Dictionary:
 	var served := DrinkMix.from_legacy_layers(drink_layers)
 	var wanted := DrinkOrder.from_legacy_want(want_array)
 	return score_drink(served, wanted)
-
-	
