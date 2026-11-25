@@ -45,7 +45,7 @@ func ready() -> void:
 	_ensure_pour_stream()
 	if liquid_resource:
 		size = liquid_resource.liquid_size
-		current_liquid = size
+		current_liquid = size + (PlayerStats.unlocks["Drinks Size Increase"] * 10)
 		color_liquid = liquid_resource.liquid_color
 		if liquid_resource.buoyancy > 0.0:
 			LiquidVisualHelper.register_liquid_buoyancy(liquid_resource.id, liquid_resource.buoyancy)
@@ -57,6 +57,7 @@ func ready() -> void:
 		visual_helper.last_global_pos = inside_node.global_position if inside_node else global_position
 		_setup_liquid_shader()
 		_apply_outside_texture()
+		$Liquid_refresh.wait_time = 4 - (PlayerStats.unlock_passive["Drinks Auto Increase"] * 0.5)
 		set_liquid_color(liquid_resource.liquid_color)
 
 func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:

@@ -66,7 +66,7 @@ modulate = Color(1, 1, 1, 0)
 texture = ExtResource("3_5iee8")
 
 [node name="Liquid_refresh" type="Timer" parent="." unique_id=227173742]
-wait_time = 5.0
+wait_time = 4.0
 autostart = true
 
 [connection signal="area_entered" from="." to="." method="_on_interact_area_entered"]
