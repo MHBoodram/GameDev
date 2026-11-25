@@ -23,6 +23,7 @@ func _setting_dictionary_start() -> void:
 		"world_env_btn": $CenterContainer/VBoxContainer/Video/HBoxContainer/World_Environment,
 		"control_buttons": _get_control_buttons(),
 		"control_reset_btn": $CenterContainer/VBoxContainer/Controls/VBoxContainer/Control_reset,
+		"invert_pour_btn": $CenterContainer/VBoxContainer/Controls/VBoxContainer/Invert_Pour,
 	})
 
 func _moving(move : bool = true) -> void:

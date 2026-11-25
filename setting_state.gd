@@ -13,6 +13,7 @@ const DEFAULT_SETTING = {
 		"Down" : "S",
 		"Left" : "A",
 		"Right" : "D",
+		"InvertPouringAngle" : false,
 		},
 	"Audio" :
 		{
@@ -63,10 +64,11 @@ func bind_settings_panel(config: Dictionary) -> void:
 	var world_env_btn := config.get("world_env_btn") as BaseButton
 	var audio_reset_btn := config.get("audio_reset_btn") as BaseButton
 	var control_reset_btn := config.get("control_reset_btn") as BaseButton
+	var invert_pour_btn := config.get("invert_pour_btn") as BaseButton
 	var control_buttons: Dictionary = config.get("control_buttons", {})
 
 	_active_control_buttons = control_buttons
-	apply_settings_to_ui(master_slider, ui_slider, music_slider, fullscreen_btn, world_env_btn, control_buttons)
+	apply_settings_to_ui(master_slider, ui_slider, music_slider, fullscreen_btn, world_env_btn, control_buttons, invert_pour_btn)
 
 	if is_instance_valid(master_slider) and not master_slider.get_meta("_setting_state_bound", false):
 		master_slider.set_meta("_setting_state_bound", true)
@@ -105,6 +107,12 @@ func bind_settings_panel(config: Dictionary) -> void:
 			set_world_environment(world_env_btn.button_pressed)
 		)
 
+	if is_instance_valid(invert_pour_btn) and not invert_pour_btn.get_meta("_setting_state_bound", false):
+		invert_pour_btn.set_meta("_setting_state_bound", true)
+		invert_pour_btn.pressed.connect(func() -> void:
+			set_invert_pouring_angle(invert_pour_btn.button_pressed)
+		)
+
 	for action_name in control_buttons:
 		var btn := control_buttons[action_name] as Button
 		if is_instance_valid(btn) and not btn.get_meta("_setting_state_bound", false):
@@ -117,7 +125,7 @@ func bind_settings_panel(config: Dictionary) -> void:
 	if is_instance_valid(control_reset_btn) and not control_reset_btn.get_meta("_setting_state_bound", false):
 		control_reset_btn.set_meta("_setting_state_bound", true)
 		control_reset_btn.pressed.connect(func() -> void:
-			reset_controls_to_ui(control_buttons)
+			reset_controls_to_ui(control_buttons, invert_pour_btn)
 		)
 
 func _saving_setting():
@@ -139,6 +147,10 @@ func _loading_setting():
 	if file:
 		var loaded_data = file.get_var()
 		file.close()
+		if not (loaded_data is Dictionary):
+			apply_world_environment()
+			apply_audio_settings()
+			return
 		for main_key in setting_dic:
 			if not loaded_data.has(main_key):
 				loaded_data[main_key] = DEFAULT_SETTING[main_key].duplicate(true)
@@ -147,7 +159,9 @@ func _loading_setting():
 					loaded_data[main_key][default_key] = DEFAULT_SETTING[main_key][default_key]
 			for sub_key in loaded_data[main_key]:
 				var file_key = loaded_data[main_key][sub_key]
-				if(file_key):
+				if DEFAULT_SETTING.get(main_key, {}).get(sub_key) is bool:
+					setting_dic[main_key][sub_key] = bool(file_key)
+				elif(file_key):
 					setting_dic[main_key][sub_key] = file_key
 					print(main_key + " " + sub_key + ": " + str(file_key))
 				else:
@@ -231,6 +245,12 @@ func set_world_environment(enabled: bool) -> void:
 	setting_dic["Video"]["WorldEnvironment"] = enabled
 	apply_world_environment()
 
+func set_invert_pouring_angle(enabled: bool) -> void:
+	setting_dic["Control"]["InvertPouringAngle"] = enabled
+
+func is_invert_pouring_angle() -> bool:
+	return bool(setting_dic["Control"].get("InvertPouringAngle", false))
+
 func set_audio_setting(key: String, buses: Array, value: float) -> void:
 	for bus_name in buses:
 		set_bus_volume(str(bus_name), value)
@@ -255,7 +275,8 @@ func apply_settings_to_ui(
 	music_slider: Range,
 	fullscreen_btn: BaseButton,
 	world_env_btn: BaseButton,
-	control_buttons: Dictionary
+	control_buttons: Dictionary,
+	invert_pour_btn: BaseButton = null
 ) -> void:
 	if is_instance_valid(master_slider):
 		master_slider.value = setting_dic["Audio"]["Master_value"]
@@ -279,6 +300,10 @@ func apply_settings_to_ui(
 		if is_instance_valid(btn):
 			btn.text = _key_to_string(str(action_name))
 
+	var invert_enabled: bool = is_invert_pouring_angle()
+	if is_instance_valid(invert_pour_btn):
+		invert_pour_btn.button_pressed = invert_enabled
+
 func handle_rebind_input(event: InputEvent, action_name: String, target_button: Button) -> bool:
 	if not (event is InputEventKey and event.pressed):
 		return true
@@ -292,10 +317,13 @@ func handle_rebind_input(event: InputEvent, action_name: String, target_button: 
 		target_button.text = event.as_text()
 	return false
 
-func reset_controls_to_ui(control_buttons: Dictionary) -> void:
+func reset_controls_to_ui(control_buttons: Dictionary, invert_pour_btn: BaseButton = null) -> void:
 	waiting_keybind = false
 	_reset_to_default_controls()
 	for action_name in control_buttons:
 		var btn := control_buttons[action_name] as Button
 		if is_instance_valid(btn):
 			btn.text = str(DEFAULT_SETTING["Control"].get(str(action_name), _key_to_string(str(action_name))))
+	var invert_enabled: bool = is_invert_pouring_angle()
+	if is_instance_valid(invert_pour_btn):
+		invert_pour_btn.button_pressed = invert_enabled

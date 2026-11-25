@@ -133,7 +133,13 @@ static func get_pour_height_ratio(viewport: Viewport) -> float:
 		return 0.5
 	var mouse_y: float = viewport.get_mouse_position().y
 	var raw_height: float = 1.0 - clampf(mouse_y / vp_height, 0.0, 1.0)
-	return clampf((raw_height - 0.1) / 0.8, 0.0, 1.0)
+	var ratio: float = clampf((raw_height - 0.1) / 0.8, 0.0, 1.0)
+	if not Engine.is_editor_hint():
+		var tree := viewport.get_tree()
+		var settings := tree.root.get_node_or_null("SettingState") if (tree and tree.root) else null
+		if settings and settings.has_method("is_invert_pouring_angle") and settings.is_invert_pouring_angle():
+			return 1.0 - ratio
+	return ratio
 
 static func get_pour_rate_multiplier(viewport: Viewport) -> float:
 	return get_pour_height_ratio(viewport) * 2.0

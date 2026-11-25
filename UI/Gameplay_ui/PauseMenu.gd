@@ -41,6 +41,7 @@ func _load_settings() -> void:
 		"world_env_btn": $Inside_paper/Left_color/Left_Page/Video/World_Environment,
 		"control_buttons": _get_control_buttons(),
 		"control_reset_btn": $Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Control_reset,
+		"invert_pour_btn": $Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Invert_Pour,
 	})
 
 func _unhandled_input(event: InputEvent) -> void:
