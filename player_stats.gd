@@ -5,7 +5,7 @@ signal overall_reputation_changed(new_value: float, delta: float)
 signal species_reputation_changed(species_name: String, new_value: float, delta: float)
 
 var previous_money : float = 0
-var money : float = 0
+var money : float = 500
 var overall_reputation : float = 0.0
 var reputation_species : Dictionary = {}
 var night_species_delta : Dictionary = {}

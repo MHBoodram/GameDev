@@ -36,7 +36,8 @@ func _on_input_event(camera: Node, event: InputEvent, event_position: Vector3, n
 				pass
 				if(PlayerStats.unlock_passive.has(id)):
 					PlayerStats.unlocks[type][id] = false
-					PlayerStats.unlocks_passive[id] += 1
+					#print(PlayerStats.unlock_passive[id])
+					PlayerStats.unlock_passive[id] = PlayerStats.unlock_passive[id] + 1
 
 
 			var player_camera_pos = GameState.player.camera_rig.global_position
