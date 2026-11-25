@@ -242,6 +242,8 @@ func _on_jump_night_pressed() -> void:
 	if night_option.selected < 0:
 		return
 	var target_night := int(night_option.get_item_metadata(night_option.selected))
+	if target_night <= GameState.night and PlayerStats.has_method("reset_tool_unlocks"):
+		PlayerStats.reset_tool_unlocks()
 	Engine.time_scale = 1.0
 	_cleanup_tutorial_and_dialogue(false)
 
@@ -368,6 +370,9 @@ func _on_unlock_all_pressed() -> void:
 		for ing in PlayerStats.unlocks["Ingredients"]:
 			PlayerStats.unlocks["Ingredients"][ing] = true
 			SpeciesRegistry.on_ingredient_unlocked(str(ing), PlayerStats)
+	if PlayerStats.unlocks.has("Tools"):
+		for tool_key in PlayerStats.unlocks["Tools"]:
+			PlayerStats.unlocks["Tools"][tool_key] = true
 	if GameState.shelf_manager and is_instance_valid(GameState.main_node):
 		GameState.shelf_manager.refresh_shelf_bottles(GameState.main_node, _get_counter_ref())
 

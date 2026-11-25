@@ -6,8 +6,18 @@ extends RefCounted
 
 var tool_in_hand: String = "hand"
 
+func _get_player_stats() -> Node:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree and tree.root:
+		return tree.root.get_node_or_null("PlayerStats")
+	return null
+
 func set_tool(new_tool: String) -> void:
-	tool_in_hand = new_tool.to_lower().strip_edges()
+	var normalized := new_tool.to_lower().strip_edges()
+	var stats := _get_player_stats()
+	if is_instance_valid(stats) and stats.has_method("is_tool_unlocked") and not stats.is_tool_unlocked(normalized):
+		return
+	tool_in_hand = normalized
 
 func get_tool() -> String:
 	return tool_in_hand

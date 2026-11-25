@@ -18,10 +18,10 @@ func _init() -> void:
 func is_unlocked(stats: Node = null) -> bool:
 	if stats == null:
 		return false
+	if stats.has_method("has_unlock") and not stats.has_unlock("Ingredients", "Blood"):
+		return false
 	if stats.has_method("has_knife_unlock"):
-		return stats.has_knife_unlock(stats.has_unlock("Ingredients", "Blood"))
-	if stats.has_method("has_unlock"):
-		return stats.has_unlock("Ingredients", "Blood")
+		return stats.has_knife_unlock(true)
 	return true
 
 func on_ingredient_unlocked(ingredient_key: String, stats: Node = null) -> void:

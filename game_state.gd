@@ -103,6 +103,7 @@ func advance_night() -> void:
 	night += 1
 	reset_night_restarts()
 	get_night_quota(night)
+	NightManager.unlock_tools_for_night(night)
 
 func pause_night() -> void:
 	night_paused = true
