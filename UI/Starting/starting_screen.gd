@@ -55,7 +55,7 @@ func _on_area_3d_input_event(camera: Node, event: InputEvent, event_position: Ve
 		await tween.finished
 		await get_tree().create_timer(1).timeout
 		$Menu2/Menu3/Viewport/SubViewport/StartMenu._on_play_pressed()
-		
+
 
 func _on_play_mouse_entered() -> void:
 	_update_hand("interact")
