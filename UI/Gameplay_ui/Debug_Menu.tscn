@@ -9,7 +9,7 @@ script = ExtResource("1_4urve")
 [node name="TextureRect" type="ColorRect" parent="." unique_id=271145910]
 offset_top = 41.0
 offset_right = 310.0
-offset_bottom = 565.0
+offset_bottom = 600.0
 color = Color(0.36282945, 0.36282945, 0.36282945, 1)
 
 [node name="VBoxContainer" type="VBoxContainer" parent="TextureRect" unique_id=1303611127]
@@ -49,11 +49,6 @@ text = "-60s"
 
 [node name="NightEndRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498689]
 layout_mode = 2
-
-[node name="End_Shift" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/NightEndRow" unique_id=1210498690]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "End Shift"
 
 [node name="End_Night" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/NightEndRow" unique_id=-475765348]
 layout_mode = 2
@@ -146,6 +141,19 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Blood Game"
 
+[node name="UnlocksRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498720]
+layout_mode = 2
+
+[node name="Unlock_Tools" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/UnlocksRow" unique_id=1210498721]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Unlock Tools"
+
+[node name="Unlock_Ingredients" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/UnlocksRow" unique_id=1210498722]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Unlock Ingredients"
+
 [node name="UpgradesRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 
@@ -162,15 +170,10 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "+1000$"
 
-[node name="Add_Quota" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/MoneyRow" unique_id=1210498710]
+[node name="Sub_Money" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/MoneyRow" unique_id=1210498723]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "+Quota"
-
-[node name="Zero_Money" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/MoneyRow" unique_id=1210498711]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "$0"
+text = "-$1000"
 
 [node name="RepRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498712]
 layout_mode = 2

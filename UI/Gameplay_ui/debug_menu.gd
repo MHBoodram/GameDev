@@ -13,7 +13,6 @@ var _cursor_over_debug: bool = false
 @onready var skip_tutorial_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/Skip_Tutorial
 @onready var speed_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/FlowRow/Speed
 @onready var skip_time_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/FlowRow/Skip_Time
-@onready var end_shift_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/NightEndRow/End_Shift
 @onready var end_night_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/NightEndRow/End_Night
 @onready var jump_night_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/JumpNightRow/Jump_Night
 @onready var night_option: OptionButton = $TextureRect/VBoxContainer/HBoxContainer/JumpNightRow/NightOption
@@ -29,10 +28,11 @@ var _cursor_over_debug: bool = false
 @onready var unlock_all_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/ItemsRow/Unlock_All
 @onready var refill_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/ItemsRow/Refill_Bottles
 @onready var blood_game_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/ItemsRow/Blood_Game
+@onready var unlock_tools_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/UnlocksRow/Unlock_Tools
+@onready var unlock_ingredients_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/UnlocksRow/Unlock_Ingredients
 @onready var unlock_upgrades_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/UpgradesRow/Unlock_Upgrades
 @onready var add_money_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/MoneyRow/Add_Money
-@onready var add_quota_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/MoneyRow/Add_Quota
-@onready var zero_money_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/MoneyRow/Zero_Money
+@onready var sub_money_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/MoneyRow/Sub_Money
 @onready var add_rep_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/RepRow/Add_Rep
 @onready var add_species_rep_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/RepRow/Add_Species_Rep
 @onready var remove_npc_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/MiscRow/Remove_NPC
@@ -48,7 +48,6 @@ func _ready() -> void:
 	skip_tutorial_btn.pressed.connect(_on_skip_tutorial_pressed)
 	speed_btn.pressed.connect(_on_speed_pressed)
 	skip_time_btn.pressed.connect(_on_skip_time_pressed)
-	end_shift_btn.pressed.connect(_on_end_shift_pressed)
 	end_night_btn.pressed.connect(_on_end_night_pressed)
 	jump_night_btn.pressed.connect(_on_jump_night_pressed)
 	serve_good_btn.pressed.connect(_on_serve_good_pressed)
@@ -57,13 +56,15 @@ func _ready() -> void:
 	take_orders_btn.pressed.connect(_on_take_orders_pressed)
 	low_patience_btn.pressed.connect(_on_low_patience_pressed)
 	spawn_btn.pressed.connect(_on_spawn_pressed)
+	species_option.item_selected.connect(_on_species_option_selected)
 	unlock_all_btn.pressed.connect(_on_unlock_all_pressed)
 	refill_btn.pressed.connect(_on_refill_pressed)
 	blood_game_btn.pressed.connect(_on_blood_game_pressed)
+	unlock_tools_btn.pressed.connect(_on_unlock_tools_pressed)
+	unlock_ingredients_btn.pressed.connect(_on_unlock_ingredients_pressed)
 	unlock_upgrades_btn.pressed.connect(_on_unlock_upgrades_pressed)
 	add_money_btn.pressed.connect(_on_add_money_pressed)
-	add_quota_btn.pressed.connect(_on_add_quota_pressed)
-	zero_money_btn.pressed.connect(_on_zero_money_pressed)
+	sub_money_btn.pressed.connect(_on_sub_money_pressed)
 	add_rep_btn.pressed.connect(_on_add_rep_pressed)
 	add_species_rep_btn.pressed.connect(_on_add_species_rep_pressed)
 	remove_npc_btn.pressed.connect(_on_remove_npc_pressed)
@@ -98,6 +99,21 @@ func _populate_species_dropdown() -> void:
 		species_option.add_item(sp.display_name)
 		species_option.set_item_metadata(species_option.item_count - 1, sp.species_id)
 	species_option.select(0)
+	_update_species_rep_button_text()
+
+func _on_species_option_selected(_index: int) -> void:
+	_update_species_rep_button_text()
+
+func _update_species_rep_button_text() -> void:
+	if not is_instance_valid(add_species_rep_btn) or not is_instance_valid(species_option):
+		return
+	var sp_id := str(species_option.get_selected_metadata()) if species_option.selected >= 0 else ""
+	if sp_id == "":
+		add_species_rep_btn.text = "+5 Random Rep"
+	else:
+		var sp := SpeciesRegistry.get_species_or_default(sp_id)
+		var sp_name := sp.display_name if sp else sp_id
+		add_species_rep_btn.text = "+5 %s Rep" % sp_name
 
 func _populate_modifier_dropdown() -> void:
 	modifier_option.clear()
@@ -203,17 +219,6 @@ func _on_skip_time_pressed() -> void:
 	if not nm or not nm.night_timer or nm.night_timer.is_stopped():
 		return
 	nm.night_timer.start(maxf(0.5, nm.night_timer.time_left - 60.0))
-
-func _on_end_shift_pressed() -> void:
-	var nm := GameState.night_manager
-	if not nm:
-		return
-	if GameState.special_state or not nm.is_shift_active:
-		_cleanup_tutorial_and_dialogue(true)
-		GameState.special_state = false
-		GameState.can_end_night = true
-		GameState.resume_night()
-	nm.end_shift()
 
 func _on_end_night_pressed() -> void:
 	Engine.time_scale = 1.0
@@ -362,7 +367,12 @@ func _on_spawn_pressed() -> void:
 	var mod_id := str(modifier_option.get_selected_metadata()) if modifier_option.selected >= 0 else "__NATURAL__"
 	GameState.seat_manager.spawn_custom_customer(sp_id, mod_id)
 
-func _on_unlock_all_pressed() -> void:
+func _on_unlock_tools_pressed() -> void:
+	if PlayerStats.unlocks.has("Tools"):
+		for tool_key in PlayerStats.unlocks["Tools"].keys():
+			PlayerStats.unlock_tool(str(tool_key))
+
+func _on_unlock_ingredients_pressed() -> void:
 	if PlayerStats.unlocks.has("Drinks"):
 		for d in PlayerStats.unlocks["Drinks"]:
 			PlayerStats.unlocks["Drinks"][d] = true
@@ -370,14 +380,23 @@ func _on_unlock_all_pressed() -> void:
 		for ing in PlayerStats.unlocks["Ingredients"]:
 			PlayerStats.unlocks["Ingredients"][ing] = true
 			SpeciesRegistry.on_ingredient_unlocked(str(ing), PlayerStats)
-	if PlayerStats.unlocks.has("Tools"):
-		for tool_key in PlayerStats.unlocks["Tools"]:
-			PlayerStats.unlocks["Tools"][tool_key] = true
 	if GameState.shelf_manager and is_instance_valid(GameState.main_node):
 		GameState.shelf_manager.refresh_shelf_bottles(GameState.main_node, _get_counter_ref())
 
 func _on_unlock_upgrades_pressed() -> void:
 	PlayerStats.unlock_all_upgrades()
+
+func _on_unlock_all_pressed() -> void:
+	_on_unlock_ingredients_pressed()
+	_on_unlock_tools_pressed()
+	_on_unlock_upgrades_pressed()
+	if PlayerStats.unlocks.has("Recipes"):
+		for recipe_key in PlayerStats.unlocks["Recipes"].keys():
+			PlayerStats.unlocks["Recipes"][recipe_key] = true
+	for cat in PlayerStats.unlocks.keys():
+		if PlayerStats.unlocks[cat] is Dictionary:
+			for key in PlayerStats.unlocks[cat].keys():
+				PlayerStats.unlocks[cat][key] = true
 
 func _on_refill_pressed() -> void:
 	if not GameState.shelf_manager:
@@ -401,20 +420,21 @@ func _on_blood_game_pressed() -> void:
 func _on_add_money_pressed() -> void:
 	PlayerStats._change_money(PlayerStats.money + 1000.0)
 
-func _on_add_quota_pressed() -> void:
-	PlayerStats._change_money(PlayerStats.money + GameState.get_night_quota(GameState.night))
-
-func _on_zero_money_pressed() -> void:
-	PlayerStats._change_money(0.0)
+func _on_sub_money_pressed() -> void:
+	PlayerStats._change_money(PlayerStats.money - 1000.0)
 
 func _on_add_rep_pressed() -> void:
 	PlayerStats.add_overall_reputation(10.0)
 
 func _on_add_species_rep_pressed() -> void:
 	var sp_id := str(species_option.get_selected_metadata()) if species_option.selected >= 0 else ""
+	var sp: SpeciesBase = null
 	if sp_id == "":
-		sp_id = "HUMAN"
-	var sp := SpeciesRegistry.get_species_or_default(sp_id)
+		var all_species := SpeciesRegistry.get_all_species()
+		if not all_species.is_empty():
+			sp = all_species.pick_random()
+	else:
+		sp = SpeciesRegistry.get_species_or_default(sp_id)
 	var sp_name := sp.display_name if sp else "Human"
 	PlayerStats.change_species_reputation(sp_name, 5.0)
 
