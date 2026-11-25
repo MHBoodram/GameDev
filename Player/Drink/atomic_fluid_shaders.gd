@@ -5,6 +5,7 @@ const GRID_SIZE := 64
 const GRID_CELLS := 4096
 const MAX_PARTICLES := 16384
 const WORKGROUP_SIZE := 64
+const REFERENCE_CUP_SIZE := 10.0
 
 const LIQUID_COLOR := {
 	"gin": Color(0.0, 0.953, 0.0, 1.0),
@@ -39,8 +40,31 @@ const LIQUID_VISCOSITY := {
 	"blood": 0.0
 }
 
+const LIQUID_PRICE_PER_CUP_PERCENT := {
+	"gin": 0.1,
+	"beer": 0.1,
+	"rum": 0.1,
+	"vodka": 0.1,
+	"tequila": 0.1,
+	"whiskey": 0.1,
+	"spirit": 0.1,
+	"blood": 0.1
+}
+
 static var _custom_buoyancy: Dictionary = {}
 static var _custom_viscosity: Dictionary = {}
+static var _custom_price_per_cup_percent: Dictionary = {}
+
+static func register_liquid_price(id: String, price_val: float) -> void:
+	if price_val >= 0.0:
+		_custom_price_per_cup_percent[id] = price_val
+
+static func get_liquid_price_per_cup_percent(id: String) -> float:
+	if _custom_price_per_cup_percent.has(id):
+		return float(_custom_price_per_cup_percent[id])
+	if LIQUID_PRICE_PER_CUP_PERCENT.has(id):
+		return float(LIQUID_PRICE_PER_CUP_PERCENT[id])
+	return 0.1
 
 static func register_liquid_buoyancy(id: String, buoyancy_val: float) -> void:
 	if buoyancy_val > 0.0:

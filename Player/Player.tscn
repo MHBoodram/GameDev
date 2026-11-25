@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://Player/camera.gd" id="2_tok1r"]
 [ext_resource type="PackedScene" uid="uid://byw6bbpmaen6w" path="res://UI/Gameplay_ui/Gameplay_UI.tscn" id="3_tok1r"]
 [ext_resource type="Texture2D" uid="uid://6sfbebk1yfeh" path="res://Assets/UI/Hand-Sheet.png" id="4_ddoul"]
+[ext_resource type="PackedScene" path="res://UI/Gameplay_ui/JukeboxUI.tscn" id="5_jukebox"]
 
 [sub_resource type="Animation" id="Animation_ddoul"]
 length = 0.001
@@ -115,6 +116,8 @@ transform = Transform3D(0.99999994, 0, 0, 0, 0.9999998, 0, 0, 0, 1, -0.13314986,
 [node name="GameplayUi" parent="." unique_id=8092202 node_paths=PackedStringArray("player") instance=ExtResource("3_tok1r")]
 layer = 6
 player = NodePath("..")
+
+[node name="JukeboxUI" parent="GameplayUi" instance=ExtResource("5_jukebox")]
 
 [node name="Hand" type="Sprite2D" parent="GameplayUi" unique_id=597545569]
 process_mode = 3

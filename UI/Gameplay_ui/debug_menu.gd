@@ -29,6 +29,7 @@ var _cursor_over_debug: bool = false
 @onready var unlock_all_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/ItemsRow/Unlock_All
 @onready var refill_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/ItemsRow/Refill_Bottles
 @onready var blood_game_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/ItemsRow/Blood_Game
+@onready var unlock_upgrades_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/UpgradesRow/Unlock_Upgrades
 @onready var add_money_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/MoneyRow/Add_Money
 @onready var add_quota_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/MoneyRow/Add_Quota
 @onready var zero_money_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/MoneyRow/Zero_Money
@@ -59,6 +60,7 @@ func _ready() -> void:
 	unlock_all_btn.pressed.connect(_on_unlock_all_pressed)
 	refill_btn.pressed.connect(_on_refill_pressed)
 	blood_game_btn.pressed.connect(_on_blood_game_pressed)
+	unlock_upgrades_btn.pressed.connect(_on_unlock_upgrades_pressed)
 	add_money_btn.pressed.connect(_on_add_money_pressed)
 	add_quota_btn.pressed.connect(_on_add_quota_pressed)
 	zero_money_btn.pressed.connect(_on_zero_money_pressed)
@@ -368,6 +370,9 @@ func _on_unlock_all_pressed() -> void:
 			SpeciesRegistry.on_ingredient_unlocked(str(ing), PlayerStats)
 	if GameState.shelf_manager and is_instance_valid(GameState.main_node):
 		GameState.shelf_manager.refresh_shelf_bottles(GameState.main_node, _get_counter_ref())
+
+func _on_unlock_upgrades_pressed() -> void:
+	PlayerStats.unlock_all_upgrades()
 
 func _on_refill_pressed() -> void:
 	if not GameState.shelf_manager:

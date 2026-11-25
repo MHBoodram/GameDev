@@ -1,0 +1,51 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://UI/Gameplay_ui/name_tag.gd" id="1_nametag"]
+[ext_resource type="FontFile" uid="uid://cq83j1cam8lw" path="res://Assets/Font/Merchant Copy.ttf" id="2_font"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tag"]
+size = Vector3(0.26, 0.13, 0.06)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tag"]
+content_margin_left = 10.0
+content_margin_top = 6.0
+content_margin_right = 10.0
+content_margin_bottom = 6.0
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0, 0, 0, 1)
+anti_aliasing = false
+
+[node name="NameTag" type="Area3D"]
+script = ExtResource("1_nametag")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_tag")
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+pixel_size = 0.0026
+transparent = true
+double_sided = true
+texture_filter = 0
+render_priority = 4
+
+[node name="SubViewport" type="SubViewport" parent="Sprite3D"]
+transparent_bg = true
+gui_disable_input = true
+size = Vector2i(100, 48)
+render_target_update_mode = 3
+
+[node name="TagButton" type="Button" parent="Sprite3D/SubViewport"]
+offset_right = 100.0
+offset_bottom = 48.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_constants/h_separation = 6
+theme_override_constants/icon_max_width = 28
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 56
+theme_override_styles/normal = SubResource("StyleBoxFlat_tag")
+text = ""
+expand_icon = true

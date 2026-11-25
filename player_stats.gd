@@ -27,36 +27,40 @@ var unlocks : Dictionary = {
 		"Fishing_Rod" : false,
 		"Mag" : false
 	},
-	"Upgrades":{
-		"Jukebox" : false,
-		"Human Banner" : false,
-		"Vampire Banner" : false,
-		"Slime Banner" : false,
-		"Tiny Banner" : false,
-		"Instant Refill" : false,
-		"Drinks Size Increase" : false,
-		"Drinks Auto Increase" : false
-	},
+	"Upgrades":{},
 	"Recipes":{
 		"BLOODY MARY" : false,
 		"Classic Mojito" : false,
 	}
 }
 
-var unlock_passive: Dictionary = {
-	"Drinks Auto Increase" : 0,
-	"Drinks Size Increase" : 0,
-	"Combo Extension Increase" : 0
-}
+var unlock_passive: Dictionary = {}
 
 
 
 func _ready() -> void:
 	sync_species_registry()
+	sync_upgrade_registry()
 
 func sync_species_registry() -> void:
 	for sp in SpeciesRegistry.get_all_species():
 		_ensure_species_entry(sp.display_name, sp.default_marketing_weight)
+
+func sync_upgrade_registry() -> void:
+	UpgradeRegistry.sync_with_player_stats(self)
+
+func get_all_upgrades() -> Array[UpgradeDef]:
+	return UpgradeRegistry.get_all_upgrades()
+
+func get_upgrade_level(upgrade_id: String) -> int:
+	return UpgradeRegistry.get_level(upgrade_id, self)
+
+func unlock_upgrade(upgrade_id: String, levels: int = 1) -> bool:
+	return UpgradeRegistry.unlock_upgrade(upgrade_id, self, levels)
+
+func unlock_all_upgrades() -> void:
+	sync_species_registry()
+	UpgradeRegistry.unlock_all_upgrades(self)
 
 func _ensure_species_entry(key: String, default_marketing: float = 0.0) -> void:
 	if not reputation_species.has(key):
@@ -186,4 +190,6 @@ func get_species_spawn_weight(species: String) -> float:
 	return final_weight
 
 func _check_upgrades(id: String, type: String):
+	if type == "Upgrades":
+		return has_unlock("Upgrades", id)
 	return unlocks[type][id]

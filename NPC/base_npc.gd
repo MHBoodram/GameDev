@@ -36,6 +36,8 @@ var max_patience: float = 90.0
 var payment_global: float = 0.0
 var _served_scores: Array[float] = []
 var _drink_combo_logs: Array[String] = []
+var jukebox_patience_multiplier: float = 1.0
+var jukebox_payout_multiplier: float = 1.0
 var is_leaving: bool = false
 var _is_highlighted: bool = false
 var _original_modulate: Color = Color.WHITE
@@ -103,7 +105,7 @@ func _ready() -> void:
 	patient_2d._change_curent(max_patience)
 	camera = get_viewport().get_camera_3d()
 	_apply_species_scale()
-	_start_bounce()
+	
 
 	if not DialogueManager.dialogue_started.is_connected(_on_dialouge_started):
 		DialogueManager.dialogue_started.connect(_on_dialouge_started)
@@ -190,6 +192,7 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 	else:
 		max_patience = 90.0
 
+	max_patience *= jukebox_patience_multiplier
 	patience_timer.wait_time = max_patience
 	patience_timer.start(max_patience)
 
@@ -310,14 +313,48 @@ func _moving_to(to: Marker3D) -> void:
 	var offset := Vector3(0.0, species_def.seat_y_offset, 0.0) if species_def else Vector3.ZERO
 	tween.tween_property(self, "position", to.position + offset, 0.8)
 	current_state = State.SIT
+	await tween.finished
+	_base_position = position
+	_base_scale = scale
+	if random_start_delay:
+		await get_tree().create_timer(randf_range(0.0, bounce_duration)).timeout
+	start_idle()
 
-func _start_bounce() -> void:
-	if _bounce_tween and _bounce_tween.is_valid():
-		_bounce_tween.kill()
-	_bounce_tween = get_tree().create_tween().set_loops()
-	_bounce_tween.tween_method(_apply_bounce_scale, 1.0, 1.01, 0.5)
-	_bounce_tween.tween_method(_apply_bounce_scale, 1.01, 1.0, 0.4)
-	_bounce_tween.tween_interval(0.1)
+@export var bounce_height := 0.03      # world units
+@export var bounce_duration := 1     # seconds for one full up-and-down
+@export var squash_amount := 0.02      # 0 = no squash/stretch
+@export var random_start_delay := true # desyncs multiple sprites
+
+var _base_position: Vector3
+var _base_scale: Vector3
+var _idle_tween: Tween
+
+	
+
+func start_idle() -> void:
+	stop_idle()
+	var half := bounce_duration / 2.0
+	_idle_tween = create_tween().set_loops()
+
+	# Up (stretch tall)
+	_idle_tween.tween_property(self, "position:y", _base_position.y + bounce_height, half) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_idle_tween.parallel().tween_property(self, "scale",
+		_base_scale * Vector3(1.0 - squash_amount, 1.0 + squash_amount, 1.0), half) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	# Down (squash flat)
+	_idle_tween.tween_property(self, "position:y", _base_position.y, half) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	_idle_tween.parallel().tween_property(self, "scale",
+		_base_scale * Vector3(1.0 + squash_amount, 1.0 - squash_amount, 1.0), half) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+func stop_idle() -> void:
+	if _idle_tween and _idle_tween.is_valid():
+		_idle_tween.kill()
+	position = _base_position
+	scale = _base_scale
 
 func _show_drink_score_indicator(drink_score: float) -> void:
 	var hud := HudIndicators.get_current()
@@ -374,7 +411,7 @@ func receive_drink(mix: DrinkMix) -> float:
 		_served_scores.append(override_score)
 		_show_drink_score_indicator(override_score)
 		_apply_reputation_impact(false, override_score)
-		_calculate_payout(override_score, false)
+		_calculate_payout(override_score, false, {}, mix)
 		has_receipt_spawned = false
 		if attempt_override.has("emo"):
 			emo = str(attempt_override["emo"])
@@ -408,7 +445,7 @@ func receive_drink(mix: DrinkMix) -> float:
 	if not (unique_talk and GameState.special_state) and GameState.seat_manager:
 		serve_combo_data = GameState.seat_manager.register_order_served(is_satisfactory)
 	var combo_data := _calculate_combo(mix, wanted_order, is_satisfactory, serve_combo_data)
-	_calculate_payout(drink_score, is_satisfactory, combo_data)
+	_calculate_payout(drink_score, is_satisfactory, combo_data, mix)
 	_show_combo_indicators(combo_data)
 
 	has_receipt_spawned = false
@@ -580,22 +617,39 @@ func _get_tip_breakdown(drink_score: float, is_satisfactory: bool) -> Dictionary
 		"raw_tip": raw_tip
 	}
 
-func _calculate_payout(drink_score: float, is_satisfactory: bool, combo_data: Dictionary = {}) -> void:
+func _get_base_drink_price(mix: DrinkMix) -> float:
+	if mix == null or mix.is_empty():
+		return 0.0
+	var total_price := 0.0
+	var use_normalized := mix.cup_capacity <= 0.001
+	var reference_amount := mix.get_total_amount() if use_normalized else AtomicFluidShaders.REFERENCE_CUP_SIZE
+	if reference_amount <= 0.001:
+		return 0.0
+	for ing_id in mix.ingredients.keys():
+		var amt := float(mix.ingredients[ing_id])
+		if amt <= 0.001:
+			continue
+		var cup_percent := (amt / reference_amount) * 100.0
+		total_price += cup_percent * AtomicFluidShaders.get_liquid_price_per_cup_percent(str(ing_id))
+	return total_price
+
+func _calculate_payout(drink_score: float, is_satisfactory: bool, combo_data: Dictionary = {}, mix: DrinkMix = null) -> void:
 	var race_name := _get_race_display_name()
 	var score_factor := drink_score if SCALE_BASE_PAYOUT_BY_SCORE else 1.0
 	var quality_mult := SATISFACTORY_PAYOUT_MULTIPLIER if is_satisfactory else UNSATISFACTORY_PAYOUT_MULTIPLIER
-	var base_payout := BASE_DRINK_PRICE * score_factor * quality_mult
+	var base_price := _get_base_drink_price(mix) if mix != null else BASE_DRINK_PRICE
+	var base_payout := base_price * score_factor * quality_mult
 	var payment := base_payout
 
 	var after_species_payout := payment
 	if species_def:
-		after_species_payout = species_def.modify_payout(self, BASE_DRINK_PRICE, is_satisfactory, drink_score, payment)
+		after_species_payout = species_def.modify_payout(self, base_price, is_satisfactory, drink_score, payment)
 	var species_payout_delta := after_species_payout - payment
 	payment = after_species_payout
 
 	var after_mod_payout := payment
 	if modifier:
-		after_mod_payout = modifier.modify_payout(self, BASE_DRINK_PRICE, is_satisfactory, drink_score, payment)
+		after_mod_payout = modifier.modify_payout(self, base_price, is_satisfactory, drink_score, payment)
 	var mod_payout_delta := after_mod_payout - payment
 	payment = after_mod_payout
 
@@ -625,7 +679,7 @@ func _calculate_payout(drink_score: float, is_satisfactory: bool, combo_data: Di
 		payment = pre_combo_payment * combo_multiplier
 		combo_bonus = payment - pre_combo_payment
 	payment = roundf(payment)
-	payment_global += payment
+	payment_global += payment * jukebox_payout_multiplier
 	_payment_given = false
 
 	var drink_num := _served_scores.size()
@@ -636,14 +690,14 @@ func _calculate_payout(drink_score: float, is_satisfactory: bool, combo_data: Di
 		for comp in combo_components:
 			if comp is Dictionary:
 				parts.append(str(comp.get("label", "")))
-		_drink_combo_logs.append("Drink #%d: %s -> +%d%% (x%.2f) | $%.2f -> $%.2f (+$%.2f)" % [
-			drink_num, ", ".join(parts), combo_pct, combo_multiplier, pre_combo_payment, payment, payment - pre_combo_payment
-		])
+			_drink_combo_logs.append("Drink #%d: %s -> +%d%% (x%.2f) | $%.2f -> $%.2f (+$%.2f)" % [
+				drink_num, ", ".join(parts), combo_pct, combo_multiplier, pre_combo_payment, payment, payment - pre_combo_payment
+			])
 	else:
 		_drink_combo_logs.append("Drink #%d: None (0%%, x1.00) | $%.2f" % [drink_num, payment])
 
 	print("Payout (Seat #%d, %s)" % [seat_num, race_name])
-	print("  Base Drink Price: $%.2f (score=%.3f, score_factor=%.3f, quality_mult=%.2f, satisfactory=%s)" % [base_payout, drink_score, score_factor, quality_mult, str(is_satisfactory)])
+	print("  Base Drink Price: $%.2f (base=$%.2f, score=%.3f, score_factor=%.3f, quality_mult=%.2f, satisfactory=%s)" % [base_payout, base_price, drink_score, score_factor, quality_mult, str(is_satisfactory)])
 	if not is_zero_approx(species_payout_delta) or not is_zero_approx(mod_payout_delta):
 		print("  Payout Modifiers: species=%+.2f, modifier=%+.2f" % [species_payout_delta, mod_payout_delta])
 	if is_satisfactory:

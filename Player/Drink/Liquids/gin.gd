@@ -3,6 +3,8 @@ class_name Drinks
 
 # base controller script for all shelf liquor and blood bottles (liquid.tscn)
 
+signal liquid_changed(current_amount: float, max_amount: float)
+
 const POUR_AMOUNT: float = 0.0825
 const POUR_INTERVAL: float = 0.033
 const SFX_INTERVAL_MS: int = 100
@@ -51,6 +53,8 @@ func ready() -> void:
 			LiquidVisualHelper.register_liquid_buoyancy(liquid_resource.id, liquid_resource.buoyancy)
 		if liquid_resource.viscosity >= 0.0:
 			LiquidVisualHelper.register_liquid_viscosity(liquid_resource.id, liquid_resource.viscosity)
+		if liquid_resource.price_per_cup_percent >= 0.0:
+			AtomicFluidShaders.register_liquid_price(liquid_resource.id, liquid_resource.price_per_cup_percent)
 		$Inside.texture = liquid_resource.sprite
 		$Inside/Outside.texture = liquid_resource.outside_Sprite
 		var inside_node := get_node_or_null("Inside") as Node3D
@@ -71,6 +75,8 @@ func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 		LiquidVisualHelper.register_liquid_buoyancy(liquid_resource.id, liquid_resource.buoyancy)
 	if liquid_resource.viscosity >= 0.0:
 		LiquidVisualHelper.register_liquid_viscosity(liquid_resource.id, liquid_resource.viscosity)
+	if liquid_resource.price_per_cup_percent >= 0.0:
+		AtomicFluidShaders.register_liquid_price(liquid_resource.id, liquid_resource.price_per_cup_percent)
 
 	$Inside.texture = liquid_resource.sprite
 	$Inside/Outside.texture = liquid_resource.outside_Sprite
@@ -299,6 +305,20 @@ func set_liquid_amount(amount: float) -> void:
 	current_liquid = clampf(amount, 0.0, size)
 	_rebuild_liquid_gradient()
 	_update_liquid_shader()
+	liquid_changed.emit(current_liquid, size)
+
+func get_price_per_cup_percent() -> float:
+	if liquid_resource and liquid_resource.price_per_cup_percent >= 0.0:
+		return liquid_resource.price_per_cup_percent
+	var id_str := liquid_resource.id if liquid_resource else "gin"
+	return AtomicFluidShaders.get_liquid_price_per_cup_percent(id_str)
+
+func get_refill_cost() -> int:
+	var missing := maxf(0.0, size - current_liquid)
+	if missing <= 0.001:
+		return 0
+	var missing_cup_percent := (missing / AtomicFluidShaders.REFERENCE_CUP_SIZE) * 100.0
+	return maxi(1, ceili(missing_cup_percent * get_price_per_cup_percent()))
 
 func _update_liquid_shader() -> void:
 	if size <= 0.0:
@@ -331,6 +351,7 @@ func _add_liquid(amount: float) -> void:
 	current_liquid = clampf(current_liquid + amount, 0.0, size)
 	_rebuild_liquid_gradient()
 	_update_liquid_shader()
+	liquid_changed.emit(current_liquid, size)
 
 func _on_liquid_refresh_timeout() -> void:
 	_add_liquid(0.25)

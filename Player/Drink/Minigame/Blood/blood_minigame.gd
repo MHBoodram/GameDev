@@ -72,7 +72,8 @@ func _return_blood(blood: float = 0.0, node_position: Vector2 = Vector2.ZERO) ->
 
 	blood_cells_obtain += blood
 	set_fill(blood_cells_obtain / 100.0 + previous_cells / 100.0)
-	$Label.text = "Total Blood: " + str(int(blood_cells_obtain))
+	$Label.text = "{blood_drop} " + str(int(blood_cells_obtain))
+	TextIcons.apply_to_control($Label)
 	_check_all_finished()
 
 func _process(delta: float) -> void:
@@ -129,7 +130,7 @@ func make_tear_texture(w: int = 16, h: int = 24) -> Texture2D:
 				half = r * pow(y / cy, 1.5)
 			else:
 				# Round bottom
-				var dy := y - cy
+				var dy: float = float(y) - cy
 				half = sqrt(maxf(r * r - dy * dy, 0.0))
 			if absf(x - cx) <= half:
 				img.set_pixel(x, y, Color.WHITE)

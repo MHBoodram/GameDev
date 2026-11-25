@@ -332,7 +332,7 @@ func show_money_change(delta: float, suffix: String = "", options: Dictionary = 
 	if absf(delta) < 0.005:
 		return null
 	var amount_str: String = format_number(delta, true)
-	return show_delta_indicator("money", delta, "$" + amount_str + suffix, options)
+	return show_delta_indicator("money", delta, amount_str + " {coin}" + suffix, options)
 
 func show_overall_rep_change(delta: float, suffix: String = "", options: Dictionary = {}) -> Label:
 	if absf(delta) < 0.005:
@@ -350,7 +350,13 @@ func show_species_rep_change(species_name: String, delta: float, suffix: String 
 	elif display_species == "":
 		display_species = "Species"
 	var amount_str: String = format_number(delta, false)
-	return show_delta_indicator("species_rep", delta, amount_str + " " + display_species + " Rep" + suffix, options)
+	var lower_sp := display_species.to_lower()
+	var body_text := ""
+	if TextIcons.has_icon(lower_sp):
+		body_text = amount_str + " {" + lower_sp + "} Rep" + suffix
+	else:
+		body_text = amount_str + " " + display_species + " Rep" + suffix
+	return show_delta_indicator("species_rep", delta, body_text, options)
 
 func show_cup_spill_indicator(glass: Node3D, _spilled_percent: float = 0.0, options: Dictionary = {}) -> Label:
 	var vp_size: Vector2 = _get_viewport_size()
@@ -389,7 +395,7 @@ func show_delta_indicator(channel_id: String, delta: float, formatted_body: Stri
 
 	var is_positive: bool = delta > 0.0
 	var color: Color = cfg.get("positive_color", INCREASE_COLOR) if is_positive else cfg.get("negative_color", DECREASE_COLOR)
-	var sign_prefix: String = "+" if is_positive else "-"
+	var sign_prefix: String = "+ " if is_positive else "- "
 	var merged_options: Dictionary = options.duplicate()
 	if not merged_options.has("channel"):
 		merged_options["channel"] = channel_id
@@ -418,7 +424,8 @@ func show_floating_text(text: String, color: Color = Color.WHITE, options: Dicti
 	var label := _create_styled_label(text, color, font_size, outline_col, outline_size)
 	if align == "center":
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var label_size: Vector2 = label.get_minimum_size()
+	TextIcons.apply_to_control(label)
+	var label_size: Vector2 = label.get_combined_minimum_size()
 	label.size = label_size
 	label.pivot_offset = label_size * 0.5
 
@@ -542,7 +549,6 @@ func _track_floating_label(stack_group: String, label: Label) -> void:
 	alive.append(label)
 	_active_floating_groups[stack_group] = alive
 
-# Persistent (used by pouring)
 func _ensure_pouring_group() -> void:
 	get_or_create_status_group("pouring", {
 		"anchor_preset": Control.PRESET_TOP_RIGHT,
@@ -631,6 +637,7 @@ func update_status_group(group_id: String, entries: Array[Dictionary], owner_obj
 				shader_mat.set_shader_parameter("secondary_color", entry.get("secondary_color", Color(0.5, 0.9, 1.0, 1.0)))
 		else:
 			lbl.add_theme_color_override("font_color", entry_color)
+			TextIcons.apply_to_control(lbl)
 
 	box.visible = true
 	box.modulate.a = 1.0
@@ -736,8 +743,9 @@ func _ensure_serve_combo_ui() -> void:
 	_serve_combo_box.visible = false
 	add_child(_serve_combo_box)
 
-	_serve_combo_label = _create_styled_label("Serve combo", COMBO_FINAL_COLOR, 32, OUTLINE_COLOR, 4)
+	_serve_combo_label = _create_styled_label("{arrow} Serve Combo", COMBO_FINAL_COLOR, 32, OUTLINE_COLOR, 4)
 	_serve_combo_label.name = "ServeComboLabel"
+	TextIcons.apply_to_control(_serve_combo_label)
 	_serve_combo_box.add_child(_serve_combo_label)
 
 	_serve_combo_bar = ProgressBar.new()
@@ -783,13 +791,12 @@ func update_serve_combo_indicator(streak: int, grace_left: float, grace_max: flo
 
 	var title_text := ""
 	if current_bonus > 0.0:
-		var bonus_pct := roundi(current_bonus * 100.0)
-		title_text = "Serve Combo x%d" % streak
+		title_text = "{arrow} Serve Combo x%d" % streak
 	else:
-		var next_pct := roundi(next_step_bonus * 100.0)
-		title_text = "Serve Combo"
+		title_text = "{arrow} Serve Combo"
 
 	_serve_combo_label.text = title_text
+	TextIcons.apply_to_control(_serve_combo_label)
 
 	if streak > _last_serve_combo_streak:
 		_last_serve_combo_streak = streak
