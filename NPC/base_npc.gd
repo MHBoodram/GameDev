@@ -36,6 +36,8 @@ var max_patience: float = 90.0
 var payment_global: float = 0.0
 var _served_scores: Array[float] = []
 var _drink_combo_logs: Array[String] = []
+var jukebox_patience_multiplier: float = 1.0
+var jukebox_payout_multiplier: float = 1.0
 var is_leaving: bool = false
 var _is_highlighted: bool = false
 var _original_modulate: Color = Color.WHITE
@@ -190,6 +192,7 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 	else:
 		max_patience = 90.0
 
+	max_patience *= jukebox_patience_multiplier
 	patience_timer.wait_time = max_patience
 	patience_timer.start(max_patience)
 
@@ -625,7 +628,7 @@ func _calculate_payout(drink_score: float, is_satisfactory: bool, combo_data: Di
 		payment = pre_combo_payment * combo_multiplier
 		combo_bonus = payment - pre_combo_payment
 	payment = roundf(payment)
-	payment_global += payment
+	payment_global += payment * jukebox_payout_multiplier
 	_payment_given = false
 
 	var drink_num := _served_scores.size()
@@ -636,9 +639,9 @@ func _calculate_payout(drink_score: float, is_satisfactory: bool, combo_data: Di
 		for comp in combo_components:
 			if comp is Dictionary:
 				parts.append(str(comp.get("label", "")))
-		_drink_combo_logs.append("Drink #%d: %s -> +%d%% (x%.2f) | $%.2f -> $%.2f (+$%.2f)" % [
-			drink_num, ", ".join(parts), combo_pct, combo_multiplier, pre_combo_payment, payment, payment - pre_combo_payment
-		])
+			_drink_combo_logs.append("Drink #%d: %s -> +%d%% (x%.2f) | $%.2f -> $%.2f (+$%.2f)" % [
+				drink_num, ", ".join(parts), combo_pct, combo_multiplier, pre_combo_payment, payment, payment - pre_combo_payment
+			])
 	else:
 		_drink_combo_logs.append("Drink #%d: None (0%%, x1.00) | $%.2f" % [drink_num, payment])
 

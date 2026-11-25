@@ -157,6 +157,16 @@ func spawn_customer(npc_source: Variant, patience: float = 90.0, dialogue_title:
 	npc.name = "seat%d_npc" % (free_seat + 1)
 
 	var rec_marker := main_root.get_node_or_null("Recipt%d" % (free_seat + 1)) as Marker3D
+	var effect: Dictionary = {
+		"patience_multiplier" : 1.0,
+		"payout_multiplier" : 1.0,
+	}
+	if is_instance_valid(GameState.jukebox_manager):
+		effect = GameState.jukebox_manager.get_customer_effect()
+
+	npc.jukebox_patience_multiplier = float(effect["patience_multiplier"])
+	npc.jukebox_payout_multiplier = float(effect["payout_multiplier"])
+
 	npc.setup_npc(resolved_resource, free_seat + 1, rec_marker, patience, dialogue_title, forced_modifier)
 
 	var target_seat := main_root.get_node_or_null("Seat%d" % (free_seat + 1)) as Marker3D

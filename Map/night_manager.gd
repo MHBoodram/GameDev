@@ -125,6 +125,8 @@ func start_shift(duration: float, quota: float) -> void:
 	is_night_concluded = false
 	GameState.night_paused = false
 	GameState.special_state = false
+	if is_instance_valid(GameState.jukebox_manager):
+		GameState.jukebox_manager.reset_for_shift()
 
 	# Prepare during-night npcs
 	_during_night_queue.clear()
