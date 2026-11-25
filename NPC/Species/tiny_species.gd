@@ -1,0 +1,60 @@
+class_name TinySpecies
+extends SpeciesBase
+
+const DIALOGUE_PATH := "res://NPC/Dialogue/Frederick.dialogue"
+
+func _init() -> void:
+	species_id = "TINY"
+	display_name = "Tiny"
+	sort_order = 2
+	logo_frame = 1
+	npc_resource_path = "res://NPC/Resources/frederick.tres"
+	fallback_texture_path = "res://Assets/NPC/Tiny/tiny.webp"
+	fallback_hframes = 10
+	npc_scale = Vector3(0.05, 0.05, 0.05)
+	base_spawn_weight = 2.0
+	default_marketing_weight = 1.0
+	spawn_randomly = true
+	can_be_ghost = false
+	disallowed_modifiers = ["GHOST"]
+
+func get_npc_resource() -> NPC:
+	var res := super.get_npc_resource()
+	if res:
+		if res.race.to_upper().strip_edges() != species_id:
+			res = res.duplicate() as NPC
+			res.race = species_id
+		if res.dialogue_resource == null:
+			if ResourceLoader.exists(DIALOGUE_PATH):
+				res.dialogue_resource = load(DIALOGUE_PATH) as DialogueResource
+			else:
+				res.dialogue_resource = get_fallback_dialogue_resource_for_name("Frederick")
+	return res
+
+func is_unlocked(stats: Node = null) -> bool:
+	if stats == null:
+		return false
+	if stats.has_method("has_unlock"):
+		if "unlocks" in stats and stats.unlocks.has("Ingredients") and stats.unlocks["Ingredients"].has("Mag"):
+			return stats.has_unlock("Ingredients", "Mag")
+		if "unlocks" in stats and stats.unlocks.has("Tools") and stats.unlocks["Tools"].has("Mag"):
+			return stats.has_unlock("Tools", "Mag")
+	return true
+
+func on_ingredient_unlocked(ingredient_key: String, stats: Node = null) -> void:
+	if stats == null:
+		return
+	var lower := ingredient_key.to_lower().strip_edges()
+	if lower == "mag":
+		if stats.has_method("set_species_marketing"):
+			stats.set_species_marketing(display_name, 1.0)
+
+func get_drink_pool(stats: Node = null) -> Array[String]:
+	return super.get_drink_pool(stats)
+
+func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = null) -> Array[DrinkOrder]:
+	var orders := super.generate_orders(npc, modifier, stats)
+	for order in orders:
+		if order:
+			order.is_tiny = true
+	return orders

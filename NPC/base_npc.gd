@@ -116,7 +116,7 @@ func _apply_species_scale() -> void:
 	_refresh_visual_scale()
 	var patience_sprite := get_node_or_null("Sprite3D") as Sprite3D
 	if patience_sprite and base_scale.x > 0.01:
-		var inv_factor := minf(1.8, 0.5 / base_scale.x)
+		var inv_factor := minf(10.0, 0.5 / base_scale.x)
 		patience_sprite.scale = Vector3.ONE * inv_factor
 
 func _apply_bounce_scale(factor: float) -> void:
@@ -204,7 +204,16 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 		hframes = npc_resource.hframe
 		vframes = npc_resource.vframe if "vframe" in npc_resource and npc_resource.vframe > 0 else 1
 		dialogue_resource = npc_resource.dialogue_resource
+		if dialogue_resource == null and species_def:
+			dialogue_resource = species_def.get_fallback_dialogue_resource()
 		patient_2d._setup(max_patience, npc_resource.race)
+	elif species_def:
+		var fallback_res := species_def.get_npc_resource()
+		if fallback_res:
+			texture = fallback_res.sprite_sheet
+			hframes = fallback_res.hframe
+			dialogue_resource = fallback_res.dialogue_resource
+		patient_2d._setup(max_patience, species_def.species_id)
 
 	_apply_species_scale()
 	patient_2d._change_max_progress(max_patience)
@@ -284,8 +293,8 @@ func show_floating_feedback(message: String) -> void:
 	label3d.font_size = 48
 	label3d.outline_size = 12
 	label3d.modulate = Color(1.0, 0.9, 0.35, 1.0)
-	var inv := 0.5 / maxf(base_scale.x, 0.1)
-	label3d.scale = Vector3.ONE * minf(1.8, inv)
+	var inv := 0.5 / maxf(base_scale.x, 0.01)
+	label3d.scale = Vector3.ONE * minf(10.0, inv)
 	label3d.position = Vector3(0.0, 1.35, 0.1)
 	add_child(label3d)
 

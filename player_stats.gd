@@ -201,5 +201,5 @@ func get_species_spawn_weight(species: String) -> float:
 	print("[species_weight]: ", key, " = ", final_weight)
 	return final_weight
 
-func _check_upgrades(id: String,type: String):
+func _check_upgrades(id: String, type: String):
 	return unlocks[type][id]
