@@ -3,12 +3,12 @@
 importer="wav"
 type="AudioStreamWAV"
 uid="uid://c5x862xlywd8n"
-path="res://.godot/imported/Knifesheaf.wav-a2fadfb98dd73a9925d0117c1dd3cfb1.sample"
+path="res://.godot/imported/Knifesheaf.wav-0a83513b7ba0977a6e03f9a6d0010659.sample"
 
 [deps]
 
-source_file="res://Assets/Audio/SFX/Knifesheaf.wav"
-dest_files=["res://.godot/imported/Knifesheaf.wav-a2fadfb98dd73a9925d0117c1dd3cfb1.sample"]
+source_file="res://Audio/SFX/Knifesheaf.wav"
+dest_files=["res://.godot/imported/Knifesheaf.wav-0a83513b7ba0977a6e03f9a6d0010659.sample"]
 
 [params]
 

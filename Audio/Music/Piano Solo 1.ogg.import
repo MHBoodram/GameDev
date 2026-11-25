@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://deweeaxhoyguy"
+path="res://.godot/imported/Piano Solo 1.ogg-827089d34077244dad6c4fbfe9a79b57.oggvorbisstr"
+
+[deps]
+
+source_file="res://Audio/Music/Piano Solo 1.ogg"
+dest_files=["res://.godot/imported/Piano Solo 1.ogg-827089d34077244dad6c4fbfe9a79b57.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -2,7 +2,7 @@ class_name HudIndicators
 extends Control
 
 const INDICATOR_FONT: Font = preload("res://Assets/Font/Merchant Copy.ttf")
-const LIQUIDS_LABEL_SCENE: PackedScene = preload("res://Player/Drink/Glasses/liquids_label.tscn")
+const LIQUIDS_LABEL_SCENE: PackedScene = preload("res://UI/Gameplay_ui/liquids_label.tscn")
 
 const INCREASE_COLOR: Color = Color(0.28, 0.96, 0.36, 1.0)
 const DECREASE_COLOR: Color = Color(1.0, 0.25, 0.25, 1.0)

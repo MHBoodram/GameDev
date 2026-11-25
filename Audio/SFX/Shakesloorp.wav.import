@@ -3,12 +3,12 @@
 importer="wav"
 type="AudioStreamWAV"
 uid="uid://c6egkwauti3yh"
-path="res://.godot/imported/Shakesloorp.wav-9e5df3ac06e43d22c29737ad9b0b1e3d.sample"
+path="res://.godot/imported/Shakesloorp.wav-98de9fdfe29729668c1242efcf4a44bf.sample"
 
 [deps]
 
-source_file="res://Assets/Audio/SFX/Shakesloorp.wav"
-dest_files=["res://.godot/imported/Shakesloorp.wav-9e5df3ac06e43d22c29737ad9b0b1e3d.sample"]
+source_file="res://Audio/SFX/Shakesloorp.wav"
+dest_files=["res://.godot/imported/Shakesloorp.wav-98de9fdfe29729668c1242efcf4a44bf.sample"]
 
 [params]
 

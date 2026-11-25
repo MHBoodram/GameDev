@@ -2,13 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://dowextdb5qang"
-path="res://.godot/imported/Slime.wav-e113f92370bfbb93df4b9a8dfded7fc7.sample"
+uid="uid://1msd7udfsxoa"
+path="res://.godot/imported/KnifeStab.wav-2d854250ab511ed3ee3df1304437e6be.sample"
 
 [deps]
 
-source_file="res://Assets/Audio/SFX/Slime.wav"
-dest_files=["res://.godot/imported/Slime.wav-e113f92370bfbb93df4b9a8dfded7fc7.sample"]
+source_file="res://Audio/SFX/KnifeStab.wav"
+dest_files=["res://.godot/imported/KnifeStab.wav-2d854250ab511ed3ee3df1304437e6be.sample"]
 
 [params]
 

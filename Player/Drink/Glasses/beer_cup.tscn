@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://1yul4dtngbg4" path="res://Assets/Items/beer.png" id="1_isq7m"]
 [ext_resource type="Script" path="res://Player/Drink/Glasses/Glasses.gd" id="2_isq7m"]
-[ext_resource type="Shader" path="res://Player/Drink/liquid_container.gdshader" id="3_pq6lo"]
+[ext_resource type="Shader" path="res://Shader/liquid_container.gdshader" id="3_pq6lo"]
 [ext_resource type="Texture2D" uid="uid://d1lg7pdai3jyu" path="res://Assets/Items/beer_outside.png" id="5_pq6lo"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_l3v6c"]

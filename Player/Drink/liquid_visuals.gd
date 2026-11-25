@@ -3,7 +3,7 @@ extends RefCounted
 
 # Handles container liquid physics
 
-const CONTAINER_SHADER := preload("res://Player/Drink/liquid_container.gdshader")
+const CONTAINER_SHADER := preload("res://Shader/liquid_container.gdshader")
 const LIQUID_COLOR := AtomicFluidShaders.LIQUID_COLOR
 const LIQUID_BUOYANCY := AtomicFluidShaders.LIQUID_BUOYANCY
 const LIQUID_VISCOSITY := AtomicFluidShaders.LIQUID_VISCOSITY
