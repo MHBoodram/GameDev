@@ -52,25 +52,27 @@ func _display_recipt() -> void:
 	_top_speicies_check()
 	await _display_container($Recipt/Recipt/VBoxContainer/Top_species)
 	await _display_container($Recipt/Recipt/VBoxContainer/Earning)
-	await _display_number(earning_number,(PlayerStats.money))
+	await _display_number(earning_number, PlayerStats.money)
 	await _display_container($Recipt/Recipt/VBoxContainer/Quota)
-	await _display_number(quota_number,(GameState.get_night_quota(GameState.night)))
+	await _display_number(quota_number, GameState.get_night_quota(GameState.night))
 	await get_tree().create_timer(0.5).timeout
 	await _display_container($Recipt/Recipt/VBoxContainer/Profits)
-	await _display_container($Recipt/Recipt/VBoxContainer/Profit_number)
-	if(PlayerStats.money - GameState.get_night_quota(GameState.night) < 0):
-		proft_number.add_theme_color_override("font_color",Color(1.0, 0.0, 0.0, 1.0))
+	var net_profit: float = PlayerStats.money - GameState.get_night_quota(GameState.night)
+	if net_profit < 0:
+		proft_number.add_theme_color_override("font_color", Color(1.0, 0.0, 0.0, 1.0))
 	else:
-		proft_number.add_theme_color_override("font_color",Color(0.424, 0.91, 0.0, 1.0))
-	await _display_number(proft_number,(PlayerStats.money - GameState.get_night_quota(GameState.night)),PlayerStats.money)
+		proft_number.add_theme_color_override("font_color", Color(0.424, 0.91, 0.0, 1.0))
+	NumberInterpolator.set_number(proft_number, PlayerStats.money, " {coin}")
+	await _display_container($Recipt/Recipt/VBoxContainer/Profit_number)
+	await _display_number(proft_number, net_profit, PlayerStats.money)
 	await get_tree().create_timer(1).timeout
-	if(PlayerStats.money - GameState.get_night_quota(GameState.night) < 0):
-		PlayerStats._change_money(PlayerStats.money - GameState.get_night_quota(GameState.night))
+	if net_profit < 0:
+		PlayerStats._change_money(net_profit)
 		
 		#$Animation.play("failed_night")
 		return
 	else:
-		PlayerStats._change_money(PlayerStats.money - GameState.get_night_quota(GameState.night))
+		PlayerStats._change_money(net_profit)
 		#await get_tree().create_timer(1).timeout
 		#_move_to_out($Recipt,false)
 		#_move_to_in($Marketing,true)
@@ -197,16 +199,11 @@ func _display_container(container: Control) -> void:
 	#tween.tween_property(container, "rotation_degrees", 360.0, 1.0)
 	tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
-func _display_number(label: Label, to: float,from: float = 0) -> void:
+func _display_number(label: Label, to: float, from: float = 0.0, duration: float = NumberInterpolator.DEFAULT_SUMMARY_DURATION) -> void:
 	label.show()
-	var tween := create_tween()
-	var duration = min(to/150,3)
-	print(duration)
-	tween.tween_method(
-		func(value): label.text = str(int(value)),
-		float(from), float(to), duration
-	)
-	await tween.finished
+	var tween := NumberInterpolator.interpolate(label, to, from, duration, " {coin}")
+	if tween and tween.is_valid():
+		await tween.finished
 	#while not Input.is_action_just_pressed("Left_click"):
 		#await get_tree().process_frame
 
@@ -311,5 +308,3 @@ func _on_next_night_pressed() -> void:
 	GameState.advance_night()
 	PlayerStats.reset_night_reputation_gains()
 	Transition._changing_scene("res://Main3D.tscn")
-
-	

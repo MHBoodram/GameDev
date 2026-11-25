@@ -178,14 +178,14 @@ layout_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.42352942, 0.9098039, 0, 1)
 theme_override_font_sizes/font_size = 60
-text = "Earning: "
+text = "Revenue: "
 horizontal_alignment = 1
 
 [node name="Number" type="Label" parent="Recipt/Recipt/VBoxContainer/Earning" unique_id=1908434857]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.42352942, 0.9098039, 0, 1)
 theme_override_font_sizes/font_size = 60
-text = "#"
+text = "0 {coin}"
 horizontal_alignment = 1
 
 [node name="Quota" type="HBoxContainer" parent="Recipt/Recipt/VBoxContainer" unique_id=627586182]
@@ -196,14 +196,14 @@ layout_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.78431374, 0, 0, 1)
 theme_override_font_sizes/font_size = 60
-text = "Quota:"
+text = "Quota: "
 horizontal_alignment = 1
 
 [node name="Number" type="Label" parent="Recipt/Recipt/VBoxContainer/Quota" unique_id=1146929424]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.78431374, 0, 0, 1)
 theme_override_font_sizes/font_size = 60
-text = "#"
+text = "0 {coin}"
 horizontal_alignment = 1
 
 [node name="Profits" type="Label" parent="Recipt/Recipt/VBoxContainer" unique_id=52133118]
@@ -218,7 +218,7 @@ layout_mode = 2
 size_flags_vertical = 8
 theme_override_colors/font_color = Color(0.42352942, 0.9098039, 0, 1)
 theme_override_font_sizes/font_size = 75
-text = "#"
+text = "0 {coin}"
 horizontal_alignment = 1
 
 [node name="Cracked" type="TextureRect" parent="Recipt/Recipt" unique_id=1708411994]
@@ -356,7 +356,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
 theme_override_font_sizes/font_size = 75
-text = "Total Cost = # + #"
+text = "Total Cost = 0 {coin}"
 horizontal_alignment = 1
 
 [node name="next_night" type="Button" parent="Marketing/Marketing/VBoxContainer/Last" unique_id=2094565650]

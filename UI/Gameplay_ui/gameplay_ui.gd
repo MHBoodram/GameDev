@@ -49,7 +49,7 @@ func _order_hud_indicators() -> void:
 		move_child(hud_indicators, hand_node.get_index())
 
 func _sync_money_display(value: float) -> void:
-	$"Right Container/Money/Label".text = str(int(value))
+	NumberInterpolator.set_number($"Right Container/Money/Label", value)
 
 func set_shift_hud_visible(is_visible: bool) -> void:
 	$"Left Container".visible = is_visible
@@ -154,10 +154,11 @@ func _night_title_finish() -> void:
 	$AnimationPlayer.play("Night_Animation")
 
 func _change_money(new_value: float) -> void:
-	var old_value := float($"Right Container/Money/Label".text)
-	$"Right Container/Money/Label".text = str(int(new_value))
+	var money_label := $"Right Container/Money/Label" as Label
+	var old_value := NumberInterpolator.get_target_value(money_label, float(money_label.text))
 	if is_equal_approx(new_value, old_value):
 		return
+	NumberInterpolator.interpolate(money_label, new_value, null, NumberInterpolator.DEFAULT_HUD_DURATION)
 	$"Right Container/Money/CPUParticles2D".color = Color.RED if new_value < old_value else Color.WHITE
 	$"Right Container/Money/CPUParticles2D".emitting = true
 	await get_tree().create_timer(0.5).timeout
