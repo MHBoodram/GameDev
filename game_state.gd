@@ -33,6 +33,8 @@ var can_end_night: bool = true
 var is_dialogue_open: bool = false
 var character_talking: Node3D #Changed for Afternight
 
+var jukebox_manager: JukeboxManager
+
 
 func _ready() -> void:
 	call_deferred("_connect_dialogue_signals")
@@ -62,11 +64,14 @@ func register_gameplay_subsystems(main: Node3D, p_player: Node3D, timer: Timer, 
 	seat_manager = SeatManager.new()
 	shelf_manager = BarShelfManager.new()
 	minigame_host = MinigameHost.new()
+	jukebox_manager = JukeboxManager.new()
+
 
 	main.add_child(night_manager)
 	main.add_child(seat_manager)
 	main.add_child(shelf_manager)
 	main.add_child(minigame_host)
+	main.add_child(jukebox_manager)
 
 	seat_manager.setup(main)
 	night_manager.setup(timer, env, sun_node)

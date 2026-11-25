@@ -105,6 +105,8 @@ func start_shift(duration: float, quota: float) -> void:
 	is_night_concluded = false
 	GameState.night_paused = false
 	GameState.special_state = false
+	if is_instance_valid(GameState.jukebox_manager):
+		GameState.jukebox_manager.reset_for_shift()
 	if GameState.gameplay_ui:
 		GameState.gameplay_ui.set_shift_hud_visible(true)
 		GameState.gameplay_ui._update_quota(quota)

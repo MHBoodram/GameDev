@@ -29,6 +29,8 @@ var customer_satisfaction: float = 1.0
 var _dialouge_paused_patience : float = -1.0
 var max_patience: float = 90.0
 var payment_global: float = 0.0
+var jukebox_patience_multiplier: float = 1.0
+var jukebox_payout_multiplier: float = 1.0
 var is_leaving: bool = false
 var _is_highlighted: bool = false
 var _original_modulate: Color = Color.WHITE
@@ -144,6 +146,7 @@ func setup_npc(npc_source: NPC, seat: int, rec_marker: Marker3D, patience: float
 	else:
 		max_patience = 90.0
 
+	max_patience *= jukebox_patience_multiplier
 	patience_timer.wait_time = max_patience
 	patience_timer.start(max_patience)
 
@@ -398,7 +401,7 @@ func _calculate_payout(drink_score: float, is_satisfactory: bool) -> void:
 			tip = species_def.modify_tip(self, tip, is_satisfactory, drink_score)
 		payment += tip
 
-	payment_global += payment
+	payment_global += payment * jukebox_payout_multiplier
 
 func _on_all_orders_completed(drink_score: float) -> void:
 	var col = get_node_or_null("Area3D/CollisionShape3D")
