@@ -418,7 +418,8 @@ func show_floating_text(text: String, color: Color = Color.WHITE, options: Dicti
 	var label := _create_styled_label(text, color, font_size, outline_col, outline_size)
 	if align == "center":
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var label_size: Vector2 = label.get_minimum_size()
+	TextIcons.apply_to_control(label)
+	var label_size: Vector2 = label.get_combined_minimum_size()
 	label.size = label_size
 	label.pivot_offset = label_size * 0.5
 
@@ -631,6 +632,7 @@ func update_status_group(group_id: String, entries: Array[Dictionary], owner_obj
 				shader_mat.set_shader_parameter("secondary_color", entry.get("secondary_color", Color(0.5, 0.9, 1.0, 1.0)))
 		else:
 			lbl.add_theme_color_override("font_color", entry_color)
+			TextIcons.apply_to_control(lbl)
 
 	box.visible = true
 	box.modulate.a = 1.0

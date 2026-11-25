@@ -140,7 +140,6 @@ func _sync_collision_enabled() -> void:
 func _refresh_tag() -> void:
 	if not is_node_ready() or not tag_button:
 		return
-	tag_button.text = tag_text
 	tag_button.icon = tag_icon
 	tag_button.expand_icon = (tag_icon != null)
 	tag_button.add_theme_font_override("font", UI_FONT)
@@ -148,6 +147,7 @@ func _refresh_tag() -> void:
 	tag_button.add_theme_constant_override("icon_max_width", icon_size)
 	tag_button.add_theme_constant_override("h_separation", 6)
 	_update_button_visual()
+	TextIcons.apply_to_control(tag_button, tag_text)
 	_refresh_layout()
 
 func _refresh_layout() -> void:
@@ -180,6 +180,7 @@ func _update_button_visual() -> void:
 
 	tag_button.add_theme_stylebox_override("normal", active_style)
 	tag_button.add_theme_color_override("font_color", active_text_col)
+	TextIcons.sync_control_visuals(tag_button)
 
 func _can_interact() -> bool:
 	if not interactive or not visible:

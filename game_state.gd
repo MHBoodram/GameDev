@@ -42,6 +42,9 @@ var jukebox_manager: JukeboxManager
 var story_flags: Dictionary = {}
 var scheduled_npcs: Array[Dictionary] = []
 
+func _ready() -> void:
+	TextIcons.install(self)
+
 func register_subsystems(main: Node3D, p_player: Node3D, timer: Timer, env: WorldEnvironment, sun_node: DirectionalLight3D, counter_ref: Node3D) -> void:
 	main_node = main
 	player = p_player

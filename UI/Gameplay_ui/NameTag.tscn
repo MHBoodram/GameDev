@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" path="res://UI/Gameplay_ui/name_tag.gd" id="1_nametag"]
 [ext_resource type="FontFile" uid="uid://cq83j1cam8lw" path="res://Assets/Font/Merchant Copy.ttf" id="2_font"]
-[ext_resource type="Texture2D" uid="uid://xk8p6bfsbe0w" path="res://Assets/UI/Coin.png" id="3_coin"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_tag"]
 size = Vector3(0.26, 0.13, 0.06)
@@ -48,6 +47,5 @@ theme_override_constants/icon_max_width = 28
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 56
 theme_override_styles/normal = SubResource("StyleBoxFlat_tag")
-text = "0"
-icon = ExtResource("3_coin")
+text = ""
 expand_icon = true

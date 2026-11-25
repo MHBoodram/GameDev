@@ -6,7 +6,6 @@ extends Node
 const LIQUID_SCENE_PATH := "res://Player/Drink/Liquids/liquid.tscn"
 const RESOURCE_BASE_PATH := "res://Player/Drink/Liquids/resource/"
 const NAME_TAG_SCENE := preload("res://UI/Gameplay_ui/NameTag.tscn")
-const COIN_ICON := preload("res://Assets/UI/Coin.png")
 
 var spawned_bottles: Dictionary = {}
 var refill_tags: Dictionary = {}
@@ -91,7 +90,7 @@ func _ensure_refill_tag(host: Node3D, drink_id: String, bottle_node: Node, marke
 			tag_y = maxf(tag_y, (sprite_bounds as AABB).end.y + 0.09)
 	tag.global_position = Vector3(base_pos.x, tag_y, base_pos.z - 0.06)
 
-	tag.setup(str(bottle.get_refill_cost()), COIN_ICON, true)
+	tag.setup("{coin} " + str(bottle.get_refill_cost()), null, true)
 	tag.set_disabled(bottle.get_refill_cost() <= 0)
 
 	tag.pressed.connect(func() -> void:
@@ -106,7 +105,7 @@ func _update_refill_tag(bottle: Drinks, tag: NameTag) -> void:
 	if not is_instance_valid(bottle) or not is_instance_valid(tag):
 		return
 	var cost: int = bottle.get_refill_cost()
-	tag.set_text(str(cost))
+	tag.set_text("{coin} " + str(cost))
 	tag.set_disabled(cost <= 0)
 
 func _on_refill_tag_pressed(bottle: Drinks, tag: NameTag) -> void:
