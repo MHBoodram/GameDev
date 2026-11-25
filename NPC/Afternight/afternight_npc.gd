@@ -33,6 +33,8 @@ func talk() -> void:
 		return
 	if not can_talk or speaking_title == "" or speaking_title == null:
 		return
+	if GameState.main_node and "upgrade_time" in GameState.main_node and GameState.main_node.upgrade_time and GameState.main_node.has_method("_get_shop_options_title"):
+		speaking_title = GameState.main_node._get_shop_options_title()
 	if dialogue_resource:
 		DialogueManager.show_dialogue_balloon_scene(custom_balloon, dialogue_resource, speaking_title, [self])
 

@@ -11,6 +11,8 @@ extends Node3D
 var ingredient_picked : bool = false
 var drink_picked : bool = false
 var upgrade_time : bool = false
+var _is_advancing_shop : bool = false
+var _is_finishing_night : bool = false
 var upgrades
 
 
@@ -21,11 +23,10 @@ func _ready() -> void:
 	$new_bar._open_light()
 	var tween = get_tree().create_tween()
 	tween.tween_property($Viewport,"modulate:a",1,0)
-	match GameState.night:
-		1:
-			shopkeeper.speaking_title = "firstIntro"
-		2:
-			pass
+	if GameState.night == 1:
+		shopkeeper.speaking_title = "firstIntro"
+	else:
+		shopkeeper.speaking_title = "Comingback"
 
 func _check_money() -> void:
 	#$Player/Secondary.current = true
@@ -59,14 +60,35 @@ func _reset_night():
 		get_tree().change_scene_to_file("res://Main3D.tscn")
 
 func _finished_night():
+	if _is_finishing_night:
+		return
+	_is_finishing_night = true
+	if is_instance_valid(shopkeeper):
+		shopkeeper.can_talk = false
 	await _close_light_bar()
 	GameState.advance_night()
 	PlayerStats.reset_night_reputation_gains()
 	Transition._changing_scene("res://Main3D.tscn")
 
+func _get_shop_options_title() -> String:
+	if GameState.night > 3 or GameState.night < 1:
+		return "options1"
+	return "options" + str(GameState.night)
+
+func _get_locked_unlocks(pick: String) -> Array:
+	var temp_array = []
+	if PlayerStats.unlocks.has(pick):
+		for x in PlayerStats.unlocks[pick]:
+			if(!PlayerStats.unlocks[pick][x]):
+				temp_array.push_back(x)
+	return temp_array
+
 func _go_next():
 	if ingredient_picked and drink_picked and upgrade_time:
 		return
+	if _is_advancing_shop:
+		return
+	_is_advancing_shop = true
 
 	var old_nodes = get_tree().get_nodes_in_group("Choice")
 	print("Removed Nodes: ", old_nodes)
@@ -91,32 +113,37 @@ func _go_next():
 
 	shopkeeper._play_animation_knocking()
 	await get_tree().create_timer(1).timeout
+
+	if not ingredient_picked and _get_locked_unlocks("Drinks").is_empty():
+		ingredient_picked = true
+	if ingredient_picked and not drink_picked and _get_locked_unlocks("Ingredients").is_empty():
+		drink_picked = true
+
 	if(ingredient_picked):
 		if(drink_picked):
+			upgrade_time = true
+			shopkeeper.speaking_title = _get_shop_options_title()
 			if(GameState.night == 1):
 				$ShopKeeper.force_dialogue("firstUpgrades")
-			shopkeeper.speaking_title = ("options" + str(GameState.night))
-			if(GameState.night > 3):
-				shopkeeper.speaking_title = "options1"
 			_produce_upgrades()
-			upgrade_time = true
 		else:
+			drink_picked = true
+			shopkeeper.speaking_title = "firstWait1" if GameState.night == 1 else "wait"
 			if(GameState.night == 1):
 				$ShopKeeper.force_dialogue("firstIngredients")
 			_produce_unlocks_pick_3("Ingredients")
-			drink_picked = true
 	else:
+		ingredient_picked = true
+		shopkeeper.speaking_title = "firstWait1" if GameState.night == 1 else "wait"
 		if(GameState.night == 1):
 			$ShopKeeper.force_dialogue("firstDrinks")
 		_produce_unlocks_pick_3("Drinks")
-		ingredient_picked = true
-		
+
+	_is_advancing_shop = false
+
 
 func _produce_unlocks_pick_3(pick: String = "Ingredients") -> void:
-	var temp_array = []
-	for x in PlayerStats.unlocks[pick]:
-		if(!PlayerStats.unlocks[pick][x]):
-			temp_array.push_back(x)
+	var temp_array = _get_locked_unlocks(pick)
 	print("Temp_array",temp_array)
 	print("Temp_array:size",temp_array.size())
 	for x in min(3,temp_array.size()):
