@@ -41,14 +41,14 @@ const LIQUID_VISCOSITY := {
 }
 
 const LIQUID_PRICE_PER_CUP_PERCENT := {
-	"gin": 0.02,
-	"beer": 0.015,
-	"rum": 0.03,
-	"vodka": 0.03,
-	"tequila": 0.04,
-	"whiskey": 0.04,
-	"spirit": 0.05,
-	"blood": 0.06
+	"gin": 0.1,
+	"beer": 0.1,
+	"rum": 0.1,
+	"vodka": 0.1,
+	"tequila": 0.1,
+	"whiskey": 0.1,
+	"spirit": 0.1,
+	"blood": 0.1
 }
 
 static var _custom_buoyancy: Dictionary = {}
@@ -64,7 +64,7 @@ static func get_liquid_price_per_cup_percent(id: String) -> float:
 		return float(_custom_price_per_cup_percent[id])
 	if LIQUID_PRICE_PER_CUP_PERCENT.has(id):
 		return float(LIQUID_PRICE_PER_CUP_PERCENT[id])
-	return 0.03
+	return 0.1
 
 static func register_liquid_buoyancy(id: String, buoyancy_val: float) -> void:
 	if buoyancy_val > 0.0:

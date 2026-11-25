@@ -377,7 +377,7 @@ func receive_drink(mix: DrinkMix) -> float:
 		_served_scores.append(override_score)
 		_show_drink_score_indicator(override_score)
 		_apply_reputation_impact(false, override_score)
-		_calculate_payout(override_score, false)
+		_calculate_payout(override_score, false, {}, mix)
 		has_receipt_spawned = false
 		if attempt_override.has("emo"):
 			emo = str(attempt_override["emo"])
@@ -411,7 +411,7 @@ func receive_drink(mix: DrinkMix) -> float:
 	if not (unique_talk and GameState.special_state) and GameState.seat_manager:
 		serve_combo_data = GameState.seat_manager.register_order_served(is_satisfactory)
 	var combo_data := _calculate_combo(mix, wanted_order, is_satisfactory, serve_combo_data)
-	_calculate_payout(drink_score, is_satisfactory, combo_data)
+	_calculate_payout(drink_score, is_satisfactory, combo_data, mix)
 	_show_combo_indicators(combo_data)
 
 	has_receipt_spawned = false
@@ -583,22 +583,39 @@ func _get_tip_breakdown(drink_score: float, is_satisfactory: bool) -> Dictionary
 		"raw_tip": raw_tip
 	}
 
-func _calculate_payout(drink_score: float, is_satisfactory: bool, combo_data: Dictionary = {}) -> void:
+func _get_base_drink_price(mix: DrinkMix) -> float:
+	if mix == null or mix.is_empty():
+		return 0.0
+	var total_price := 0.0
+	var use_normalized := mix.cup_capacity <= 0.001
+	var reference_amount := mix.get_total_amount() if use_normalized else AtomicFluidShaders.REFERENCE_CUP_SIZE
+	if reference_amount <= 0.001:
+		return 0.0
+	for ing_id in mix.ingredients.keys():
+		var amt := float(mix.ingredients[ing_id])
+		if amt <= 0.001:
+			continue
+		var cup_percent := (amt / reference_amount) * 100.0
+		total_price += cup_percent * AtomicFluidShaders.get_liquid_price_per_cup_percent(str(ing_id))
+	return total_price
+
+func _calculate_payout(drink_score: float, is_satisfactory: bool, combo_data: Dictionary = {}, mix: DrinkMix = null) -> void:
 	var race_name := _get_race_display_name()
 	var score_factor := drink_score if SCALE_BASE_PAYOUT_BY_SCORE else 1.0
 	var quality_mult := SATISFACTORY_PAYOUT_MULTIPLIER if is_satisfactory else UNSATISFACTORY_PAYOUT_MULTIPLIER
-	var base_payout := BASE_DRINK_PRICE * score_factor * quality_mult
+	var base_price := _get_base_drink_price(mix) if mix != null else BASE_DRINK_PRICE
+	var base_payout := base_price * score_factor * quality_mult
 	var payment := base_payout
 
 	var after_species_payout := payment
 	if species_def:
-		after_species_payout = species_def.modify_payout(self, BASE_DRINK_PRICE, is_satisfactory, drink_score, payment)
+		after_species_payout = species_def.modify_payout(self, base_price, is_satisfactory, drink_score, payment)
 	var species_payout_delta := after_species_payout - payment
 	payment = after_species_payout
 
 	var after_mod_payout := payment
 	if modifier:
-		after_mod_payout = modifier.modify_payout(self, BASE_DRINK_PRICE, is_satisfactory, drink_score, payment)
+		after_mod_payout = modifier.modify_payout(self, base_price, is_satisfactory, drink_score, payment)
 	var mod_payout_delta := after_mod_payout - payment
 	payment = after_mod_payout
 
@@ -646,7 +663,7 @@ func _calculate_payout(drink_score: float, is_satisfactory: bool, combo_data: Di
 		_drink_combo_logs.append("Drink #%d: None (0%%, x1.00) | $%.2f" % [drink_num, payment])
 
 	print("Payout (Seat #%d, %s)" % [seat_num, race_name])
-	print("  Base Drink Price: $%.2f (score=%.3f, score_factor=%.3f, quality_mult=%.2f, satisfactory=%s)" % [base_payout, drink_score, score_factor, quality_mult, str(is_satisfactory)])
+	print("  Base Drink Price: $%.2f (base=$%.2f, score=%.3f, score_factor=%.3f, quality_mult=%.2f, satisfactory=%s)" % [base_payout, base_price, drink_score, score_factor, quality_mult, str(is_satisfactory)])
 	if not is_zero_approx(species_payout_delta) or not is_zero_approx(mod_payout_delta):
 		print("  Payout Modifiers: species=%+.2f, modifier=%+.2f" % [species_payout_delta, mod_payout_delta])
 	if is_satisfactory:
