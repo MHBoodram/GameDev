@@ -48,6 +48,11 @@ shader_parameter/glass_reflection_strength = 0.28
 shader_parameter/meniscus_curve = 0.03
 shader_parameter/gradient_offset = 0.0
 shader_parameter/flip_gradient = false
+shader_parameter/use_fluid_field = false
+shader_parameter/fluid_density_threshold = 0.34
+shader_parameter/local_up_uv = Vector2(0, -1)
+shader_parameter/liquid_tint_color = Color(0.45, 0.92, 1, 1)
+shader_parameter/liquid_tint_strength = 0.0
 
 [node name="Liquids" type="Area3D" unique_id=280743464]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
@@ -80,7 +85,7 @@ modulate = Color(1, 1, 1, 0)
 texture = ExtResource("3_5iee8")
 
 [node name="Liquid_refresh" type="Timer" parent="." unique_id=227173742]
-wait_time = 5.0
+wait_time = 4.0
 autostart = true
 
 [connection signal="area_entered" from="." to="." method="_on_interact_area_entered"]

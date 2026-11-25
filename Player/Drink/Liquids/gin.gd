@@ -75,7 +75,7 @@ func ready() -> void:
 	if liquid_resource:
 		LiquidProperties.register_from_liquid(liquid_resource)
 		size = liquid_resource.liquid_size
-		current_liquid = size
+		current_liquid = size + (PlayerStats.unlocks["Drinks Size Increase"] * 10)
 		color_liquid = liquid_resource.liquid_color
 		$Inside.texture = liquid_resource.sprite
 		$Inside/Outside.texture = liquid_resource.outside_Sprite
@@ -83,6 +83,7 @@ func ready() -> void:
 		visual_helper.last_global_pos = inside_node.global_position if inside_node else global_position
 		_setup_liquid_shader()
 		_apply_outside_texture()
+		$Liquid_refresh.wait_time = 4 - (PlayerStats.unlock_passive["Drinks Auto Increase"] * 0.5)
 		set_liquid_color(liquid_resource.liquid_color)
 
 func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
