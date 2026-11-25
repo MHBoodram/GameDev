@@ -1,0 +1,34 @@
+~ start
+Frederick: [[HI!|HOY!|HELLO!]], I WOULD LIKE {{_current_order_text()}}
+do _add_recipt()
+set speaking_title = "mid"
+=> END
+~ next_order
+Frederick: [[|]]
+=> END
+~ finish
+Frederick: Finished
+=> END
+
+
+
+~ Positive
+#set emo = "happy"
+Frederick: TASTE GOOD THANK YOU!
+do _give_payment()
+=> END
+
+~ Negative
+#set emo = "mad"
+Frederick: [BAD!|AWFUL!|GROSS!|NASTY!]
+do _give_payment()
+=> END
+
+~ Mid
+Frederick: MID.
+do _give_payment()
+=> END
+
+~ TimeWarning1
+Frederick: [HURRY UP!|IMPATIENT!|WAIT NO MORE!]
+=> END

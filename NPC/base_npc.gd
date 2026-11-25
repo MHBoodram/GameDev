@@ -74,7 +74,10 @@ func _ready() -> void:
 
 func _apply_species_scale() -> void:
 	base_scale = species_def.npc_scale if species_def else Vector3(0.5, 0.5, 0.5)
-	visual_scale_multiplier = 1.0
+	if _get_race_display_name() == "Tiny":
+		visual_scale_multiplier = 0.1
+	else:
+		visual_scale_multiplier = 1.0
 	_refresh_visual_scale()
 	var patience_sprite := get_node_or_null("Sprite3D") as Sprite3D
 	if patience_sprite and base_scale.x > 0.01:
