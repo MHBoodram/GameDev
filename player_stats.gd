@@ -96,6 +96,13 @@ func has_unlock(category: String, key: String) -> bool:
 			return bool(cat_dict[k])
 	return false
 
+func has_knife_unlock(fallback_when_missing: bool = true) -> bool:
+	if unlocks.has("Ingredients") and unlocks["Ingredients"].has("Knife"):
+		return has_unlock("Ingredients", "Knife")
+	if unlocks.has("Tools") and unlocks["Tools"].has("Knife"):
+		return has_unlock("Tools", "Knife")
+	return fallback_when_missing
+
 func set_species_marketing(species: String, value: float) -> void:
 	var key := _find_species_key(species)
 	species_marketing[key] = value
@@ -105,6 +112,8 @@ func _change_money(new_value: float) -> void:
 	var delta: float = new_value - old_money
 	money = new_value
 	print("[money]: ", money)
+	if GameState.gameplay_ui:
+		GameState.gameplay_ui._change_money(new_value)
 	if not is_zero_approx(delta):
 		money_changed.emit(money, delta)
 
@@ -192,5 +201,5 @@ func get_species_spawn_weight(species: String) -> float:
 	print("[species_weight]: ", key, " = ", final_weight)
 	return final_weight
 
-func _check_upgrades(id: String,type: String):
+func _check_upgrades(id: String, type: String):
 	return unlocks[type][id]

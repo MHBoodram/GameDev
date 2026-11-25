@@ -12,10 +12,10 @@ var board_slot_quaternion: Quaternion = Quaternion.IDENTITY
 var board_slot_scale: Vector3 = Vector3.ONE
 var _move_tween: Tween = null
 
-@export var hold_lift: float = 0.3
-@export var snap_to_glass: bool = true
-@export var snap_offset: Vector3 = Vector3(0, 0.5, 0)
-@export var follow_speed: float = 20.0
+func _init() -> void:
+	hold_lift = 0.3
+	snap_to_glass = true
+	follow_speed = 20.0
 
 func ready() -> void:
 	base_y_position = 1.6
@@ -24,18 +24,6 @@ func ready() -> void:
 
 func _is_drag_blocked() -> bool:
 	return not ordered
-
-func _get_drag_follow_speed() -> float:
-	return follow_speed
-
-func _get_drag_hold_lift() -> float:
-	return hold_lift
-
-func _get_free_drag_target(delta: float) -> Vector3:
-	if snap_to_glass and camera and is_instance_valid(current_hovered_target) and can_interact_with(current_hovered_target):
-		var to_cam := (camera.global_position - current_hovered_target.global_position).normalized()
-		return current_hovered_target.global_position + snap_offset + to_cam * hold_lift
-	return super._get_free_drag_target(delta)
 
 func _process(delta: float) -> void:
 	super._process(delta)

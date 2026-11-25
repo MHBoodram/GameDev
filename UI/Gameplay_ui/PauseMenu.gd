@@ -7,8 +7,6 @@ const START_MENU_SCENE := "res://UI/Starting/Starting_screen.tscn"
 @onready var menu_button: Button = $Border/Dim/CenterContainer/VBox2/MainMenuButton
 @onready var quit_button: Button = $Border/Dim/CenterContainer/VBox2/QuitButton
 var which_menu = "Resume"
-var action_to_rebind = "Up"
-var waiting_keybind = false
 
 func _ready() -> void:
 	#DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
@@ -24,36 +22,26 @@ func _ready() -> void:
 	if OS.has_feature("web"):
 		quit_button.hide()
 
-func _load_settings() -> void:
-	$Inside_paper/Left_color/Left_Page/Audio_Container/Master/Master_slider.value = SettingState.setting_dic["Audio"]["Master_value"]
-	$Inside_paper/Left_color/Left_Page/Audio_Container/UI/UI_slider.value = SettingState.setting_dic["Audio"]["UI_value"]
-	$Inside_paper/Left_color/Left_Page/Audio_Container/Music/Music_slider.value = SettingState.setting_dic["Audio"]["Music_value"]
-	$Inside_paper/Left_color/Left_Page/Video/Full_Screen.button_pressed = SettingState.setting_dic["Video"]["FullScreen"]
-	if $Inside_paper/Left_color/Left_Page/Video/Full_Screen.button_pressed:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-	else:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
-	$Inside_paper/Left_color/Left_Page/Video/World_Environment.button_pressed = SettingState.setting_dic["Video"].get("WorldEnvironment", true)
-	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Right/Right.text = SettingState._key_to_string("Right")
-	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Left/Left.text = SettingState._key_to_string("Left")
-	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Down/Down.text = SettingState._key_to_string("Down")
-	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Up/Up.text = SettingState._key_to_string("Up")
+func _get_control_buttons() -> Dictionary:
+	return {
+		"Right": $Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Right/Right,
+		"Left": $Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Left/Left,
+		"Down": $Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Down/Down,
+		"Up": $Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Up/Up,
+	}
 
-func _input(event: InputEvent) -> void:
-	if not waiting_keybind:
-		return
-	if event is InputEventKey and event.pressed:
-		var node_search = get_node("Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/" + action_to_rebind + "/" + action_to_rebind)
-		var previous_text = node_search.text
-		if event.physical_keycode == KEY_ESCAPE:
-			waiting_keybind = false
-			node_search.text = previous_text
-			return
-		
-		SettingState.rebind_action(action_to_rebind, event)
-		node_search.text = event.as_text()
-		waiting_keybind = false
-		get_viewport().set_input_as_handled()
+func _load_settings() -> void:
+	SettingState.bind_settings_panel({
+		"master_slider": $Inside_paper/Left_color/Left_Page/Audio_Container/Master/Master_slider,
+		"ui_slider": $Inside_paper/Left_color/Left_Page/Audio_Container/UI/UI_slider,
+		"music_slider": $Inside_paper/Left_color/Left_Page/Audio_Container/Music/Music_slider,
+		"sfx_slider": $Inside_paper/Left_color/Left_Page/Audio_Container/SFX/SFX_slider,
+		"audio_reset_btn": $Inside_paper/Left_color/Left_Page/Audio_Container/Audio_reset,
+		"fullscreen_btn": $Inside_paper/Left_color/Left_Page/Video/Full_Screen,
+		"world_env_btn": $Inside_paper/Left_color/Left_Page/Video/World_Environment,
+		"control_buttons": _get_control_buttons(),
+		"control_reset_btn": $Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Control_reset,
+	})
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
@@ -75,6 +63,7 @@ func pause() -> void:
 	resume_button.grab_focus()
 
 func resume() -> void:
+	SettingState.cancel_rebind()
 	get_tree().paused = false
 	$Hand.hide()
 	hide()
@@ -88,6 +77,7 @@ func settings() -> void:
 		which_menu = "Resume"
 
 func _on_main_menu_pressed() -> void:
+	SettingState.cancel_rebind()
 	get_tree().paused = false
 	get_tree().change_scene_to_file(START_MENU_SCENE)
 
@@ -96,80 +86,6 @@ func _on_quit_pressed() -> void:
 	get_tree().quit()
 
 func _on_save_quit_setting_pressed() -> void:
+	SettingState.cancel_rebind()
 	settings()
 	SettingState._saving_setting()
-
-
-func _on_full_screen_pressed() -> void:
-	if $Inside_paper/Left_color/Left_Page/Video/Full_Screen.button_pressed:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-	else:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
-	SettingState.setting_dic["Video"]["FullScreen"] = $Inside_paper/Left_color/Left_Page/Video/Full_Screen.button_pressed
-
-func _on_world_environment_pressed() -> void:
-	SettingState.setting_dic["Video"]["WorldEnvironment"] = $Inside_paper/Left_color/Left_Page/Video/World_Environment.button_pressed
-	SettingState.apply_world_environment()
-
-func _on_up_pressed() -> void:
-	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Up/Up.text = "awaiting"
-	action_to_rebind = "Up"
-	waiting_keybind = true
-
-
-func _on_down_pressed() -> void:
-	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Down/Down.text = "awaiting"
-	action_to_rebind = "Down"
-	waiting_keybind = true
-
-
-func _on_left_pressed() -> void:
-	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Left/Left.text = "awaiting"
-	action_to_rebind = "Left"
-	waiting_keybind = true
-
-
-func _on_right_pressed() -> void:
-	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Right/Right.text = "awaiting"
-	action_to_rebind = "Right"
-	waiting_keybind = true
-
-
-func _on_master_slider_value_changed(value: float) -> void:
-	UIAudio._change_bus_volume("Master",value)
-	SettingState.setting_dic["Audio"]["Master_value"] = value
-
-func _on_ui_slider_value_changed(value: float) -> void:
-	UIAudio._change_bus_volume("UI",value)
-	SFXAudio._change_bus_volume("SFX",value)
-	SettingState.setting_dic["Audio"]["UI_value"] = value
-	SettingState.setting_dic["Audio"]["SFX_value"] = value
-
-
-func _on_music_slider_value_changed(value: float) -> void:
-	UIAudio._change_bus_volume("Music",value)
-	SettingState.setting_dic["Audio"]["Music_value"] = value
-
-
-func _on_audio_reset_pressed() -> void:
-	UIAudio._change_bus_volume("Master",0)
-	UIAudio._change_bus_volume("Music",0)
-	UIAudio._change_bus_volume("UI",0)
-	SFXAudio._change_bus_volume("SFX",0)
-	SettingState.setting_dic["Audio"]["Master_value"] = 0
-	SettingState.setting_dic["Audio"]["Music_value"] = 0
-	SettingState.setting_dic["Audio"]["UI_value"] = 0
-	SettingState.setting_dic["Audio"]["SFX_value"] = 0
-	$Inside_paper/Left_color/Left_Page/Audio_Container/SFX/SFX_slider.value = 0
-	$Inside_paper/Left_color/Left_Page/Audio_Container/Music/Music_slider.value = 0
-	$Inside_paper/Left_color/Left_Page/Audio_Container/Master/Master_slider.value = 0
-	$Inside_paper/Left_color/Left_Page/Audio_Container/UI/UI_slider.value = 0
-
-
-func _on_control_reset_pressed() -> void:
-	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Right/Right.text = "D"
-	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Left/Left.text = "A"
-	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Down/Down.text = "S"
-	$Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Up/Up.text = "W"
-	SettingState._reset_to_default_controls()
-	

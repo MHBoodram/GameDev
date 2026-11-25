@@ -5,7 +5,6 @@ extends Camera3D
 
 signal marker_returned
 
-@export var seat_markers: Array[NodePath] = []
 @export var max_offset := Vector2(0.15, 0.15)
 @export var max_roll := 0.05
 @export var decay := 1.5
@@ -46,77 +45,16 @@ func _ready() -> void:
 	noise.frequency = 1.0
 	position.y += CAMERA_Y_OFFSET
 	default_camera_local_pos = position
-	_connect_game_events()
 	call_deferred("_setup_stool_markers")
-
-func _exit_tree() -> void:
-	if GameEvents._bus:
-		if GameEvents.camera_shake_requested.is_connected(_on_camera_shake_requested):
-			GameEvents.camera_shake_requested.disconnect(_on_camera_shake_requested)
-		if GameEvents.camera_focus_requested.is_connected(_on_camera_focus_requested):
-			GameEvents.camera_focus_requested.disconnect(_on_camera_focus_requested)
-		if GameEvents.camera_return_requested.is_connected(_on_camera_return_requested):
-			GameEvents.camera_return_requested.disconnect(_on_camera_return_requested)
-
-func _connect_game_events() -> void:
-	if not GameEvents.camera_shake_requested.is_connected(_on_camera_shake_requested):
-		GameEvents.camera_shake_requested.connect(_on_camera_shake_requested)
-	if not GameEvents.camera_focus_requested.is_connected(_on_camera_focus_requested):
-		GameEvents.camera_focus_requested.connect(_on_camera_focus_requested)
-	if not GameEvents.camera_return_requested.is_connected(_on_camera_return_requested):
-		GameEvents.camera_return_requested.connect(_on_camera_return_requested)
-
-func _on_camera_shake_requested(amount: float) -> void:
-	if current:
-		add_shake(amount)
-
-func _on_camera_focus_requested(marker: Node3D, duration: float) -> void:
-	if current:
-		focus_on_marker(marker, duration)
-
-func _on_camera_return_requested(duration: float) -> void:
-	if current:
-		return_from_marker(duration)
-
-func _resolve_seat_markers() -> Array[Node3D]:
-	var resolved: Array[Node3D] = []
-	for path in seat_markers:
-		if not path.is_empty():
-			var node := get_node_or_null(path) as Node3D
-			if is_instance_valid(node):
-				resolved.append(node)
-	if resolved.size() >= 3:
-		return resolved
-
-	if is_inside_tree():
-		var grouped := get_tree().get_nodes_in_group("seat_markers")
-		if grouped.size() >= 3:
-			var sorted_group: Array[Node3D] = []
-			for n in grouped:
-				if n is Node3D:
-					sorted_group.append(n as Node3D)
-			sorted_group.sort_custom(func(a: Node3D, b: Node3D) -> bool:
-				return a.name.naturalnocasecmp_to(b.name) < 0
-			)
-			if sorted_group.size() >= 3:
-				return sorted_group
-
-	var scene_root: Node = get_tree().current_scene
-	if is_instance_valid(scene_root):
-		for seat_name in ["Seat1", "Seat2", "Seat3"]:
-			var seat_node := scene_root.get_node_or_null(seat_name) as Node3D
-			if is_instance_valid(seat_node):
-				resolved.append(seat_node)
-	return resolved
 
 # aligns stool movement offsets to match the 3D scene seat markers
 func _setup_stool_markers() -> void:
-	var seats := _resolve_seat_markers()
-	if seats.is_empty():
+	var scene_root: Node = get_tree().current_scene
+	if not scene_root:
 		return
-	var seat1: Node3D = seats[0] if seats.size() > 0 else null
-	var seat2: Node3D = seats[1] if seats.size() > 1 else null
-	var seat3: Node3D = seats[2] if seats.size() > 2 else null
+	var seat1 := scene_root.get_node_or_null("Seat1") as Node3D
+	var seat2 := scene_root.get_node_or_null("Seat2") as Node3D
+	var seat3 := scene_root.get_node_or_null("Seat3") as Node3D
 	var cam_x_offset: float = position.x
 
 	if seat3:

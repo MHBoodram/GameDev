@@ -125,8 +125,8 @@ mouse_filter = 2
 [node name="Timer" type="TextureProgressBar" parent="Left Container" unique_id=1415814912]
 layout_mode = 2
 mouse_filter = 2
-max_value = 300.0
-value = 300.0
+max_value = 150.0
+value = 150.0
 fill_mode = 5
 texture_under = ExtResource("3_xl5tu")
 texture_progress = ExtResource("4_jsh06")

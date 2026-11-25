@@ -1,14 +1,17 @@
 class_name SpeciesRegistry
 extends RefCounted
 
-# Auto-discovers every SpeciesBase subclass in /species
-# Hooks in many files by looping through the loaded species list
+# Detects every SpeciesBase subclass in NPC/Species and every ModifierBase subclass in NPC/Modifiers
+# Calls species and modifier functions
 
 const SPECIES_DIR := "res://NPC/Species"
+const MODIFIERS_DIR := "res://NPC/Modifiers"
 
 static var _initialized: bool = false
 static var _species_by_id: Dictionary = {}
 static var _ordered_species: Array[SpeciesBase] = []
+static var _modifiers_by_id: Dictionary = {}
+static var _ordered_modifiers: Array[ModifierBase] = []
 
 static func ensure_loaded() -> void:
 	if _initialized:
@@ -16,37 +19,58 @@ static func ensure_loaded() -> void:
 	_initialized = true
 	_species_by_id.clear()
 	_ordered_species.clear()
+	_modifiers_by_id.clear()
+	_ordered_modifiers.clear()
 
-	for script_path in _discover_species_scripts():
+	_ordered_species.assign(_load_registry_entries(
+		SPECIES_DIR,
+		["species_base.gd", "species_registry.gd"],
+		"species_id",
+		_species_by_id,
+		func(inst) -> bool: return inst is SpeciesBase
+	))
+
+	_ordered_modifiers.assign(_load_registry_entries(
+		MODIFIERS_DIR,
+		["modifier_base.gd", "modifier_registry.gd"],
+		"modifier_id",
+		_modifiers_by_id,
+		func(inst) -> bool: return inst is ModifierBase,
+		["NONE"]
+	))
+
+static func _load_registry_entries(dir_path: String, excluded_files: Array[String], id_prop: String, by_id: Dictionary, type_check: Callable, ignored_ids: Array[String] = []) -> Array:
+	var loaded: Array = []
+	for script_path in _discover_scripts(dir_path, excluded_files):
 		var res = load(script_path)
 		if res is GDScript and res.can_instantiate():
 			var instance = res.new()
-			if instance is SpeciesBase:
-				var sp := instance as SpeciesBase
-				var key := sp.species_id.to_upper().strip_edges()
-				if key != "" and not _species_by_id.has(key):
-					_species_by_id[key] = sp
-					_ordered_species.append(sp)
+			if type_check.call(instance):
+				var key := str(instance.get(id_prop)).to_upper().strip_edges()
+				if key != "" and not ignored_ids.has(key) and not by_id.has(key):
+					by_id[key] = instance
+					loaded.append(instance)
 
-	_ordered_species.sort_custom(func(a: SpeciesBase, b: SpeciesBase) -> bool:
+	loaded.sort_custom(func(a, b) -> bool:
 		if a.sort_order != b.sort_order:
 			return a.sort_order < b.sort_order
-		return a.species_id < b.species_id
+		return str(a.get(id_prop)) < str(b.get(id_prop))
 	)
+	return loaded
 
 static func reload() -> void:
 	_initialized = false
 	ensure_loaded()
 
-static func _discover_species_scripts() -> Array[String]:
+static func _discover_scripts(dir_path: String, excluded_files: Array[String]) -> Array[String]:
 	var found: Array[String] = []
 	var filenames: PackedStringArray = PackedStringArray()
 
 	if ResourceLoader.has_method("list_directory"):
-		filenames = ResourceLoader.list_directory(SPECIES_DIR)
+		filenames = ResourceLoader.list_directory(dir_path)
 
 	if filenames.is_empty():
-		var dir := DirAccess.open(SPECIES_DIR)
+		var dir := DirAccess.open(dir_path)
 		if dir:
 			dir.list_dir_begin()
 			var entry := dir.get_next()
@@ -64,9 +88,9 @@ static func _discover_species_scripts() -> Array[String]:
 			clean_name = clean_name.trim_suffix(".gdc") + ".gd"
 		if not clean_name.ends_with(".gd"):
 			continue
-		if clean_name == "species_base.gd" or clean_name == "species_registry.gd":
+		if excluded_files.has(clean_name):
 			continue
-		var full_path := SPECIES_DIR + "/" + clean_name
+		var full_path := dir_path + "/" + clean_name
 		if not found.has(full_path):
 			found.append(full_path)
 
@@ -97,8 +121,44 @@ static func get_species_or_default(species_name: String) -> SpeciesBase:
 		return sp
 	return _ordered_species[0] if not _ordered_species.is_empty() else null
 
+static func get_all_modifiers() -> Array[ModifierBase]:
+	ensure_loaded()
+	var list: Array[ModifierBase] = []
+	list.assign(_ordered_modifiers)
+	return list
+
+static func get_modifier(mod_name: String) -> ModifierBase:
+	ensure_loaded()
+	var key := mod_name.to_upper().strip_edges()
+	if _modifiers_by_id.has(key):
+		return _modifiers_by_id[key] as ModifierBase
+	for mod in _ordered_modifiers:
+		if mod.display_name.to_upper() == key:
+			return mod
+	return null
+
+static func roll_modifier(species_id: String, is_unique: bool = false, stats: Node = null) -> ModifierBase:
+	ensure_loaded()
+	if is_unique:
+		return ModifierBase.new()
+	for proto in _ordered_modifiers:
+		if proto.can_apply_to_species(species_id, is_unique, stats):
+			var chance := clampf(proto.get_spawn_chance(species_id, stats), 0.0, 1.0)
+			if chance > 0.0 and randf() < chance:
+				return proto.create_instance()
+	return ModifierBase.new()
+
+static func create_modifier_for_species(mod_name: String, species_id: String, is_unique: bool = false, stats: Node = null) -> ModifierBase:
+	ensure_loaded()
+	var proto := get_modifier(mod_name)
+	if proto and proto.can_apply_to_species(species_id, is_unique, stats):
+		return proto.create_instance()
+	return ModifierBase.new()
+
 static func clear_npc_visuals(npc: Sprite3D) -> void:
 	ensure_loaded()
+	for proto in _ordered_modifiers:
+		proto.on_npc_clear(npc)
 	for sp in _ordered_species:
 		sp.on_npc_clear(npc)
 
@@ -136,19 +196,27 @@ static func apply_drink_scoring_hooks(served: DrinkMix, wanted: DrinkOrder, scor
 		var target_sp := get_species(wanted.species_id)
 		if target_sp:
 			target_sp.on_score_drink(served, wanted, score_data)
+	for proto in _ordered_modifiers:
+		proto.on_score_drink_global(served, wanted, score_data)
 
 static func get_glass_resource_multiplier(glass: Area3D, liquid_id: String = "") -> float:
 	ensure_loaded()
-	var mult := 1.0
+	var sp_mult := 1.0
 	for sp in _ordered_species:
-		mult *= sp.get_glass_resource_multiplier(glass, liquid_id)
-	return maxf(0.05, mult)
+		sp_mult *= sp.get_glass_resource_multiplier(glass, liquid_id)
+	var mod_mult := 1.0
+	for proto in _ordered_modifiers:
+		mod_mult *= proto.get_glass_resource_multiplier(glass, liquid_id)
+	return maxf(0.05, maxf(0.05, sp_mult) * maxf(0.05, mod_mult))
 
 static func handle_counter_edge_tool(tool_id: String, player: Node3D, main_node: Node3D) -> bool:
 	ensure_loaded()
 	var normalized_tool := tool_id.to_lower().strip_edges()
 	for sp in _ordered_species:
 		if sp.on_tool_counter_action(normalized_tool, player, main_node):
+			return true
+	for proto in _ordered_modifiers:
+		if proto.on_tool_counter_action(normalized_tool, player, main_node):
 			return true
 	return false
 
@@ -158,11 +226,17 @@ static func handle_glass_tool_click(tool_id: String, glass: Area3D, player: Node
 	for sp in _ordered_species:
 		if sp.on_tool_interact_glass(normalized_tool, glass, player):
 			return true
+	for proto in _ordered_modifiers:
+		if proto.on_tool_interact_glass(normalized_tool, glass, player):
+			return true
 	return false
 
 static func should_consume_glass_click(tool_id: String, glass: Area3D) -> bool:
 	ensure_loaded()
 	var normalized_tool := tool_id.to_lower().strip_edges()
+	for proto in _ordered_modifiers:
+		if proto.should_consume_glass_click(normalized_tool, glass):
+			return true
 	for sp in _ordered_species:
 		if sp.should_consume_glass_click(normalized_tool, glass):
 			return true
@@ -171,10 +245,14 @@ static func should_consume_glass_click(tool_id: String, glass: Area3D) -> bool:
 static func can_highlight_glass(tool_id: String, glass: Area3D) -> bool:
 	ensure_loaded()
 	var normalized_tool := tool_id.to_lower().strip_edges()
+	for proto in _ordered_modifiers:
+		var mod_verdict := proto.can_highlight_glass(normalized_tool, glass)
+		if mod_verdict != -1:
+			return mod_verdict == 1
 	for sp in _ordered_species:
-		var verdict := sp.can_highlight_glass(normalized_tool, glass)
-		if verdict != -1:
-			return verdict == 1
+		var sp_verdict := sp.can_highlight_glass(normalized_tool, glass)
+		if sp_verdict != -1:
+			return sp_verdict == 1
 	return true
 
 static func handle_npc_tool_click(npc: Sprite3D, tool_id: String, player: Node3D) -> bool:
@@ -187,6 +265,14 @@ static func handle_npc_tool_click(npc: Sprite3D, tool_id: String, player: Node3D
 		if sp == primary_sp:
 			continue
 		if sp.on_npc_tool_click(npc, normalized_tool, player):
+			return true
+	var npc_mod: ModifierBase = npc.get("modifier") as ModifierBase if npc else null
+	if npc_mod and npc_mod.on_npc_tool_click(npc, normalized_tool, player):
+		return true
+	for proto in _ordered_modifiers:
+		if npc_mod and proto.get_script() == npc_mod.get_script():
+			continue
+		if proto.on_npc_tool_click(npc, normalized_tool, player):
 			return true
 	return false
 

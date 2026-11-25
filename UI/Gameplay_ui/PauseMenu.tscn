@@ -757,15 +757,4 @@ visible = false
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1600441125]
 libraries/ = SubResource("AnimationLibrary_5lsp1")
 
-[connection signal="pressed" from="Inside_paper/Left_color/Left_Page/Video/Full_Screen" to="." method="_on_full_screen_pressed"]
-[connection signal="pressed" from="Inside_paper/Left_color/Left_Page/Video/World_Environment" to="." method="_on_world_environment_pressed"]
-[connection signal="value_changed" from="Inside_paper/Left_color/Left_Page/Audio_Container/Master/Master_slider" to="." method="_on_master_slider_value_changed"]
-[connection signal="value_changed" from="Inside_paper/Left_color/Left_Page/Audio_Container/UI/UI_slider" to="." method="_on_ui_slider_value_changed"]
-[connection signal="value_changed" from="Inside_paper/Left_color/Left_Page/Audio_Container/Music/Music_slider" to="." method="_on_music_slider_value_changed"]
-[connection signal="pressed" from="Inside_paper/Left_color/Left_Page/Audio_Container/Audio_reset" to="." method="_on_audio_reset_pressed"]
-[connection signal="pressed" from="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Up/Up" to="." method="_on_up_pressed"]
-[connection signal="pressed" from="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Down/Down" to="." method="_on_down_pressed"]
-[connection signal="pressed" from="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Left/Left" to="." method="_on_left_pressed"]
-[connection signal="pressed" from="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Right/Right" to="." method="_on_right_pressed"]
-[connection signal="pressed" from="Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Control_reset" to="." method="_on_control_reset_pressed"]
 [connection signal="pressed" from="Inside_paper/Save_Quit_Setting" to="." method="_on_save_quit_setting_pressed"]

@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://c7luxqrlqkc1n"
+path="res://.godot/imported/Frederick.dialogue-152da965981c12d3e20392c613a6cab1.tres"
+
+[deps]
+
+source_file="res://NPC/Dialogue/Frederick.dialogue"
+dest_files=["res://.godot/imported/Frederick.dialogue-152da965981c12d3e20392c613a6cab1.tres"]
+
+[params]
+
+defaults=true

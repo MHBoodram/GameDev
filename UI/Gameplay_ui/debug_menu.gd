@@ -103,7 +103,7 @@ func _populate_modifier_dropdown() -> void:
 	modifier_option.set_item_metadata(0, "__NATURAL__")
 	modifier_option.add_item("None")
 	modifier_option.set_item_metadata(1, "__NONE__")
-	for mod in ModifierRegistry.get_all_modifiers():
+	for mod in SpeciesRegistry.get_all_modifiers():
 		modifier_option.add_item(mod.display_name)
 		modifier_option.set_item_metadata(modifier_option.item_count - 1, mod.modifier_id)
 	modifier_option.select(0)
@@ -136,6 +136,13 @@ func _update_cursor_visibility() -> void:
 func _on_visibility_changed() -> void:
 	_update_cursor_visibility()
 
+func _get_counter_ref() -> Node3D:
+	if GameState.player and "counter" in GameState.player and is_instance_valid(GameState.player.counter):
+		return GameState.player.counter
+	if is_instance_valid(GameState.main_node):
+		return GameState.main_node.get_node_or_null("Coutner") as Node3D
+	return null
+
 func _cleanup_tutorial_and_dialogue(remove_story_npcs: bool = true) -> void:
 	if GameState.gameplay_ui:
 		if "tutorial_director" in GameState.gameplay_ui and GameState.gameplay_ui.tutorial_director:
@@ -156,17 +163,7 @@ func _cleanup_tutorial_and_dialogue(remove_story_npcs: bool = true) -> void:
 	GameState.character_talking = null
 
 	if remove_story_npcs and GameState.seat_manager:
-		var sm := GameState.seat_manager
-		for i in sm.seats.size():
-			var npc := sm.seats[i]
-			if is_instance_valid(npc) and npc.unique_talk:
-				sm.clear_receipt_for_seat(npc.seat_num)
-				if npc.patience_timer:
-					npc.patience_timer.stop()
-				if npc._bounce_tween and npc._bounce_tween.is_valid():
-					npc._bounce_tween.kill()
-				sm.seats[i] = null
-				npc.queue_free()
+		GameState.seat_manager.clear_all_customers(true, true)
 
 func _on_skip_tutorial_pressed() -> void:
 	if is_instance_valid(GameState.main_node):
@@ -226,16 +223,7 @@ func _on_end_night_pressed() -> void:
 	var sm := GameState.seat_manager
 	if sm:
 		sm.stop_spawning()
-		for i in sm.seats.size():
-			var npc := sm.seats[i]
-			if is_instance_valid(npc):
-				sm.clear_receipt_for_seat(npc.seat_num)
-				if npc.patience_timer:
-					npc.patience_timer.stop()
-				if npc._bounce_tween and npc._bounce_tween.is_valid():
-					npc._bounce_tween.kill()
-				sm.seats[i] = null
-				npc.queue_free()
+		sm.clear_all_customers(true, false)
 
 	GameState.special_state = false
 	GameState.night_paused = false
@@ -260,6 +248,9 @@ func _on_jump_night_pressed() -> void:
 	GameState.special_state = false
 	GameState.night_paused = false
 	GameState.can_end_night = true
+	GameState.seat1_order = []
+	GameState.seat2_order = []
+	GameState.seat3_order = []
 
 	GameState.night = clampi(target_night, 1, GameState.max_nights)
 	GameState.reset_night_restarts()
@@ -305,7 +296,7 @@ func _on_spawn_cup_pressed() -> void:
 	if not glass:
 		return
 
-	var counter_ref: Node3D = GameState.player.counter if (GameState.player and "counter" in GameState.player) else main.get_node_or_null("Coutner")
+	var counter_ref: Node3D = _get_counter_ref()
 	var cup_scale: Vector3 = GameState.player.spawn_scale if (GameState.player and "spawn_scale" in GameState.player) else Vector3(0.2, 0.2, 0.2)
 	glass.scale = cup_scale
 	glass._skip_initial_snap = true
@@ -376,8 +367,7 @@ func _on_unlock_all_pressed() -> void:
 			PlayerStats.unlocks["Ingredients"][ing] = true
 			SpeciesRegistry.on_ingredient_unlocked(str(ing), PlayerStats)
 	if GameState.shelf_manager and is_instance_valid(GameState.main_node):
-		var counter_ref: Node3D = GameState.player.counter if (GameState.player and "counter" in GameState.player) else GameState.main_node.get_node_or_null("Coutner")
-		GameState.shelf_manager.refresh_shelf_bottles(GameState.main_node, counter_ref)
+		GameState.shelf_manager.refresh_shelf_bottles(GameState.main_node, _get_counter_ref())
 
 func _on_refill_pressed() -> void:
 	if not GameState.shelf_manager:
@@ -394,8 +384,7 @@ func _on_blood_game_pressed() -> void:
 	if PlayerStats.unlocks.has("Ingredients"):
 		PlayerStats.unlocks["Ingredients"]["Blood"] = true
 	if GameState.shelf_manager and is_instance_valid(GameState.main_node):
-		var counter_ref: Node3D = GameState.player.counter if (GameState.player and "counter" in GameState.player) else GameState.main_node.get_node_or_null("Coutner")
-		GameState.shelf_manager.refresh_shelf_bottles(GameState.main_node, counter_ref)
+		GameState.shelf_manager.refresh_shelf_bottles(GameState.main_node, _get_counter_ref())
 	visible = false
 	GameState.minigame_host.start_blood_minigame(GameState.main_node, GameState.player)
 

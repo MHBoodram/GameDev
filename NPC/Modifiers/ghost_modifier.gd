@@ -1,6 +1,10 @@
 class_name GhostModifier
 extends ModifierBase
 
+const SPECTRAL_REP_MULTIPLIER := 2.0
+const SPECTRAL_TIP_MULTIPLIER := 1.5
+const REJECTED_TIP_MULTIPLIER := 0.0
+
 var ghost_fell_through: bool = false
 
 func _init() -> void:
@@ -15,11 +19,8 @@ func can_apply_to_species(species_id: String, is_unique: bool = false, stats: No
 	var sp := SpeciesRegistry.get_species(species_id)
 	if sp == null or not sp.can_accept_modifier(modifier_id):
 		return false
-	if stats and "unlocks" in stats:
-		if stats.unlocks.has("Ingredients") and stats.unlocks["Ingredients"].has("Knife"):
-			return stats.has_unlock("Ingredients", "Knife")
-		if stats.unlocks.has("Tools") and stats.unlocks["Tools"].has("Knife"):
-			return stats.has_unlock("Tools", "Knife")
+	if stats and stats.has_method("has_knife_unlock"):
+		return stats.has_knife_unlock(true)
 	return true
 
 func on_npc_setup(npc: Sprite3D) -> void:
@@ -64,7 +65,7 @@ func evaluate_drink_attempt(_npc: Sprite3D, mix: DrinkMix, _wanted: DrinkOrder) 
 		"clear_orders": true,
 		"zero_satisfaction": true,
 		"emo": "mad",
-		"feedback": "ghost_passed_through"
+		"feedback": "Passed right through!"
 	}
 
 func consume_delivered_cup(_npc: Sprite3D, drink: Area3D) -> bool:
@@ -102,17 +103,18 @@ func consume_delivered_cup(_npc: Sprite3D, drink: Area3D) -> bool:
 func on_drink_served(npc: Sprite3D, _mix: DrinkMix, _wanted: DrinkOrder, score_data: Dictionary) -> void:
 	if score_data.get("is_satisfactory", false) and not ghost_fell_through:
 		if is_instance_valid(npc) and npc.has_method("show_floating_feedback"):
-			npc.show_floating_feedback("ghost_spectral_delight")
+			npc.show_floating_feedback("Spectral delight!")
 
 func modify_species_reputation_delta(_npc: Sprite3D, _race_name: String, base_delta: float, is_satisfactory: bool, _drink_score: float) -> float:
 	if is_satisfactory and not ghost_fell_through:
-		return base_delta * 2.0
+		return base_delta * SPECTRAL_REP_MULTIPLIER
 	return base_delta
 
 func modify_tip(_npc: Sprite3D, current_tip: float, _is_satisfactory: bool, _drink_score: float) -> float:
-	if ghost_fell_through:
-		return 0.0
-	return current_tip * 1.5
+	var mult := REJECTED_TIP_MULTIPLIER if ghost_fell_through else SPECTRAL_TIP_MULTIPLIER
+	var adjusted_tip := current_tip * mult
+	print("  [GhostTip] tip=$%.2f * mult=%.2f -> $%.2f (fell_through=%s)" % [current_tip, mult, adjusted_tip, str(ghost_fell_through)])
+	return adjusted_tip
 
 func can_highlight_glass(tool_id: String, glass: Area3D) -> int:
 	if tool_id != "knife" or not (glass is Glasses):
@@ -146,7 +148,7 @@ func on_tool_interact_glass(tool_id: String, glass: Area3D, _player: Node3D) -> 
 		stab_tween.tween_property(target_sprite, "position:y", base_pos.y, 0.22)
 
 	cup.set_highlight(false)
-	GameEvents.sfx_requested.emit("stab")
+	GameState.play_sfx("play_stab")
 	if cup.camera and cup.camera.has_method("add_shake"):
 		cup.camera.add_shake(0.15)
 	return true

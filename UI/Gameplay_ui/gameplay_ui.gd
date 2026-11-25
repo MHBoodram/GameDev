@@ -29,40 +29,10 @@ func _ready() -> void:
 	$FishEye.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	GameState.gameplay_ui = self
 	_sync_money_display(PlayerStats.money)
+	if has_node("Left Container/Timer"):
+		_set_max_time(GameState.night_duration)
 	set_shift_hud_visible(false)
 	_setup_hud_indicators()
-	if PlayerStats and not PlayerStats.money_changed.is_connected(_on_money_changed):
-		PlayerStats.money_changed.connect(_on_money_changed)
-	if not GameEvents.night_title_requested.is_connected(_on_night_title_requested):
-		GameEvents.night_title_requested.connect(_on_night_title_requested)
-	if not GameEvents.minigame_lock_changed.is_connected(_on_minigame_lock_changed):
-		GameEvents.minigame_lock_changed.connect(_on_minigame_lock_changed)
-
-func _exit_tree() -> void:
-	if is_instance_valid(PlayerStats) and PlayerStats.money_changed.is_connected(_on_money_changed):
-		PlayerStats.money_changed.disconnect(_on_money_changed)
-	if GameEvents._bus:
-		if GameEvents.night_title_requested.is_connected(_on_night_title_requested):
-			GameEvents.night_title_requested.disconnect(_on_night_title_requested)
-		if GameEvents.minigame_lock_changed.is_connected(_on_minigame_lock_changed):
-			GameEvents.minigame_lock_changed.disconnect(_on_minigame_lock_changed)
-
-func _on_minigame_lock_changed(locked: bool) -> void:
-	if locked:
-		_in_down_minigame()
-	else:
-		_out_down_minigame()
-
-func _on_money_changed(new_value: float, _delta: float) -> void:
-	_change_money(new_value)
-
-func _on_night_title_requested(text: String) -> void:
-	if text == "":
-		_night_title_popup()
-	else:
-		$ColorRect3/Night/HeyPeter.hide()
-		$ColorRect3/Night.text = text
-		$AnimationPlayer.play("Night_Animation")
 
 func _setup_hud_indicators() -> void:
 	if hud_indicators and is_instance_valid(hud_indicators):
@@ -193,8 +163,14 @@ func _change_money(new_value: float) -> void:
 	if is_inside_tree():
 		$"Right Container/Money/CPUParticles2D".emitting = false
 
+func _set_max_time(new_max: float) -> void:
+	if has_node("Left Container/Timer"):
+		$"Left Container/Timer".max_value = new_max
+		$"Left Container/Timer".value = new_max
+
 func _change_time(new_value: float) -> void:
-	$"Left Container/Timer".value = new_value
+	if has_node("Left Container/Timer"):
+		$"Left Container/Timer".value = new_value
 
 # tutorial methods go to the tutorial helper
 func start_tutorial(keys_node: Control = null) -> void:

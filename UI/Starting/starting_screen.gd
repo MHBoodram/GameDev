@@ -22,19 +22,7 @@ func _moving_3d_to_2d():
 	#$Node2D/Camera2D.make_current()
 
 func _update_hand(change: String) -> void:
-	match change:
-		"interact":
-			if(!$Node2D/Setting/Hand/AnimationPlayer.current_animation == "interact"):
-				$Node2D/Setting/Hand/AnimationPlayer.play("interact")
-			return
-		"holding":
-			if(!$Node2D/Setting/Hand/AnimationPlayer.current_animation == "hold"):
-				$Node2D/Setting/Hand/AnimationPlayer.play("hold")
-			return
-		_:
-			if(!$Node2D/Setting/Hand/AnimationPlayer.current_animation == "idle"):
-				$Node2D/Setting/Hand/AnimationPlayer.play("idle")
-			return
+	ToolController.apply_hand_animation($Node2D/Setting/Hand/AnimationPlayer, change)
 
 func _moving_2d_to_3d():
 	$AnimationPlayer.play_backwards("move_setting")

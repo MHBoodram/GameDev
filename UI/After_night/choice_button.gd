@@ -32,6 +32,8 @@ func _on_input_event(camera: Node, event: InputEvent, event_position: Vector3, n
 
 			PlayerStats._change_money(PlayerStats.money - cost)
 			PlayerStats.unlocks[type][id] = true
+			if type == "Ingredients":
+				SpeciesRegistry.on_ingredient_unlocked(id, PlayerStats)
 			if(type == "Upgrades"):
 				pass
 				if(PlayerStats.unlock_passive.has(id)):

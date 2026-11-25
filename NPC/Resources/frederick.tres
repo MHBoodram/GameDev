@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="NPC" format=3 uid="uid://chgdm8bwx4ubx"]
+
+[ext_resource type="Script" uid="uid://cafgtw527fei4" path="res://NPC/npc_class.gd" id="1_dmjbj"]
+[ext_resource type="Resource" uid="uid://c7luxqrlqkc1n" path="res://NPC/Dialogue/Frederick.dialogue" id="1_w3tn1"]
+[ext_resource type="Texture2D" uid="uid://8p2g1yxbn2bm" path="res://Assets/NPC/Tiny/tiny.webp" id="3_2i6k5"]
+
+[resource]
+script = ExtResource("1_dmjbj")
+sprite_sheet = ExtResource("3_2i6k5")
+race = "TINY"
+dialogue_resource = ExtResource("1_w3tn1")
+patience_time = 25.0
+metadata/_custom_type_script = "uid://cafgtw527fei4"

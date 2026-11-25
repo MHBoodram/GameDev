@@ -1,82 +1,53 @@
 # All audio sound effects
 extends Node
 
+const UI_AUDIO_SCRIPT := preload("res://UI/Audio/UIAudio.gd")
+
 @export var knifedraw_stream: AudioStream = preload("res://Assets/Audio/SFX/Knifesheaf.wav")
 @export var knifestab_stream: AudioStream = preload("res://Assets/Audio/SFX/KnifeStab.wav")
 @export var entranto_stream: AudioStream = preload("res://Assets/Audio/SFX/842380__mihacappy__entrance_open1.wav")
 @export var liquidpour_stream: AudioStream = preload("res://Assets/Audio/SFX/liquidpour.wav")
 @export var shakerrattle_stream: AudioStream = preload("res://Assets/Audio/SFX/Shaker1.mp3")
 @export var mugpickup_stream: AudioStream = preload("res://Assets/Audio/SFX/Pickupglass.wav")
+@export var slime_stream: AudioStream = preload("res://Assets/Audio/SFX/Slime.wav")
 @export var bus_name: StringName = &"SFX"
 
-var knifedraw: AudioStreamPlayer
-var knifestab: AudioStreamPlayer
-var entranto: AudioStreamPlayer
-var liquidpour: AudioStreamPlayer
-var shakerrattle: AudioStreamPlayer
-var mugpickup: AudioStreamPlayer
+var _players: Dictionary = {}
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	knifedraw = _make_player(knifedraw_stream)
-	knifestab = _make_player(knifestab_stream)
-	entranto = _make_player(entranto_stream)
-	liquidpour = _make_player(liquidpour_stream)
-	shakerrattle = _make_player(shakerrattle_stream)
-	mugpickup = _make_player(mugpickup_stream)
-	call_deferred("_connect_game_events")
+	var streams := {
+		&"draw": knifedraw_stream,
+		&"stab": knifestab_stream,
+		&"entranto": entranto_stream,
+		&"liquidpour": liquidpour_stream,
+		&"shakerrattle": shakerrattle_stream,
+		&"mugpickup": mugpickup_stream,
+		&"slime": slime_stream,
+	}
+	for key in streams:
+		_players[key] = UI_AUDIO_SCRIPT.create_bus_player(self, streams[key], bus_name, &"SFXAudio")
 
-func _connect_game_events() -> void:
-	if not GameEvents.sfx_requested.is_connected(_on_sfx_requested):
-		GameEvents.sfx_requested.connect(_on_sfx_requested)
-
-func _on_sfx_requested(sfx_id: String) -> void:
-	match sfx_id:
-		"draw", "knifedraw", "play_draw":
-			play_draw()
-		"stab", "knifestab", "play_stab":
-			play_stab()
-		"entranto", "play_entranto":
-			play_entranto()
-		"pour", "liquidpour", "play_liquidpour":
-			play_liquidpour()
-		"shaker", "shakerrattle", "play_shakerrattle":
-			play_shakerrattle()
-		"mugpickup", "play_mugpickup":
-			play_mugpickup()
-
-func _make_player(stream: AudioStream) -> AudioStreamPlayer:
-	var player := AudioStreamPlayer.new()
-	player.stream = stream
-	if AudioServer.get_bus_index(bus_name) != -1:
-		player.bus = bus_name
-	else:
-		push_warning("SFXAudio: bus '%s' not found, falling back to Master." % bus_name)
-		player.bus = &"Master"
-	add_child(player)
-	return player
-
-func _change_bus_volume(n_bus: String, value: float) -> void:
-	SettingState.set_bus_volume(n_bus, value)
+func _play_key(key: StringName) -> void:
+	UI_AUDIO_SCRIPT.play_player(_players.get(key) as AudioStreamPlayer)
 
 func play_draw() -> void:
-	_play(knifedraw)
+	_play_key(&"draw")
 
 func play_stab() -> void:
-	_play(knifestab)
+	_play_key(&"stab")
 
 func play_entranto() -> void:
-	_play(entranto)
+	_play_key(&"entranto")
 
 func play_liquidpour() -> void:
-	_play(liquidpour)
+	_play_key(&"liquidpour")
 
 func play_shakerrattle() -> void:
-	_play(shakerrattle)
+	_play_key(&"shakerrattle")
 
 func play_mugpickup() -> void:
-	_play(mugpickup)
+	_play_key(&"mugpickup")
 
-func _play(player: AudioStreamPlayer) -> void:
-	if player and player.stream:
-		player.play()
+func play_slime() -> void:
+	_play_key(&"slime")

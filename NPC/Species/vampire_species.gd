@@ -18,11 +18,9 @@ func _init() -> void:
 func is_unlocked(stats: Node = null) -> bool:
 	if stats == null:
 		return false
+	if stats.has_method("has_knife_unlock"):
+		return stats.has_knife_unlock(stats.has_unlock("Ingredients", "Blood"))
 	if stats.has_method("has_unlock"):
-		if "unlocks" in stats and stats.unlocks.has("Ingredients") and stats.unlocks["Ingredients"].has("Knife"):
-			return stats.has_unlock("Ingredients", "Knife")
-		if "unlocks" in stats and stats.unlocks.has("Tools") and stats.unlocks["Tools"].has("Knife"):
-			return stats.has_unlock("Tools", "Knife")
 		return stats.has_unlock("Ingredients", "Blood")
 	return true
 

@@ -7,25 +7,39 @@ extends Node
 const BASE_NPC_SCENE := preload("res://NPC/base npc.tscn")
 const RECEIPT_SCENE := preload("res://NPC/Recipt/recipt_scene.tscn")
 
+const SERVE_COMBO_GRACE_PERIOD := 8.0
+const SERVE_COMBO_PER_ORDER := 0.20
+
 var seats: Array[Base_NPC] = [null, null, null]
 var receipt_board: ReceiptBoard = ReceiptBoard.new()
 var main_root: Node3D
 
 var is_spawning_allowed: bool = false
 var spawn_timer_acc: float = 0.0
+var serve_combo_streak: int = 0
+var serve_combo_grace_left: float = 0.0
+
+func _exit_tree() -> void:
+	reset_serve_combo(true)
 
 func setup(host: Node3D) -> void:
 	main_root = host
 	receipt_board.setup(host)
+	if not DialogueManager.dialogue_started.is_connected(_on_dialogue_started):
+		DialogueManager.dialogue_started.connect(_on_dialogue_started)
+	if not DialogueManager.dialogue_ended.is_connected(_on_dialogue_ended):
+		DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
 
 func start_spawning() -> void:
 	is_spawning_allowed = true
 	spawn_timer_acc = 16.0
+	reset_serve_combo(true)
 
 func stop_spawning() -> void:
 	is_spawning_allowed = false
 
 func _process(delta: float) -> void:
+	_update_serve_combo_timer(delta)
 	if not is_spawning_allowed or GameState.special_state or GameState.night_paused:
 		return
 	if get_empty_seat_count() <= 0:
@@ -36,6 +50,64 @@ func _process(delta: float) -> void:
 	if spawn_timer_acc >= spawn_interval:
 		spawn_timer_acc = 0.0
 		spawn_random_customer()
+
+func _update_serve_combo_timer(delta: float) -> void:
+	if serve_combo_grace_left <= 0.0:
+		return
+	if GameState.is_dialogue_open:
+		return
+	serve_combo_grace_left = maxf(0.0, serve_combo_grace_left - delta)
+	if serve_combo_grace_left <= 0.0:
+		reset_serve_combo()
+	else:
+		_sync_serve_combo_hud()
+
+func register_order_served(is_satisfactory: bool) -> Dictionary:
+	if not is_satisfactory:
+		reset_serve_combo()
+		return {
+			"streak": 0,
+			"stacks": 0,
+			"bonus": 0.0,
+			"grace_left": 0.0
+		}
+
+	if serve_combo_grace_left > 0.0 and serve_combo_streak > 0:
+		serve_combo_streak += 1
+	else:
+		serve_combo_streak = 1
+
+	serve_combo_grace_left = SERVE_COMBO_GRACE_PERIOD
+	var stacks := maxi(0, serve_combo_streak - 1)
+	var bonus := snappedf(float(stacks) * SERVE_COMBO_PER_ORDER, 0.0001)
+	_sync_serve_combo_hud()
+	return {
+		"streak": serve_combo_streak,
+		"stacks": stacks,
+		"bonus": bonus,
+		"grace_left": serve_combo_grace_left
+	}
+
+func reset_serve_combo(immediate: bool = false) -> void:
+	serve_combo_streak = 0
+	serve_combo_grace_left = 0.0
+	var hud := HudIndicators.get_current()
+	if hud and hud.has_method("hide_serve_combo_indicator"):
+		hud.hide_serve_combo_indicator(immediate)
+
+func _sync_serve_combo_hud() -> void:
+	var hud := HudIndicators.get_current()
+	if hud and hud.has_method("update_serve_combo_indicator"):
+		var stacks := maxi(0, serve_combo_streak - 1)
+		var current_bonus := snappedf(float(stacks) * SERVE_COMBO_PER_ORDER, 0.0001)
+		hud.update_serve_combo_indicator(serve_combo_streak, serve_combo_grace_left, SERVE_COMBO_GRACE_PERIOD, current_bonus, SERVE_COMBO_PER_ORDER)
+
+func _on_dialogue_started(_resource) -> void:
+	GameState.is_dialogue_open = true
+
+func _on_dialogue_ended(_resource) -> void:
+	GameState.is_dialogue_open = false
+	GameState.character_talking = null
 
 func get_empty_seat_count() -> int:
 	return seats.count(null)
@@ -91,7 +163,11 @@ func spawn_customer(npc_source: Variant, patience: float = 90.0, dialogue_title:
 	if target_seat:
 		npc._moving_to(target_seat)
 
-	npc._want_drink()
+	var order := npc._want_drink()
+	match free_seat:
+		0: GameState.seat1_order = order
+		1: GameState.seat2_order = order
+		2: GameState.seat3_order = order
 
 	return npc
 
@@ -101,16 +177,12 @@ func spawn_customer_by_species(sp: SpeciesBase, patience: float = -1.0, dialogue
 	var effective_patience := patience if patience > 0.0 else sp.default_patience
 	return spawn_customer(sp.get_npc_resource(), effective_patience, dialogue_title, forced_modifier)
 
-func spawn_random_customer() -> Base_NPC:
-	var weighted_entries := SpeciesRegistry.get_spawnable_species_weights(PlayerStats)
+func _pick_weighted_species(weighted_entries: Array[Dictionary]) -> SpeciesBase:
 	if weighted_entries.is_empty():
-		var fallback := SpeciesRegistry.get_species_or_default("HUMAN")
-		return spawn_customer_by_species(fallback)
-
+		return null
 	var total_weight: float = 0.0
 	for entry in weighted_entries:
 		total_weight += float(entry["weight"])
-
 	var roll := randf_range(0.0, total_weight)
 	var acc: float = 0.0
 	var chosen: SpeciesBase = weighted_entries[0]["species"]
@@ -119,7 +191,12 @@ func spawn_random_customer() -> Base_NPC:
 		if roll <= acc:
 			chosen = entry["species"]
 			break
+	return chosen
 
+func spawn_random_customer() -> Base_NPC:
+	var chosen := _pick_weighted_species(SpeciesRegistry.get_spawnable_species_weights(PlayerStats))
+	if chosen == null:
+		chosen = SpeciesRegistry.get_species_or_default("HUMAN")
 	return spawn_customer_by_species(chosen)
 
 func spawn_specific_species(species_name: String) -> Base_NPC:
@@ -127,7 +204,7 @@ func spawn_specific_species(species_name: String) -> Base_NPC:
 	return spawn_customer_by_species(sp)
 
 func spawn_specific_with_modifier(modifier_name: String, species_name: String = "") -> Base_NPC:
-	var mod_proto := ModifierRegistry.get_modifier(modifier_name)
+	var mod_proto := SpeciesRegistry.get_modifier(modifier_name)
 	var chosen: SpeciesBase = null
 
 	if species_name != "":
@@ -137,22 +214,11 @@ func spawn_specific_with_modifier(modifier_name: String, species_name: String = 
 
 	if chosen == null:
 		var eligible_entries: Array[Dictionary] = []
-		var total_weight: float = 0.0
 		for entry in SpeciesRegistry.get_spawnable_species_weights(PlayerStats):
 			var sp: SpeciesBase = entry["species"]
 			if sp and (mod_proto == null or mod_proto.can_apply_to_species(sp.species_id, false, PlayerStats)):
 				eligible_entries.append(entry)
-				total_weight += float(entry["weight"])
-
-		if not eligible_entries.is_empty():
-			var roll := randf_range(0.0, total_weight)
-			var acc: float = 0.0
-			chosen = eligible_entries[0]["species"]
-			for entry in eligible_entries:
-				acc += float(entry["weight"])
-				if roll <= acc:
-					chosen = entry["species"]
-					break
+		chosen = _pick_weighted_species(eligible_entries)
 
 	if chosen == null:
 		for sp in SpeciesRegistry.get_all_species():
@@ -181,20 +247,8 @@ func spawn_custom_customer(species_id: String = "", modifier_id: String = "__NAT
 		if clean_sp != "":
 			chosen = SpeciesRegistry.get_species_or_default(clean_sp)
 		else:
-			var weighted_entries := SpeciesRegistry.get_spawnable_species_weights(PlayerStats)
-			if not weighted_entries.is_empty():
-				var total_weight: float = 0.0
-				for entry in weighted_entries:
-					total_weight += float(entry["weight"])
-				var roll := randf_range(0.0, total_weight)
-				var acc: float = 0.0
-				chosen = weighted_entries[0]["species"]
-				for entry in weighted_entries:
-					acc += float(entry["weight"])
-					if roll <= acc:
-						chosen = entry["species"]
-						break
-			else:
+			chosen = _pick_weighted_species(SpeciesRegistry.get_spawnable_species_weights(PlayerStats))
+			if chosen == null:
 				chosen = SpeciesRegistry.get_species_or_default("HUMAN")
 		return spawn_customer_by_species(chosen, -1.0, "start", "NONE")
 
@@ -244,13 +298,26 @@ func free_seat(seat_number: int) -> void:
 	if is_completely_empty() and GameState.night_manager:
 		GameState.night_manager.check_night_concluded(true)
 
-func clear_all_customers() -> void:
+func clear_all_customers(immediate: bool = false, unique_only: bool = false) -> void:
 	for seat_idx in seats.size():
 		var npc := seats[seat_idx]
-		if npc:
+		if not is_instance_valid(npc):
 			seats[seat_idx] = null
-			clear_receipt_for_seat(seat_idx + 1)
+			continue
+		if unique_only and not npc.unique_talk:
+			continue
+		seats[seat_idx] = null
+		clear_receipt_for_seat(npc.seat_num if npc.seat_num > 0 else (seat_idx + 1))
+		if immediate:
+			if npc.patience_timer:
+				npc.patience_timer.stop()
+			if npc._bounce_tween and npc._bounce_tween.is_valid():
+				npc._bounce_tween.kill()
+			npc.queue_free()
+		else:
 			npc._leaving()
+	if not unique_only:
+		reset_serve_combo(immediate)
 
 func add_receipt(seat: int, order_text: String, customer_race: String = "", customer_icon: Texture2D = null) -> void:
 	if not main_root:
@@ -292,6 +359,13 @@ func add_receipt(seat: int, order_text: String, customer_race: String = "", cust
 			var tween := main_root.get_tree().create_tween()
 			tween.tween_property(recipt_node, "global_position", marker_node.global_position, 0.5)
 
+func update_receipt(seat: int, order_text: String) -> void:
+	if not main_root:
+		return
+	var recipt_node := main_root.get_node_or_null("ReciptPaper" + str(seat))
+	if recipt_node and recipt_node.has_method("_write"):
+		recipt_node._write(order_text)
+
 func clear_receipt_for_seat(seat_number: int) -> void:
 	if not main_root:
 		return
@@ -323,17 +397,7 @@ func serve_cup_to_npc(drink: Glasses, npc: Base_NPC) -> void:
 		drink.is_delivering = false
 
 	if is_instance_valid(drink) and not drink.is_consumed and is_instance_valid(npc):
-		if npc.has_method("receive_drink"):
-			npc.receive_drink(drink.drink_mix)
-		else:
-			npc._obtain_drink(drink._return_drink())
-		var handled := false
-		if npc.modifier and npc.modifier.consume_delivered_cup(npc, drink):
-			handled = true
-		elif npc.species_def and npc.species_def.consume_delivered_cup(npc, drink):
-			handled = true
-		if not handled:
-			drink._dranked()
+		npc.deliver_cup(drink)
 
 func on_patience_ended(seat_num: int) -> void:
 	if not main_root:

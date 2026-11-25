@@ -1,26 +1,53 @@
 class_name HudIndicators
 extends Control
 
-const INDICATOR_FONT: Font = IndicatorSettings.INDICATOR_FONT
+const INDICATOR_FONT: Font = preload("res://Assets/Font/Merchant Copy.ttf")
 const LIQUIDS_LABEL_SCENE: PackedScene = preload("res://Player/Drink/Glasses/liquids_label.tscn")
 
-const INCREASE_COLOR: Color = IndicatorSettings.COLORS["increase"]
-const DECREASE_COLOR: Color = IndicatorSettings.COLORS["decrease"]
-const CLEAN_COLOR: Color = IndicatorSettings.COLORS["clean"]
-const OUTLINE_COLOR: Color = IndicatorSettings.COLORS["outline"]
-const SHADOW_COLOR: Color = IndicatorSettings.COLORS["shadow"]
+const INCREASE_COLOR: Color = Color(0.28, 0.96, 0.36, 1.0)
+const DECREASE_COLOR: Color = Color(1.0, 0.25, 0.25, 1.0)
+const OK_COLOR: Color = Color(1.0, 0.82, 0.24, 1.0)
+const PERFECT_COLOR: Color = Color(0.38, 0.94, 1.0, 1.0)
+const CLEAN_COLOR: Color = Color(0.55, 0.92, 1.0, 1.0)
+const OUTLINE_COLOR: Color = Color(0.0, 0.0, 0.0, 1.0)
+const SHADOW_COLOR: Color = Color(0.0, 0.0, 0.0, 0.75)
 
-const DEFAULT_FONT_SIZE: int = IndicatorSettings.HUD_DEFAULTS["font_size"]
-const DEFAULT_OUTLINE_SIZE: int = IndicatorSettings.HUD_DEFAULTS["outline_size"]
-const DEFAULT_FLOAT_DISTANCE: float = IndicatorSettings.HUD_DEFAULTS["float_distance"]
-const DEFAULT_DURATION: float = IndicatorSettings.HUD_DEFAULTS["duration"]
-const DEFAULT_SCALE_PUNCH: float = IndicatorSettings.HUD_DEFAULTS["scale_punch"]
+const COMBO_COMPONENT_COLOR: Color = Color(1.0, 0.82, 0.24, 1.0)
+const COMBO_FINAL_COLOR: Color = Color(1.0, 0.62, 0.16, 1.0)
+const COMBO_INITIAL_DELAY: float = 0.0
+const COMBO_COMPONENT_DELAY: float = 0.35
+const COMBO_FINAL_DELAY: float = 0.35
+const COMBO_DURATION: float = 1.45
+const COMBO_FLOAT_DISTANCE: float = 64.0
+const COMBO_COMPONENT_FONT_SIZE: int = 44
+const COMBO_FINAL_FONT_SIZE: int = 56
+const COMBO_COMPONENT_SCALE_PUNCH: float = 1.28
+const COMBO_FINAL_SCALE_PUNCH: float = 1.48
+
+const SCORE_THRESHOLD_PERFECT: float = 0.95
+const SCORE_THRESHOLD_GOOD: float = 0.85
+const SCORE_THRESHOLD_OK: float = 0.65
+
+const DEFAULT_FONT_SIZE: int = 50
+const DEFAULT_OUTLINE_SIZE: int = 8
+const DEFAULT_FLOAT_DISTANCE: float = 64.0
+const DEFAULT_DURATION: float = 1.45
+const DEFAULT_SCALE_PUNCH: float = 1.28
 
 static var current: HudIndicators = null
 
 var _channels: Dictionary = {}
 var _active_floating_groups: Dictionary = {}
 var _status_groups: Dictionary = {}
+var _fallback_visual_helper: LiquidVisualHelper = LiquidVisualHelper.new()
+
+var _serve_combo_box: VBoxContainer = null
+var _serve_combo_label: Label = null
+var _serve_combo_bar: ProgressBar = null
+var _serve_combo_fill_style: StyleBoxFlat = null
+var _serve_combo_fade_tween: Tween = null
+var _serve_combo_punch_tween: Tween = null
+var _last_serve_combo_streak: int = 0
 
 static func get_current() -> HudIndicators:
 	if is_instance_valid(current) and current.is_inside_tree():
@@ -48,7 +75,6 @@ func _enter_tree() -> void:
 
 func _exit_tree() -> void:
 	_disconnect_player_stats()
-	_disconnect_game_events()
 	if current == self:
 		current = null
 
@@ -66,8 +92,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_register_default_channels()
 	_ensure_pouring_group()
+	_ensure_serve_combo_ui()
 	_connect_player_stats()
-	_connect_game_events()
 
 func _process(_delta: float) -> void:
 	if _status_groups.has("pouring"):
@@ -75,55 +101,116 @@ func _process(_delta: float) -> void:
 		var owner_obj: Variant = pouring_group.get("owner", null)
 		if owner_obj != null and not is_instance_valid(owner_obj):
 			pouring_group["owner"] = null
-			var fade_dur: float = float(IndicatorSettings.get_status_group("pouring").get("fade_duration", 1.0))
-			hide_status_group("pouring", null, false, fade_dur)
+			hide_status_group("pouring", null, false, 1.0)
 
 func _register_default_channels() -> void:
-	for channel_id in IndicatorSettings.HUD_CHANNELS.keys():
-		register_channel(str(channel_id), IndicatorSettings.get_hud_channel(str(channel_id)))
+	register_channel("drink_score", {
+		"stack_group": "right_hud",
+		"align": "right",
+		"y_offset_below_money": 4.0,
+		"fallback_y": 98.0,
+		"font_size": DEFAULT_FONT_SIZE,
+		"float_distance": DEFAULT_FLOAT_DISTANCE,
+		"duration": DEFAULT_DURATION,
+		"scale_punch": 1.32,
+		"positive_color": INCREASE_COLOR,
+		"negative_color": DECREASE_COLOR
+	})
+	register_channel("money", {
+		"stack_group": "right_hud",
+		"align": "right",
+		"y_offset_below_money": 4.0,
+		"fallback_y": 98.0,
+		"font_size": DEFAULT_FONT_SIZE,
+		"float_distance": DEFAULT_FLOAT_DISTANCE,
+		"duration": DEFAULT_DURATION,
+		"scale_punch": DEFAULT_SCALE_PUNCH,
+		"positive_color": INCREASE_COLOR,
+		"negative_color": DECREASE_COLOR
+	})
+	register_channel("overall_rep", {
+		"stack_group": "right_hud",
+		"align": "right",
+		"y_offset_below_money": 46.0,
+		"fallback_y": 140.0,
+		"font_size": DEFAULT_FONT_SIZE,
+		"float_distance": DEFAULT_FLOAT_DISTANCE,
+		"duration": DEFAULT_DURATION,
+		"scale_punch": DEFAULT_SCALE_PUNCH,
+		"positive_color": INCREASE_COLOR,
+		"negative_color": DECREASE_COLOR
+	})
+	register_channel("species_rep", {
+		"stack_group": "right_hud",
+		"align": "right",
+		"y_offset_below_money": 46.0,
+		"fallback_y": 140.0,
+		"font_size": DEFAULT_FONT_SIZE,
+		"float_distance": DEFAULT_FLOAT_DISTANCE,
+		"duration": DEFAULT_DURATION,
+		"scale_punch": DEFAULT_SCALE_PUNCH,
+		"positive_color": INCREASE_COLOR,
+		"negative_color": DECREASE_COLOR
+	})
+	register_channel("bonus", {
+		"stack_group": "right_hud",
+		"align": "right",
+		"y_offset_below_money": 88.0,
+		"fallback_y": 182.0,
+		"font_size": DEFAULT_FONT_SIZE,
+		"float_distance": DEFAULT_FLOAT_DISTANCE,
+		"duration": DEFAULT_DURATION,
+		"scale_punch": DEFAULT_SCALE_PUNCH,
+		"positive_color": INCREASE_COLOR,
+		"negative_color": DECREASE_COLOR
+	})
+	register_channel("combo", {
+		"stack_group": "right_hud",
+		"align": "right",
+		"y_offset_below_money": 130.0,
+		"fallback_y": 224.0,
+		"font_size": DEFAULT_FONT_SIZE,
+		"float_distance": DEFAULT_FLOAT_DISTANCE,
+		"duration": DEFAULT_DURATION,
+		"scale_punch": 1.35,
+		"positive_color": INCREASE_COLOR,
+		"negative_color": DECREASE_COLOR
+	})
+	register_channel("cup_spill", {
+		"stack_group": "cup_feedback",
+		"align": "center",
+		"font_size": 48,
+		"float_distance": 56.0,
+		"duration": 1.15,
+		"scale_punch": 1.36,
+		"positive_color": INCREASE_COLOR,
+		"negative_color": DECREASE_COLOR
+	})
+	register_channel("cup_reset", {
+		"stack_group": "cup_feedback",
+		"align": "center",
+		"font_size": 48,
+		"float_distance": DEFAULT_FLOAT_DISTANCE,
+		"duration": DEFAULT_DURATION,
+		"scale_punch": 1.32,
+		"positive_color": CLEAN_COLOR,
+		"negative_color": DECREASE_COLOR
+	})
+	register_channel("default", {
+		"stack_group": "right_hud",
+		"align": "right",
+		"y_offset_below_money": 46.0,
+		"fallback_y": 140.0,
+		"font_size": DEFAULT_FONT_SIZE,
+		"float_distance": DEFAULT_FLOAT_DISTANCE,
+		"duration": DEFAULT_DURATION,
+		"scale_punch": DEFAULT_SCALE_PUNCH,
+		"positive_color": INCREASE_COLOR,
+		"negative_color": DECREASE_COLOR
+	})
 
 func register_channel(channel_id: String, config: Dictionary) -> void:
 	_channels[channel_id] = config.duplicate(true)
-
-func _get_channel_config(channel_id: String, options: Dictionary = {}) -> Dictionary:
-	var base: Dictionary = _channels.get(channel_id, _channels.get("default", IndicatorSettings.get_hud_channel("default"))).duplicate(true)
-	for key in options.keys():
-		base[key] = options[key]
-	return base
-
-func _connect_game_events() -> void:
-	if not GameEvents.cup_spilled.is_connected(_on_cup_spilled):
-		GameEvents.cup_spilled.connect(_on_cup_spilled)
-	if not GameEvents.cup_emptied.is_connected(_on_cup_emptied):
-		GameEvents.cup_emptied.connect(_on_cup_emptied)
-	if not GameEvents.cup_pouring_updated.is_connected(_on_cup_pouring_updated):
-		GameEvents.cup_pouring_updated.connect(_on_cup_pouring_updated)
-	if not GameEvents.cup_pouring_stopped.is_connected(_on_cup_pouring_stopped):
-		GameEvents.cup_pouring_stopped.connect(_on_cup_pouring_stopped)
-
-func _disconnect_game_events() -> void:
-	if not GameEvents._bus:
-		return
-	if GameEvents.cup_spilled.is_connected(_on_cup_spilled):
-		GameEvents.cup_spilled.disconnect(_on_cup_spilled)
-	if GameEvents.cup_emptied.is_connected(_on_cup_emptied):
-		GameEvents.cup_emptied.disconnect(_on_cup_emptied)
-	if GameEvents.cup_pouring_updated.is_connected(_on_cup_pouring_updated):
-		GameEvents.cup_pouring_updated.disconnect(_on_cup_pouring_updated)
-	if GameEvents.cup_pouring_stopped.is_connected(_on_cup_pouring_stopped):
-		GameEvents.cup_pouring_stopped.disconnect(_on_cup_pouring_stopped)
-
-func _on_cup_spilled(glass: Node3D, overflow_percent: float) -> void:
-	show_cup_spill_indicator(glass, overflow_percent)
-
-func _on_cup_emptied(glass: Node3D) -> void:
-	show_cup_empty_indicator(glass)
-
-func _on_cup_pouring_updated(glass: Node, liquids: Array, capacity: float, visual_helper: RefCounted) -> void:
-	update_pouring_indicator(glass, liquids, capacity, visual_helper as LiquidVisualHelper)
-
-func _on_cup_pouring_stopped(glass: Node, immediate: bool) -> void:
-	hide_pouring_indicator(glass, immediate)
 
 func _connect_player_stats() -> void:
 	if not PlayerStats:
@@ -154,115 +241,155 @@ func _on_overall_reputation_changed(_new_value: float, delta: float) -> void:
 func _on_species_reputation_changed(species_name: String, _new_value: float, delta: float) -> void:
 	show_species_rep_change(species_name, delta)
 
+func show_drink_score_indicator(drink_score: float, options: Dictionary = {}) -> Label:
+	var rating_text: String
+	var rating_color: Color
+	if drink_score >= SCORE_THRESHOLD_PERFECT:
+		rating_text = "Perfect!"
+		rating_color = PERFECT_COLOR
+	elif drink_score >= SCORE_THRESHOLD_GOOD:
+		rating_text = "Good!"
+		rating_color = INCREASE_COLOR
+	elif drink_score >= SCORE_THRESHOLD_OK:
+		rating_text = "Ok"
+		rating_color = OK_COLOR
+	else:
+		rating_text = "Bad!"
+		rating_color = DECREASE_COLOR
+
+	var merged: Dictionary = options.duplicate()
+	if not merged.has("channel"):
+		merged["channel"] = "drink_score"
+	return show_floating_text(rating_text, rating_color, merged)
+
+func show_combo_indicators(combo_data: Dictionary, options: Dictionary = {}) -> void:
+	if not is_inside_tree():
+		return
+	var total_combo: float = float(combo_data.get("total_combo", 0.0))
+	if total_combo <= 0.0:
+		return
+
+	var raw_components: Variant = combo_data.get("components", [])
+	var components: Array = raw_components.duplicate(true) if raw_components is Array else []
+	if components.is_empty():
+		return
+
+	var initial_delay: float = maxf(0.0, float(options.get("initial_delay", COMBO_INITIAL_DELAY)))
+	var component_delay: float = maxf(0.0, float(options.get("component_delay", COMBO_COMPONENT_DELAY)))
+	var final_delay: float = maxf(0.0, float(options.get("final_delay", COMBO_FINAL_DELAY)))
+
+	if initial_delay > 0.0:
+		await get_tree().create_timer(initial_delay, false).timeout
+		if not is_inside_tree():
+			return
+
+	for i in components.size():
+		if i > 0 and component_delay > 0.0:
+			await get_tree().create_timer(component_delay, false).timeout
+			if not is_inside_tree():
+				return
+		if not (components[i] is Dictionary):
+			continue
+		var comp: Dictionary = components[i]
+		var comp_text: String = str(comp.get("label", ""))
+		if comp_text == "":
+			continue
+		var comp_opts: Dictionary = options.duplicate()
+		comp_opts["channel"] = "combo"
+		if not comp_opts.has("font_size"):
+			comp_opts["font_size"] = COMBO_COMPONENT_FONT_SIZE
+		if not comp_opts.has("scale_punch"):
+			comp_opts["scale_punch"] = COMBO_COMPONENT_SCALE_PUNCH
+		if not comp_opts.has("duration"):
+			comp_opts["duration"] = COMBO_DURATION
+		if not comp_opts.has("float_distance"):
+			comp_opts["float_distance"] = COMBO_FLOAT_DISTANCE
+		if not comp_opts.has("jitter_x"):
+			comp_opts["jitter_x"] = 0.0
+		show_floating_text(comp_text, COMBO_COMPONENT_COLOR, comp_opts)
+
+	if final_delay > 0.0:
+		await get_tree().create_timer(final_delay, false).timeout
+		if not is_inside_tree():
+			return
+
+	var final_text := "x %d%% combo" % roundi(total_combo * 100.0)
+	var final_opts: Dictionary = options.duplicate()
+	final_opts["channel"] = "combo"
+	if not final_opts.has("font_size"):
+		final_opts["font_size"] = COMBO_FINAL_FONT_SIZE
+	if not final_opts.has("scale_punch"):
+		final_opts["scale_punch"] = COMBO_FINAL_SCALE_PUNCH
+	if not final_opts.has("duration"):
+		final_opts["duration"] = COMBO_DURATION
+	if not final_opts.has("float_distance"):
+		final_opts["float_distance"] = COMBO_FLOAT_DISTANCE
+	if not final_opts.has("jitter_x"):
+		final_opts["jitter_x"] = 0.0
+	show_floating_text(final_text, COMBO_FINAL_COLOR, final_opts)
+
 func show_money_change(delta: float, suffix: String = "", options: Dictionary = {}) -> Label:
 	if absf(delta) < 0.005:
 		return null
-	var cfg: Dictionary = _get_channel_config("money", options)
-	if not bool(cfg.get("enabled", true)):
-		return null
-	var amount_str: String = format_number(delta, bool(cfg.get("currency_decimals", true)))
-	var text: String = IndicatorSettings.format_delta_text("money", delta, {
-		"amount": amount_str,
-		"suffix": suffix,
-	}, cfg)
-	var color: Color = cfg.get("positive_color", INCREASE_COLOR) if delta > 0.0 else cfg.get("negative_color", DECREASE_COLOR)
-	var merged: Dictionary = options.duplicate()
-	if not merged.has("channel"):
-		merged["channel"] = "money"
-	return show_floating_text(text, color, merged)
+	var amount_str: String = format_number(delta, true)
+	return show_delta_indicator("money", delta, "$" + amount_str + suffix, options)
 
 func show_overall_rep_change(delta: float, suffix: String = "", options: Dictionary = {}) -> Label:
 	if absf(delta) < 0.005:
 		return null
-	var cfg: Dictionary = _get_channel_config("overall_rep", options)
-	if not bool(cfg.get("enabled", true)):
-		return null
-	var amount_str: String = format_number(delta, bool(cfg.get("currency_decimals", false)))
-	var text: String = IndicatorSettings.format_delta_text("overall_rep", delta, {
-		"amount": amount_str,
-		"suffix": suffix,
-	}, cfg)
-	var color: Color = cfg.get("positive_color", INCREASE_COLOR) if delta > 0.0 else cfg.get("negative_color", DECREASE_COLOR)
-	var merged: Dictionary = options.duplicate()
-	if not merged.has("channel"):
-		merged["channel"] = "overall_rep"
-	return show_floating_text(text, color, merged)
+	var amount_str: String = format_number(delta, false)
+	return show_delta_indicator("overall_rep", delta, amount_str + " Overall Rep" + suffix, options)
 
 func show_species_rep_change(species_name: String, delta: float, suffix: String = "", options: Dictionary = {}) -> Label:
 	if absf(delta) < 0.005:
-		return null
-	var cfg: Dictionary = _get_channel_config("species_rep", options)
-	if not bool(cfg.get("enabled", true)):
 		return null
 	var display_species: String = species_name.strip_edges()
 	var sp := SpeciesRegistry.get_species(display_species)
 	if sp:
 		display_species = sp.display_name
 	elif display_species == "":
-		display_species = str(cfg.get("default_species_label", "Species"))
-	var amount_str: String = format_number(delta, bool(cfg.get("currency_decimals", false)))
-	var text: String = IndicatorSettings.format_delta_text("species_rep", delta, {
-		"amount": amount_str,
-		"species": display_species,
-		"suffix": suffix,
-	}, cfg)
-	var color: Color = cfg.get("positive_color", INCREASE_COLOR) if delta > 0.0 else cfg.get("negative_color", DECREASE_COLOR)
-	var merged: Dictionary = options.duplicate()
-	if not merged.has("channel"):
-		merged["channel"] = "species_rep"
-	return show_floating_text(text, color, merged)
+		display_species = "Species"
+	var amount_str: String = format_number(delta, false)
+	return show_delta_indicator("species_rep", delta, amount_str + " " + display_species + " Rep" + suffix, options)
 
 func show_cup_spill_indicator(glass: Node3D, _spilled_percent: float = 0.0, options: Dictionary = {}) -> Label:
-	var cfg: Dictionary = _get_channel_config("cup_spill", options)
-	if not bool(cfg.get("enabled", true)):
-		return null
 	var vp_size: Vector2 = _get_viewport_size()
-	var fallback_ratio: Vector2 = cfg.get("fallback_anchor_ratio", Vector2(0.5, 0.35))
-	var fallback := Vector2(vp_size.x * fallback_ratio.x, vp_size.y * fallback_ratio.y)
-	var world_offset: Vector3 = cfg.get("world_offset", Vector3(0.0, 0.15, 0.0))
+	var fallback := Vector2(vp_size.x * 0.5, vp_size.y * 0.35)
 	var merged: Dictionary = options.duplicate()
 	if not merged.has("channel"):
 		merged["channel"] = "cup_spill"
 	if not merged.has("anchor") and not merged.has("anchor_resolver"):
-		merged["anchor"] = _get_world_anchor(glass, world_offset, fallback)
+		merged["anchor"] = _get_world_anchor(glass, Vector3(0.0, 0.15, 0.0), fallback)
 	if not merged.has("stack_group") and is_instance_valid(glass):
 		merged["stack_group"] = "cup_" + str(glass.get_instance_id())
-	if not merged.has("jitter_x") and cfg.has("jitter_x"):
-		merged["jitter_x"] = cfg["jitter_x"]
-	var text: String = str(cfg.get("text", "Spilled!"))
-	return show_floating_text(text, cfg.get("negative_color", DECREASE_COLOR), merged)
+	if not merged.has("jitter_x"):
+		merged["jitter_x"] = 0.0
+	return show_floating_text("Spilling!", DECREASE_COLOR, merged)
 
 func show_cup_empty_indicator(glass: Node3D, options: Dictionary = {}) -> Label:
-	var cfg: Dictionary = _get_channel_config("cup_reset", options)
-	if not bool(cfg.get("enabled", true)):
-		return null
 	var vp_size: Vector2 = _get_viewport_size()
-	var fallback_ratio: Vector2 = cfg.get("fallback_anchor_ratio", Vector2(0.5, 0.35))
-	var fallback := Vector2(vp_size.x * fallback_ratio.x, vp_size.y * fallback_ratio.y)
-	var world_offset: Vector3 = cfg.get("world_offset", Vector3(0.0, 0.15, 0.0))
+	var fallback := Vector2(vp_size.x * 0.5, vp_size.y * 0.35)
 	var merged: Dictionary = options.duplicate()
 	if not merged.has("channel"):
 		merged["channel"] = "cup_reset"
 	if not merged.has("anchor") and not merged.has("anchor_resolver"):
-		merged["anchor"] = _get_world_anchor(glass, world_offset, fallback)
+		merged["anchor"] = _get_world_anchor(glass, Vector3(0.0, 0.15, 0.0), fallback)
 	if not merged.has("stack_group") and is_instance_valid(glass):
 		merged["stack_group"] = "cup_" + str(glass.get_instance_id())
-	if not merged.has("jitter_x") and cfg.has("jitter_x"):
-		merged["jitter_x"] = cfg["jitter_x"]
-	var text: String = str(cfg.get("text", "Cup Empty! (Reset)"))
-	var color: Color = cfg.get("color", cfg.get("positive_color", CLEAN_COLOR))
-	return show_floating_text(text, color, merged)
+	if not merged.has("jitter_x"):
+		merged["jitter_x"] = 0.0
+	return show_floating_text("Cup Empty! (Reset)", CLEAN_COLOR, merged)
 
 func show_delta_indicator(channel_id: String, delta: float, formatted_body: String, options: Dictionary = {}) -> Label:
 	if absf(delta) < 0.005:
 		return null
-	var cfg: Dictionary = _get_channel_config(channel_id, options)
-	if not bool(cfg.get("enabled", true)):
-		return null
+	var cfg: Dictionary = _channels.get(channel_id, _channels.get("default", {})).duplicate(true)
+	for key in options.keys():
+		cfg[key] = options[key]
 
 	var is_positive: bool = delta > 0.0
 	var color: Color = cfg.get("positive_color", INCREASE_COLOR) if is_positive else cfg.get("negative_color", DECREASE_COLOR)
-	var sign_prefix: String = str(cfg.get("positive_prefix", "+")) if is_positive else str(cfg.get("negative_prefix", "-"))
+	var sign_prefix: String = "+" if is_positive else "-"
 	var merged_options: Dictionary = options.duplicate()
 	if not merged_options.has("channel"):
 		merged_options["channel"] = channel_id
@@ -273,31 +400,22 @@ func show_floating_text(text: String, color: Color = Color.WHITE, options: Dicti
 		return null
 
 	var channel_id: String = str(options.get("channel", "default"))
-	var cfg: Dictionary = _get_channel_config(channel_id, options)
-	if not bool(cfg.get("enabled", true)):
-		return null
+	var cfg: Dictionary = _channels.get(channel_id, _channels.get("default", {})).duplicate(true)
+	for key in options.keys():
+		cfg[key] = options[key]
 
 	var vp_size: Vector2 = _get_viewport_size()
-	var font_res: Font = cfg.get("font", INDICATOR_FONT) as Font
 	var font_size: int = int(cfg.get("font_size", DEFAULT_FONT_SIZE))
 	var outline_size: int = int(cfg.get("outline_size", DEFAULT_OUTLINE_SIZE))
 	var outline_col: Color = cfg.get("outline_color", OUTLINE_COLOR)
-	var shadow_col: Color = cfg.get("shadow_color", SHADOW_COLOR)
-	var shadow_offset: Vector2i = cfg.get("shadow_offset", Vector2i(2, 2))
-	var shadow_outline_size: int = int(cfg.get("shadow_outline_size", 2))
 	var float_dist: float = float(cfg.get("float_distance", DEFAULT_FLOAT_DISTANCE))
 	var duration: float = maxf(0.2, float(cfg.get("duration", DEFAULT_DURATION)))
 	var scale_punch: float = float(cfg.get("scale_punch", DEFAULT_SCALE_PUNCH))
-	var punch_duration: float = maxf(0.02, float(cfg.get("punch_duration", 0.14)))
-	var fade_start_ratio: float = clampf(float(cfg.get("fade_start_ratio", 0.55)), 0.0, 0.99)
 	var delay: float = maxf(0.0, float(cfg.get("delay", 0.0)))
 	var align: String = str(cfg.get("align", "right"))
 	var stack_group: String = str(cfg.get("stack_group", channel_id))
-	var stack_spacing: float = float(cfg.get("stack_spacing", 4.0))
-	var margin_x: float = float(cfg.get("screen_margin_x", 16.0))
-	var margin_y: float = float(cfg.get("screen_margin_y", 20.0))
 
-	var label := _create_styled_label(text, color, font_size, outline_col, outline_size, font_res, shadow_col, shadow_offset, shadow_outline_size)
+	var label := _create_styled_label(text, color, font_size, outline_col, outline_size)
 	if align == "center":
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var label_size: Vector2 = label.get_minimum_size()
@@ -305,9 +423,7 @@ func show_floating_text(text: String, color: Color = Color.WHITE, options: Dicti
 	label.pivot_offset = label_size * 0.5
 
 	var anchor: Vector2 = _resolve_anchor(cfg, vp_size)
-	var j_min: float = float(cfg.get("jitter_min_x", -8.0))
-	var j_max: float = float(cfg.get("jitter_max_x", 8.0))
-	var jitter_x: float = float(cfg.get("jitter_x", randf_range(j_min, j_max)))
+	var jitter_x: float = float(cfg.get("jitter_x", randf_range(-8.0, 8.0)))
 
 	var spawn_x: float = anchor.x
 	if align == "right":
@@ -316,9 +432,9 @@ func show_floating_text(text: String, color: Color = Color.WHITE, options: Dicti
 		spawn_x = anchor.x - label_size.x * 0.5 + jitter_x
 	else:
 		spawn_x = anchor.x + jitter_x
-	spawn_x = clampf(spawn_x, margin_x, maxf(margin_x, vp_size.x - label_size.x - margin_x))
+	spawn_x = clampf(spawn_x, 16.0, maxf(16.0, vp_size.x - label_size.x - 16.0))
 
-	var spawn_y: float = _resolve_stacked_y(stack_group, anchor.y, label_size.y, vp_size, stack_spacing, margin_y)
+	var spawn_y: float = _resolve_stacked_y(stack_group, anchor.y, label_size.y, vp_size)
 	label.position = Vector2(spawn_x, spawn_y)
 	label.scale = Vector2.ONE * scale_punch
 	label.modulate = Color(1.0, 1.0, 1.0, 1.0)
@@ -334,9 +450,9 @@ func show_floating_text(text: String, color: Color = Color.WHITE, options: Dicti
 			if is_instance_valid(label):
 				label.visible = true
 		).set_delay(delay)
-	tween.tween_property(label, "scale", Vector2.ONE, punch_duration).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(label, "scale", Vector2.ONE, 0.14).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_property(label, "position:y", target_y, duration).set_delay(delay).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tween.tween_property(label, "modulate:a", 0.0, duration * (1.0 - fade_start_ratio)).set_delay(delay + duration * fade_start_ratio).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.tween_property(label, "modulate:a", 0.0, duration * 0.45).set_delay(delay + duration * 0.55).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.chain().tween_callback(func():
 		if _active_floating_groups.has(stack_group):
 			var arr := _active_floating_groups[stack_group] as Array
@@ -348,31 +464,20 @@ func show_floating_text(text: String, color: Color = Color.WHITE, options: Dicti
 	)
 	return label
 
-func _create_styled_label(
-	text: String,
-	color: Color,
-	font_size: int,
-	outline_col: Color,
-	outline_size: int,
-	font_res: Font = INDICATOR_FONT,
-	shadow_col: Color = SHADOW_COLOR,
-	shadow_offset: Vector2i = Vector2i(2, 2),
-	shadow_outline_size: int = 2
-) -> Label:
+func _create_styled_label(text: String, color: Color, font_size: int, outline_col: Color, outline_size: int) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	if font_res:
-		label.add_theme_font_override("font", font_res)
+	label.add_theme_font_override("font", INDICATOR_FONT)
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_color_override("font_outline_color", outline_col)
 	label.add_theme_constant_override("outline_size", outline_size)
-	label.add_theme_color_override("font_shadow_color", shadow_col)
-	label.add_theme_constant_override("shadow_offset_x", shadow_offset.x)
-	label.add_theme_constant_override("shadow_offset_y", shadow_offset.y)
-	label.add_theme_constant_override("shadow_outline_size", shadow_outline_size)
+	label.add_theme_color_override("font_shadow_color", SHADOW_COLOR)
+	label.add_theme_constant_override("shadow_offset_x", 2)
+	label.add_theme_constant_override("shadow_offset_y", 2)
+	label.add_theme_constant_override("shadow_outline_size", 2)
 	return label
 
 func _get_viewport_size() -> Vector2:
@@ -409,7 +514,7 @@ func _resolve_anchor(cfg: Dictionary, vp_size: Vector2) -> Vector2:
 		base_y = money_rect.end.y + float(cfg.get("y_offset_below_money", 10.0))
 	return Vector2(right_x, base_y)
 
-func _resolve_stacked_y(stack_group: String, desired_y: float, label_height: float, vp_size: Vector2, stack_spacing: float = 4.0, margin_y: float = 20.0) -> float:
+func _resolve_stacked_y(stack_group: String, desired_y: float, label_height: float, vp_size: Vector2) -> float:
 	var active: Array = _prune_floating_group(stack_group)
 	active.sort_custom(func(a: Control, b: Control) -> bool:
 		return a.position.y < b.position.y
@@ -418,10 +523,10 @@ func _resolve_stacked_y(stack_group: String, desired_y: float, label_height: flo
 	for entry in active:
 		var ctrl := entry as Control
 		var ey: float = ctrl.position.y
-		var eh: float = maxf(ctrl.size.y, label_height) + stack_spacing
-		if candidate_y + label_height + stack_spacing > ey and candidate_y < ey + eh:
+		var eh: float = maxf(ctrl.size.y, label_height) + 4.0
+		if candidate_y + label_height + 4.0 > ey and candidate_y < ey + eh:
 			candidate_y = ey + eh
-	return clampf(candidate_y, margin_y, maxf(margin_y, vp_size.y - label_height - margin_y))
+	return clampf(candidate_y, 20.0, maxf(20.0, vp_size.y - label_height - 20.0))
 
 func _prune_floating_group(stack_group: String) -> Array:
 	var raw: Array = _active_floating_groups.get(stack_group, [])
@@ -439,8 +544,14 @@ func _track_floating_label(stack_group: String, label: Label) -> void:
 
 # Persistent (used by pouring)
 func _ensure_pouring_group() -> void:
-	var cfg: Dictionary = IndicatorSettings.get_status_group("pouring")
-	get_or_create_status_group("pouring", cfg.get("layout", {}))
+	get_or_create_status_group("pouring", {
+		"anchor_preset": Control.PRESET_TOP_RIGHT,
+		"offset_left": -261.0,
+		"offset_top": 285.0,
+		"offset_right": -15.0,
+		"offset_bottom": 325.0,
+		"grow_horizontal": Control.GROW_DIRECTION_BEGIN
+	})
 
 func get_or_create_status_group(group_id: String, layout: Dictionary = {}) -> VBoxContainer:
 	if _status_groups.has(group_id):
@@ -487,7 +598,6 @@ func update_status_group(group_id: String, entries: Array[Dictionary], owner_obj
 	group["owner"] = owner_obj
 	group["is_hiding"] = false
 
-	var defaults := IndicatorSettings.HUD_DEFAULTS
 	var was_wavy: bool = bool(group.get("use_wavy", false))
 	var children := box.get_children()
 	if children.size() != entries.size() or was_wavy != use_wavy_labels:
@@ -499,13 +609,10 @@ func update_status_group(group_id: String, entries: Array[Dictionary], owner_obj
 			if use_wavy_labels:
 				new_lbl = LIQUIDS_LABEL_SCENE.instantiate() as Label
 			else:
-				new_lbl = _create_styled_label("", Color.WHITE, int(defaults.get("font_size", DEFAULT_FONT_SIZE)), OUTLINE_COLOR, int(defaults.get("outline_size", DEFAULT_OUTLINE_SIZE)))
+				new_lbl = _create_styled_label("", Color.WHITE, DEFAULT_FONT_SIZE, OUTLINE_COLOR, DEFAULT_OUTLINE_SIZE)
 			box.add_child(new_lbl)
 			_set_mouse_ignore_recursive(new_lbl)
 		group["use_wavy"] = use_wavy_labels
-
-	var group_cfg: Dictionary = IndicatorSettings.get_status_group(group_id)
-	var default_sec_col: Color = group_cfg.get("default_secondary_color", IndicatorSettings.COLORS["pouring_secondary"])
 
 	children = box.get_children()
 	for i in range(mini(children.size(), entries.size())):
@@ -521,7 +628,7 @@ func update_status_group(group_id: String, entries: Array[Dictionary], owner_obj
 			if lbl.material is ShaderMaterial:
 				var shader_mat := lbl.material as ShaderMaterial
 				shader_mat.set_shader_parameter("base_color", entry_color)
-				shader_mat.set_shader_parameter("secondary_color", entry.get("secondary_color", default_sec_col))
+				shader_mat.set_shader_parameter("secondary_color", entry.get("secondary_color", Color(0.5, 0.9, 1.0, 1.0)))
 		else:
 			lbl.add_theme_color_override("font_color", entry_color)
 
@@ -577,38 +684,143 @@ func hide_status_group(group_id: String, owner_obj: Object = null, immediate: bo
 	)
 
 func update_pouring_indicator(glass: Node, liquids: Array, glass_size: float, visual_helper: LiquidVisualHelper = null) -> void:
-	var cfg: Dictionary = IndicatorSettings.get_status_group("pouring")
-	if not bool(cfg.get("enabled", true)) or liquids.is_empty():
+	if liquids.is_empty():
 		hide_pouring_indicator(glass, true)
 		return
 
-	var has_tint: bool = visual_helper != null and visual_helper._visual_override.has("liquid_tint_color")
-	var tint_col: Color = visual_helper._visual_override.get("liquid_tint_color", Color.WHITE) if has_tint else Color.WHITE
-	var tint_mix: float = float(visual_helper._visual_override.get("liquid_tint_strength", 0.35)) if has_tint else 0.35
-	var layer_template: String = str(cfg.get("layer_text_format", "{name}: {percent}%"))
+	var helper: LiquidVisualHelper = visual_helper if visual_helper else _fallback_visual_helper
+	var has_tint: bool = helper._visual_override.has("liquid_tint_color")
+	var tint_col: Color = helper._visual_override.get("liquid_tint_color", Color.WHITE)
+	var tint_mix: float = float(helper._visual_override.get("liquid_tint_strength", 0.35))
 
 	var entries: Array[Dictionary] = []
 	for layer in liquids:
 		if not (layer is Array) or layer.size() < 2:
 			continue
-		var col: Color = LiquidColorUtils.get_layer_color(layer)
+		var col: Color = helper.get_layer_color(layer)
 		if has_tint:
 			col = col.lerp(tint_col, tint_mix)
-		var layer_name: String = LiquidColorUtils.format_layer_name(layer[0])
+		var layer_name: String = helper.format_layer_name(layer[0])
 		var pct: float = (float(layer[1]) / maxf(glass_size, 0.001)) * 100.0
 		entries.append({
-			"text": IndicatorSettings.format_text(layer_template, {
-				"name": layer_name,
-				"percent": str(snappedf(pct, 0.1)),
-			}),
+			"text": layer_name + ": " + str(snappedf(pct, 0.1)) + "%",
 			"color": col
 		})
 
-	update_status_group("pouring", entries, glass, bool(cfg.get("use_wavy_labels", true)), cfg.get("layout", {}))
+	var dm: Variant = glass.get("drink_mix") if is_instance_valid(glass) else null
+	if dm is DrinkMix and (dm as DrinkMix).overfill_percent > 0.05:
+		entries.append({
+			"text": "Spilled!",
+			"color": DECREASE_COLOR,
+			"secondary_color": DECREASE_COLOR
+		})
+
+	update_status_group("pouring", entries, glass, true)
 
 func hide_pouring_indicator(glass: Node = null, immediate: bool = false) -> void:
-	var fade_dur: float = float(IndicatorSettings.get_status_group("pouring").get("fade_duration", 1.0))
-	hide_status_group("pouring", glass, immediate, fade_dur)
+	hide_status_group("pouring", glass, immediate, 1.0)
+
+func _ensure_serve_combo_ui() -> void:
+	if is_instance_valid(_serve_combo_box):
+		return
+	_serve_combo_box = VBoxContainer.new()
+	_serve_combo_box.name = "ServeComboIndicator"
+	_serve_combo_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_serve_combo_box.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	_serve_combo_box.offset_left = 27.0
+	_serve_combo_box.offset_top = 210.0
+	_serve_combo_box.offset_right = 240.0
+	_serve_combo_box.offset_bottom = 265.0
+	_serve_combo_box.grow_horizontal = Control.GROW_DIRECTION_END
+	_serve_combo_box.modulate.a = 0.0
+	_serve_combo_box.visible = false
+	add_child(_serve_combo_box)
+
+	_serve_combo_label = _create_styled_label("Serve combo", COMBO_FINAL_COLOR, 32, OUTLINE_COLOR, 4)
+	_serve_combo_label.name = "ServeComboLabel"
+	_serve_combo_box.add_child(_serve_combo_label)
+
+	_serve_combo_bar = ProgressBar.new()
+	_serve_combo_bar.name = "ServeComboBar"
+	_serve_combo_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_serve_combo_bar.show_percentage = false
+	_serve_combo_bar.custom_minimum_size = Vector2(0.0, 10.0)
+
+	var bg_style := StyleBoxFlat.new()
+	bg_style.bg_color = Color(0.12, 0.12, 0.14, 0.85)
+	bg_style.set_corner_radius_all(2)
+	_serve_combo_bar.add_theme_stylebox_override("background", bg_style)
+
+	_serve_combo_fill_style = StyleBoxFlat.new()
+	_serve_combo_fill_style.bg_color = COMBO_FINAL_COLOR
+	_serve_combo_fill_style.set_corner_radius_all(2)
+	_serve_combo_bar.add_theme_stylebox_override("fill", _serve_combo_fill_style)
+
+	_serve_combo_box.add_child(_serve_combo_bar)
+	_set_mouse_ignore_recursive(_serve_combo_box)
+
+func update_serve_combo_indicator(streak: int, grace_left: float, grace_max: float, current_bonus: float, next_step_bonus: float) -> void:
+	if not is_inside_tree() or streak <= 0 or grace_left <= 0.0:
+		hide_serve_combo_indicator(true)
+		return
+
+	_ensure_serve_combo_ui()
+
+	if _serve_combo_fade_tween and _serve_combo_fade_tween.is_valid():
+		_serve_combo_fade_tween.kill()
+		_serve_combo_fade_tween = null
+
+	_serve_combo_box.visible = true
+	_serve_combo_box.modulate.a = 1.0
+
+	var pct := clampf(grace_left / maxf(grace_max, 0.001), 0.0, 1.0)
+	_serve_combo_bar.max_value = grace_max
+	_serve_combo_bar.value = grace_left
+
+	if _serve_combo_fill_style:
+		var bar_col := COMBO_FINAL_COLOR if pct > 0.3 else DECREASE_COLOR.lerp(COMBO_FINAL_COLOR, pct / 0.3)
+		_serve_combo_fill_style.bg_color = bar_col
+
+	var title_text := ""
+	if current_bonus > 0.0:
+		var bonus_pct := roundi(current_bonus * 100.0)
+		title_text = "Serve Combo x%d" % streak
+	else:
+		var next_pct := roundi(next_step_bonus * 100.0)
+		title_text = "Serve Combo"
+
+	_serve_combo_label.text = title_text
+
+	if streak > _last_serve_combo_streak:
+		_last_serve_combo_streak = streak
+		if _serve_combo_punch_tween and _serve_combo_punch_tween.is_valid():
+			_serve_combo_punch_tween.kill()
+		_serve_combo_box.scale = Vector2(1.15, 1.15)
+		_serve_combo_punch_tween = create_tween()
+		_serve_combo_punch_tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		_serve_combo_punch_tween.tween_property(_serve_combo_box, "scale", Vector2.ONE, 0.18)
+
+func hide_serve_combo_indicator(immediate: bool = false) -> void:
+	_last_serve_combo_streak = 0
+	if not is_instance_valid(_serve_combo_box):
+		return
+	if _serve_combo_fade_tween and _serve_combo_fade_tween.is_valid():
+		_serve_combo_fade_tween.kill()
+		_serve_combo_fade_tween = null
+	if immediate or not is_inside_tree():
+		_serve_combo_box.modulate.a = 0.0
+		_serve_combo_box.visible = false
+		return
+	if not _serve_combo_box.visible or _serve_combo_box.modulate.a <= 0.0:
+		_serve_combo_box.visible = false
+		return
+	_serve_combo_fade_tween = create_tween()
+	_serve_combo_fade_tween.tween_property(_serve_combo_box, "modulate:a", 0.0, 0.35)
+	_serve_combo_fade_tween.tween_callback(func():
+		if is_instance_valid(_serve_combo_box):
+			_serve_combo_box.visible = false
+			_serve_combo_box.scale = Vector2.ONE
+	)
 
 func _set_mouse_ignore_recursive(node: Node) -> void:
 	if node is Control:

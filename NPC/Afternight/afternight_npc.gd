@@ -52,3 +52,7 @@ func _talking(open_mouth: bool = false) -> void:
 	var total_frames := hframes * vframes
 	if frame_check < total_frames:
 		frame = frame_check
+
+func _reset_night() -> void:
+	if is_instance_valid(GameState.main_node) and GameState.main_node.has_method("_reset_night"):
+		GameState.main_node._reset_night()

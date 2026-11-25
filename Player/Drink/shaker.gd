@@ -1,4 +1,4 @@
-extends Processor
+extends Ingredients
 class_name Shaker
 
 const SHAKE_SCENE := preload("res://Player/Drink/ShakeMinigame.tscn")
@@ -12,9 +12,20 @@ var _jiggle_home : Dictionary = {}
 var _jiggle_tweens : Dictionary = {}
 var _active_glass : Glasses = null
 
+func is_working_area_item() -> bool:
+	return true
+
 func ready() -> void:
-	super.ready()
+	if area_body == null:
+		area_body = get_node_or_null("CollisionShape3D")
+	rotation = Vector3.ZERO
+	_face_camera()
+	_snap_to_working_area()
+	_last_counter_position = global_position
 	add_to_group("shaker")
+
+func _on_hover(hovered: bool) -> void:
+	set_highlight(hovered)
 
 func can_be_shaken() -> bool:
 	return false
@@ -37,12 +48,6 @@ func start_shake(glass: Glasses) -> void:
 		return
 	_shaking = true
 	_active_glass = glass
-
-	var focus := StationFocusController.get_current(self)
-	if focus:
-		focus.begin_station(null, 0.0, true)
-	else:
-		GameEvents.minigame_lock_changed.emit(true)
 
 	_in_game()
 	glass._in_game()
@@ -76,14 +81,10 @@ func start_shake(glass: Glasses) -> void:
 			print("[mixed]: ", glass.get_mixed_ingredients())
 		glass._out_of_game()
 	_out_of_game()
-	if focus:
-		await focus.end_station(false, 0.0)
-	else:
-		GameEvents.minigame_lock_changed.emit(false)
 	_shaking = false
 
 func _on_shake_pumped() -> void:
-	GameEvents.sfx_requested.emit("shaker")
+	SFXAudio.play_shakerrattle()
 	if is_instance_valid(_active_glass) and _active_glass.visual_helper:
 		_active_glass.visual_helper.add_agitation(Vector2(randf_range(-12.0, 12.0), randf_range(-14.0, -5.0)))
 	for n in _jiggle_nodes:

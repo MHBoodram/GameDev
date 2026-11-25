@@ -1,32 +1,13 @@
 [gd_scene format=3 uid="uid://bfuhk0eorv3q3"]
 
 [ext_resource type="Texture2D" uid="uid://b5l0yoj3yjcmf" path="res://Assets/Items/inside_shot_glass.png" id="1_p1pq6"]
-[ext_resource type="Script" uid="uid://dc30lcc5336nc" path="res://Player/Drink/Glasses/shot_cup.gd" id="2_4egiw"]
+[ext_resource type="Script" path="res://Player/Drink/Glasses/Glasses.gd" id="2_4egiw"]
 [ext_resource type="Texture2D" uid="uid://4sg263uyig2d" path="res://Assets/Items/outside_shot_glass.png" id="3_4egiw"]
-[ext_resource type="Shader" uid="uid://b5kpwtrmoc3g5" path="res://Shader/shot_cup.gdshader" id="3_id3av"]
-
-[sub_resource type="Gradient" id="Gradient_4egiw"]
-interpolation_mode = 1
-offsets = PackedFloat32Array(0, 0.92537314, 1)
-colors = PackedColorArray(0.38170326, 0.38170323, 0.38170323, 0, 1, 1, 1, 1, 0.98039216, 0.32156864, 0.050980393, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_id3av"]
-gradient = SubResource("Gradient_4egiw")
-width = 120
-height = 67
-fill_from = Vector2(0, 0.5294118)
-fill_to = Vector2(1, 0.5294118)
-metadata/_snap_enabled = true
-metadata/_snap_count = 17
+[ext_resource type="Shader" path="res://Player/Drink/liquid_container.gdshader" id="3_id3av"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_l3v6c"]
 render_priority = 2
 shader = ExtResource("3_id3av")
-shader_parameter/fill_amount = 0.0
-shader_parameter/slosh_angle = 0.0
-shader_parameter/slosh_vertical_offset = 0.0
-shader_parameter/wave_phase = 0.0
-shader_parameter/wave_amplitude = 0.0
 shader_parameter/pixel_resolution = 48.0
 shader_parameter/surface_highlight_color = Color(1.4, 1.4, 1.5, 1)
 shader_parameter/secondary_highlight_color = Color(0.9, 0.4, 0.95, 0.85)
@@ -39,10 +20,7 @@ shader_parameter/caustic_beam_strength = 0.35
 shader_parameter/sparkle_density = 0.7
 shader_parameter/glass_reflection_strength = 0.28
 shader_parameter/meniscus_curve = 0.03
-shader_parameter/gradient_offset = 0.0
-shader_parameter/flip_gradient = false
 shader_parameter/texture_albedo = ExtResource("3_4egiw")
-shader_parameter/gradient_texture = SubResource("GradientTexture2D_id3av")
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_t6etq"]
 radius = 0.43603516

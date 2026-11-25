@@ -53,7 +53,8 @@ func add_blood_to_bottle(search_root: Node, amount: float) -> void:
 func _lock_player_and_ui(player_node: Node3D, lock: bool) -> void:
 	if player_node and "in_game" in player_node:
 		player_node.in_game = lock
-	var focus := StationFocusController.get_current(self)
-	if focus:
-		focus.is_locked = lock
-	GameEvents.minigame_lock_changed.emit(lock)
+	if GameState.gameplay_ui:
+		if lock and GameState.gameplay_ui.has_method("_in_down_minigame"):
+			GameState.gameplay_ui._in_down_minigame()
+		elif not lock and GameState.gameplay_ui.has_method("_out_down_minigame"):
+			GameState.gameplay_ui._out_down_minigame()
