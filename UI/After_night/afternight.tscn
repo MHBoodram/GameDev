@@ -15,7 +15,7 @@
 [ext_resource type="Texture2D" uid="uid://dhwy3spw05iwl" path="res://Assets/Items/Drinks/beer.png" id="11_hcxpf"]
 [ext_resource type="PackedScene" uid="uid://dbd3xmclss4bq" path="res://NPC/Afternight/Afternight_NPC.tscn" id="12_sxjop"]
 [ext_resource type="PackedScene" uid="uid://c7e1o70yhke0k" path="res://UI/After_night/after_night_menu.tscn" id="14_22u17"]
-[ext_resource type="Resource" uid="uid://bk0hkcys7plb0" path="res://NPC/Resources/yecott.tres" id="15_cotfs"]
+[ext_resource type="Resource" uid="uid://comow1187smtu" path="res://NPC/Resources/shopkeeper.tres" id="16_hkwvl"]
 
 [sub_resource type="Animation" id="Animation_n4i4h"]
 length = 0.001
@@ -354,7 +354,7 @@ shape = SubResource("BoxShape3D_bqacp")
 [node name="ShopKeeper" parent="." unique_id=1265211487 instance=ExtResource("12_sxjop")]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -0.047801152, 2.9228249, 1.3728292)
 visible = false
-npc_resource = ExtResource("15_cotfs")
+npc_resource = ExtResource("16_hkwvl")
 
 [node name="Choice1" type="Marker3D" parent="ShopKeeper" unique_id=695025756]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.3576584, 0)

@@ -15,10 +15,10 @@ const PAUSE_MENU_SCENE := preload("res://UI/Gameplay_ui/PauseMenu.tscn")
 func _ready() -> void:
 	GameState.register_gameplay_subsystems(self, player, night_timer, world_environment, sun, counter)
 	add_child(PAUSE_MENU_SCENE.instantiate())
-
+	PlayerStats.money = PlayerStats.previous_money
 	animation_player.play("opening")
 	await animation_player.animation_finished
-
+	
 	GameState.start_night()
 
 func toggle_debug_menu() -> void:
