@@ -18,7 +18,11 @@ func setup(parent : Node3D,_id: String,_type: String,_Cost: int = 0) -> void:
 	elif(type == "Drinks"):
 		$Sprite3D.texture = load("res://Assets/Items/Drinks/"+str(id)+".png")
 	elif(type == "Upgrades"):
-		$Sprite3D.texture = load("res://Assets/Upgrades/" +str(id)+".png")
+		var upg := UpgradeRegistry.get_upgrade(id)
+		if upg:
+			$Sprite3D.texture = upg.get_icon()
+		elif ResourceLoader.exists("res://Assets/Upgrades/" + str(id) + ".png"):
+			$Sprite3D.texture = load("res://Assets/Upgrades/" + str(id) + ".png")
 	if(cost!=0):
 		$Label3D.text = str(id) + "\nCost: " + str(cost)
 	else:
@@ -31,15 +35,12 @@ func _on_input_event(camera: Node, event: InputEvent, event_position: Vector3, n
 			remove_from_group("Choice")  # main won't process or free us
 
 			PlayerStats._change_money(PlayerStats.money - cost)
-			PlayerStats.unlocks[type][id] = true
-			if type == "Ingredients":
-				SpeciesRegistry.on_ingredient_unlocked(id, PlayerStats)
-			if(type == "Upgrades"):
-				pass
-				if(PlayerStats.unlock_passive.has(id)):
-					PlayerStats.unlocks[type][id] = false
-					#print(PlayerStats.unlock_passive[id])
-					PlayerStats.unlock_passive[id] = PlayerStats.unlock_passive[id] + 1
+			if type == "Upgrades":
+				PlayerStats.unlock_upgrade(id)
+			else:
+				PlayerStats.unlocks[type][id] = true
+				if type == "Ingredients":
+					SpeciesRegistry.on_ingredient_unlocked(id, PlayerStats)
 
 
 			var player_camera_pos = GameState.player.camera_rig.global_position

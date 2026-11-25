@@ -372,21 +372,7 @@ func _on_unlock_all_pressed() -> void:
 		GameState.shelf_manager.refresh_shelf_bottles(GameState.main_node, _get_counter_ref())
 
 func _on_unlock_upgrades_pressed() -> void:
-	if PlayerStats.unlocks.has("Upgrades"):
-		for upg in PlayerStats.unlocks["Upgrades"]:
-			PlayerStats.unlocks["Upgrades"][upg] = true
-	if PlayerStats.unlock_passive.has("Drinks Auto Increase"):
-		PlayerStats.unlock_passive["Drinks Auto Increase"] = maxi(1, int(PlayerStats.unlock_passive["Drinks Auto Increase"]))
-	if PlayerStats.unlock_passive.has("Drinks Size Increase"):
-		PlayerStats.unlock_passive["Drinks Size Increase"] = maxi(1, int(PlayerStats.unlock_passive["Drinks Size Increase"]))
-	if PlayerStats.unlock_passive.has("Combo Extension Increase"):
-		PlayerStats.unlock_passive["Combo Extension Increase"] = maxi(1, int(PlayerStats.unlock_passive["Combo Extension Increase"]))
-	if PlayerStats.has_method("sync_species_registry"):
-		PlayerStats.sync_species_registry()
-	for sp_name in PlayerStats.species_banners.keys():
-		PlayerStats.species_banners[sp_name] = true
-	if GameState.shelf_manager and is_instance_valid(GameState.main_node):
-		GameState.shelf_manager.refresh_shelf_bottles(GameState.main_node, _get_counter_ref())
+	PlayerStats.unlock_all_upgrades()
 
 func _on_refill_pressed() -> void:
 	if not GameState.shelf_manager:

@@ -134,27 +134,23 @@ func _produce_unlocks_pick_3(pick: String = "Ingredients") -> void:
 		await get_tree().create_timer(0.75).timeout
 
 func _produce_upgrades() -> void:
-	var temp_array = []
-	for x in PlayerStats.unlocks["Upgrades"]:
-		if(!PlayerStats.unlocks["Upgrades"][x]):
-			temp_array.push_back(x)
-	print("Temp_array",temp_array)
-	
-	for x in min(5,temp_array.size()-1):
-		var random = randi_range(0,temp_array.size()-1)
-		var obtain_node = $new_bar._get_marker(x+1)
-		var random_object = temp_array.pop_at(random)
+	var available_upgrades := UpgradeRegistry.get_available_shop_upgrades(PlayerStats, GameState.night)
+	print("Temp_array", available_upgrades)
+
+	for x in mini(5, available_upgrades.size()):
+		var random = randi_range(0, available_upgrades.size() - 1)
+		var obtain_node = $new_bar._get_marker(x + 1)
+		var chosen_upgrade: UpgradeDef = available_upgrades.pop_at(random)
 		var new_choice = choices.instantiate()
-		#temporary cost variable
-		var cost = randi_range(1, GameState.night * 30)
-		
-		new_choice.setup(self,random_object,"Upgrades",cost) #Tempory
+		var cost: int = chosen_upgrade.get_shop_cost(GameState.night, PlayerStats)
+
+		new_choice.setup(self, chosen_upgrade.upgrade_id, "Upgrades", cost)
 		add_child(new_choice)
 		new_choice.global_position = $ShopKeeper.global_position
 		var tween = get_tree().create_tween()
 		tween.set_trans(Tween.TRANS_SINE)
 		tween.set_ease(Tween.EASE_OUT)
-		tween.tween_property(new_choice,"global_position",obtain_node.global_position,0.5)
+		tween.tween_property(new_choice, "global_position", obtain_node.global_position, 0.5)
 		await get_tree().create_timer(0.5).timeout
 
 #Temporary Functions
