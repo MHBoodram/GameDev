@@ -90,7 +90,7 @@ func _ensure_refill_tag(host: Node3D, drink_id: String, bottle_node: Node, marke
 			tag_y = maxf(tag_y, (sprite_bounds as AABB).end.y + 0.09)
 	tag.global_position = Vector3(base_pos.x, tag_y, base_pos.z - 0.06)
 
-	tag.setup("{coin} " + str(bottle.get_refill_cost()), null, true)
+	tag.setup(str(bottle.get_refill_cost()) + " {coin}", null, true)
 	tag.set_disabled(bottle.get_refill_cost() <= 0)
 
 	tag.pressed.connect(func() -> void:
@@ -105,7 +105,7 @@ func _update_refill_tag(bottle: Drinks, tag: NameTag) -> void:
 	if not is_instance_valid(bottle) or not is_instance_valid(tag):
 		return
 	var cost: int = bottle.get_refill_cost()
-	tag.set_text("{coin} " + str(cost))
+	tag.set_text(str(cost) + " {coin}")
 	tag.set_disabled(cost <= 0)
 
 func _on_refill_tag_pressed(bottle: Drinks, tag: NameTag) -> void:

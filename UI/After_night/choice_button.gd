@@ -24,9 +24,9 @@ func setup(parent : Node3D,_id: String,_type: String,_Cost: int = 0) -> void:
 		elif ResourceLoader.exists("res://Assets/Upgrades/" + str(id) + ".png"):
 			$Sprite3D.texture = load("res://Assets/Upgrades/" + str(id) + ".png")
 	if(cost!=0):
-		$Label3D.text = str(id) + "\nCost: " + str(cost)
+		TextIcons.set_text($Label3D, str(id) + "\n" + str(cost) + " {coin}")
 	else:
-		$Label3D.text = str(id)
+		TextIcons.set_text($Label3D, str(id))
 
 func _on_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -55,7 +55,6 @@ func _on_input_event(camera: Node, event: InputEvent, event_position: Vector3, n
 			parent_node._go_next()
 		else:
 			deny()
-		#queue_free()
 	
 var _base_offset: Vector2
 var _tween: Tween

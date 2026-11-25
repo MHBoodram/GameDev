@@ -101,7 +101,7 @@ offset_right = 46.0
 offset_bottom = -86.0
 grow_horizontal = 2
 grow_vertical = 0
-text = "Total Blood:"
+text = "{blood_drop} 0"
 
 [node name="Marker2D" type="Marker2D" parent="." unique_id=985589755]
 position = Vector2(639, 639)

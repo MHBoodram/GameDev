@@ -56,7 +56,8 @@ func set_shift_hud_visible(is_visible: bool) -> void:
 	$"Mid Container".visible = is_visible
 
 func _update_quota(quota_value: float) -> void:
-	$"Mid Container/Money/Label".text = "Quota:\n" + str(int(quota_value))
+	$"Mid Container/Money/Label".text = "Quota:\n" + str(int(quota_value)) + " {coin}"
+	TextIcons.apply_to_control($"Mid Container/Money/Label")
 
 func _update_night_display(night_number: int) -> void:
 	$ColorRect3/Night.text = "Night " + str(night_number)

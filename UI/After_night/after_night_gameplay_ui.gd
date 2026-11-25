@@ -7,7 +7,6 @@ extends CanvasLayer
 
 var camera_rig: Camera = null
 var hud_indicators: HudIndicators = null
-#var tutorial_director: TutorialManager = TutorialManager.new()
 
 # patch to camera rig so existing scripts don't break
 var down: bool:
@@ -22,8 +21,6 @@ var current_position: int:
 		if camera_rig: camera_rig.current_position = val
 
 func _ready() -> void:
-	#add_child(tutorial_director)
-	
 	var cam: Camera3D = get_viewport().get_camera_3d()
 	if cam is Camera:
 		camera_rig = cam as Camera
@@ -58,7 +55,8 @@ func set_shift_hud_visible(is_visible: bool) -> void:
 	$"Mid Container".visible = is_visible
 
 func _update_quota(quota_value: float) -> void:
-	$"Mid Container/Money/Label".text = "Quota:\n" + str(int(quota_value))
+	$"Mid Container/Money/Label".text = "Quota:\n" + str(int(quota_value)) + " {coin}"
+	TextIcons.apply_to_control($"Mid Container/Money/Label")
 
 func _update_night_display(night_number: int) -> void:
 	$ColorRect3/Night.text = "Night " + str(night_number)
@@ -140,12 +138,6 @@ func _on_bottom_button_mouse_entered() -> void:
 func _on_up_button_mouse_entered() -> void:
 	pass
 
-#func _night_title_popup() -> void:
-	#var hey_peter := randi_range(1, 500)
-	#$ColorRect3/Night/HeyPeter.visible = (hey_peter == 67)
-	#$ColorRect3/Night.text = "Night " + str(GameState.night)
-	#$AnimationPlayer.play("Night_Animation")
-
 func _night_title_finish() -> void:
 	$ColorRect3/Night/HeyPeter.hide()
 	$ColorRect3/Night.text = "Finish"
@@ -164,14 +156,3 @@ func _change_money(new_value: float) -> void:
 
 func _change_time(new_value: float) -> void:
 	$"Left Container/Timer".value = new_value
-
-# tutorial methods go to the tutorial helper
-#func start_tutorial(keys_node: Control = null) -> void:
-	#tutorial_director.start_tutorial(self, keys_node)
-#
-#func _tutorial_find_shark() -> Base_NPC:
-	#return tutorial_director.find_shark()
-#
-#func _tutorial_start_drink() -> void:
-	#tutorial_director.start_drink_tutorial(self)
-	

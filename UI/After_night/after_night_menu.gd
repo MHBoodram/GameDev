@@ -47,7 +47,6 @@ func _ready() -> void:
 	restart_button.pressed.connect(_on_restart_pressed)
 	next_night_button.pressed.connect(_on_next_night_pressed)
 	_refresh_display()
-	#_display_recipt()
 
 func _display_recipt() -> void:
 	_top_speicies_check()
@@ -218,15 +217,23 @@ func _top_speicies_check() -> void:
 
 func _refresh_display() -> void:
 	var top_species: String = PlayerStats.get_highest_gaining_species()
-	top_species_label.text = "Representative Visitor Tonight: " + top_species
+	var sp_icon := ""
+	if TextIcons.has_icon(top_species.to_lower()):
+		sp_icon = " {" + top_species.to_lower() + "}"
+	top_species_label.text = "Representative Visitor Tonight: " + top_species + sp_icon
 	var target_quota: float = GameState.get_night_quota(GameState.night)
-	info_label.text = "Night: " + str(GameState.night) + " / " + str(GameState.max_nights) + "\nMoney: $" + str(int(PlayerStats.money)) + "\nQuota Due: $" + str(int(target_quota))
-	pay_quota_button.text = "Paid Quota" if quota_paid else "Pay Quota ($" + str(int(target_quota)) + ")"
+	info_label.text = "Night: " + str(GameState.night) + " / " + str(GameState.max_nights) + "\nMoney: " + str(int(PlayerStats.money)) + " {coin}\nQuota Due: " + str(int(target_quota)) + " {coin}"
+	pay_quota_button.text = "Paid Quota" if quota_paid else "Pay Quota (" + str(int(target_quota)) + " {coin})"
 	pay_quota_button.disabled = quota_paid
+	buy_ingredient_button.text = "Ingredient Purchased" if ingredient_bought else "Buy Ingredient (" + str(int(MANDATORY_INGREDIENT_COST)) + " {coin})"
+	buy_marketing_button.text = "Marketing Active" if marketing_bought else "Buy Marketing (" + str(int(MANDATORY_MARKETING_COST)) + " {coin})"
 	restart_button.text = "Restart Night (" + str(GameState.restarts_left) + " left)"
 	restart_button.disabled = GameState.restarts_left <= 0
-
-
+	TextIcons.apply_to_control(top_species_label)
+	TextIcons.apply_to_control(info_label)
+	TextIcons.apply_to_control(pay_quota_button)
+	TextIcons.apply_to_control(buy_ingredient_button)
+	TextIcons.apply_to_control(buy_marketing_button)
 
 # Deducts quota from balance
 func _on_pay_quota_pressed() -> void:
@@ -304,4 +311,5 @@ func _on_next_night_pressed() -> void:
 	GameState.advance_night()
 	PlayerStats.reset_night_reputation_gains()
 	Transition._changing_scene("res://Main3D.tscn")
+
 	
