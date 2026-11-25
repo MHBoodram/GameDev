@@ -173,4 +173,3 @@ func _tutorial_find_shark() -> Base_NPC:
 
 func _tutorial_start_drink() -> void:
 	tutorial_director.start_drink_tutorial(self)
-	
