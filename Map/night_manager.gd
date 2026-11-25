@@ -29,6 +29,8 @@ var _during_night_queue: Array[Dictionary] = []
 
 func setup(timer_node: Timer, env_node: WorldEnvironment, sun_node: DirectionalLight3D) -> void:
 	night_timer = timer_node
+	if night_timer:
+		night_timer.wait_time = GameState.night_duration
 	world_environment = env_node
 	sun = sun_node
 	is_shift_active = false
@@ -136,6 +138,8 @@ func start_shift(duration: float, quota: float) -> void:
 		GameState.gameplay_ui._update_quota(quota)
 		GameState.gameplay_ui._update_night_display(GameState.night)
 		GameState.gameplay_ui._night_title_popup()
+		if GameState.gameplay_ui.has_method("_set_max_time"):
+			GameState.gameplay_ui._set_max_time(duration)
 	if night_timer:
 		night_timer.wait_time = duration
 		night_timer.start()

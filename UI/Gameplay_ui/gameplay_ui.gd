@@ -29,6 +29,8 @@ func _ready() -> void:
 	$FishEye.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	GameState.gameplay_ui = self
 	_sync_money_display(PlayerStats.money)
+	if has_node("Left Container/Timer"):
+		_set_max_time(GameState.night_duration)
 	set_shift_hud_visible(false)
 	_setup_hud_indicators()
 
@@ -161,8 +163,14 @@ func _change_money(new_value: float) -> void:
 	if is_inside_tree():
 		$"Right Container/Money/CPUParticles2D".emitting = false
 
+func _set_max_time(new_max: float) -> void:
+	if has_node("Left Container/Timer"):
+		$"Left Container/Timer".max_value = new_max
+		$"Left Container/Timer".value = new_max
+
 func _change_time(new_value: float) -> void:
-	$"Left Container/Timer".value = new_value
+	if has_node("Left Container/Timer"):
+		$"Left Container/Timer".value = new_value
 
 # tutorial methods go to the tutorial helper
 func start_tutorial(keys_node: Control = null) -> void:
