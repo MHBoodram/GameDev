@@ -11,7 +11,7 @@ extends Node
 
 var night: int = 1
 var max_nights: int = 7
-var night_duration: float = 300.0
+var night_duration: float = 150.0
 var restarts_left: int = 3
 const MAX_RESTARTS: int = 3
 const BASE_QUOTA: float = 150.0
