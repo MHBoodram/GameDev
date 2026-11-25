@@ -9,22 +9,6 @@ var money : float = 500
 var overall_reputation : float = 0.0
 var reputation_species : Dictionary = {}
 var night_species_delta : Dictionary = {}
-
-var upgrades : Dictionary = {
-	"Drinks":
-		{
-
-		},
-	"Ingredients":
-		{
-
-		},
-	"Marketing":
-		{
-
-		}
-}
-
 var overall_marketing : float = 1.0
 var species_marketing : Dictionary = {}
 var species_banners : Dictionary = {}
