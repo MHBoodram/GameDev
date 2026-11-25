@@ -252,7 +252,7 @@ func _trigger_pour_splash(id: String, liquids_num: float, pour_info: Dictionary)
 func _update_pour_splash(delta: float) -> void:
 	_ensure_pour_splash_stream()
 	if _pour_splash_timer <= 0.0 or is_consumed or is_pouring_out:
-		_pour_splash_timer = 0.0
+		_pour_splash_timer = 0.0 
 		_pour_splash_stream.set_splash_active(false)
 		return
 
