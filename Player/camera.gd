@@ -30,7 +30,7 @@ var _saved_marker_return_rot: Vector3 = Vector3.ZERO
 const CAMERA_Y_OFFSET: float = 0.3
 const CAMERA_TILT_OFFSET: float = 5.0
 const BASE_FRONT_CAMERA_ROTATION: Vector3 = Vector3(-16.3, 0.0, 0.0)
-const BASE_BACK_CAMERA_ROTATION: Vector3 = Vector3(-21.0, 180.0, 0.0)
+const BASE_BACK_CAMERA_ROTATION: Vector3 = Vector3(-12.0, 180.0, 0.0)
 
 var base_camera_rotation: Vector3 = BASE_FRONT_CAMERA_ROTATION + Vector3(CAMERA_TILT_OFFSET, 0.0, 0.0)
 var current_tilt_yaw: float = 0.0

@@ -9,7 +9,7 @@ script = ExtResource("1_4urve")
 [node name="TextureRect" type="ColorRect" parent="." unique_id=271145910]
 offset_top = 41.0
 offset_right = 310.0
-offset_bottom = 530.0
+offset_bottom = 565.0
 color = Color(0.36282945, 0.36282945, 0.36282945, 1)
 
 [node name="VBoxContainer" type="VBoxContainer" parent="TextureRect" unique_id=1303611127]
@@ -145,6 +145,14 @@ text = "Refill"
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Blood Game"
+
+[node name="UpgradesRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="Unlock_Upgrades" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/UpgradesRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Unlock Upgrades"
 
 [node name="MoneyRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498709]
 layout_mode = 2

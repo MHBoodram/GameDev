@@ -9,3 +9,4 @@ class_name Liquid
 @export var liquid_color : Color = Color(1.0, 1.0, 1.0, 1.0)
 @export var buoyancy: float = -1.0
 @export var viscosity: float = -1.0
+@export var price_per_cup_percent: float = -1.0

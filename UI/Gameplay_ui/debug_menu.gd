@@ -29,6 +29,7 @@ var _cursor_over_debug: bool = false
 @onready var unlock_all_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/ItemsRow/Unlock_All
 @onready var refill_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/ItemsRow/Refill_Bottles
 @onready var blood_game_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/ItemsRow/Blood_Game
+@onready var unlock_upgrades_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/UpgradesRow/Unlock_Upgrades
 @onready var add_money_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/MoneyRow/Add_Money
 @onready var add_quota_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/MoneyRow/Add_Quota
 @onready var zero_money_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/MoneyRow/Zero_Money
@@ -59,6 +60,7 @@ func _ready() -> void:
 	unlock_all_btn.pressed.connect(_on_unlock_all_pressed)
 	refill_btn.pressed.connect(_on_refill_pressed)
 	blood_game_btn.pressed.connect(_on_blood_game_pressed)
+	unlock_upgrades_btn.pressed.connect(_on_unlock_upgrades_pressed)
 	add_money_btn.pressed.connect(_on_add_money_pressed)
 	add_quota_btn.pressed.connect(_on_add_quota_pressed)
 	zero_money_btn.pressed.connect(_on_zero_money_pressed)
@@ -366,6 +368,23 @@ func _on_unlock_all_pressed() -> void:
 		for ing in PlayerStats.unlocks["Ingredients"]:
 			PlayerStats.unlocks["Ingredients"][ing] = true
 			SpeciesRegistry.on_ingredient_unlocked(str(ing), PlayerStats)
+	if GameState.shelf_manager and is_instance_valid(GameState.main_node):
+		GameState.shelf_manager.refresh_shelf_bottles(GameState.main_node, _get_counter_ref())
+
+func _on_unlock_upgrades_pressed() -> void:
+	if PlayerStats.unlocks.has("Upgrades"):
+		for upg in PlayerStats.unlocks["Upgrades"]:
+			PlayerStats.unlocks["Upgrades"][upg] = true
+	if PlayerStats.unlock_passive.has("Drinks Auto Increase"):
+		PlayerStats.unlock_passive["Drinks Auto Increase"] = maxi(1, int(PlayerStats.unlock_passive["Drinks Auto Increase"]))
+	if PlayerStats.unlock_passive.has("Drinks Size Increase"):
+		PlayerStats.unlock_passive["Drinks Size Increase"] = maxi(1, int(PlayerStats.unlock_passive["Drinks Size Increase"]))
+	if PlayerStats.unlock_passive.has("Combo Extension Increase"):
+		PlayerStats.unlock_passive["Combo Extension Increase"] = maxi(1, int(PlayerStats.unlock_passive["Combo Extension Increase"]))
+	if PlayerStats.has_method("sync_species_registry"):
+		PlayerStats.sync_species_registry()
+	for sp_name in PlayerStats.species_banners.keys():
+		PlayerStats.species_banners[sp_name] = true
 	if GameState.shelf_manager and is_instance_valid(GameState.main_node):
 		GameState.shelf_manager.refresh_shelf_bottles(GameState.main_node, _get_counter_ref())
 
