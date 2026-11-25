@@ -7,7 +7,7 @@ const GAME_SCENE := "res://Main3D.tscn"
 
 func _ready() -> void:
 	#$CenterContainer/VBox/Button.grab_focus()
-	
+
 	MusicPlayer.play_menu() # new menu song should be labeled "Piano Solo 1"
 	get_tree().paused = false #in case we come here from the pause menu
 	UIAudio.hook_buttons(self)
