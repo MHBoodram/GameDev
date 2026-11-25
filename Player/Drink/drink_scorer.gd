@@ -11,6 +11,7 @@ const PENALTY_WRONG_GLASS := 0.25
 const PENALTY_MISSING_GARNISH := 0.15
 const PENALTY_UNWANTED_GARNISH := 0.15
 const PENALTY_WRONG_PROCESSING := 0.3
+const PENALTY_PER_OVERFILL_PERCENT := 0.005
 const PENALTY_ICE_MISMATCH := 0.08
 const MAX_FINISH_DEDUCTION := 0.25
 
@@ -66,6 +67,10 @@ static func score_drink(served: DrinkMix, wanted: DrinkOrder) -> Dictionary:
 		if not served.garnishes.has(g):
 			drink_score -= PENALTY_MISSING_GARNISH
 
+	# cumulative overfill / spill penalty (persists even after pouring out in the sink)
+	if served.overfill_percent > 0.0:
+		drink_score -= served.overfill_percent * PENALTY_PER_OVERFILL_PERCENT
+
 	var result := {
 		"score": clampf(drink_score, 0.0, 1.0),
 		"is_satisfactory": false
@@ -99,3 +104,5 @@ static func score_legacy(drink_layers: Array, want_array: Array) -> Dictionary:
 	var served := DrinkMix.from_legacy_layers(drink_layers)
 	var wanted := DrinkOrder.from_legacy_want(want_array)
 	return score_drink(served, wanted)
+
+	

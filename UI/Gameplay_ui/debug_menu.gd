@@ -260,9 +260,6 @@ func _on_jump_night_pressed() -> void:
 	GameState.special_state = false
 	GameState.night_paused = false
 	GameState.can_end_night = true
-	GameState.seat1_order = []
-	GameState.seat2_order = []
-	GameState.seat3_order = []
 
 	GameState.night = clampi(target_night, 1, GameState.max_nights)
 	GameState.reset_night_restarts()
@@ -345,8 +342,7 @@ func _on_spawn_cup_pressed() -> void:
 			glass.drink_mix.add_processing("spectral")
 			SpectralEffect.apply_to_glass(glass)
 
-	if glass.liquid_box:
-		glass.liquid_box.modulate.a = 0.0
+	glass._remove_displaying_list(true)
 
 func _on_take_orders_pressed() -> void:
 	if GameState.seat_manager:

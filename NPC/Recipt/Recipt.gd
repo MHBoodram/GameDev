@@ -9,6 +9,7 @@ var ordered: bool = false
 var has_board_slot: bool = false
 var board_slot_position: Vector3 = Vector3.ZERO
 var board_slot_quaternion: Quaternion = Quaternion.IDENTITY
+var board_slot_scale: Vector3 = Vector3.ONE
 var _move_tween: Tween = null
 
 @export var hold_lift: float = 0.3
@@ -54,22 +55,27 @@ func _on_area_3d_input_event(cam: Node, event: InputEvent, pos: Vector3, normal:
 			_move_tween.kill()
 	super._on_area_3d_input_event(cam, event, pos, normal, shape_idx)
 
-func get_receipt_dimensions() -> Vector2:
+func get_base_receipt_dimensions() -> Vector2:
 	var paper_mesh := get_node_or_null("PaperMesh") as MeshInstance3D
 	if paper_mesh and paper_mesh.mesh:
 		var aabb: AABB = paper_mesh.mesh.get_aabb()
-		var width: float = aabb.size.x * absf(paper_mesh.scale.x) * absf(scale.x)
-		var height_local: float = aabb.size.z * absf(paper_mesh.scale.z) * absf(scale.z)
+		var width: float = aabb.size.x * absf(paper_mesh.scale.x)
+		var height_local: float = aabb.size.z * absf(paper_mesh.scale.z)
 		if aabb.size.z <= 0.001:
-			height_local = aabb.size.y * absf(paper_mesh.scale.y) * absf(scale.y)
+			height_local = aabb.size.y * absf(paper_mesh.scale.y)
 		if width > 0.001 and height_local > 0.001:
 			return Vector2(width, height_local)
-	return Vector2(0.25 * absf(scale.x), 0.35 * absf(scale.z))
+	return Vector2(0.25, 0.35)
 
-func _moving_to_board(target_pos: Vector3, target_basis: Basis, duration: float = 0.5) -> void:
+func get_receipt_dimensions() -> Vector2:
+	var base_dims := get_base_receipt_dimensions()
+	return Vector2(base_dims.x * absf(scale.x), base_dims.y * absf(scale.z))
+
+func _moving_to_board(target_pos: Vector3, target_basis: Basis, duration: float = 0.5, target_scale: Vector3 = Vector3.ONE) -> void:
 	has_board_slot = true
 	board_slot_position = target_pos
 	board_slot_quaternion = target_basis.get_rotation_quaternion()
+	board_slot_scale = target_scale
 	base_y_position = target_pos.y
 	if _move_tween and _move_tween.is_valid():
 		_move_tween.kill()
@@ -78,12 +84,15 @@ func _moving_to_board(target_pos: Vector3, target_basis: Basis, duration: float 
 	_move_tween.set_ease(Tween.EASE_OUT)
 	_move_tween.tween_property(self, "global_position", board_slot_position, duration)
 	_move_tween.tween_property(self, "quaternion", board_slot_quaternion, duration)
+	_move_tween.tween_property(self, "scale", board_slot_scale, duration)
 
 func clear_board_slot() -> void:
 	has_board_slot = false
 	ordered = false
+	board_slot_scale = Vector3.ONE
 	if _move_tween and _move_tween.is_valid():
 		_move_tween.kill()
+	scale = Vector3.ONE
 
 func _moving_to(to: Marker3D) -> void:
 	if _move_tween and _move_tween.is_valid():
@@ -146,7 +155,7 @@ func execute_interaction(target: Ingredients) -> void:
 func on_drop_failed() -> void:
 	if ordered:
 		if has_board_slot:
-			_moving_to_board(board_slot_position, Basis(board_slot_quaternion), 0.4)
+			_moving_to_board(board_slot_position, Basis(board_slot_quaternion), 0.4, board_slot_scale)
 		elif recipt_marker:
 			if _move_tween and _move_tween.is_valid():
 				_move_tween.kill()

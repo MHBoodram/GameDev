@@ -24,6 +24,26 @@ func _ready() -> void:
 	liquidpour = _make_player(liquidpour_stream)
 	shakerrattle = _make_player(shakerrattle_stream)
 	mugpickup = _make_player(mugpickup_stream)
+	call_deferred("_connect_game_events")
+
+func _connect_game_events() -> void:
+	if not GameEvents.sfx_requested.is_connected(_on_sfx_requested):
+		GameEvents.sfx_requested.connect(_on_sfx_requested)
+
+func _on_sfx_requested(sfx_id: String) -> void:
+	match sfx_id:
+		"draw", "knifedraw", "play_draw":
+			play_draw()
+		"stab", "knifestab", "play_stab":
+			play_stab()
+		"entranto", "play_entranto":
+			play_entranto()
+		"pour", "liquidpour", "play_liquidpour":
+			play_liquidpour()
+		"shaker", "shakerrattle", "play_shakerrattle":
+			play_shakerrattle()
+		"mugpickup", "play_mugpickup":
+			play_mugpickup()
 
 func _make_player(stream: AudioStream) -> AudioStreamPlayer:
 	var player := AudioStreamPlayer.new()

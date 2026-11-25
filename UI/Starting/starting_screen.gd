@@ -50,6 +50,7 @@ func _on_area_3d_input_event(camera: Node, event: InputEvent, event_position: Ve
 		tween.set_ease(Tween.EASE_OUT)
 		tween.tween_property($Menu2/Menu3/Viewport,"modulate:a",0,0.3)
 		#tween.tween_property($Menu2,"modulate:a",0,0.5)
+		tween.tween_property($WorldEnvironment.environment,"background_energy_multiplier",0,0.5)
 		tween.tween_property($SpotLight3D,"light_energy",0,0.3)
 		await tween.finished
 		await get_tree().create_timer(1).timeout

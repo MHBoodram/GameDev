@@ -1,6 +1,10 @@
 extends Node
 
-var previous_money : float
+signal money_changed(new_value: float, delta: float)
+signal overall_reputation_changed(new_value: float, delta: float)
+signal species_reputation_changed(species_name: String, new_value: float, delta: float)
+
+var previous_money : float = 0
 var money : float = 0
 var overall_reputation : float = 0.0
 var reputation_species : Dictionary = {}
@@ -12,10 +16,6 @@ var upgrades : Dictionary = {
 
 		},
 	"Ingredients":
-		{
-
-		},
-	"Tools":
 		{
 
 		},
@@ -39,12 +39,33 @@ var unlocks : Dictionary = {
 		"whiskey" : false,
 	},
 	"Ingredients":{
-		"Blood" : true,
-		#"Slime" : false,
+		"Blood" : false,
 		"Fishing_Rod" : false,
 		"Mag" : false
 	},
+	"Upgrades":{
+		"Jukebox" : false,
+		"Human Banner" : false,
+		"Vampire Banner" : false,
+		"Slime Banner" : false,
+		"Tiny Banner" : false,
+		"Instant Refill" : false,
+		"Drinks Size Increase" : false,
+		"Drinks Auto Increase" : false
+	},
+	"Recipes":{
+		"BLOODY MARY" : false,
+		"Classic Mojito" : false,
+	}
 }
+
+var unlock_passive: Dictionary = {
+	"Drinks Auto Increase" : 0,
+	"Drinks Size Increase" : 0,
+	"Combo Extension Increase" : 0
+}
+
+
 
 func _ready() -> void:
 	sync_species_registry()
@@ -80,10 +101,12 @@ func set_species_marketing(species: String, value: float) -> void:
 	species_marketing[key] = value
 
 func _change_money(new_value: float) -> void:
+	var old_money: float = money
+	var delta: float = new_value - old_money
 	money = new_value
 	print("[money]: ", money)
-	if GameState.gameplay_ui:
-		GameState.gameplay_ui._change_money(new_value)
+	if not is_zero_approx(delta):
+		money_changed.emit(money, delta)
 
 func _find_species_key(species: String) -> String:
 	var sp := SpeciesRegistry.get_species(species)
@@ -100,9 +123,23 @@ func _find_species_key(species: String) -> String:
 	return "Human"
 
 func add_overall_reputation(amount: float) -> void:
+	var old_rep: float = overall_reputation
 	if amount > 0.0:
 		overall_reputation += amount
+	var applied_delta: float = overall_reputation - old_rep
 	print("[overall_reputation]: ", overall_reputation)
+	if not is_zero_approx(applied_delta):
+		overall_reputation_changed.emit(overall_reputation, applied_delta)
+
+func change_overall_reputation(delta: float) -> void:
+	var old_rep: float = overall_reputation
+	var updated_rep: float = maxf(0.0, old_rep + delta)
+	var applied_delta: float = updated_rep - old_rep
+	overall_reputation = updated_rep
+	print("[overall_reputation]: ", overall_reputation)
+	var display_delta: float = applied_delta if not is_zero_approx(applied_delta) else delta
+	if not is_zero_approx(display_delta):
+		overall_reputation_changed.emit(overall_reputation, display_delta)
 
 func get_species_reputation(species: String) -> float:
 	var key: String = _find_species_key(species)
@@ -117,6 +154,9 @@ func change_species_reputation(species: String, delta: float) -> void:
 	night_species_delta[key] += applied_delta
 	print("[species_reputation]: ", reputation_species[key])
 	print("[night_species_delta]: ", night_species_delta[key])
+	var display_delta: float = applied_delta if not is_zero_approx(applied_delta) else delta
+	if not is_zero_approx(display_delta):
+		species_reputation_changed.emit(key, updated_rep, display_delta)
 
 # Returns species with largest reputation gain during current night
 func get_highest_gaining_species() -> String:
@@ -152,5 +192,5 @@ func get_species_spawn_weight(species: String) -> float:
 	print("[species_weight]: ", key, " = ", final_weight)
 	return final_weight
 
-func _check_upgrades() -> void:
-	pass
+func _check_upgrades(id: String,type: String):
+	return unlocks[type][id]

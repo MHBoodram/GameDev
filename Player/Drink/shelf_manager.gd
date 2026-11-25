@@ -26,6 +26,8 @@ func spawn_bottle_if_missing(host: Node3D, counter_ref: Node3D, drink_id: String
 
 	var existing := host.get_node_or_null(drink_id)
 	if existing:
+		if "liquid_resource" in existing and existing.liquid_resource is Liquid:
+			LiquidProperties.register_from_liquid(existing.liquid_resource)
 		spawned_bottles[drink_id] = existing
 		return existing
 
@@ -41,6 +43,9 @@ func spawn_bottle_if_missing(host: Node3D, counter_ref: Node3D, drink_id: String
 	var liquid_scene = load(LIQUID_SCENE_PATH)
 	if not liquid_scene or not liquid_res:
 		return null
+
+	if liquid_res is Liquid:
+		LiquidProperties.register_from_liquid(liquid_res)
 
 	var bottle_instance = liquid_scene.instantiate()
 	bottle_instance.name = drink_id
@@ -59,3 +64,4 @@ func add_liquid_to_bottle(drink_id: String, amount: float) -> void:
 	var bottle = get_bottle(drink_id)
 	if bottle and bottle.has_method("_add_liquid"):
 		bottle._add_liquid(amount)
+		

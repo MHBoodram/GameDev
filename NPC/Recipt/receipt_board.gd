@@ -26,15 +26,19 @@ func mount_receipt(receipt: Node3D, duration: float = 0.5) -> bool:
 
 	var slot_index: int = allocate_slot(receipt)
 	var r_size: Vector2 = Vector2(0.25, 0.35)
-	if receipt.has_method("get_receipt_dimensions"):
+	if receipt.has_method("get_base_receipt_dimensions"):
+		r_size = receipt.get_base_receipt_dimensions()
+	elif receipt.has_method("get_receipt_dimensions"):
 		r_size = receipt.get_receipt_dimensions()
 
 	var slot_xf: Dictionary = compute_slot_transform(board_data, slot_index, r_size)
+	var target_scale: Vector3 = slot_xf.get("scale", Vector3.ONE)
 	if receipt.has_method("_moving_to_board"):
-		receipt._moving_to_board(slot_xf["position"], slot_xf["basis"], duration)
+		receipt._moving_to_board(slot_xf["position"], slot_xf["basis"], duration, target_scale)
 	else:
 		receipt.global_position = slot_xf["position"]
 		receipt.basis = slot_xf["basis"]
+		receipt.scale = target_scale
 	return true
 
 func release_receipt(receipt: Node3D) -> void:
@@ -175,14 +179,34 @@ func get_board_data() -> Dictionary:
 func compute_slot_transform(board_data: Dictionary, slot_index: int, receipt_size: Vector2) -> Dictionary:
 	var board_w: float = board_data["width"]
 	var board_h: float = board_data["height"]
-	var r_w: float = maxf(receipt_size.x, 0.01)
-	var r_h: float = maxf(receipt_size.y, 0.01)
+	var base_w: float = maxf(receipt_size.x, 0.01)
+	var base_h: float = maxf(receipt_size.y, 0.01)
 
-	var min_gap_x: float = minf(0.04, r_w * 0.12)
-	var min_gap_y: float = minf(0.04, r_h * 0.12)
+	var edge_pad_x: float = board_w * 0.04
+	var edge_pad_y: float = board_h * 0.05
+	var inner_gap_x: float = board_w * 0.025
+	var inner_gap_y: float = board_h * 0.03
 
-	var cols: int = maxi(1, int(floor((board_w - min_gap_x) / (r_w + min_gap_x))))
-	var rows: int = maxi(1, int(floor((board_h - min_gap_y) / (r_h + min_gap_y))))
+	var cols: int = 3
+	var rows: int = 1
+	var best_scale: float = -1.0
+
+	for candidate in [[3, 1], [2, 2], [1, 3]]:
+		var c: int = candidate[0]
+		var r: int = candidate[1]
+		var avail_w: float = maxf(0.01, board_w - edge_pad_x * 2.0 - inner_gap_x * float(c - 1))
+		var avail_h: float = maxf(0.01, board_h - edge_pad_y * 2.0 - inner_gap_y * float(r - 1))
+		var cell_w: float = avail_w / float(c)
+		var cell_h: float = avail_h / float(r)
+		var candidate_scale: float = minf(cell_w / base_w, cell_h / base_h)
+		if candidate_scale > best_scale:
+			best_scale = candidate_scale
+			cols = c
+			rows = r
+
+	var receipt_scale: float = maxf(best_scale, 0.1)
+	var r_w: float = base_w * receipt_scale
+	var r_h: float = base_h * receipt_scale
 
 	var gap_x: float = (board_w - float(cols) * r_w) / float(cols + 1)
 	var gap_y: float = (board_h - float(rows) * r_h) / float(rows + 1)
@@ -207,6 +231,7 @@ func compute_slot_transform(board_data: Dictionary, slot_index: int, receipt_siz
 	return {
 		"position": slot_pos,
 		"basis": slot_basis,
+		"scale": Vector3.ONE * receipt_scale,
 	}
 
 func _find_board_node() -> Node3D:

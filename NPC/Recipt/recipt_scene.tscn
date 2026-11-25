@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://bcghbjc5vt6x0" path="res://NPC/2D Subports/recipt.tscn" id="2_w43kb"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_pka58"]
-size = Vector3(0.55, 0.3, 0.55)
+size = Vector3(0.26, 0.15, 0.36)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_wk5cn"]
 flip_faces = true

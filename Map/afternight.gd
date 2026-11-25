@@ -13,9 +13,7 @@ func _ready() -> void:
 
 func _open_light() -> void:
 	var tween = get_tree().create_tween().set_parallel(true)
-	tween.tween_property($Spot_003,"light_energy",2.503,0.5)
 	tween.tween_property($Point_001,"light_energy",0.087,0.5)
-	#tween.tween_property($Point_002,"light_energy",0.087,0.5)
 	tween.tween_property($Point_003,"light_energy",0.087,0.5)
 	tween.tween_property($Point_004,"light_energy",0.087,0.5)
 	tween.tween_property($Point_005,"light_energy",0.087,0.5)
@@ -23,7 +21,11 @@ func _open_light() -> void:
 	#$Spot_003.light_energy = 
 
 func _close_light() -> void:
-	var tween = get_tree().create_tween()
+	var tween = get_tree().create_tween().set_parallel(true)
+	tween.tween_property($Spot,"light_energy",0,0.5)
+	tween.tween_property($shelf_spot,"light_energy",0,0.5)
+	tween.tween_property($shelf_spot2,"light_energy",0,0.5)
+	tween.tween_property($Spot_001,"light_energy",0,0.5)
 	tween.tween_property($Spot_003,"light_energy",0,0.5)
 	tween.tween_property($Point_001,"light_energy",0,0.5)
 	#tween.tween_property($Point_002,"light_energy",0,0.5)
@@ -36,10 +38,19 @@ func _close_light() -> void:
 func _setup_shop_scene() -> void:
 	$Shop.play("default")
 	await $Shop.animation_finished
-	$Spot_003.light_color = Color("80fd00")
+	var tween = get_tree().create_tween().set_parallel(true)
+	$Spot_003.light_color = Color(1.0, 1.0, 1.0, 1.0)
+	tween.tween_property($Spot_003,"light_energy",4,0.5)
+	tween.tween_property($shelf_spot,"light_energy",4,0.5)
+	tween.tween_property($shelf_spot2,"light_energy",4,0.5)
+	tween.tween_property($Spot,"light_energy",4,0.5)
 	$Spot.show()
 	$Spot_002.show()
-	
+
+func _get_marker(id: int) -> Marker3D:
+	var string_node = str("Marker",id)
+	var marker3d_node = get_node(string_node)
+	return marker3d_node
 
 func _setup_working_area_walls() -> void:
 	if get_node_or_null("WorkingAreaInvisibleWalls") != null:

@@ -66,10 +66,12 @@ func _display_recipt() -> void:
 	await _display_number(proft_number,(PlayerStats.money - GameState.get_night_quota(GameState.night)),PlayerStats.money)
 	await get_tree().create_timer(1).timeout
 	if(PlayerStats.money - GameState.get_night_quota(GameState.night) < 0):
+		PlayerStats._change_money(PlayerStats.money - GameState.get_night_quota(GameState.night))
+		
 		#$Animation.play("failed_night")
 		return
 	else:
-		PlayerStats.money = (PlayerStats.money - GameState.get_night_quota(GameState.night))
+		PlayerStats._change_money(PlayerStats.money - GameState.get_night_quota(GameState.night))
 		#await get_tree().create_timer(1).timeout
 		#_move_to_out($Recipt,false)
 		#_move_to_in($Marketing,true)

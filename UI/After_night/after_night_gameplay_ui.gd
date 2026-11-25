@@ -6,7 +6,7 @@ extends CanvasLayer
 @export var player: Node3D
 
 var camera_rig: Camera = null
-#var tutorial_director: TutorialManager = TutorialManager.new()
+var hud_indicators: HudIndicators = null
 
 # patch to camera rig so existing scripts don't break
 var down: bool:
@@ -21,8 +21,6 @@ var current_position: int:
 		if camera_rig: camera_rig.current_position = val
 
 func _ready() -> void:
-	#add_child(tutorial_director)
-	
 	var cam: Camera3D = get_viewport().get_camera_3d()
 	if cam is Camera:
 		camera_rig = cam as Camera
@@ -30,9 +28,45 @@ func _ready() -> void:
 	$Right_Button.disabled = true
 	$Left_Button.disabled = true
 	GameState.gameplay_ui = self
-	_change_money(PlayerStats.money)
+	_sync_money_display(PlayerStats.money)
 	set_shift_hud_visible(false)
-	print(camera_rig.global_position)
+	_setup_hud_indicators()
+	if PlayerStats and not PlayerStats.money_changed.is_connected(_on_money_changed):
+		PlayerStats.money_changed.connect(_on_money_changed)
+	if not GameEvents.minigame_lock_changed.is_connected(_on_minigame_lock_changed):
+		GameEvents.minigame_lock_changed.connect(_on_minigame_lock_changed)
+
+func _exit_tree() -> void:
+	if is_instance_valid(PlayerStats) and PlayerStats.money_changed.is_connected(_on_money_changed):
+		PlayerStats.money_changed.disconnect(_on_money_changed)
+	if GameEvents._bus and GameEvents.minigame_lock_changed.is_connected(_on_minigame_lock_changed):
+		GameEvents.minigame_lock_changed.disconnect(_on_minigame_lock_changed)
+
+func _on_minigame_lock_changed(locked: bool) -> void:
+	if locked:
+		_in_down_minigame()
+	else:
+		_out_down_minigame()
+
+func _on_money_changed(new_value: float, _delta: float) -> void:
+	_change_money(new_value)
+
+func _setup_hud_indicators() -> void:
+	if hud_indicators and is_instance_valid(hud_indicators):
+		return
+	hud_indicators = HudIndicators.new()
+	add_child(hud_indicators)
+	call_deferred("_order_hud_indicators")
+
+func _order_hud_indicators() -> void:
+	if not is_instance_valid(hud_indicators):
+		return
+	var hand_node := get_node_or_null("Hand")
+	if hand_node and hud_indicators.get_index() > hand_node.get_index():
+		move_child(hud_indicators, hand_node.get_index())
+
+func _sync_money_display(value: float) -> void:
+	$"Right Container/Money/Label".text = str(int(value))
 
 func set_shift_hud_visible(is_visible: bool) -> void:
 	$"Left Container".visible = is_visible
@@ -89,7 +123,6 @@ func _on_right_button_pressed() -> void:
 func _on_bottom_button_pressed() -> void:
 	if !GameState.player.in_shop:
 		return
-	
 	if GameState.player and GameState.player.has_method("handle_counter_edge_action"):
 		if GameState.player.handle_counter_edge_action():
 			_in_down_minigame()
@@ -134,9 +167,11 @@ func _night_title_finish() -> void:
 
 func _change_money(new_value: float) -> void:
 	var old_value := float($"Right Container/Money/Label".text)
+	$"Right Container/Money/Label".text = str(int(new_value))
+	if is_equal_approx(new_value, old_value):
+		return
 	$"Right Container/Money/CPUParticles2D".color = Color.RED if new_value < old_value else Color.WHITE
 	$"Right Container/Money/CPUParticles2D".emitting = true
-	$"Right Container/Money/Label".text = str(int(new_value))
 	await get_tree().create_timer(0.5).timeout
 	if is_inside_tree():
 		$"Right Container/Money/CPUParticles2D".emitting = false

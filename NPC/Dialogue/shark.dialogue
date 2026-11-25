@@ -128,7 +128,8 @@ Scott: Finished
 Shark: Yo dude, long time no see
 Shark: Let's see how you did
 do GameState.main_node._check_money()
-if PlayerStats.money - GameState.get_night_quota(GameState.night) < 0:
+do _money_checking()
+if PlayerStats.money < 0:
 	=> afternight_1_Loss
 else:
 	=> afternight_1_Win

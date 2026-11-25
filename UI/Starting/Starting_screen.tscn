@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dbopjf61c8b21"]
 
 [ext_resource type="PackedScene" uid="uid://ci6fovgg0i85" path="res://Map/bar1.tscn" id="1_2t0lq"]
-[ext_resource type="Script" uid="uid://gm2337lcgrvo" path="res://UI/Starting/starting_screen.gd" id="1_aj1h6"]
+[ext_resource type="Script" uid="uid://cgrldus8tt4ky" path="res://UI/Starting/starting_screen.gd" id="1_aj1h6"]
 [ext_resource type="PackedScene" uid="uid://bdpvjjayusxo7" path="res://UI/Starting/StartMenu.tscn" id="3_pa3t7"]
 [ext_resource type="Texture2D" uid="uid://cmfpp3ot4ndl3" path="res://Assets/UI/Logo.png" id="4_8bcmw"]
 [ext_resource type="PackedScene" uid="uid://dmvyu064q12ba" path="res://UI/Starting/setting.tscn" id="5_vdsfn"]
@@ -432,7 +432,7 @@ tracks/5/keys = {
 "times": PackedFloat32Array(1.1, 1.45),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [0.2, 0.0]
+"values": [0.2, 0.1]
 }
 tracks/6/type = "value"
 tracks/6/imported = false
@@ -575,6 +575,26 @@ shadow_enabled = true
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=849316482]
 libraries/ = SubResource("AnimationLibrary_vom8s")
+
+[node name="Spot_003" type="SpotLight3D" parent="." unique_id=346710712]
+transform = Transform3D(1, 0, 0, 0, 0.29237163, 0.9563048, 0, -0.9563048, 0.29237163, -1.0314078, 4.849311, -3.2946143)
+visible = false
+light_color = Color(1.530687, 0.8024005, 0, 1)
+light_energy = 2.5030978
+spot_range = 4096.0
+spot_attenuation = 2.0
+spot_angle = 33.399994
+spot_angle_attenuation = 1.233333
+
+[node name="Spot_004" type="SpotLight3D" parent="." unique_id=1964981442]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, -0.7774728, 3.523968, 3.1099968)
+visible = false
+light_color = Color(1.2836301, 0.92815703, 0.5584855, 1)
+light_energy = 0.8165156
+spot_range = 4096.0
+spot_attenuation = 2.0
+spot_angle = 51.499992
+spot_angle_attenuation = 1.2333336
 
 [connection signal="input_event" from="Menu2/Menu3/Play" to="." method="_on_area_3d_input_event"]
 [connection signal="mouse_entered" from="Menu2/Menu3/Play" to="." method="_on_play_mouse_entered"]

@@ -12,10 +12,19 @@ func _ready() -> void:
 		hframes = npc_resource.hframe
 		dialogue_resource = npc_resource.dialogue_resource
 
+func _money_checking():
+	print("Money: ",PlayerStats.money)
+	print(PlayerStats.money>0)
+	#if(PlayerStats.money > 0):
+
+func _play_animation_knocking():
+	$AnimationPlayer.play("knocking")
+
 func _on_interaction_input_event(camera_node: Node, event: InputEvent, _pos: Vector3, _norm: Vector3, _shape: int) -> void:
 	if not can_talk or speaking_title == "" or speaking_title == null:
 		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		GameState.character_talking = self
 		if abs(camera_node.global_position.x - global_position.x) < 2:
 			talk()
 
@@ -26,7 +35,11 @@ func talk() -> void:
 		return
 	if dialogue_resource:
 		DialogueManager.show_dialogue_balloon_scene(custom_balloon, dialogue_resource, speaking_title, [self])
-		
+
+func force_dialogue(speaking: String) -> void:
+	if dialogue_resource:
+		DialogueManager.show_dialogue_balloon_scene(custom_balloon, dialogue_resource, speaking, [self])
+
 func _talking(open_mouth: bool = false) -> void:
 	var frame_check := 0
 	match emo:

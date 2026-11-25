@@ -88,7 +88,7 @@ Right_click={
 
 [internationalization]
 
-locale/translations_pot_files=PackedStringArray("res://NPC/Dialogue/Scott.dialogue", "res://NPC/Dialogue/shark.dialogue", "res://NPC/Dialogue/Slime.dialogue", "res://NPC/Dialogue/cesti.dialogue", "res://NPC/Dialogue/default_patron.dialogue", "res://NPC/Dialogue/yecott.dialogue", "res://NPC/Dialogue/ShopKeeper.dialogue")
+locale/translations_pot_files=PackedStringArray("res://NPC/Dialogue/Scott.dialogue", "res://NPC/Dialogue/shark.dialogue", "res://NPC/Dialogue/Slime.dialogue", "res://NPC/Dialogue/cesti.dialogue", "res://NPC/Dialogue/ShopKeeper.dialogue")
 "HEAD[internationalization]locale/translations_pot_files"=PackedStringArray("res://NPC/Dialogue/Scott.dialogue", "res://NPC/Dialogue/shark.dialogue", "res://NPC/Dialogue/Slime.dialogue")
 "313286a272f41fd9e9c7b84e875fa635e1a26a45[physics]3d/physics_engine"="Jolt Physics"
 "[internationalization]locale/translations_pot_files"=PackedStringArray("res://NPC/Dialogue/Scott.dialogue", "res://NPC/Dialogue/shark.dialogue", "res://NPC/Dialogue/Slime.dialogue")

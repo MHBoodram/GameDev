@@ -1,0 +1,112 @@
+#		"netural": frame_check = 0
+#		"happy": frame_check = 2
+#		"mad": frame_check = 4
+
+
+#First intro
+~ firstIntro
+Shop Keeper: Hello Mister, new here huh
+Shop Keeper: You can call me the Shop Keeper
+Shop Keeper: Every night you can get some new [wave amp=25 freq=5]Ingredidents[/wave] or Upgrades
+Shop Keeper: There's always some freebies from coming
+do GameState.main_node._go_next()
+set speaking_title = "firstWait1"
+=> END
+
+~ firstDrinks
+Shop Keeper: Pick one of these for free
+Shop Keeper: No trick just free [wave amp=25 freq=5]Drinks[/wave] on the house
+set speaking_title = "firstWait1"
+=> END
+
+~ firstIngredients
+Shop Keeper: Same as these are free
+set speaking_title = "firstWait1"
+=> END
+
+~ firstUpgrades
+Shop Keeper: You can use your money to buy these upgrades
+Shop Keeper: From [wave amp=25 freq=5]Drink[/wave] Upgrades, Cool looking banners, or recipes
+Shop Keeper: and always thanks for your patronage
+=> END
+
+~ firstWait1
+Shop Keeper: Just pick one, don't worry it won't bite
+set speaking_title = "firstWait2"
+=> END
+
+~ firstWait2
+Shop Keeper: Mister...
+Shop Keeper: You good?
+set speaking_title = "firstWait3"
+=> END
+
+~ firstWait3
+set emo = "mad"
+Shop Keeper: JUST PICK A DAMN ITEM
+set emo = "netural"
+Shop Keeper: [next=auto]...
+set speaking_title = "wait"
+=> END
+
+
+#Constant
+~ Comingback
+Shop Keeper: Welcome back
+do GameState.main_node._go_next()
+set speaking_title = "wait"
+=> END
+
+~ wait
+% Shop Keeper: What's up, the items are above
+% Shop Keeper: It's on the house don't worry
+%1 Shop Keeper: Just pick a damn item
+=> END
+
+~ options1
+Shop Keeper: What's up
+- How are you doing
+	Shop Keeper: Not too bad Mister
+	Shop Keeper: A bit tired but not too bad
+	Shop Keeper: How about you
+	- Fine
+		Shop Keeper: That's what up Mister
+	- Awful
+		Shop Keeper: You got a lot of head you
+		Shop Keeper: You got this
+- Hows business going
+	Shop Keeper: A bit slow recently because the of war
+	Shop Keeper: Customers are scared coming out here because you don't know whos after you
+	Shop Keeper: But I wish it was more calmer
+	- What War
+		Shop Keeper: You are really are new here aren't you Mister
+		Shop Keeper: Welp, it's a long story maybe if you come here more I will tell more about it
+		Shop Keeper: But to keep it short it some people on the top are blaming some certain type of people
+		- Who
+			Shop Keeper: You need to come here again if want to know
+	- Same
+		Shop Keeper: Be like
+		Shop Keeper: 
+- Leaving
+	Shop Keeper: See you later mister
+	Shop Keeper: Thank you for your patronage always
+	do GameState.main_node._finished_night()
+=> END
+
+~ options2
+Shop Keeper: Go next
+- How are you doing
+	Shop Keeper: Not too bad Mister
+- Leaving
+	Shop Keeper: See you later mister
+	do GameState.main_node._finished_night()
+=> END
+
+~ options3
+Shop Keeper: Go next
+- How are you doing
+	Shop Keeper: Not too bad Mister
+- Leaving
+	Shop Keeper: See you later mister
+	do GameState.main_node._finished_night()
+=> END

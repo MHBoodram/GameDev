@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://d35b6bj2mv0a3" path="res://Map/afternight.tscn" id="1_bps6g"]
 [ext_resource type="Script" uid="uid://ciwnqc6giiiy6" path="res://UI/After_night/afternight.gd" id="1_sxjop"]
+[ext_resource type="Environment" uid="uid://c2h86ipdfciqx" path="res://Map/Afternight_Environment.tres" id="3_hkwvl"]
 [ext_resource type="PackedScene" uid="uid://cidirpdmn2j5" path="res://Player/After_Night_Player/AfterNightPlayer.tscn" id="3_myvk3"]
 [ext_resource type="Script" uid="uid://ilqlfi7mgoyf" path="res://Player/Dynamic_camera.gd" id="4_n4i4h"]
 [ext_resource type="PackedScene" uid="uid://sx4hrn3cgwy1" path="res://Player/Coutner.tscn" id="4_reyg2"]
@@ -14,22 +15,7 @@
 [ext_resource type="Texture2D" uid="uid://dhwy3spw05iwl" path="res://Assets/Items/Drinks/beer.png" id="11_hcxpf"]
 [ext_resource type="PackedScene" uid="uid://dbd3xmclss4bq" path="res://NPC/Afternight/Afternight_NPC.tscn" id="12_sxjop"]
 [ext_resource type="PackedScene" uid="uid://c7e1o70yhke0k" path="res://UI/After_night/after_night_menu.tscn" id="14_22u17"]
-[ext_resource type="Resource" uid="uid://bk0hkcys7plb0" path="res://NPC/Resources/yecott.tres" id="15_cotfs"]
-
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_reyg2"]
-load_path = "res://.godot/imported/toposcope_sunset_2k.hdr-9f1a087744ac216565fb09a6d9e764d7.bptc.ctex"
-
-[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_sxjop"]
-panorama = SubResource("CompressedTexture2D_reyg2")
-
-[sub_resource type="Sky" id="Sky_n4i4h"]
-sky_material = SubResource("PanoramaSkyMaterial_sxjop")
-
-[sub_resource type="Environment" id="Environment_22u17"]
-background_mode = 2
-background_energy_multiplier = 0.0
-sky = SubResource("Sky_n4i4h")
-sky_rotation = Vector3(0, -2.120575, 0)
+[ext_resource type="Resource" uid="uid://comow1187smtu" path="res://NPC/Resources/shopkeeper.tres" id="16_hkwvl"]
 
 [sub_resource type="Animation" id="Animation_n4i4h"]
 length = 0.001
@@ -114,7 +100,7 @@ tracks/2/type = "value"
 tracks/2/imported = false
 tracks/2/enabled = true
 tracks/2/path = NodePath(".:position")
-tracks/2/interp = 1
+tracks/2/interp = 2
 tracks/2/loop_wrap = true
 tracks/2/keys = {
 "times": PackedFloat32Array(0, 0.6),
@@ -126,7 +112,7 @@ tracks/3/type = "value"
 tracks/3/imported = false
 tracks/3/enabled = true
 tracks/3/path = NodePath(".:rotation")
-tracks/3/interp = 1
+tracks/3/interp = 2
 tracks/3/loop_wrap = true
 tracks/3/keys = {
 "times": PackedFloat32Array(0, 0.6),
@@ -181,7 +167,7 @@ script = ExtResource("1_sxjop")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.004, 1.17, 1.426)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1767207049]
-environment = SubResource("Environment_22u17")
+environment = ExtResource("3_hkwvl")
 
 [node name="Sun" type="DirectionalLight3D" parent="WorldEnvironment" unique_id=154308508]
 transform = Transform3D(-0.95751554, -0.16707794, 0.23505107, -0.08849062, 0.94597405, 0.3119334, -0.2744694, 0.27788123, -0.9205698, 6.6585455, 3.4872513, -7.5352235)
@@ -325,7 +311,7 @@ wait_time = 300.0
 one_shot = true
 
 [node name="Viewport" type="Sprite3D" parent="." unique_id=199499708]
-transform = Transform3D(0.09918737, 0, 0, 0, -5.2643796e-09, 0.16071211, 0, -0.12043496, -7.0249495e-09, -0.38534808, 2.3437724, 2.0515742)
+transform = Transform3D(0.09918737, 0, 0, 0, -5.2643796e-09, 0.16071211, 0, -0.12043496, -7.0249495e-09, -0.0566383, 2.3437724, 2.0515742)
 texture = SubResource("ViewportTexture_hkwvl")
 
 [node name="SubViewport" type="SubViewport" parent="Viewport" unique_id=328333767]
@@ -368,12 +354,28 @@ shape = SubResource("BoxShape3D_bqacp")
 [node name="ShopKeeper" parent="." unique_id=1265211487 instance=ExtResource("12_sxjop")]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -0.047801152, 2.9228249, 1.3728292)
 visible = false
-npc_resource = ExtResource("15_cotfs")
+npc_resource = ExtResource("16_hkwvl")
+
+[node name="Choice1" type="Marker3D" parent="ShopKeeper" unique_id=695025756]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.3576584, 0)
+
+[node name="Choice2" type="Marker3D" parent="ShopKeeper" unique_id=1192028642]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 1.6576586, 0)
+
+[node name="Choice3" type="Marker3D" parent="ShopKeeper" unique_id=1021425485]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8576584, 0)
+
+[node name="Choice4" type="Marker3D" parent="ShopKeeper" unique_id=136988419]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.6576586, 0)
+
+[node name="Choice5" type="Marker3D" parent="ShopKeeper" unique_id=1046000916]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.3576584, 0)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=138677692]
 visible = false
 
 [node name="Button" type="Button" parent="CanvasLayer" unique_id=1293870491]
+visible = false
 offset_left = 490.0
 offset_top = 114.0
 offset_right = 771.0
