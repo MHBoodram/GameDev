@@ -4,7 +4,7 @@ signal money_changed(new_value: float, delta: float)
 signal overall_reputation_changed(new_value: float, delta: float)
 signal species_reputation_changed(species_name: String, new_value: float, delta: float)
 
-var previous_money : float
+var previous_money : float = 0
 var money : float = 0
 var overall_reputation : float = 0.0
 var reputation_species : Dictionary = {}
@@ -39,7 +39,7 @@ var unlocks : Dictionary = {
 		"whiskey" : false,
 	},
 	"Ingredients":{
-		"Blood" : true,
+		"Blood" : false,
 		"Fishing_Rod" : false,
 		"Mag" : false
 	},
@@ -51,12 +51,15 @@ var unlocks : Dictionary = {
 		"Tiny Banner" : false,
 		"Instant Refill" : false,
 		"Drinks Size Increase" : false,
+		"Drinks Auto Increase" : false
 	},
 	"Recipes":{
 		"BLOODY MARY" : false,
 		"Classic Mojito" : false,
 	}
 }
+
+
 
 func _ready() -> void:
 	sync_species_registry()
