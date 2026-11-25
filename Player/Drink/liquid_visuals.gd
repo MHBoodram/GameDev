@@ -392,4 +392,43 @@ func get_layer_hsv_color(layer: Array) -> Color:
 	return average_hsv_color(weights)
 
 func average_hsv_color(color_weights: Array) -> Color:
-	return LiquidColorUtils.average_hsv_color(color_weights)
+	if color_weights.is_empty():
+		return Color.WHITE
+
+	var total_weight: float = 0.0
+	var sum_x: float = 0.0
+	var sum_y: float = 0.0
+	var sum_s: float = 0.0
+	var sum_v: float = 0.0
+	var sum_a: float = 0.0
+
+	for item in color_weights:
+		var c: Color = item[0]
+		var w: float = float(item[1])
+		if w <= 0.0:
+			continue
+		total_weight += w
+		var angle := c.h * TAU
+		var sat_w := maxf(c.s, 0.01) * w
+		sum_x += cos(angle) * sat_w
+		sum_y += sin(angle) * sat_w
+		sum_s += c.s * w
+		sum_v += c.v * w
+		sum_a += c.a * w
+
+	if total_weight <= 0.0:
+		return Color.WHITE
+
+	var avg_h: float = 0.0
+	if absf(sum_x) > 0.0001 or absf(sum_y) > 0.0001:
+		var avg_angle := atan2(sum_y, sum_x)
+		if avg_angle < 0.0:
+			avg_angle += TAU
+		avg_h = avg_angle / TAU
+	else:
+		avg_h = color_weights[0][0].h
+
+	var avg_s := clampf(sum_s / total_weight, 0.35, 1.0)
+	var avg_v := clampf(sum_v / total_weight, 0.5, 1.0)
+	var avg_a := clampf(sum_a / total_weight, 0.0, 1.0)
+	return Color.from_hsv(avg_h, avg_s, avg_v, avg_a)
