@@ -116,13 +116,39 @@ func _apply_species_scale() -> void:
 	base_scale = species_def.npc_scale if species_def else Vector3(0.5, 0.5, 0.5)
 	visual_scale_multiplier = 1.0
 	_refresh_visual_scale()
+	var p_scale: float = species_def.patience_scale if species_def else 1.0
 	var patience_sprite := get_node_or_null("Sprite3D") as Sprite3D
 	if patience_sprite and base_scale.x > 0.01:
 		var inv_factor := minf(10.0, 0.5 / base_scale.x)
-		patience_sprite.scale = Vector3.ONE * inv_factor
+		patience_sprite.scale = Vector3.ONE * (inv_factor * p_scale)
 		var base_patience_y := 1.7339805
 		var p_offset := species_def.get_patience_offset() if species_def and species_def.has_method("get_patience_offset") else Vector3.ZERO
 		patience_sprite.position = Vector3(p_offset.x, base_patience_y + p_offset.y, p_offset.z)
+	_sync_hitbox_to_standard(species_def.get_seat_offset() if species_def else Vector3.ZERO)
+
+func _sync_hitbox_to_standard(seat_off: Vector3) -> void:
+	var inv_x: float = 1.0 / maxf(absf(base_scale.x), 0.001)
+	var inv_y: float = 1.0 / maxf(absf(base_scale.y), 0.001)
+	var inv_z: float = 1.0 / maxf(absf(base_scale.z), 0.001)
+	var hitbox_scale := Vector3(0.5 * inv_x, 0.5 * inv_y, 0.5 * inv_z)
+
+	var area_interact := get_node_or_null("Area3D") as Area3D
+	if area_interact:
+		area_interact.scale = hitbox_scale
+		area_interact.position = Vector3(
+			-seat_off.x * inv_x,
+			-seat_off.y * inv_y,
+			(0.37303102 * 0.5 - seat_off.z) * inv_z
+		)
+
+	var area_drink := get_node_or_null("Area3D2") as Area3D
+	if area_drink:
+		area_drink.scale = hitbox_scale
+		area_drink.position = Vector3(
+			-seat_off.x * inv_x,
+			(-1.441681 * 0.5 - seat_off.y) * inv_y,
+			(0.4174888 * 0.5 - seat_off.z) * inv_z
+		)
 
 func _apply_bounce_scale(factor: float) -> void:
 	_bounce_factor = factor
@@ -299,8 +325,9 @@ func show_floating_feedback(message: String) -> void:
 	label3d.font_size = 48
 	label3d.outline_size = 12
 	label3d.modulate = Color(1.0, 0.9, 0.35, 1.0)
+	var p_scale: float = species_def.patience_scale if species_def else 1.0
 	var inv := 0.5 / maxf(base_scale.x, 0.01)
-	label3d.scale = Vector3.ONE * minf(10.0, inv)
+	label3d.scale = Vector3.ONE * (minf(10.0, inv) * p_scale)
 	label3d.position = Vector3(0.0, 1.35, 0.1)
 	add_child(label3d)
 

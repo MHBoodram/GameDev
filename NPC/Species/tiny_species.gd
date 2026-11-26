@@ -12,6 +12,7 @@ func _init() -> void:
 	fallback_texture_path = "res://Assets/NPC/Tiny/tiny.webp"
 	fallback_hframes = 10
 	npc_scale = Vector3(0.05, 0.05, 0.05)
+	patience_scale = 0.7
 	seat_offset = Vector3(0.0, -0.45, 0.35)
 	patience_y_offset = 8.5
 	base_spawn_weight = 2.0

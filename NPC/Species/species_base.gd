@@ -13,6 +13,7 @@ var fallback_texture_path: String = ""
 var fallback_hframes: int = 1
 var default_patience: float = 90.0
 var npc_scale: Vector3 = Vector3(0.5, 0.5, 0.5)
+var patience_scale: float = 1.0
 var seat_y_offset: float = 0.0
 var seat_offset: Vector3 = Vector3.ZERO
 var patience_y_offset: float = 0.0
