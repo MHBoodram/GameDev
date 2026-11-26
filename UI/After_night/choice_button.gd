@@ -18,7 +18,7 @@ func setup(parent : Node3D,_id: String,_type: String,_Cost: int = 0) -> void:
 	self.id = _id
 	self.type = _type
 	self.cost = _Cost
-	if(type == "Ingredients"):
+	if(type == "Ingredients" or type == "Tools"):
 		$Sprite3D.texture = load("res://Assets/Items/Ingreidents/" +id+".png")
 	elif(type == "Drinks"):
 		$Sprite3D.texture = load("res://Assets/Items/Drinks/"+str(id)+".png")
@@ -46,6 +46,8 @@ func _on_input_event(camera: Node, event: InputEvent, event_position: Vector3, n
 			PlayerStats._change_money(PlayerStats.money - cost)
 			if type == "Upgrades":
 				PlayerStats.unlock_upgrade(id)
+			elif type == "Tools" or (type == "Ingredients" and id.to_lower() == "knife"):
+				PlayerStats.unlock_tool(id)
 			else:
 				PlayerStats.unlocks[type][id] = true
 				if type == "Ingredients":
