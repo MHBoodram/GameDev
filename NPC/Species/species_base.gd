@@ -3,6 +3,13 @@ extends RefCounted
 
 # Base class for all customer species definitions, preferences, and gimmicks
 
+const GARNISH_DISPLAY_NAMES := {
+	"lemons": "Lemon",
+	"herbs": "Herb",
+	"cherries": "Cherry",
+	"olives": "Olive",
+}
+
 var species_id: String = "BASE"
 var display_name: String = "Base"
 var sort_order: int = 100
@@ -154,6 +161,12 @@ func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = n
 			orders.append(fallback)
 	return orders
 
+func format_garnish_name(garnish_id: String) -> String:
+	var clean_g := garnish_id.to_lower().strip_edges()
+	if GARNISH_DISPLAY_NAMES.has(clean_g):
+		return str(GARNISH_DISPLAY_NAMES[clean_g])
+	return clean_g.replace("_", " ").capitalize()
+
 func format_order_text(order: DrinkOrder, base_text: String) -> String:
 	if order == null:
 		return base_text
@@ -161,10 +174,22 @@ func format_order_text(order: DrinkOrder, base_text: String) -> String:
 	if order.required_glass != "":
 		out += order.required_glass.capitalize() + " Glass\n"
 	if not order.garnishes.is_empty():
-		var garnish_names := PackedStringArray()
+		var garnish_counts: Dictionary = {}
+		var garnish_order: Array[String] = []
 		for g in order.garnishes:
-			garnish_names.append(str(g).replace("_", " ").capitalize())
-		out += "Garnish: " + ", ".join(garnish_names) + "\n"
+			var clean_g := str(g).to_lower().strip_edges()
+			if clean_g == "":
+				continue
+			if not garnish_counts.has(clean_g):
+				garnish_counts[clean_g] = 0
+				garnish_order.append(clean_g)
+			garnish_counts[clean_g] = int(garnish_counts[clean_g]) + 1
+		if not garnish_order.is_empty():
+			var garnish_names := PackedStringArray()
+			for g_key in garnish_order:
+				var count := int(garnish_counts[g_key])
+				garnish_names.append(format_garnish_name(g_key) + " x" + str(count))
+			out += "Garnish: " + ", ".join(garnish_names) + "\n"
 	if order.ice_preference == DrinkRecipe.IcePreference.REQUIRED:
 		out += "Ice\n"
 	if not order.required_processing.is_empty():

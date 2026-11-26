@@ -51,8 +51,15 @@ static func _build_recipe(data: Dictionary) -> DrinkRecipe:
 	if raw_garnishes is Array:
 		for g in raw_garnishes:
 			var clean_g := str(g).to_lower().strip_edges()
-			if is_valid_garnish(clean_g) and not recipe.garnishes.has(clean_g):
+			if is_valid_garnish(clean_g):
 				recipe.garnishes.append(clean_g)
+	elif raw_garnishes is Dictionary:
+		for g in (raw_garnishes as Dictionary).keys():
+			var clean_g := str(g).to_lower().strip_edges()
+			var count := int(raw_garnishes[g])
+			if is_valid_garnish(clean_g) and count >= 1:
+				for _i in range(count):
+					recipe.garnishes.append(clean_g)
 
 	var raw_accepted: Variant = data.get("accepted_garnishes", [])
 	if raw_accepted is Array:

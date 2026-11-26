@@ -120,24 +120,26 @@ static func score_drink(served: DrinkMix, wanted: DrinkOrder, scoring_params: Di
 			drink_score -= PENALTY_WRONG_PROCESSING
 
 	# finishes: missing garnishes, unwanted garnishes, and ice preference (capped)
-	var wanted_garnishes_lower: Array[String] = []
-	for g in wanted.garnishes:
-		var clean_g := str(g).to_lower().strip_edges()
-		if clean_g != "":
-			wanted_garnishes_lower.append(clean_g)
-			if not served.garnishes.has(clean_g):
-				missing_garnish_deduction += PENALTY_MISSING_GARNISH
+	var wanted_garnish_counts: Dictionary = wanted.get_garnish_counts()
+	var served_garnish_counts: Dictionary = served.get_garnish_counts()
 
 	var accepted_garnishes_lower: Array[String] = []
 	for g in wanted.accepted_garnishes:
 		var clean_g := str(g).to_lower().strip_edges()
-		if clean_g != "":
+		if clean_g != "" and not accepted_garnishes_lower.has(clean_g):
 			accepted_garnishes_lower.append(clean_g)
 
-	for g in served.garnishes:
-		var clean_g := str(g).to_lower().strip_edges()
-		if clean_g != "" and not wanted_garnishes_lower.has(clean_g) and not accepted_garnishes_lower.has(clean_g):
-			unwanted_garnish_deduction += PENALTY_UNWANTED_GARNISH
+	for g_key in wanted_garnish_counts.keys():
+		var req_count := int(wanted_garnish_counts[g_key])
+		var have_count := int(served_garnish_counts.get(g_key, 0))
+		if have_count < req_count:
+			missing_garnish_deduction += float(req_count - have_count) * PENALTY_MISSING_GARNISH
+
+	for g_key in served_garnish_counts.keys():
+		var have_count := int(served_garnish_counts[g_key])
+		var req_count := int(wanted_garnish_counts.get(g_key, 0))
+		if have_count > req_count and not accepted_garnishes_lower.has(g_key):
+			unwanted_garnish_deduction += float(have_count - req_count) * PENALTY_UNWANTED_GARNISH
 
 	if wanted.ice_preference == DrinkRecipe.IcePreference.REQUIRED and not served.has_ice:
 		ice_deduction = PENALTY_ICE_MISMATCH

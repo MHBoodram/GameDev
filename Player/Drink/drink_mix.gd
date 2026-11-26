@@ -12,7 +12,6 @@ var glass_type: String = ""
 var cup_capacity: float = 0.0 # <= 0.0 means capacity was not explicitly set
 var is_tiny: bool = false
 var overfill_percent: float = 0.0
-var max_garnishes = 2
 var has_ice = false
 
 static func is_valid_garnish(garnish_id: String) -> bool:
@@ -35,12 +34,25 @@ func add_overfill(percent: float) -> void:
 	if percent > 0.0:
 		overfill_percent += percent
 
-func add_garnish(garnish_id: String) -> bool:
+func add_garnish(garnish_id: String, amount: int = 1) -> bool:
 	var clean_id := garnish_id.to_lower().strip_edges()
-	if not is_valid_garnish(clean_id) or garnishes.has(clean_id) or garnishes.size() >= max_garnishes:
+	if amount < 1 or not is_valid_garnish(clean_id):
 		return false
-	garnishes.append(clean_id)
+	for _i in range(amount):
+		garnishes.append(clean_id)
 	return true
+
+func get_garnish_counts() -> Dictionary:
+	var counts: Dictionary = {}
+	for g in garnishes:
+		var clean_id := str(g).to_lower().strip_edges()
+		if clean_id != "":
+			counts[clean_id] = int(counts.get(clean_id, 0)) + 1
+	return counts
+
+func get_garnish_count(garnish_id: String) -> int:
+	var clean_id := garnish_id.to_lower().strip_edges()
+	return int(get_garnish_counts().get(clean_id, 0))
 
 #func add_garnish(garnish_id: String) -> void: # Legacy code for future reference (sorry toby)
 	#if not garnishes.has(garnish_id):

@@ -29,6 +29,14 @@ func get_normalized_ingredients() -> Dictionary:
 		result[id] = float(ingredients[id]) / total
 	return result
 
+func get_garnish_counts() -> Dictionary:
+	var counts: Dictionary = {}
+	for g in garnishes:
+		var clean_id := str(g).to_lower().strip_edges()
+		if clean_id != "":
+			counts[clean_id] = int(counts.get(clean_id, 0)) + 1
+	return counts
+
 # converts the older [["beer", 1.0]] or [["gin", 0.5], ["vermouth", 0.5]] format
 static func from_legacy_want(want: Array) -> DrinkOrder:
 	var order := DrinkOrder.new()
@@ -56,7 +64,7 @@ static func from_recipe(recipe: DrinkRecipe) -> DrinkOrder:
 	order.required_glass = recipe.required_glass
 	order.garnishes = recipe.garnishes.duplicate()
 	order.required_processing = recipe.processing.duplicate()
-	order.accepted_garnishes = recipe.accepted_garnishes
+	order.accepted_garnishes = recipe.accepted_garnishes.duplicate()
 	order.ice_preference = recipe.ice_preference
 
 	# normalize recipe ingredients
