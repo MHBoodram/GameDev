@@ -66,10 +66,12 @@ func _apply_passive_upgrades() -> void:
 	var base_stock: int = GarnishDefinitions.get_base_stock(garnish_id)
 	var size_bonus_level: int = _get_upgrade_level("Drinks Size Increase")
 	var auto_bonus_level: int = _get_upgrade_level("Drinks Auto Increase")
+	var size_step_ratio: float = UpgradeRegistry.get_effect_step("Drinks Size Increase", GarnishDefinitions.SIZE_UPGRADE_STEP_RATIO, true)
+	var refill_time_step: float = UpgradeRegistry.get_effect_step("Drinks Auto Increase", GarnishDefinitions.REFILL_TIME_STEP_PER_LEVEL, true)
 
 	var size_bonus: int = 0
 	if size_bonus_level > 0:
-		size_bonus = maxi(size_bonus_level, roundi(float(base_stock) * GarnishDefinitions.SIZE_UPGRADE_STEP_RATIO * float(size_bonus_level)))
+		size_bonus = maxi(size_bonus_level, roundi(float(base_stock) * size_step_ratio * float(size_bonus_level)))
 
 	max_stock = maxi(1, base_stock + size_bonus)
 	if max_stock > prev_max_stock:
@@ -77,7 +79,7 @@ func _apply_passive_upgrades() -> void:
 	else:
 		current_stock = clampi(current_stock, 0, max_stock)
 
-	var raw_wait: float = GarnishDefinitions.DEFAULT_REFILL_TIME - float(auto_bonus_level) * GarnishDefinitions.REFILL_TIME_STEP_PER_LEVEL
+	var raw_wait: float = GarnishDefinitions.DEFAULT_REFILL_TIME - float(auto_bonus_level) * refill_time_step
 	var target_wait: float = GarnishDefinitions.MIN_REFILL_TIME
 	if raw_wait >= GarnishDefinitions.MIN_REFILL_TIME:
 		target_wait = raw_wait

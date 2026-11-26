@@ -4,6 +4,21 @@ signal money_changed(new_value: float, delta: float)
 signal overall_reputation_changed(new_value: float, delta: float)
 signal species_reputation_changed(species_name: String, new_value: float, delta: float)
 
+const MIN_INGREDIENT_UNLOCK_NIGHT: int = 3
+
+const INGREDIENT_UNLOCK_NIGHTS := {
+	"Hand": 1,
+	"Knife": 2,
+	"Blood": 2,
+	"Garnishes": 3,
+	"Ice": 3,
+}
+
+const INGREDIENT_BASE_COST: int = 40
+const INGREDIENT_COST_OVERRIDES := {}
+const INGREDIENT_COST_PER_NIGHT_ADD: float = 0.0
+const INGREDIENT_COST_PER_NIGHT_MULT: float = 1.25
+
 var previous_money : float = 0
 var money : float = 500
 var overall_reputation : float = 0.0
@@ -79,7 +94,7 @@ func _ensure_species_entry(key: String, default_marketing: float = 0.0) -> void:
 	if not species_marketing.has(key):
 		species_marketing[key] = default_marketing
 	if not species_banners.has(key):
-		species_banners[key] = false
+		species_banners[key] = 0
 
 func has_unlock(category: String, key: String) -> bool:
 	if not unlocks.has(category):
@@ -92,6 +107,56 @@ func has_unlock(category: String, key: String) -> bool:
 		if str(k).to_lower() == target_lower:
 			return bool(cat_dict[k])
 	return false
+
+func is_tool_ingredient(item_id: String) -> bool:
+	var target_lower := item_id.to_lower().strip_edges()
+	if target_lower == "knife" or target_lower == "mag" or target_lower == "fishing_rod" or target_lower == "hand":
+		return true
+	if unlocks.has("Tools"):
+		for k in unlocks["Tools"].keys():
+			if str(k).to_lower().strip_edges() == target_lower:
+				return true
+	return false
+
+func get_ingredient_unlock_night(item_id: String) -> int:
+	var target_lower := item_id.to_lower().strip_edges()
+	for k in INGREDIENT_UNLOCK_NIGHTS.keys():
+		if str(k).to_lower().strip_edges() == target_lower:
+			return int(INGREDIENT_UNLOCK_NIGHTS[k])
+	if is_tool_ingredient(item_id):
+		return 0
+	return MIN_INGREDIENT_UNLOCK_NIGHT
+
+func can_offer_ingredient_free_pick(item_id: String, night_number: int) -> bool:
+	var target_lower := item_id.to_lower().strip_edges()
+	if night_number == 1:
+		return target_lower == "knife"
+	if is_tool_ingredient(item_id):
+		return true
+	if target_lower == "garnishes" or target_lower == "ice":
+		return night_number >= MIN_INGREDIENT_UNLOCK_NIGHT
+	return true
+
+func can_buy_ingredient_in_shop(item_id: String, night_number: int) -> bool:
+	var target_lower := item_id.to_lower().strip_edges()
+	if night_number == 1:
+		return target_lower == "knife"
+	if is_tool_ingredient(item_id):
+		return true
+	if target_lower == "garnishes" or target_lower == "ice":
+		return night_number >= MIN_INGREDIENT_UNLOCK_NIGHT
+	return true
+
+func get_ingredient_shop_cost(item_id: String, night_number: int) -> int:
+	var base_cost := INGREDIENT_BASE_COST
+	var target_lower := item_id.to_lower().strip_edges()
+	for k in INGREDIENT_COST_OVERRIDES.keys():
+		if str(k).to_lower().strip_edges() == target_lower:
+			base_cost = int(INGREDIENT_COST_OVERRIDES[k])
+			break
+	var night_idx := float(maxi(0, night_number - 1))
+	var cost := (float(base_cost) + INGREDIENT_COST_PER_NIGHT_ADD * night_idx) * pow(maxf(INGREDIENT_COST_PER_NIGHT_MULT, 0.01), night_idx)
+	return maxi(1, roundi(cost))
 
 func has_knife_unlock(fallback_when_missing: bool = true) -> bool:
 	if unlocks.has("Ingredients") and unlocks["Ingredients"].has("Knife"):
@@ -239,7 +304,19 @@ func get_species_spawn_weight(species: String) -> float:
 	var base_weight: float = sp.base_spawn_weight if sp else 5.0
 
 	var marketing_multiplier: float = float(species_marketing.get(key, 1.0))
-	var banner_multiplier: float = 2.0 if species_banners.get(key, false) else 1.0
+	var banner_val: Variant = species_banners.get(key, 0)
+	var banner_level: int = 0
+	if banner_val is bool:
+		banner_level = 1 if (banner_val as bool) else 0
+	elif banner_val is int or banner_val is float:
+		banner_level = int(banner_val)
+
+	var banner_step: float = 1.0
+	var banner_upgrade_id := key + " Banner"
+	if UpgradeRegistry.get_upgrade(banner_upgrade_id) != null:
+		banner_step = UpgradeRegistry.get_effect_step(banner_upgrade_id, 1.0)
+
+	var banner_multiplier: float = 1.0 + float(banner_level) * banner_step
 	var final_weight: float = base_weight * marketing_multiplier * banner_multiplier
 	print("[species_weight]: ", key, " = ", final_weight)
 	return final_weight

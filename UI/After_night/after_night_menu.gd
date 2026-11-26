@@ -166,8 +166,7 @@ func _produce_unlocks_pick_3_ingrediants() -> Array:
 			#temp_array.push_back(x)
 	for x in PlayerStats.unlocks["Ingredients"]:
 		if(!PlayerStats.unlocks["Ingredients"][x]):
-			var lower := str(x).to_lower().strip_edges()
-			if (lower == "garnishes" or lower == "ice") and GameState.night < 3:
+			if not PlayerStats.can_offer_ingredient_free_pick(str(x), GameState.night):
 				continue
 			temp_array.push_back(x)
 		if(temp_array.size() >= 3):
@@ -302,7 +301,6 @@ func _on_next_night_pressed() -> void:
 					PlayerStats.unlocks[main_key][sub_key] = true
 					print("Main_key ",main_key)
 					print("Sub_key ",sub_key)
-	#print(PlayerStats.unlocks)
 	if GameState.night >= GameState.max_nights:
 		status_label.text = "VICTORY! You survived all 7 nights"
 		next_night_button.disabled = true

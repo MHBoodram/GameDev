@@ -8,8 +8,6 @@ signal night_concluded
 const TOOL_UNLOCK_NIGHTS := {
 	"hand": 1,
 	"knife": 2,
-	"mag": 3,
-	"fishing_rod": 4,
 }
 
 @export var dusk_start_seconds: float = 0.0
@@ -41,15 +39,20 @@ static func _get_player_stats() -> Node:
 	return null
 
 static func get_tool_unlock_night(tool_id: String) -> int:
-	return int(TOOL_UNLOCK_NIGHTS.get(tool_id.to_lower().strip_edges(), 1))
+	var clean_id := tool_id.to_lower().strip_edges()
+	var stats := _get_player_stats()
+	if is_instance_valid(stats) and stats.has_method("get_ingredient_unlock_night"):
+		return int(stats.get_ingredient_unlock_night(clean_id))
+	return int(TOOL_UNLOCK_NIGHTS.get(clean_id, 0))
 
 static func unlock_tools_for_night(night_number: int) -> void:
 	var stats := _get_player_stats()
 	if not is_instance_valid(stats) or not stats.has_method("unlock_tool"):
 		return
-	for tool_id in TOOL_UNLOCK_NIGHTS.keys():
-		if night_number >= int(TOOL_UNLOCK_NIGHTS[tool_id]):
-			stats.unlock_tool(str(tool_id))
+	if night_number >= 1:
+		stats.unlock_tool("hand")
+	if night_number >= 2:
+		stats.unlock_tool("knife")
 
 func setup(timer_node: Timer, env_node: WorldEnvironment, sun_node: DirectionalLight3D) -> void:
 	night_timer = timer_node

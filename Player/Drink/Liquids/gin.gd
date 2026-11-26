@@ -10,6 +10,9 @@ const POUR_INTERVAL: float = 0.033
 const SFX_INTERVAL_MS: int = 100
 const MIN_POUR_ANGLE_DEGREES: float = 5.0
 const MAX_POUR_ANGLE_DEGREES: float = 150.0
+const DEFAULT_REFILL_WAIT_TIME: float = 4.0
+const MIN_REFILL_WAIT_TIME: float = 0.5
+const DEFAULT_REFILL_AMOUNT: float = 0.25
 
 @onready var liquid_refresh: Timer = get_node("Liquid_refresh")
 @export var liquid_resource: Liquid
@@ -21,6 +24,8 @@ var is_pouring: bool = false
 
 var color_liquid: Color = Color.WHITE
 var current_liquid: float = 50.0
+var _base_size: float = 50.0
+var _refill_amount: float = DEFAULT_REFILL_AMOUNT
 
 var visual_helper: LiquidVisualHelper = LiquidVisualHelper.new()
 var liquid_gradient: Gradient
@@ -43,11 +48,49 @@ func _get_effective_viscosity() -> float:
 	var res_visc := liquid_resource.viscosity if (liquid_resource and liquid_resource.viscosity >= 0.0) else LiquidVisualHelper.get_liquid_viscosity(id_str)
 	return clampf(maxf(visual_helper.viscosity, res_visc), 0.0, 1.0)
 
+func _apply_passive_upgrades(fill_to_max: bool = false) -> void:
+	var prev_size: float = size
+	var size_level: int = PlayerStats.get_upgrade_level("Drinks Size Increase")
+	var size_step: float = UpgradeRegistry.get_effect_step("Drinks Size Increase", 10.0)
+	size = maxf(1.0, _base_size + float(size_level) * size_step)
+
+	if fill_to_max:
+		current_liquid = size
+	elif size > prev_size:
+		current_liquid = clampf(current_liquid + (size - prev_size), 0.0, size)
+	else:
+		current_liquid = clampf(current_liquid, 0.0, size)
+
+	var auto_level: int = PlayerStats.get_upgrade_level("Drinks Auto Increase")
+	var auto_step: float = UpgradeRegistry.get_effect_step("Drinks Auto Increase", 0.5)
+	var raw_wait: float = DEFAULT_REFILL_WAIT_TIME - float(auto_level) * auto_step
+	var target_wait: float = MIN_REFILL_WAIT_TIME
+	if raw_wait >= MIN_REFILL_WAIT_TIME:
+		target_wait = raw_wait
+		_refill_amount = DEFAULT_REFILL_AMOUNT
+	else:
+		_refill_amount = DEFAULT_REFILL_AMOUNT * (MIN_REFILL_WAIT_TIME / maxf(raw_wait, 0.05))
+
+	if is_instance_valid(liquid_refresh):
+		var was_stopped := liquid_refresh.is_stopped()
+		liquid_refresh.wait_time = target_wait
+		if was_stopped or liquid_refresh.time_left > target_wait:
+			liquid_refresh.start(target_wait)
+
+func refresh_upgrades() -> void:
+	var prev_size := size
+	var prev_liquid := current_liquid
+	_apply_passive_upgrades(false)
+	if not is_equal_approx(size, prev_size) or not is_equal_approx(current_liquid, prev_liquid):
+		_rebuild_liquid_gradient()
+		_update_liquid_shader()
+		liquid_changed.emit(current_liquid, size)
+
 func ready() -> void:
 	_ensure_pour_stream()
 	if liquid_resource:
-		size = liquid_resource.liquid_size
-		current_liquid = size + (PlayerStats.unlocks["Drinks Size Increase"] * 10)
+		_base_size = liquid_resource.liquid_size
+		_apply_passive_upgrades(true)
 		color_liquid = liquid_resource.liquid_color
 		if liquid_resource.buoyancy > 0.0:
 			LiquidVisualHelper.register_liquid_buoyancy(liquid_resource.id, liquid_resource.buoyancy)
@@ -61,14 +104,13 @@ func ready() -> void:
 		visual_helper.last_global_pos = inside_node.global_position if inside_node else global_position
 		_setup_liquid_shader()
 		_apply_outside_texture()
-		$Liquid_refresh.wait_time = 4 - (PlayerStats.unlock_passive["Drinks Auto Increase"] * 0.5)
 		set_liquid_color(liquid_resource.liquid_color)
 
 func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 	_ensure_pour_stream()
 	liquid_resource = _liquid
-	size = liquid_resource.liquid_size
-	current_liquid = size
+	_base_size = liquid_resource.liquid_size
+	_apply_passive_upgrades(true)
 	color_liquid = liquid_resource.liquid_color
 
 	if liquid_resource.buoyancy > 0.0:
@@ -354,4 +396,4 @@ func _add_liquid(amount: float) -> void:
 	liquid_changed.emit(current_liquid, size)
 
 func _on_liquid_refresh_timeout() -> void:
-	_add_liquid(0.25)
+	_add_liquid(_refill_amount)

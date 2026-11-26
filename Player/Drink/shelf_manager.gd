@@ -80,14 +80,19 @@ func spawn_garnish_dispenser_if_missing(host: Node3D, counter_ref: Node3D, marke
 
 func spawn_bottle_if_missing(host: Node3D, counter_ref: Node3D, drink_id: String) -> Node:
 	if spawned_bottles.has(drink_id) and is_instance_valid(spawned_bottles[drink_id]):
-		_ensure_refill_tag(host, drink_id, spawned_bottles[drink_id], host.get_node_or_null(drink_id + "_marker") as Marker3D)
-		return spawned_bottles[drink_id]
+		var existing_bottle: Node = spawned_bottles[drink_id]
+		if existing_bottle.has_method("refresh_upgrades"):
+			existing_bottle.refresh_upgrades()
+		_ensure_refill_tag(host, drink_id, existing_bottle, host.get_node_or_null(drink_id + "_marker") as Marker3D)
+		return existing_bottle
 
 	var marker := host.get_node_or_null(drink_id + "_marker") as Marker3D
 
 	var existing := host.get_node_or_null(drink_id)
 	if existing:
 		spawned_bottles[drink_id] = existing
+		if existing.has_method("refresh_upgrades"):
+			existing.refresh_upgrades()
 		_ensure_refill_tag(host, drink_id, existing, marker)
 		return existing
 

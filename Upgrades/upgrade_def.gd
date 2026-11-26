@@ -3,6 +3,10 @@ extends RefCounted
 
 # Modular upgrade definition (supports data-only upgrades, banners, passives, and custom callbacks)
 
+const DEFAULT_BASE_COST: int = 40
+const DEFAULT_LEVEL_COST_MULT: float = 1.5
+const DEFAULT_NIGHT_COST_MULT: float = 1.25
+
 var upgrade_id: String = ""
 var display_name: String = ""
 var description: String = ""
@@ -12,6 +16,12 @@ var sort_order: int = 100
 var repeatable: bool = false
 var max_level: int = 1
 var base_cost: int = 0
+var cost_per_level_add: float = 0.0
+var cost_per_level_mult: float = 1.0
+var cost_per_night_add: float = 0.0
+var cost_per_night_mult: float = DEFAULT_NIGHT_COST_MULT
+var effect_per_level: float = 1.0
+var secondary_effect_per_level: float = 1.0
 var show_in_shop: bool = true
 var passive_key: String = ""
 var banner_species: String = ""
@@ -31,8 +41,16 @@ static func from_dict(data: Dictionary) -> UpgradeDef:
 	def.repeatable = bool(data.get("repeatable", false))
 	def.max_level = int(data.get("max_level", -1 if def.repeatable else 1))
 	def.base_cost = int(data.get("base_cost", 0))
+	def.cost_per_level_add = float(data.get("cost_per_level_add", 0.0))
+	def.cost_per_level_mult = float(data.get("cost_per_level_mult", DEFAULT_LEVEL_COST_MULT if def.repeatable else 1.0))
+	def.cost_per_night_add = float(data.get("cost_per_night_add", 0.0))
+	def.cost_per_night_mult = float(data.get("cost_per_night_mult", DEFAULT_NIGHT_COST_MULT))
+	def.effect_per_level = float(data.get("effect_per_level", 1.0))
+	def.secondary_effect_per_level = float(data.get("secondary_effect_per_level", def.effect_per_level))
 	def.show_in_shop = bool(data.get("show_in_shop", true))
 	def.passive_key = str(data.get("passive_key", ""))
+	if def.repeatable and def.passive_key == "":
+		def.passive_key = def.upgrade_id
 	def.banner_species = str(data.get("banner_species", ""))
 	if data.get("on_unlocked") is Callable:
 		def.on_unlocked_cb = data["on_unlocked"] as Callable
@@ -61,9 +79,14 @@ func get_icon() -> Texture2D:
 func get_shop_cost(night: int = 1, stats: Node = null) -> int:
 	if cost_cb.is_valid():
 		return int(cost_cb.call(night, get_level(stats), stats))
-	if base_cost > 0:
-		return base_cost
-	return randi_range(1, maxi(1, night) * 30)
+	var resolved_base: float = float(base_cost if base_cost > 0 else DEFAULT_BASE_COST)
+	var night_idx: float = float(maxi(0, night - 1))
+	var cost: float = (resolved_base + cost_per_night_add * night_idx) * pow(maxf(cost_per_night_mult, 0.01), night_idx)
+	if repeatable:
+		var level: float = float(maxi(0, get_level(stats)))
+		if level > 0.0:
+			cost = (cost + cost_per_level_add * level) * pow(maxf(cost_per_level_mult, 0.01), level)
+	return maxi(1, roundi(cost))
 
 func ensure_stats_entries(stats: Node) -> void:
 	if stats == null:
@@ -135,20 +158,22 @@ func apply_unlock(stats: Node = null, levels: int = 1) -> void:
 	on_unlocked(stats, get_level(stats))
 
 func on_unlocked(stats: Node = null, level: int = 1) -> void:
-	_set_banner_state(stats, true)
+	_set_banner_state(stats, true, level)
 	if on_unlocked_cb.is_valid():
 		on_unlocked_cb.call(stats, level)
 
 func on_reset(stats: Node = null) -> void:
-	_set_banner_state(stats, false)
+	_set_banner_state(stats, false, 0)
 	if on_reset_cb.is_valid():
 		on_reset_cb.call(stats)
 
-func _set_banner_state(stats: Node, active: bool) -> void:
+func _set_banner_state(stats: Node, active: bool, level: int = 1) -> void:
 	if stats == null or banner_species == "" or not ("species_banners" in stats):
 		return
+	var key: String = banner_species
 	if stats.has_method("_find_species_key"):
-		var key: String = stats._find_species_key(banner_species)
-		stats.species_banners[key] = active
+		key = stats._find_species_key(banner_species)
+	if active:
+		stats.species_banners[key] = level
 	else:
-		stats.species_banners[banner_species] = active
+		stats.species_banners[key] = 0

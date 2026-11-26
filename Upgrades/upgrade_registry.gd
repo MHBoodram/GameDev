@@ -29,11 +29,15 @@ static func _register_defaults() -> void:
 		"id": "Jukebox",
 		"description": "Decrease patience for a huge bonus",
 		"sort_order": 1,
+		"base_cost": 60,
+		"cost_per_night_mult": 1.25,
 	}))
 	register_upgrade(UpgradeDef.from_dict({
 		"id": "Instant Refill",
 		"description": "Pay to instantly refill ingrdients",
 		"sort_order": 2,
+		"base_cost": 50,
+		"cost_per_night_mult": 1.25,
 		"on_unlocked": _on_instant_refill_unlocked,
 		"on_reset": _on_ingredient_upgrade_reset,
 	}))
@@ -42,7 +46,12 @@ static func _register_defaults() -> void:
 		"description": "Increases ingredient capacity",
 		"sort_order": 3,
 		"repeatable": true,
-		"max_level": -1,
+		"max_level": 5,
+		"base_cost": 40,
+		"cost_per_level_mult": 1.5,
+		"cost_per_night_mult": 1.25,
+		"effect_per_level": 10.0,
+		"secondary_effect_per_level": 0.20,
 		"passive_key": "Drinks Size Increase",
 		"on_unlocked": _on_ingredient_upgrade_unlocked,
 		"on_reset": _on_ingredient_upgrade_reset,
@@ -53,6 +62,11 @@ static func _register_defaults() -> void:
 		"sort_order": 4,
 		"repeatable": true,
 		"max_level": 6,
+		"base_cost": 45,
+		"cost_per_level_mult": 1.5,
+		"cost_per_night_mult": 1.25,
+		"effect_per_level": 0.5,
+		"secondary_effect_per_level": 0.25,
 		"passive_key": "Drinks Auto Increase",
 		"on_unlocked": _on_ingredient_upgrade_unlocked,
 		"on_reset": _on_ingredient_upgrade_reset,
@@ -65,6 +79,10 @@ static func _register_defaults() -> void:
 		"sort_order": 5,
 		"repeatable": true,
 		"max_level": 2,
+		"base_cost": 50,
+		"cost_per_level_mult": 1.6,
+		"cost_per_night_mult": 1.25,
+		"effect_per_level": 2.0,
 		"passive_key": "Shop Shelf Slots",
 		"on_unlocked": _on_shelf_slots_unlocked,
 	}))
@@ -73,32 +91,63 @@ static func _register_defaults() -> void:
 		"description": "Extend serve combo grace period",
 		"sort_order": 6,
 		"repeatable": true,
-		"max_level": -1,
+		"max_level": 5,
+		"base_cost": 45,
+		"cost_per_level_mult": 1.5,
+		"cost_per_night_mult": 1.25,
 		"show_in_shop": false,
 		"passive_key": "Combo Extension Increase",
 	}))
 	register_upgrade(UpgradeDef.from_dict({
 		"id": "Human Banner",
-		"description": "Doubles Human patron spawn weight",
+		"description": "Increases Human patron spawn weight (+100% per level)",
 		"sort_order": 10,
+		"repeatable": true,
+		"max_level": 5,
+		"base_cost": 45,
+		"cost_per_level_mult": 1.5,
+		"cost_per_night_mult": 1.25,
+		"effect_per_level": 1.0,
+		"passive_key": "Human Banner",
 		"banner_species": "Human",
 	}))
 	register_upgrade(UpgradeDef.from_dict({
 		"id": "Vampire Banner",
-		"description": "Doubles Vampire patron spawn weight",
+		"description": "Increases Vampire patron spawn weight (+100% per level)",
 		"sort_order": 11,
+		"repeatable": true,
+		"max_level": 5,
+		"base_cost": 45,
+		"cost_per_level_mult": 1.5,
+		"cost_per_night_mult": 1.25,
+		"effect_per_level": 1.0,
+		"passive_key": "Vampire Banner",
 		"banner_species": "Vampire",
 	}))
 	register_upgrade(UpgradeDef.from_dict({
 		"id": "Slime Banner",
-		"description": "Doubles Slime patron spawn weight",
+		"description": "Increases Slime patron spawn weight (+100% per level)",
 		"sort_order": 12,
+		"repeatable": true,
+		"max_level": 5,
+		"base_cost": 45,
+		"cost_per_level_mult": 1.5,
+		"cost_per_night_mult": 1.25,
+		"effect_per_level": 1.0,
+		"passive_key": "Slime Banner",
 		"banner_species": "Slime",
 	}))
 	register_upgrade(UpgradeDef.from_dict({
 		"id": "Tiny Banner",
-		"description": "Doubles Tiny patron spawn weight",
+		"description": "Increases Tiny patron spawn weight (+100% per level)",
 		"sort_order": 13,
+		"repeatable": true,
+		"max_level": 5,
+		"base_cost": 45,
+		"cost_per_level_mult": 1.5,
+		"cost_per_night_mult": 1.25,
+		"effect_per_level": 1.0,
+		"passive_key": "Tiny Banner",
 		"banner_species": "Tiny",
 	}))
 
@@ -168,6 +217,12 @@ static func get_upgrade(id_or_name: String) -> UpgradeDef:
 		if upg.get_display_name().to_lower().strip_edges() == key:
 			return upg
 	return null
+
+static func get_effect_step(upgrade_id: String, fallback: float = 1.0, secondary: bool = false) -> float:
+	var upg := get_upgrade(upgrade_id)
+	if upg == null:
+		return fallback
+	return upg.secondary_effect_per_level if secondary else upg.effect_per_level
 
 static func get_available_shop_upgrades(stats: Node = null, night: int = 1) -> Array[UpgradeDef]:
 	ensure_loaded()

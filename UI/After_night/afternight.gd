@@ -116,15 +116,10 @@ func _get_locked_unlocks(pick: String) -> Array:
 	return temp_array
 
 func _get_available_unlocks(pick: String) -> Array:
-	if GameState.night == 1 and pick == "Ingredients":
-		if not PlayerStats.has_knife_unlock(false):
-			return ["Knife"]
-		return []
 	var locked := _get_locked_unlocks(pick)
-	if pick == "Ingredients" and GameState.night < 3:
+	if pick == "Ingredients":
 		locked = locked.filter(func(item) -> bool:
-			var lower := str(item).to_lower().strip_edges()
-			return lower != "garnishes" and lower != "ice"
+			return PlayerStats.can_offer_ingredient_free_pick(str(item), GameState.night)
 		)
 	return locked
 
@@ -184,7 +179,7 @@ func _advance_shop_step() -> void:
 	var clear_tween: Tween = null
 	for node in old_nodes:
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
-			continue  # skip it, don't abort the whole function
+			continue
 		var tween = get_tree().create_tween()
 		tween.set_trans(Tween.TRANS_SINE)
 		tween.set_ease(Tween.EASE_OUT)
@@ -291,10 +286,11 @@ func _produce_unlocks_pick_3(pick: String = "Ingredients") -> void:
 
 func _get_shop_slot_count() -> int:
 	var extra_levels: int = UpgradeRegistry.get_level("Shelf Slots Increase", PlayerStats)
-	return mini(BASE_SHOP_SLOTS + extra_levels * SLOTS_PER_UPGRADE, MAX_SHOP_SLOTS)
+	var slots_per_level: int = maxi(1, int(round(UpgradeRegistry.get_effect_step("Shelf Slots Increase", float(SLOTS_PER_UPGRADE)))))
+	return mini(BASE_SHOP_SLOTS + extra_levels * slots_per_level, MAX_SHOP_SLOTS)
 
-func _get_ingredient_shop_cost(_ingredient_id: String) -> int:
-	return randi_range(1, maxi(1, GameState.night) * 30)
+func _get_ingredient_shop_cost(ingredient_id: String) -> int:
+	return PlayerStats.get_ingredient_shop_cost(ingredient_id, GameState.night)
 
 func _build_upgrade_shop_pool(exclude_active_choices: bool = false) -> Array[Dictionary]:
 	var active_keys: Dictionary = {}
@@ -316,6 +312,8 @@ func _build_upgrade_shop_pool(exclude_active_choices: bool = false) -> Array[Dic
 
 	for ing_id in _get_locked_unlocks("Ingredients"):
 		var ing_str := str(ing_id)
+		if not PlayerStats.can_buy_ingredient_in_shop(ing_str, GameState.night):
+			continue
 		var key := "Ingredients:" + ing_str.to_lower()
 		if active_keys.has(key):
 			continue
