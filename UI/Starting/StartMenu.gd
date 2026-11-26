@@ -24,7 +24,7 @@ func _on_play_pressed() -> void:
 	GameState.seat1_order = []
 	GameState.seat2_order = []
 	GameState.seat3_order = []
-	GameState.clear_story_flags()
+	#GameState.clear_story_flags()
 	Transition._changing_scene(GAME_SCENE)
 
 func _change_hover(n_name: String = "Setting") -> void:

@@ -173,7 +173,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 2.188253, -0.8089119)
 transform = Transform3D(-1, 0, 1.509958e-07, 0, 1, 0, -1.509958e-07, 0, -1, 0.29699588, 1.109501, 3.1713862)
 
 [node name="BeerGlass Button" type="Area3D" parent="Coutner" unique_id=2100852152]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.6652439, 1.8346125, -0.4186132)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.22297424, 1.8346125, -0.4186132)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Coutner/BeerGlass Button" unique_id=1985639721]
 shape = SubResource("SphereShape3D_v88eg")
@@ -324,6 +324,21 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5346204, 2.5651095, 2.93907
 
 [node name="sink_camera_marker" type="Marker3D" parent="." unique_id=1047419930]
 transform = Transform3D(-1, 0, 1.509958e-07, 0, 1, 0, -1.509958e-07, 0, -1, -0.66992426, 2.432033, 2.8795245)
+
+[node name="ice_machine_marker" type="Marker3D" parent="." unique_id=1005701114]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.93642676, 2.4161477, 3.4938679)
+
+[node name="lemons_marker" type="Marker3D" parent="." unique_id=1561306925]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7024412, 3.0395026, 3.4938679)
+
+[node name="herbs_marker" type="Marker3D" parent="." unique_id=1759742879]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3926872, 3.0395026, 3.4938679)
+
+[node name="olives_marker" type="Marker3D" parent="." unique_id=1469715584]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0701723, 3.0395026, 3.4938679)
+
+[node name="cherries_marker" type="Marker3D" parent="." unique_id=136390265]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7576336, 3.0395026, 3.4938679)
 
 [connection signal="input_event" from="Coutner/BeerGlass Button" to="Player" method="_on_beer_glass_button_input_event"]
 [connection signal="mouse_entered" from="Coutner/BeerGlass Button" to="." method="_on_beer_glass_button_mouse_entered"]

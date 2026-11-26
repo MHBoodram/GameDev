@@ -105,7 +105,7 @@ func _ready() -> void:
 	patient_2d._change_curent(max_patience)
 	camera = get_viewport().get_camera_3d()
 	_apply_species_scale()
-	_start_bounce()
+	
 
 	if not DialogueManager.dialogue_started.is_connected(_on_dialouge_started):
 		DialogueManager.dialogue_started.connect(_on_dialouge_started)
@@ -343,14 +343,48 @@ func _moving_to(to: Marker3D) -> void:
 	var offset := species_def.get_seat_offset() if species_def else Vector3.ZERO
 	tween.tween_property(self, "position", to.position + offset, 0.8)
 	current_state = State.SIT
+	await tween.finished
+	_base_position = position
+	_base_scale = scale
+	if random_start_delay:
+		await get_tree().create_timer(randf_range(0.0, bounce_duration)).timeout
+	start_idle()
 
-func _start_bounce() -> void:
-	if _bounce_tween and _bounce_tween.is_valid():
-		_bounce_tween.kill()
-	_bounce_tween = get_tree().create_tween().set_loops()
-	_bounce_tween.tween_method(_apply_bounce_scale, 1.0, 1.01, 0.5)
-	_bounce_tween.tween_method(_apply_bounce_scale, 1.01, 1.0, 0.4)
-	_bounce_tween.tween_interval(0.1)
+@export var bounce_height := 0.03      # world units
+@export var bounce_duration := 1     # seconds for one full up-and-down
+@export var squash_amount := 0.02      # 0 = no squash/stretch
+@export var random_start_delay := true # desyncs multiple sprites
+
+var _base_position: Vector3
+var _base_scale: Vector3
+var _idle_tween: Tween
+
+	
+
+func start_idle() -> void:
+	stop_idle()
+	var half := bounce_duration / 2.0
+	_idle_tween = create_tween().set_loops()
+
+	# Up (stretch tall)
+	_idle_tween.tween_property(self, "position:y", _base_position.y + bounce_height, half) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_idle_tween.parallel().tween_property(self, "scale",
+		_base_scale * Vector3(1.0 - squash_amount, 1.0 + squash_amount, 1.0), half) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	# Down (squash flat)
+	_idle_tween.tween_property(self, "position:y", _base_position.y, half) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	_idle_tween.parallel().tween_property(self, "scale",
+		_base_scale * Vector3(1.0 + squash_amount, 1.0 - squash_amount, 1.0), half) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+func stop_idle() -> void:
+	if _idle_tween and _idle_tween.is_valid():
+		_idle_tween.kill()
+	position = _base_position
+	scale = _base_scale
 
 func _show_drink_score_indicator(drink_score: float) -> void:
 	var hud := HudIndicators.get_current()
