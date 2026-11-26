@@ -1,9 +1,7 @@
 class_name VampireSpecies
 extends SpeciesBase
 
-const LIKED_DRINKS: Dictionary = {
-	"blood": 0.5,
-}
+const LIKED_DRINKS: Dictionary = {}
 const REQUIRED_INGREDIENTS: Array[String] = [
 	"blood",
 ]

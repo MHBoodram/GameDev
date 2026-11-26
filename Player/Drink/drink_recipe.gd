@@ -9,6 +9,7 @@ extends Resource
 @export var garnishes: Array[String] = [] # "olive", "lemon_whole", "lemon_half", "lemon_sliced"
 @export var processing: Array[String] = [] # "shaken", "spectral"
 @export var is_alcoholic: bool = true
+@export var allowed_species: Array[String] = []
 
 enum IcePreference {DONT_CARE, REQUIRED, FORBIDDEN}
 

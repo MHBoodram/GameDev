@@ -191,7 +191,7 @@ func get_order_count(_npc: Sprite3D, _modifier: RefCounted = null) -> int:
 
 func pick_recipe_for_order(stats: Node = null) -> DrinkRecipe:
 	var req_ingredients := get_required_ingredients()
-	var matching_recipes := DrinkRegistry.get_matching_recipes(req_ingredients, stats, true)
+	var matching_recipes := DrinkRegistry.get_matching_recipes(req_ingredients, stats, true, species_id)
 	if matching_recipes.is_empty():
 		return null
 

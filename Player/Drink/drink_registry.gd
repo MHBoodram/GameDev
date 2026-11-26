@@ -75,6 +75,13 @@ static func _build_recipe(data: Dictionary) -> DrinkRecipe:
 			if clean_tag != "" and not recipe.processing.has(clean_tag):
 				recipe.processing.append(clean_tag)
 
+	var raw_species: Variant = data.get("allowed_species", [])
+	if raw_species is Array:
+		for sp in raw_species:
+			var clean_sp := str(sp).to_lower().strip_edges()
+			if clean_sp != "" and not recipe.allowed_species.has(clean_sp):
+				recipe.allowed_species.append(clean_sp)
+
 	return recipe
 
 static func get_all_recipes() -> Array[DrinkRecipe]:
@@ -94,6 +101,16 @@ static func get_recipe(id_or_name: String) -> DrinkRecipe:
 		if recipe.display_name.to_lower().strip_edges() == key:
 			return recipe
 	return null
+
+static func is_recipe_allowed_for_species(recipe: DrinkRecipe, species_id: String = "") -> bool:
+	if recipe == null:
+		return false
+	if recipe.allowed_species.is_empty():
+		return true
+	var clean_sp := species_id.to_lower().strip_edges()
+	if clean_sp == "":
+		return true
+	return recipe.allowed_species.has(clean_sp)
 
 static func is_recipe_unlocked(recipe: DrinkRecipe, stats: Node = null) -> bool:
 	if recipe == null:
@@ -137,12 +154,16 @@ static func is_recipe_unlocked(recipe: DrinkRecipe, stats: Node = null) -> bool:
 
 	return true
 
-static func get_available_recipes(stats: Node = null, _species_id: String = "") -> Array[DrinkRecipe]:
+static func get_available_recipes(stats: Node = null, species_id: String = "") -> Array[DrinkRecipe]:
 	ensure_loaded()
 	var available: Array[DrinkRecipe] = []
 	for recipe in _ordered_recipes:
-		if is_recipe_unlocked(recipe, stats):
+		if is_recipe_unlocked(recipe, stats) and is_recipe_allowed_for_species(recipe, species_id):
 			available.append(recipe)
+	if available.is_empty():
+		for recipe in _ordered_recipes:
+			if is_recipe_allowed_for_species(recipe, species_id):
+				available.append(recipe)
 	if available.is_empty():
 		available.assign(_ordered_recipes)
 	return available
@@ -158,9 +179,9 @@ static func recipe_matches_ingredients(recipe: DrinkRecipe, required_ingredients
 			return false
 	return true
 
-static func get_matching_recipes(required_ingredients: Array[String], stats: Node = null, include_locked_fallback: bool = false) -> Array[DrinkRecipe]:
+static func get_matching_recipes(required_ingredients: Array[String], stats: Node = null, include_locked_fallback: bool = false, species_id: String = "") -> Array[DrinkRecipe]:
 	ensure_loaded()
-	var pool := get_available_recipes(stats)
+	var pool := get_available_recipes(stats, species_id)
 	if required_ingredients.is_empty():
 		return pool
 
@@ -171,7 +192,7 @@ static func get_matching_recipes(required_ingredients: Array[String], stats: Nod
 
 	if matches.is_empty() and include_locked_fallback:
 		for recipe in _ordered_recipes:
-			if recipe_matches_ingredients(recipe, required_ingredients):
+			if is_recipe_allowed_for_species(recipe, species_id) and recipe_matches_ingredients(recipe, required_ingredients):
 				matches.append(recipe)
 
 	return matches

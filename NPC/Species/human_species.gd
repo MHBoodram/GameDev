@@ -1,7 +1,9 @@
 class_name HumanSpecies
 extends SpeciesBase
 
-const LIKED_DRINKS: Dictionary = {}
+const LIKED_DRINKS: Dictionary = {
+	"cherry_bomb": 0.5,
+}
 const REQUIRED_INGREDIENTS: Array[String] = []
 
 func _init() -> void:
