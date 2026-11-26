@@ -220,6 +220,14 @@ static func handle_counter_edge_tool(tool_id: String, player: Node3D, main_node:
 			return true
 	return false
 
+static func handle_world_tool_click(tool_id: String, player: Node3D) -> bool:
+	ensure_loaded()
+	var normalized_tool := tool_id.to_lower().strip_edges()
+	for sp in _ordered_species:
+		if sp.on_tool_world_click(normalized_tool, player):
+			return true
+	return false
+
 static func handle_glass_tool_click(tool_id: String, glass: Area3D, player: Node3D) -> bool:
 	ensure_loaded()
 	var normalized_tool := tool_id.to_lower().strip_edges()

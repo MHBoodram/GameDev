@@ -24,6 +24,9 @@ var hframes: int = -1
 var vframes: int = 1
 var npc_scale: Vector3 = Vector3.ZERO
 var seat_y_offset: float = 0.0
+var seat_offset: Vector3 = Vector3.ZERO
+var patience_y_offset: float = 0.0
+var patience_offset: Vector3 = Vector3.ZERO
 var tint: Color = Color.WHITE
 var flip_h: bool = false
 
@@ -185,16 +188,20 @@ func get_effective_scale(species_def: SpeciesBase = null) -> Vector3:
 		return sp.npc_scale
 	return Vector3(0.5, 0.5, 0.5)
 
-func get_effective_seat_y_offset(species_def: SpeciesBase = null) -> float:
-	if not is_zero_approx(seat_y_offset):
-		return seat_y_offset
-	var res_npc := get_loaded_npc_resource()
-	if res_npc and "seat_y_offset" in res_npc:
-		var off := float(res_npc.get("seat_y_offset"))
-		if not is_zero_approx(off):
-			return off
+func get_effective_seat_offset(species_def: SpeciesBase = null) -> Vector3:
+	if seat_offset != Vector3.ZERO or not is_zero_approx(seat_y_offset):
+		return Vector3(seat_offset.x, seat_offset.y + seat_y_offset, seat_offset.z)
 	var sp := species_def if species_def != null else SpeciesRegistry.get_species_or_default(species_id)
-	return sp.seat_y_offset if sp else 0.0
+	return sp.get_seat_offset() if sp else Vector3.ZERO
+
+func get_effective_patience_offset(species_def: SpeciesBase = null) -> Vector3:
+	if patience_offset != Vector3.ZERO or not is_zero_approx(patience_y_offset):
+		return Vector3(patience_offset.x, patience_offset.y + patience_y_offset, patience_offset.z)
+	var sp := species_def if species_def != null else SpeciesRegistry.get_species_or_default(species_id)
+	return sp.get_patience_offset() if sp else Vector3.ZERO
+
+func get_effective_seat_y_offset(species_def: SpeciesBase = null) -> float:
+	return get_effective_seat_offset(species_def).y
 
 func get_effective_logo_frame(species_def: SpeciesBase = null) -> int:
 	if logo_frame >= 0:
@@ -469,6 +476,9 @@ static func create_default_for_species(sp: SpeciesBase) -> NPCCharacterBase:
 		c.patience_time = sp.default_patience
 		c.npc_scale = sp.npc_scale
 		c.seat_y_offset = sp.seat_y_offset
+		c.seat_offset = sp.seat_offset
+		c.patience_y_offset = sp.patience_y_offset
+		c.patience_offset = sp.patience_offset
 		c.logo_frame = sp.logo_frame
 		c.can_be_ghost = sp.can_be_ghost
 		c.disallowed_modifiers = sp.disallowed_modifiers.duplicate()

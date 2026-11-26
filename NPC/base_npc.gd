@@ -120,6 +120,9 @@ func _apply_species_scale() -> void:
 	if patience_sprite and base_scale.x > 0.01:
 		var inv_factor := minf(10.0, 0.5 / base_scale.x)
 		patience_sprite.scale = Vector3.ONE * inv_factor
+		var base_patience_y := 1.7339805
+		var p_offset := species_def.get_patience_offset() if species_def and species_def.has_method("get_patience_offset") else Vector3.ZERO
+		patience_sprite.position = Vector3(p_offset.x, base_patience_y + p_offset.y, p_offset.z)
 
 func _apply_bounce_scale(factor: float) -> void:
 	_bounce_factor = factor
@@ -310,7 +313,7 @@ func _moving_to(to: Marker3D) -> void:
 	var tween = get_tree().create_tween()
 	tween.set_trans(Tween.TRANS_SINE)
 	tween.set_ease(Tween.EASE_OUT)
-	var offset := Vector3(0.0, species_def.seat_y_offset, 0.0) if species_def else Vector3.ZERO
+	var offset := species_def.get_seat_offset() if species_def else Vector3.ZERO
 	tween.tween_property(self, "position", to.position + offset, 0.8)
 	current_state = State.SIT
 

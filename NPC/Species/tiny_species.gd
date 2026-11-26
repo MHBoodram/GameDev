@@ -12,9 +12,11 @@ func _init() -> void:
 	fallback_texture_path = "res://Assets/NPC/Tiny/tiny.webp"
 	fallback_hframes = 10
 	npc_scale = Vector3(0.05, 0.05, 0.05)
+	seat_offset = Vector3(0.0, -0.45, 0.35)
+	patience_y_offset = 8.5
 	base_spawn_weight = 2.0
 	default_marketing_weight = 1.0
-	spawn_randomly = true
+	spawn_randomly = false
 	can_be_ghost = false
 	disallowed_modifiers = ["GHOST"]
 
@@ -57,4 +59,20 @@ func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = n
 	for order in orders:
 		if order:
 			order.is_tiny = true
+			order.ideal_fill_ratio = 0.25
+			order.proportion_tolerance = 0.35
+			order.penalty_scale = 0.05
+			order.require_ingredient_match = false
 	return orders
+
+func on_tool_world_click(tool_id: String, _player: Node3D) -> bool:
+	if tool_id != "mag":
+		return false
+	if not GameState.seat_manager:
+		return false
+	if GameState.night_manager and GameState.night_manager.is_shift_ended:
+		return false
+	if GameState.seat_manager.get_empty_seat_count() <= 0:
+		return false
+	var spawned := GameState.seat_manager.spawn_customer_by_species(self)
+	return is_instance_valid(spawned)

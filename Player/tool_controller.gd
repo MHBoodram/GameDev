@@ -26,6 +26,10 @@ func get_tool() -> String:
 func handle_counter_edge_click(player: Node3D, main_node: Node3D = null) -> bool:
 	return SpeciesRegistry.handle_counter_edge_tool(tool_in_hand, player, main_node)
 
+# triggers species-registered tool actions when clicking empty space / bar
+func handle_world_click(player: Node3D = null) -> bool:
+	return SpeciesRegistry.handle_world_tool_click(tool_in_hand, player)
+
 # triggers species/modifier-registered tool actions when clicking a glass
 func handle_glass_click(glass: Area3D, player: Node3D = null) -> bool:
 	return SpeciesRegistry.handle_glass_tool_click(tool_in_hand, glass, player)
