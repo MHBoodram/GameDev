@@ -50,6 +50,7 @@ var scheduled_npcs: Array[Dictionary] = []
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	TextIcons.install(self)
+	FastForward.install(self)
 	_setup_global_menus()
 
 func _setup_global_menus() -> void:

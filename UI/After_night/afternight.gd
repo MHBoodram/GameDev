@@ -12,6 +12,11 @@ enum ShopPhase {
 const BASE_SHOP_SLOTS := 4
 const SLOTS_PER_UPGRADE := 2
 const MAX_SHOP_SLOTS := 8
+const SUMMARY_FF_SCOPE := "afternight_summary"
+const SHOP_FF_SCOPE := "afternight_shop"
+
+@export var summary_fast_forward_duration: float = FastForward.DEFAULT_DURATION
+@export var shop_fast_forward_duration: float = FastForward.DEFAULT_DURATION
 
 @onready var choices = preload("res://UI/After_night/ChoiceButton.tscn")
 
@@ -48,10 +53,21 @@ func _ready() -> void:
 	else:
 		shopkeeper.speaking_title = "Comingback"
 
+func _exit_tree() -> void:
+	FastForward.end_scope(SUMMARY_FF_SCOPE)
+	FastForward.end_scope(SHOP_FF_SCOPE)
+
 func _check_money() -> void:
+	FastForward.begin_scope(SUMMARY_FF_SCOPE, {
+		"duration": summary_fast_forward_duration,
+		"allow_when_dialogue_open": true,
+		"priority": 50,
+	})
 	#$Player/Secondary.current = true
 	$AnimationPlayer.play("check_money")
+	FastForward.track_animation($AnimationPlayer, SUMMARY_FF_SCOPE)
 	await $Viewport/SubViewport/AfterNightMenu._display_recipt()
+	FastForward.end_scope(SUMMARY_FF_SCOPE)
 	#$Player/Secondary.current = true
 	#$Player/Camera3D.current = false
 	
@@ -64,18 +80,26 @@ func _close_light_bar():
 	await $new_bar._close_light()
 
 func _setup_shop_scene() -> void:
+	FastForward.begin_scope(SHOP_FF_SCOPE, {
+		"duration": shop_fast_forward_duration,
+		"allow_when_dialogue_open": false,
+		"priority": 40,
+	})
 	$CanvasLayer.show()
 	$AnimationPlayer.play_backwards("check_money")
+	FastForward.track_animation($AnimationPlayer, SHOP_FF_SCOPE)
 	await _close_light_bar()
 	if is_instance_valid($AfternightNpc):
 		$AfternightNpc.queue_free()
-	await get_tree().create_timer(2).timeout
+	await FastForward.wait(2.0, self, SHOP_FF_SCOPE)
 	if not is_inside_tree():
+		FastForward.end_scope(SHOP_FF_SCOPE)
 		return
 	$ShopKeeper.show()
 	await $new_bar._setup_shop_scene()
 	$Player.in_shop = true
 	await _open_light()
+	FastForward.end_scope(SHOP_FF_SCOPE)
 	if not is_inside_tree():
 		return
 	shop_phase = ShopPhase.INTRO
@@ -92,6 +116,8 @@ func _finished_night():
 		return
 	_is_finishing_night = true
 	shop_phase = ShopPhase.FINISHING
+	FastForward.end_scope(SUMMARY_FF_SCOPE)
+	FastForward.end_scope(SHOP_FF_SCOPE)
 	if is_instance_valid(shopkeeper):
 		shopkeeper.can_talk = false
 	for node in get_tree().get_nodes_in_group("Choice"):
@@ -166,6 +192,12 @@ func _advance_shop_step() -> void:
 	if not is_inside_tree():
 		return
 
+	FastForward.begin_scope(SHOP_FF_SCOPE, {
+		"duration": shop_fast_forward_duration,
+		"allow_when_dialogue_open": false,
+		"priority": 40,
+	})
+
 	var old_nodes = get_tree().get_nodes_in_group("Choice")
 	print("Removed Nodes: ", old_nodes)
 
@@ -184,11 +216,13 @@ func _advance_shop_step() -> void:
 		tween.set_trans(Tween.TRANS_SINE)
 		tween.set_ease(Tween.EASE_OUT)
 		tween.tween_property(node, "global_position", shopkeeper_position, 0.5)
+		FastForward.track_tween(tween, 0.5, SHOP_FF_SCOPE)
 		clear_tween = tween
 
 	if is_instance_valid(clear_tween) and clear_tween.is_running():
 		await clear_tween.finished
 	if not is_inside_tree():
+		FastForward.end_scope(SHOP_FF_SCOPE)
 		return
 
 	for node in old_nodes:
@@ -196,8 +230,9 @@ func _advance_shop_step() -> void:
 			node.queue_free()
 
 	shopkeeper._play_animation_knocking()
-	await get_tree().create_timer(1).timeout
+	await FastForward.wait(1.0, self, SHOP_FF_SCOPE)
 	if not is_inside_tree():
+		FastForward.end_scope(SHOP_FF_SCOPE)
 		return
 
 	if not ingredient_picked and _get_available_unlocks("Drinks").is_empty():
@@ -215,6 +250,7 @@ func _advance_shop_step() -> void:
 			await _produce_upgrades()
 			await _wait_for_dialogue_close()
 			if not is_inside_tree():
+				FastForward.end_scope(SHOP_FF_SCOPE)
 				return
 			if is_instance_valid(shopkeeper):
 				shopkeeper.speaking_title = _get_shop_options_title()
@@ -226,6 +262,7 @@ func _advance_shop_step() -> void:
 			await _produce_unlocks_pick_3("Ingredients")
 			await _wait_for_dialogue_close()
 			if not is_inside_tree():
+				FastForward.end_scope(SHOP_FF_SCOPE)
 				return
 			if is_instance_valid(shopkeeper):
 				shopkeeper.speaking_title = "firstWait1" if GameState.night == 1 else "wait"
@@ -237,11 +274,13 @@ func _advance_shop_step() -> void:
 		await _produce_unlocks_pick_3("Drinks")
 		await _wait_for_dialogue_close()
 		if not is_inside_tree():
+			FastForward.end_scope(SHOP_FF_SCOPE)
 			return
 		if is_instance_valid(shopkeeper):
 			shopkeeper.speaking_title = "firstWait1" if GameState.night == 1 else "wait"
 		shop_phase = ShopPhase.CHOOSING
 
+	FastForward.end_scope(SHOP_FF_SCOPE)
 	_enable_choices(_pending_choices)
 	_is_advancing_shop = false
 	if is_instance_valid(shopkeeper) and shop_phase != ShopPhase.FINISHING:
@@ -278,9 +317,10 @@ func _produce_unlocks_pick_3(pick: String = "Ingredients") -> void:
 		tween.set_trans(Tween.TRANS_SINE)
 		tween.set_ease(Tween.EASE_OUT)
 		tween.tween_property(new_choice,"global_position",obtain_node.global_position,0.5)
+		FastForward.track_tween(tween, 0.5, SHOP_FF_SCOPE)
 		last_tween = tween
 		if x < count - 1:
-			await get_tree().create_timer(0.75).timeout
+			await FastForward.wait(0.75, self, SHOP_FF_SCOPE)
 	if is_instance_valid(last_tween) and last_tween.is_running():
 		await last_tween.finished
 
@@ -352,9 +392,10 @@ func _produce_upgrades() -> void:
 		tween.set_trans(Tween.TRANS_SINE)
 		tween.set_ease(Tween.EASE_OUT)
 		tween.tween_property(new_choice, "global_position", obtain_node.global_position, 0.5)
+		FastForward.track_tween(tween, 0.5, SHOP_FF_SCOPE)
 		last_tween = tween
 		if x < count - 1:
-			await get_tree().create_timer(0.5).timeout
+			await FastForward.wait(0.5, self, SHOP_FF_SCOPE)
 	if is_instance_valid(last_tween) and last_tween.is_running():
 		await last_tween.finished
 

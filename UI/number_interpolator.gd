@@ -28,6 +28,20 @@ static func stop(label: Control) -> void:
 			(old_tween as Tween).kill()
 		label.remove_meta(_META_TWEEN)
 
+static func fast_forward(label: Control, target_duration: float = FastForward.DEFAULT_DURATION, scope_id: String = "") -> void:
+	if not is_instance_valid(label):
+		return
+	if scope_id != "":
+		FastForward.trigger(scope_id, target_duration)
+		return
+	if label.has_meta(_META_TWEEN):
+		var active_tween: Variant = label.get_meta(_META_TWEEN)
+		if active_tween is Tween and (active_tween as Tween).is_valid():
+			if target_duration <= 0.0:
+				(active_tween as Tween).custom_step(1000.0)
+			else:
+				(active_tween as Tween).set_speed_scale(maxf(1.0, DEFAULT_SUMMARY_DURATION / target_duration))
+
 static func get_current_value(label: Control, fallback: float = 0.0) -> float:
 	if not is_instance_valid(label):
 		return fallback
@@ -49,7 +63,9 @@ static func interpolate(
 	duration: float = DEFAULT_DURATION,
 	suffix: String = "",
 	prefix: String = "",
-	decimals: int = 0
+	decimals: int = 0,
+	fast_forward_scope: String = "",
+	fast_forward_options: Dictionary = {}
 ) -> Tween:
 	if not is_instance_valid(label):
 		return null
@@ -88,6 +104,10 @@ static func interpolate(
 			_apply_formatted_value(label, to_value, prefix, suffix, decimals)
 			label.remove_meta(_META_TWEEN)
 	)
+
+	if fast_forward_scope != "":
+		FastForward.track_tween(tween, duration, fast_forward_scope, fast_forward_options)
+
 	return tween
 
 static func _apply_formatted_value(label: Control, value: float, prefix: String, suffix: String, decimals: int) -> void:

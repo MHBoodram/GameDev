@@ -1,5 +1,9 @@
 extends Control
 
+const SUMMARY_FF_SCOPE := "afternight_summary"
+
+@export var summary_fast_forward_duration: float = FastForward.DEFAULT_DURATION
+
 @onready var item_scene = preload("res://UI/After_night/ItemButton.tscn")
 
 @onready var info_label: Label = $TextureRect/VBoxContainer/InfoLabel
@@ -36,6 +40,7 @@ var shopping_cart: Dictionary = {
 var quota_paid: bool = false
 var ingredient_bought: bool = false
 var marketing_bought: bool = false
+var _owns_summary_scope: bool = false
 
 const MANDATORY_INGREDIENT_COST: float = 50.0
 const MANDATORY_MARKETING_COST: float = 50.0
@@ -48,15 +53,50 @@ func _ready() -> void:
 	next_night_button.pressed.connect(_on_next_night_pressed)
 	_refresh_display()
 
+func _exit_tree() -> void:
+	if _owns_summary_scope:
+		_owns_summary_scope = false
+		FastForward.end_scope(SUMMARY_FF_SCOPE)
+
 func _display_recipt() -> void:
+	var owns_scope := not FastForward.has_scope(SUMMARY_FF_SCOPE)
+	if owns_scope:
+		_owns_summary_scope = true
+		FastForward.begin_scope(SUMMARY_FF_SCOPE, {
+			"duration": summary_fast_forward_duration,
+			"allow_when_dialogue_open": true,
+			"priority": 50,
+		})
+
 	_top_speicies_check()
 	await _display_container($Recipt/Recipt/VBoxContainer/Top_species)
+	if not is_inside_tree():
+		_finish_owned_summary_scope(owns_scope)
+		return
 	await _display_container($Recipt/Recipt/VBoxContainer/Earning)
+	if not is_inside_tree():
+		_finish_owned_summary_scope(owns_scope)
+		return
 	await _display_number(earning_number, PlayerStats.money)
+	if not is_inside_tree():
+		_finish_owned_summary_scope(owns_scope)
+		return
 	await _display_container($Recipt/Recipt/VBoxContainer/Quota)
+	if not is_inside_tree():
+		_finish_owned_summary_scope(owns_scope)
+		return
 	await _display_number(quota_number, GameState.get_night_quota(GameState.night))
-	await get_tree().create_timer(0.5).timeout
+	if not is_inside_tree():
+		_finish_owned_summary_scope(owns_scope)
+		return
+	await FastForward.wait(0.5, self, SUMMARY_FF_SCOPE)
+	if not is_inside_tree():
+		_finish_owned_summary_scope(owns_scope)
+		return
 	await _display_container($Recipt/Recipt/VBoxContainer/Profits)
+	if not is_inside_tree():
+		_finish_owned_summary_scope(owns_scope)
+		return
 	var net_profit: float = PlayerStats.money - GameState.get_night_quota(GameState.night)
 	if net_profit < 0:
 		proft_number.add_theme_color_override("font_color", Color(1.0, 0.0, 0.0, 1.0))
@@ -64,11 +104,20 @@ func _display_recipt() -> void:
 		proft_number.add_theme_color_override("font_color", Color(0.424, 0.91, 0.0, 1.0))
 	NumberInterpolator.set_number(proft_number, PlayerStats.money, " {coin}")
 	await _display_container($Recipt/Recipt/VBoxContainer/Profit_number)
+	if not is_inside_tree():
+		_finish_owned_summary_scope(owns_scope)
+		return
 	await _display_number(proft_number, net_profit, PlayerStats.money)
-	await get_tree().create_timer(1).timeout
+	if not is_inside_tree():
+		_finish_owned_summary_scope(owns_scope)
+		return
+	await FastForward.wait(1.0, self, SUMMARY_FF_SCOPE)
+	if not is_inside_tree():
+		_finish_owned_summary_scope(owns_scope)
+		return
 	if net_profit < 0:
 		PlayerStats._change_money(net_profit)
-		
+		_finish_owned_summary_scope(owns_scope)
 		#$Animation.play("failed_night")
 		return
 	else:
@@ -77,7 +126,12 @@ func _display_recipt() -> void:
 		#_move_to_out($Recipt,false)
 		#_move_to_in($Marketing,true)
 		#_populate_grid_container_pick_3("Drinks",$Marketing/Marketing/VBoxContainer/HBoxContainer/Drinks/GridContainer)
+	_finish_owned_summary_scope(owns_scope)
 
+func _finish_owned_summary_scope(owns_scope: bool) -> void:
+	if owns_scope:
+		_owns_summary_scope = false
+		FastForward.end_scope(SUMMARY_FF_SCOPE)
 
 func _move_to_in(node: ColorRect,big: bool = false):
 	var tween = get_tree().create_tween()
@@ -190,9 +244,11 @@ func _populate_grid_container(type: String, container: GridContainer):
 			item_slot.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_FILL
 			target_container.add_child(item_slot)
 
-func _display_container(container: Control) -> void:
+func _display_container(container: Control, fast_forward_duration: float = -1.0) -> void:
 	container.show()
 	await get_tree().process_frame
+	if not is_instance_valid(container) or not is_inside_tree():
+		return
 	container.pivot_offset = container.size / 2
 	container.scale = Vector2(2.0, 2.0)
 	container.rotation_degrees = 0.0
@@ -200,10 +256,13 @@ func _display_container(container: Control) -> void:
 	tween.tween_property(container, "scale", Vector2.ONE, 1.0)
 	#tween.tween_property(container, "rotation_degrees", 360.0, 1.0)
 	tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var ff_opts := {"duration": fast_forward_duration} if fast_forward_duration >= 0.0 else {}
+	FastForward.track_tween(tween, 1.0, SUMMARY_FF_SCOPE, ff_opts)
 
-func _display_number(label: Label, to: float, from: float = 0.0, duration: float = NumberInterpolator.DEFAULT_SUMMARY_DURATION) -> void:
+func _display_number(label: Label, to: float, from: float = 0.0, duration: float = NumberInterpolator.DEFAULT_SUMMARY_DURATION, fast_forward_duration: float = -1.0) -> void:
 	label.show()
-	var tween := NumberInterpolator.interpolate(label, to, from, duration, " {coin}")
+	var ff_opts := {"duration": fast_forward_duration} if fast_forward_duration >= 0.0 else {}
+	var tween := NumberInterpolator.interpolate(label, to, from, duration, " {coin}", "", 0, SUMMARY_FF_SCOPE, ff_opts)
 	if tween and tween.is_valid():
 		await tween.finished
 	#while not Input.is_action_just_pressed("Left_click"):

@@ -14,6 +14,8 @@ func _open_light() -> void:
 	tween.tween_property($Point_003,"light_energy",0.087,0.5)
 	tween.tween_property($Point_004,"light_energy",0.087,0.5)
 	tween.tween_property($Point_005,"light_energy",0.087,0.5)
+	if FastForward.has_scope("afternight_shop"):
+		FastForward.track_tween(tween, 0.5, "afternight_shop")
 	await tween.finished
 	#$Spot_003.light_energy = 
 
@@ -29,11 +31,15 @@ func _close_light() -> void:
 	tween.tween_property($Point_003,"light_energy",0,0.5)
 	tween.tween_property($Point_004,"light_energy",0,0.5)
 	tween.tween_property($Point_005,"light_energy",0,0.5)
+	if FastForward.has_scope("afternight_shop"):
+		FastForward.track_tween(tween, 0.5, "afternight_shop")
 	await tween.finished
 	
 
 func _setup_shop_scene() -> void:
 	$Shop.play("default")
+	if FastForward.has_scope("afternight_shop"):
+		FastForward.track_animation($Shop, "afternight_shop")
 	await $Shop.animation_finished
 	var tween = get_tree().create_tween().set_parallel(true)
 	$Spot_003.light_color = Color(1.0, 1.0, 1.0, 1.0)
@@ -41,6 +47,8 @@ func _setup_shop_scene() -> void:
 	tween.tween_property($shelf_spot,"light_energy",4,0.5)
 	tween.tween_property($shelf_spot2,"light_energy",4,0.5)
 	tween.tween_property($Spot,"light_energy",4,0.5)
+	if FastForward.has_scope("afternight_shop"):
+		FastForward.track_tween(tween, 0.5, "afternight_shop")
 	$Spot.show()
 	$Spot_002.show()
 

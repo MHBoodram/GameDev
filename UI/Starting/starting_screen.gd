@@ -1,4 +1,7 @@
 extends Node3D
+
+const TITLE_INTRO_FF_SCOPE := "title_intro"
+
 @export var sub_viewport: SubViewport
 @onready var start_menu = get_node("Menu2/Menu3/Viewport/SubViewport/StartMenu")
 
@@ -8,8 +11,20 @@ func _ready() -> void:
 	await SettingState._loading_setting()
 	$Node2D/Setting._setting_dictionary_start()
 	$AnimationPlayer.speed_scale = 0.4
+	FastForward.begin_scope(TITLE_INTRO_FF_SCOPE, {
+		"duration": 0.25,
+		"priority": 30,
+	})
 	$AnimationPlayer.play("movement")
+	FastForward.track_animation($AnimationPlayer, TITLE_INTRO_FF_SCOPE)
+	$AnimationPlayer.animation_finished.connect(_on_intro_animation_finished, CONNECT_ONE_SHOT)
 	$Menu_animation.play("menu_close")
+
+func _exit_tree() -> void:
+	FastForward.end_scope(TITLE_INTRO_FF_SCOPE)
+
+func _on_intro_animation_finished(_anim_name: StringName) -> void:
+	FastForward.end_scope(TITLE_INTRO_FF_SCOPE)
 
 @warning_ignore("unused_parameter")
 func _process(delta: float) -> void:
