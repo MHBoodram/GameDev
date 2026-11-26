@@ -69,7 +69,7 @@ func generate_orders(npc: Sprite3D, modifier: RefCounted = null, _stats: Node = 
 		order.proportion_tolerance = 0.35
 		order.penalty_scale = 0.05
 		order.require_ingredient_match = false
-		order.ice_preference = DrinkDefinitions.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
+		order.ice_preference = DrinkRegistry.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
 		orders.append(order)
 	return orders
 

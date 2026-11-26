@@ -143,14 +143,14 @@ func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = n
 		count = maxi(1, int(modifier.modify_order_count(npc, count)))
 
 	for i in range(count):
-		var recipe := DrinkDefinitions.pick_random_recipe(stats, species_id)
+		var recipe := DrinkRegistry.pick_random_recipe(stats, species_id)
 		if recipe:
-			orders.append(DrinkDefinitions.create_order_from_recipe(recipe, species_id, true))
+			orders.append(DrinkRegistry.create_order_from_recipe(recipe, species_id, true))
 		else:
 			var fallback := DrinkOrder.new()
 			fallback.species_id = species_id
 			fallback.ingredients["gin"] = 1.0
-			fallback.ice_preference = DrinkDefinitions.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
+			fallback.ice_preference = DrinkRegistry.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
 			orders.append(fallback)
 	return orders
 

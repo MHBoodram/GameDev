@@ -48,7 +48,7 @@ func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = n
 			non_blood_pool.append(candidate)
 
 	var blood_recipes: Array[DrinkRecipe] = []
-	for recipe in DrinkDefinitions.get_available_recipes(stats, species_id):
+	for recipe in DrinkRegistry.get_available_recipes(stats, species_id):
 		if recipe.ingredients.has("blood"):
 			blood_recipes.append(recipe)
 
@@ -60,7 +60,7 @@ func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = n
 		if i == 0 or (pool.has("blood") and randf() < 0.5):
 			if not blood_recipes.is_empty():
 				var picked_blood := blood_recipes.pick_random() as DrinkRecipe
-				orders.append(DrinkDefinitions.create_order_from_recipe(picked_blood, species_id, true))
+				orders.append(DrinkRegistry.create_order_from_recipe(picked_blood, species_id, true))
 			else:
 				var order := DrinkOrder.new()
 				order.species_id = species_id
@@ -71,18 +71,18 @@ func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = n
 					order.required_processing.append("shaken")
 				else:
 					order.ingredients["blood"] = 1.0
-				order.ice_preference = DrinkDefinitions.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
+				order.ice_preference = DrinkRegistry.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
 				orders.append(order)
 		else:
-			var set_recipe := DrinkDefinitions.pick_random_recipe(stats, species_id)
+			var set_recipe := DrinkRegistry.pick_random_recipe(stats, species_id)
 			if set_recipe:
-				orders.append(DrinkDefinitions.create_order_from_recipe(set_recipe, species_id, true))
+				orders.append(DrinkRegistry.create_order_from_recipe(set_recipe, species_id, true))
 			else:
 				var fallback_order := DrinkOrder.new()
 				fallback_order.species_id = species_id
 				var other_drink := str(non_blood_pool.pick_random()) if not non_blood_pool.is_empty() else str(pool.pick_random())
 				fallback_order.ingredients[other_drink] = 1.0
-				fallback_order.ice_preference = DrinkDefinitions.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
+				fallback_order.ice_preference = DrinkRegistry.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
 				orders.append(fallback_order)
 	return orders
 

@@ -424,21 +424,21 @@ func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = n
 	var orders: Array[DrinkOrder] = []
 	if custom_drink_pool.is_empty():
 		for _i in range(maxi(1, count)):
-			var recipe := DrinkDefinitions.pick_random_recipe(stats, species_id)
+			var recipe := DrinkRegistry.pick_random_recipe(stats, species_id)
 			if recipe:
-				orders.append(DrinkDefinitions.create_order_from_recipe(recipe, species_id, true))
+				orders.append(DrinkRegistry.create_order_from_recipe(recipe, species_id, true))
 		return orders
 
 	for _i in range(maxi(1, count)):
 		var drink_name := str(custom_drink_pool.pick_random())
-		var recipe := DrinkDefinitions.get_recipe(drink_name)
+		var recipe := DrinkRegistry.get_recipe(drink_name)
 		if recipe:
-			orders.append(DrinkDefinitions.create_order_from_recipe(recipe, species_id, true))
+			orders.append(DrinkRegistry.create_order_from_recipe(recipe, species_id, true))
 		else:
 			var order := DrinkOrder.new()
 			order.species_id = species_id
 			order.ingredients[drink_name.to_lower().strip_edges()] = 1.0
-			order.ice_preference = DrinkDefinitions.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
+			order.ice_preference = DrinkRegistry.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
 			orders.append(order)
 	return orders
 

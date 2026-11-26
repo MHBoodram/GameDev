@@ -799,13 +799,13 @@ func _give_payment() -> void:
 # Orders
 func _make_order_from_name(drink_name: String) -> DrinkOrder:
 	var sp_id := species_def.species_id if species_def else "HUMAN"
-	var recipe := DrinkDefinitions.get_recipe(drink_name)
+	var recipe := DrinkRegistry.get_recipe(drink_name)
 	if recipe:
-		return DrinkDefinitions.create_order_from_recipe(recipe, sp_id, true)
+		return DrinkRegistry.create_order_from_recipe(recipe, sp_id, true)
 	var order := DrinkOrder.new()
 	order.species_id = sp_id
 	order.ingredients[drink_name.to_lower().strip_edges()] = 1.0
-	order.ice_preference = DrinkDefinitions.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
+	order.ice_preference = DrinkRegistry.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
 	return order
 
 func _want_drink() -> Array:
@@ -832,8 +832,8 @@ func _want_drink() -> Array:
 		for order in generated:
 			drink_list.push_back(order)
 	else:
-		var fallback_recipe := DrinkDefinitions.pick_random_recipe(PlayerStats, "HUMAN")
-		var fallback_order := DrinkDefinitions.create_order_from_recipe(fallback_recipe, "HUMAN", true) if fallback_recipe else _make_order_from_name("gin")
+		var fallback_recipe := DrinkRegistry.pick_random_recipe(PlayerStats, "HUMAN")
+		var fallback_order := DrinkRegistry.create_order_from_recipe(fallback_recipe, "HUMAN", true) if fallback_recipe else _make_order_from_name("gin")
 		var fallback_orders: Array[DrinkOrder] = [fallback_order]
 		if modifier:
 			modifier.on_generate_orders(self, fallback_orders)
