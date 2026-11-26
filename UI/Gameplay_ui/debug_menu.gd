@@ -329,8 +329,13 @@ func _on_spawn_cup_pressed() -> void:
 		glass.visual_helper.last_global_pos = target_pos
 
 	var norm_ing := order.get_normalized_ingredients()
+	if norm_ing.is_empty() and not order.require_ingredient_match:
+		var pool := target_npc.species_def.get_drink_pool(PlayerStats) if target_npc.species_def else (["gin"] as Array[String])
+		var chosen_ing := str(pool.pick_random()) if not pool.is_empty() else "gin"
+		norm_ing[chosen_ing] = 1.0
+	var fill_target := order.ideal_fill_ratio if (order.ideal_fill_ratio > 0.0 and order.is_tiny) else 1.0
 	for ing_id in norm_ing:
-		glass._pouring(str(ing_id), float(norm_ing[ing_id]) * glass.size)
+		glass._pouring(str(ing_id), float(norm_ing[ing_id]) * glass.size * fill_target)
 
 	if order.is_tiny:
 		glass.drink_mix.is_tiny = true

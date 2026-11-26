@@ -521,7 +521,7 @@ func _calculate_combo(mix: DrinkMix, wanted_order: DrinkOrder, is_satisfactory: 
 
 	var ingredient_count := 0
 	for ing_id in mix.get_unique_ingredient_ids():
-		if wanted_order == null or wanted_order.ingredients.is_empty() or wanted_order.ingredients.has(ing_id):
+		if wanted_order == null or wanted_order.ingredients.is_empty() or not wanted_order.require_ingredient_match or wanted_order.ingredients.has(ing_id):
 			ingredient_count += 1
 
 	var extra_ingredients := maxi(0, ingredient_count - COMBO_MIN_INGREDIENTS)

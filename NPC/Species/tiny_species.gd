@@ -2,6 +2,7 @@ class_name TinySpecies
 extends SpeciesBase
 
 const DIALOGUE_PATH := "res://NPC/Dialogue/Frederick.dialogue"
+const IDEAL_FILL_RATIO := 0.25
 
 func _init() -> void:
 	species_id = "TINY"
@@ -55,16 +56,28 @@ func on_ingredient_unlocked(ingredient_key: String, stats: Node = null) -> void:
 func get_drink_pool(stats: Node = null) -> Array[String]:
 	return super.get_drink_pool(stats)
 
-func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = null) -> Array[DrinkOrder]:
-	var orders := super.generate_orders(npc, modifier, stats)
-	for order in orders:
-		if order:
-			order.is_tiny = true
-			order.ideal_fill_ratio = 0.25
-			order.proportion_tolerance = 0.35
-			order.penalty_scale = 0.05
-			order.require_ingredient_match = false
+func generate_orders(npc: Sprite3D, modifier: RefCounted = null, _stats: Node = null) -> Array[DrinkOrder]:
+	var orders: Array[DrinkOrder] = []
+	var count := maxi(1, get_order_count(npc, modifier))
+	if modifier and modifier.has_method("modify_order_count"):
+		count = maxi(1, int(modifier.modify_order_count(npc, count)))
+	for i in range(count):
+		var order := DrinkOrder.new()
+		order.species_id = species_id
+		order.is_tiny = true
+		order.ideal_fill_ratio = IDEAL_FILL_RATIO
+		order.proportion_tolerance = 0.35
+		order.penalty_scale = 0.05
+		order.require_ingredient_match = false
+		orders.append(order)
 	return orders
+
+func format_order_text(order: DrinkOrder, base_text: String) -> String:
+	if order and not order.require_ingredient_match:
+		var fill_ratio: float = order.ideal_fill_ratio if order.ideal_fill_ratio > 0.0 else IDEAL_FILL_RATIO
+		var pct: int = int(round(fill_ratio * 100.0))
+		return super.format_order_text(order, "Anything " + str(pct) + "%\n")
+	return super.format_order_text(order, base_text)
 
 func on_tool_world_click(tool_id: String, _player: Node3D) -> bool:
 	if tool_id != "mag":
