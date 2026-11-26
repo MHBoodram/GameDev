@@ -41,6 +41,15 @@ func setup(parent : Node3D,_id: String,_type: String,_Cost: int = 0) -> void:
 	else:
 		TextIcons.set_text($Label3D, str(id))
 
+func _is_tool_ingredient(item_id: String) -> bool:
+	if not PlayerStats.unlocks.has("Tools"):
+		return false
+	var lower := item_id.to_lower().strip_edges()
+	for k in PlayerStats.unlocks["Tools"].keys():
+		if str(k).to_lower().strip_edges() == lower:
+			return true
+	return false
+
 func _on_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if not is_interactable or GameState.is_dialogue_open:
 		return
@@ -54,7 +63,7 @@ func _on_input_event(camera: Node, event: InputEvent, event_position: Vector3, n
 			PlayerStats._change_money(PlayerStats.money - cost)
 			if type == "Upgrades":
 				PlayerStats.unlock_upgrade(id)
-			elif type == "Tools" or (type == "Ingredients" and id.to_lower() == "knife"):
+			elif type == "Tools" or (type == "Ingredients" and _is_tool_ingredient(id)):
 				PlayerStats.unlock_tool(id)
 			else:
 				PlayerStats.unlocks[type][id] = true

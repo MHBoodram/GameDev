@@ -58,9 +58,20 @@ static func _register_defaults() -> void:
 		"on_reset": _on_ingredient_upgrade_reset,
 	}))
 	register_upgrade(UpgradeDef.from_dict({
+		"id": "Shelf Slots Increase",
+		"display_name": "Shelf Slots Increase",
+		"description": "Increase shop shelf slots by 2",
+		"icon_path": "res://Assets/UI/Green_Arrow.png",
+		"sort_order": 5,
+		"repeatable": true,
+		"max_level": 2,
+		"passive_key": "Shop Shelf Slots",
+		"on_unlocked": _on_shelf_slots_unlocked,
+	}))
+	register_upgrade(UpgradeDef.from_dict({
 		"id": "Combo Extension Increase",
 		"description": "Extend serve combo grace period",
-		"sort_order": 5,
+		"sort_order": 6,
 		"repeatable": true,
 		"max_level": -1,
 		"show_in_shop": false,
@@ -120,6 +131,10 @@ static func _on_ingredient_upgrade_unlocked(_stats: Node, _level: int) -> void:
 
 static func _on_ingredient_upgrade_reset(_stats: Node) -> void:
 	_refresh_shelf_ingredients()
+
+static func _on_shelf_slots_unlocked(_stats: Node, _level: int) -> void:
+	if GameState and is_instance_valid(GameState.main_node) and GameState.main_node.has_method("_expand_shop_slots"):
+		GameState.main_node._expand_shop_slots()
 
 static func _resolve_stats(stats: Node = null) -> Node:
 	if is_instance_valid(stats):

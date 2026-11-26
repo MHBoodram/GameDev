@@ -46,5 +46,5 @@ func _setup_shop_scene() -> void:
 
 func _get_marker(id: int) -> Marker3D:
 	var string_node = str("Marker",id)
-	var marker3d_node = get_node(string_node)
+	var marker3d_node = get_node_or_null(string_node) as Marker3D
 	return marker3d_node

@@ -9,6 +9,10 @@ enum ShopPhase {
 	FINISHING
 }
 
+const BASE_SHOP_SLOTS := 4
+const SLOTS_PER_UPGRADE := 2
+const MAX_SHOP_SLOTS := 8
+
 @onready var choices = preload("res://UI/After_night/ChoiceButton.tscn")
 
 @onready var player: Node3D = $Player
@@ -24,6 +28,8 @@ var upgrade_time : bool = false
 var _is_advancing_shop : bool = false
 var _is_finishing_night : bool = false
 var _pending_choices : Array = []
+var _used_shop_slots : int = 0
+var _is_expanding_slots : bool = false
 var upgrades
 
 
@@ -283,22 +289,63 @@ func _produce_unlocks_pick_3(pick: String = "Ingredients") -> void:
 	if is_instance_valid(last_tween) and last_tween.is_running():
 		await last_tween.finished
 
-func _produce_upgrades() -> void:
-	var available_upgrades := UpgradeRegistry.get_available_shop_upgrades(PlayerStats, GameState.night)
-	print("Temp_array", available_upgrades)
+func _get_shop_slot_count() -> int:
+	var extra_levels: int = UpgradeRegistry.get_level("Shelf Slots Increase", PlayerStats)
+	return mini(BASE_SHOP_SLOTS + extra_levels * SLOTS_PER_UPGRADE, MAX_SHOP_SLOTS)
 
-	var count: int = mini(5, available_upgrades.size())
+func _get_ingredient_shop_cost(_ingredient_id: String) -> int:
+	return randi_range(1, maxi(1, GameState.night) * 30)
+
+func _build_upgrade_shop_pool(exclude_active_choices: bool = false) -> Array[Dictionary]:
+	var active_keys: Dictionary = {}
+	if exclude_active_choices and is_inside_tree():
+		for node in get_tree().get_nodes_in_group("Choice"):
+			if is_instance_valid(node) and not node.is_queued_for_deletion() and "id" in node and "type" in node:
+				active_keys[str(node.type) + ":" + str(node.id).to_lower()] = true
+
+	var pool: Array[Dictionary] = []
+	for chosen_upgrade in UpgradeRegistry.get_available_shop_upgrades(PlayerStats, GameState.night):
+		var key := "Upgrades:" + chosen_upgrade.upgrade_id.to_lower()
+		if active_keys.has(key):
+			continue
+		pool.append({
+			"id": chosen_upgrade.upgrade_id,
+			"type": "Upgrades",
+			"cost": chosen_upgrade.get_shop_cost(GameState.night, PlayerStats),
+		})
+
+	for ing_id in _get_locked_unlocks("Ingredients"):
+		var ing_str := str(ing_id)
+		var key := "Ingredients:" + ing_str.to_lower()
+		if active_keys.has(key):
+			continue
+		pool.append({
+			"id": ing_str,
+			"type": "Ingredients",
+			"cost": _get_ingredient_shop_cost(ing_str),
+		})
+
+	return pool
+
+func _produce_upgrades() -> void:
+	var pool := _build_upgrade_shop_pool()
+	print("Temp_array", pool)
+
+	var count: int = mini(_get_shop_slot_count(), pool.size())
+	_used_shop_slots = 0
 	var last_tween: Tween = null
 	for x in count:
 		if not is_inside_tree():
 			return
-		var random = randi_range(0, available_upgrades.size() - 1)
 		var obtain_node = $new_bar._get_marker(x + 1)
-		var chosen_upgrade: UpgradeDef = available_upgrades.pop_at(random)
+		if obtain_node == null:
+			continue
+		_used_shop_slots = x + 1
+		var random = randi_range(0, pool.size() - 1)
+		var entry: Dictionary = pool.pop_at(random)
 		var new_choice = choices.instantiate()
-		var cost: int = chosen_upgrade.get_shop_cost(GameState.night, PlayerStats)
 
-		new_choice.setup(self, chosen_upgrade.upgrade_id, "Upgrades", cost)
+		new_choice.setup(self, str(entry["id"]), str(entry["type"]), int(entry["cost"]))
 		new_choice._disable()
 		add_child(new_choice)
 		_pending_choices.append(new_choice)
@@ -312,6 +359,40 @@ func _produce_upgrades() -> void:
 			await get_tree().create_timer(0.5).timeout
 	if is_instance_valid(last_tween) and last_tween.is_running():
 		await last_tween.finished
+
+func _expand_shop_slots() -> void:
+	if _is_expanding_slots or not upgrade_time or _is_finishing_night or not is_inside_tree():
+		return
+	_is_expanding_slots = true
+	while _used_shop_slots < _get_shop_slot_count():
+		if not is_inside_tree() or _is_finishing_night:
+			break
+		var pool := _build_upgrade_shop_pool(true)
+		if pool.is_empty():
+			break
+		var next_slot: int = _used_shop_slots + 1
+		var obtain_node = $new_bar._get_marker(next_slot)
+		if obtain_node == null:
+			break
+		_used_shop_slots = next_slot
+		var random: int = randi_range(0, pool.size() - 1)
+		var entry: Dictionary = pool.pop_at(random)
+		var new_choice = choices.instantiate()
+		new_choice.setup(self, str(entry["id"]), str(entry["type"]), int(entry["cost"]))
+		new_choice._disable()
+		add_child(new_choice)
+		new_choice.global_position = $ShopKeeper.global_position
+		var tween := get_tree().create_tween()
+		tween.set_trans(Tween.TRANS_SINE)
+		tween.set_ease(Tween.EASE_OUT)
+		tween.tween_property(new_choice, "global_position", obtain_node.global_position, 0.5)
+		tween.finished.connect(func() -> void:
+			if is_instance_valid(new_choice) and not new_choice.is_queued_for_deletion() and not _is_finishing_night:
+				new_choice._enable()
+		)
+		if _used_shop_slots < _get_shop_slot_count():
+			await get_tree().create_timer(0.35).timeout
+	_is_expanding_slots = false
 
 #Temporary Functions
 func _on_button_pressed() -> void:
