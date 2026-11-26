@@ -18,6 +18,13 @@ func _ready() -> void:
 	if not DialogueManager.dialogue_ended.is_connected(_on_dialogue_ended):
 		DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
 	_sync_interactable()
+	_base_position = position
+	_base_scale = scale
+	if random_start_delay:
+		await get_tree().create_timer(randf_range(0.0, bounce_duration)).timeout
+		if not is_inside_tree():
+			return
+	start_idle()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_VISIBILITY_CHANGED:

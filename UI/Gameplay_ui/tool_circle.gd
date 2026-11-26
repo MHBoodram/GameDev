@@ -3,13 +3,15 @@ extends Control
 signal option_selected(option: WheelOption)
 
 const ICON_PATH := "res://Assets/Items/Ingreidents/%s.png"
+const UI_HAND_ICON_PATH := "res://Assets/UI/Hand.png"
 
-# Ingredient key -> icon file name (without .png)
+# Tool key -> icon file name (without .png)
 # Anything not listed here uses the key itself as the file name.
 const ICON_OVERRIDES := {
-	"Blood": "knife",
+	"Knife": "Knife",
+	"Blood": "Knife",
 	"Mag": "Mag",
-	"Fishing_Rod": "fishing_rod",
+	"Fishing_Rod": "Fishing_Rod",
 }
 
 @export var outer_radius := 200.0
@@ -21,7 +23,6 @@ const ICON_OVERRIDES := {
 @export var locked_bg_color := Color(0.03, 0.03, 0.03, 0.65)
 @export var locked_icon_color := Color(0.45, 0.45, 0.45, 0.45)
 @export var locked_text_color := Color(0.65, 0.65, 0.65, 0.9)
-@export var options: Array[WheelOption] = []
 
 var options: Array[WheelOption] = []
 var selection := -1  # -1 = nothing highlighted
@@ -82,6 +83,34 @@ func _input(event):
 			option_selected.emit(options[selection])
 		selection = -1
 		_hovered_index = -1
+
+func _build_options() -> void:
+	options.clear()
+
+	# Hand is always available
+	options.append(_make_option("Hand", "Hand", "Hand"))
+
+	if PlayerStats and PlayerStats.unlocks.has("Tools"):
+		var tools: Dictionary = PlayerStats.unlocks["Tools"]
+		for key in tools:
+			var key_str := str(key)
+			if key_str.to_lower().strip_edges() == "hand":
+				continue
+			var icon_name: String = ICON_OVERRIDES.get(key_str, key_str)
+			options.append(_make_option(key_str, key_str.replace("_", " "), icon_name))
+
+func _make_option(id: StringName, label: String, icon_name: String) -> WheelOption:
+	var opt := WheelOption.new()
+	opt.id = id
+	opt.label = label
+	var path := ICON_PATH % icon_name
+	if not ResourceLoader.exists(path) and str(id).to_lower() == "hand" and ResourceLoader.exists(UI_HAND_ICON_PATH):
+		path = UI_HAND_ICON_PATH
+	if ResourceLoader.exists(path):
+		opt.icon = load(path)
+	else:
+		push_warning("Missing wheel icon: " + path)
+	return opt
 
 func _process(_delta):
 	if not visible or options.is_empty():
