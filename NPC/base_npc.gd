@@ -866,7 +866,29 @@ func _item_print() -> String:
 	return total
 
 func _current_order_text() -> String:
-	return _item_print().strip_edges().replace("\n", ", ")
+	if drink_list.is_empty():
+		return ""
+	var cup = drink_list[0]
+	if cup is DrinkOrder:
+		var order := cup as DrinkOrder
+		if order.recipe_name != "":
+			return order.recipe_name
+		if not order.require_ingredient_match:
+			return "Anything"
+		var names := PackedStringArray()
+		for ing_name in order.ingredients:
+			names.append(str(ing_name).capitalize())
+		if not names.is_empty():
+			return " & ".join(names)
+		return ""
+	elif cup is Array:
+		var names := PackedStringArray()
+		for item in cup:
+			if item is Array and item.size() >= 1:
+				names.append(str(item[0]).capitalize())
+		if not names.is_empty():
+			return " & ".join(names)
+	return ""
 
 func _add_recipt() -> void:
 	if has_receipt_spawned or drink_list.is_empty():

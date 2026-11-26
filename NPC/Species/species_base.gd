@@ -167,8 +167,6 @@ func format_order_text(order: DrinkOrder, base_text: String) -> String:
 		out += "Garnish: " + ", ".join(garnish_names) + "\n"
 	if order.ice_preference == DrinkRecipe.IcePreference.REQUIRED:
 		out += "Ice\n"
-	elif order.ice_preference == DrinkRecipe.IcePreference.FORBIDDEN:
-		out += "No Ice\n"
 	if not order.required_processing.is_empty():
 		var tags := PackedStringArray()
 		for tag in order.required_processing:
