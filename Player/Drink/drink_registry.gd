@@ -32,6 +32,27 @@ static func reload() -> void:
 	_initialized = false
 	ensure_loaded()
 
+static func _resolve_stats(stats: Node = null) -> Node:
+	if is_instance_valid(stats):
+		return stats
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree and tree.root:
+		return tree.root.get_node_or_null("PlayerStats")
+	return null
+
+static func _has_ingredient_unlock(key: String, stats: Node) -> bool:
+	if not is_instance_valid(stats):
+		return true
+	if stats.has_method("has_unlock"):
+		return stats.has_unlock("Ingredients", key)
+	if "unlocks" in stats and stats.unlocks.has("Ingredients"):
+		var ing_dict: Dictionary = stats.unlocks["Ingredients"]
+		var lower := key.to_lower().strip_edges()
+		for k in ing_dict.keys():
+			if str(k).to_lower().strip_edges() == lower:
+				return bool(ing_dict[k])
+	return true
+
 static func _build_recipe(data: Dictionary) -> DrinkRecipe:
 	var recipe := DrinkRecipe.new()
 	recipe.recipe_id = str(data.get("id", data.get("recipe_id", ""))).to_lower().strip_edges()
@@ -144,6 +165,12 @@ static func is_recipe_unlocked(recipe: DrinkRecipe, stats: Node = null) -> bool:
 			if not stats.has_knife_unlock(true):
 				return false
 
+	if not recipe.garnishes.is_empty() and not _has_ingredient_unlock("Garnishes", stats):
+		return false
+
+	if recipe.ice_preference == DrinkRecipe.IcePreference.REQUIRED and not _has_ingredient_unlock("Ice", stats):
+		return false
+
 	if "unlocks" in stats and stats.unlocks.has("Ingredients"):
 		var ing_dict: Dictionary = stats.unlocks["Ingredients"]
 		for g in recipe.garnishes:
@@ -225,17 +252,25 @@ static func pick_random_recipe(stats: Node = null, species_id: String = "") -> D
 		return null
 	return pool.pick_random() as DrinkRecipe
 
-static func roll_ice_preference(base_preference: int = DrinkRecipe.IcePreference.DONT_CARE) -> int:
+static func roll_ice_preference(base_preference: int = DrinkRecipe.IcePreference.DONT_CARE, stats: Node = null) -> int:
+	var target_stats := _resolve_stats(stats)
+	if target_stats != null and not _has_ingredient_unlock("Ice", target_stats):
+		return DrinkRecipe.IcePreference.DONT_CARE if base_preference == DrinkRecipe.IcePreference.REQUIRED else base_preference
 	if base_preference != DrinkRecipe.IcePreference.DONT_CARE:
 		return base_preference
 	return DrinkRecipe.IcePreference.REQUIRED if randf() < 0.5 else DrinkRecipe.IcePreference.FORBIDDEN
 
-static func create_order_from_recipe(recipe: DrinkRecipe, species_id: String = "", roll_ice: bool = true) -> DrinkOrder:
+static func create_order_from_recipe(recipe: DrinkRecipe, species_id: String = "", roll_ice: bool = true, stats: Node = null) -> DrinkOrder:
 	if recipe == null:
 		return DrinkOrder.new()
+	var target_stats := _resolve_stats(stats)
 	var order := DrinkOrder.from_recipe(recipe)
 	order.species_id = species_id
 	order.accepted_garnishes = recipe.accepted_garnishes.duplicate()
+	if target_stats != null and not _has_ingredient_unlock("Garnishes", target_stats):
+		order.garnishes.clear()
 	if roll_ice:
-		order.ice_preference = roll_ice_preference(recipe.ice_preference)
+		order.ice_preference = roll_ice_preference(recipe.ice_preference, target_stats)
+	elif target_stats != null and not _has_ingredient_unlock("Ice", target_stats) and order.ice_preference == DrinkRecipe.IcePreference.REQUIRED:
+		order.ice_preference = DrinkRecipe.IcePreference.DONT_CARE
 	return order

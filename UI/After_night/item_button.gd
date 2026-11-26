@@ -20,7 +20,16 @@ func setup(text: String, type_: String,own: Control,yes_3: bool):
 			else:
 				$AspectRatioContainer/TextureRect.texture = null
 		"Ingredients":
-			var texture = load("res://Assets/Items/Ingreidents/" +text+ ".png")
+			var ing_path := "res://Assets/Items/Ingreidents/" + text + ".png"
+			var texture: Texture2D = null
+			if ResourceLoader.exists(ing_path):
+				texture = load(ing_path)
+			elif text.to_lower() == "ice":
+				texture = GarnishDefinitions.get_texture("ice", false)
+			elif text.to_lower() == "garnishes" or text.to_lower() == "garnish":
+				texture = GarnishDefinitions.get_texture("lemon_whole", false)
+			elif GarnishDefinitions.is_known_id(text):
+				texture = GarnishDefinitions.get_texture(text, false)
 			if(texture != null):
 				$AspectRatioContainer/TextureRect.texture = texture
 			else:

@@ -32,9 +32,13 @@ func refresh_shelf_upgrades(host: Node3D, counter_ref: Node3D) -> void:
 func refresh_shelf_garnishes(host: Node3D, counter_ref: Node3D) -> void:
 	if not is_instance_valid(host):
 		return
+	var garnishes_unlocked := PlayerStats.has_unlock("Ingredients", "Garnishes")
+	var ice_unlocked := PlayerStats.has_unlock("Ingredients", "Ice")
 	for marker_name in GarnishDefinitions.MARKER_MAP.keys():
 		var garnish_id := str(GarnishDefinitions.MARKER_MAP[marker_name])
-		spawn_garnish_dispenser_if_missing(host, counter_ref, str(marker_name), garnish_id)
+		var is_unlocked := ice_unlocked if GarnishDefinitions.is_ice(garnish_id) else garnishes_unlocked
+		if is_unlocked:
+			spawn_garnish_dispenser_if_missing(host, counter_ref, str(marker_name), garnish_id)
 
 func spawn_garnish_dispenser_if_missing(host: Node3D, counter_ref: Node3D, marker_name: String, garnish_id: String) -> Node:
 	var marker := host.get_node_or_null(marker_name) as Marker3D

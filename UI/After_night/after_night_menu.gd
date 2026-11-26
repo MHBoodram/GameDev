@@ -166,6 +166,9 @@ func _produce_unlocks_pick_3_ingrediants() -> Array:
 			#temp_array.push_back(x)
 	for x in PlayerStats.unlocks["Ingredients"]:
 		if(!PlayerStats.unlocks["Ingredients"][x]):
+			var lower := str(x).to_lower().strip_edges()
+			if (lower == "garnishes" or lower == "ice") and GameState.night < 3:
+				continue
 			temp_array.push_back(x)
 		if(temp_array.size() >= 3):
 			break

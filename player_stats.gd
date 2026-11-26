@@ -26,7 +26,9 @@ var unlocks : Dictionary = {
 		"Knife" : false,
 		"Blood" : false,
 		"Fishing_Rod" : false,
-		"Mag" : false
+		"Mag" : false,
+		"Garnishes" : false,
+		"Ice" : false
 	},
 	"Tools":{
 		"Hand" : true,

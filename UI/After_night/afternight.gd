@@ -114,7 +114,13 @@ func _get_available_unlocks(pick: String) -> Array:
 		if not PlayerStats.has_knife_unlock(false):
 			return ["Knife"]
 		return []
-	return _get_locked_unlocks(pick)
+	var locked := _get_locked_unlocks(pick)
+	if pick == "Ingredients" and GameState.night < 3:
+		locked = locked.filter(func(item) -> bool:
+			var lower := str(item).to_lower().strip_edges()
+			return lower != "garnishes" and lower != "ice"
+		)
+	return locked
 
 func _has_open_dialogue() -> bool:
 	if GameState.is_dialogue_open:

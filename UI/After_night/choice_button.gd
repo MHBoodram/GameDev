@@ -19,7 +19,15 @@ func setup(parent : Node3D,_id: String,_type: String,_Cost: int = 0) -> void:
 	self.type = _type
 	self.cost = _Cost
 	if(type == "Ingredients" or type == "Tools"):
-		$Sprite3D.texture = load("res://Assets/Items/Ingreidents/" +id+".png")
+		var ing_path := "res://Assets/Items/Ingreidents/" + id + ".png"
+		if ResourceLoader.exists(ing_path):
+			$Sprite3D.texture = load(ing_path)
+		elif id.to_lower() == "ice":
+			$Sprite3D.texture = GarnishDefinitions.get_texture("ice", false)
+		elif id.to_lower() == "garnishes" or id.to_lower() == "garnish":
+			$Sprite3D.texture = GarnishDefinitions.get_texture("lemon_whole", false)
+		elif GarnishDefinitions.is_known_id(id):
+			$Sprite3D.texture = GarnishDefinitions.get_texture(id, false)
 	elif(type == "Drinks"):
 		$Sprite3D.texture = load("res://Assets/Items/Drinks/"+str(id)+".png")
 	elif(type == "Upgrades"):
