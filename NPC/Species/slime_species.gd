@@ -2,9 +2,10 @@ class_name SlimeSpecies
 extends SpeciesBase
 
 const LIKED_DRINKS: Dictionary = {
-	"the_king_slime": 0.5,
+	"the_king_slime": 30,
 }
 const REQUIRED_INGREDIENTS: Array[String] = []
+const REQUIRED_DRINKS: Array[String] = []
 
 const SPLIT_SCALE_MULTIPLIER := 0.75
 const SATISFACTORY_BONUS_MULTIPLIER := 1.0

@@ -5,6 +5,7 @@ const LIKED_DRINKS: Dictionary = {
 	"cherry_bomb": 0.5,
 }
 const REQUIRED_INGREDIENTS: Array[String] = []
+const REQUIRED_DRINKS: Array[String] = []
 
 func _init() -> void:
 	species_id = "HUMAN"

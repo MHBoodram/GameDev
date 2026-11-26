@@ -179,20 +179,37 @@ static func recipe_matches_ingredients(recipe: DrinkRecipe, required_ingredients
 			return false
 	return true
 
-static func get_matching_recipes(required_ingredients: Array[String], stats: Node = null, include_locked_fallback: bool = false, species_id: String = "") -> Array[DrinkRecipe]:
+static func recipe_matches_drinks(recipe: DrinkRecipe, required_drinks: Array[String]) -> bool:
+	if recipe == null:
+		return false
+	if required_drinks.is_empty():
+		return true
+	var r_id := recipe.recipe_id.to_lower().strip_edges()
+	var r_name := recipe.display_name.to_lower().strip_edges()
+	var has_filter := false
+	for req_drink in required_drinks:
+		var clean_req := str(req_drink).to_lower().strip_edges()
+		if clean_req == "":
+			continue
+		has_filter = true
+		if r_id == clean_req or r_name == clean_req:
+			return true
+	return not has_filter
+
+static func get_matching_recipes(required_ingredients: Array[String], stats: Node = null, include_locked_fallback: bool = false, species_id: String = "", required_drinks: Array[String] = []) -> Array[DrinkRecipe]:
 	ensure_loaded()
 	var pool := get_available_recipes(stats, species_id)
-	if required_ingredients.is_empty():
+	if required_ingredients.is_empty() and required_drinks.is_empty():
 		return pool
 
 	var matches: Array[DrinkRecipe] = []
 	for recipe in pool:
-		if recipe_matches_ingredients(recipe, required_ingredients):
+		if recipe_matches_ingredients(recipe, required_ingredients) and recipe_matches_drinks(recipe, required_drinks):
 			matches.append(recipe)
 
 	if matches.is_empty() and include_locked_fallback:
 		for recipe in _ordered_recipes:
-			if is_recipe_allowed_for_species(recipe, species_id) and recipe_matches_ingredients(recipe, required_ingredients):
+			if is_recipe_allowed_for_species(recipe, species_id) and recipe_matches_ingredients(recipe, required_ingredients) and recipe_matches_drinks(recipe, required_drinks):
 				matches.append(recipe)
 
 	return matches

@@ -3,6 +3,7 @@ extends SpeciesBase
 
 const LIKED_DRINKS: Dictionary = {}
 const REQUIRED_INGREDIENTS: Array[String] = []
+const REQUIRED_DRINKS: Array[String] = []
 
 const DIALOGUE_PATH := "res://NPC/Dialogue/Frederick.dialogue"
 const IDEAL_FILL_RATIO := 0.25
@@ -60,7 +61,7 @@ func get_drink_pool(stats: Node = null) -> Array[String]:
 	return super.get_drink_pool(stats)
 
 func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = null) -> Array[DrinkOrder]:
-	if not get_liked_drinks().is_empty() or not get_required_ingredients().is_empty():
+	if not get_liked_drinks().is_empty() or not get_required_ingredients().is_empty() or not get_required_drinks().is_empty():
 		var generated := super.generate_orders(npc, modifier, stats)
 		for order in generated:
 			order.is_tiny = true
