@@ -58,6 +58,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func pause() -> void:
+	_load_settings()
+	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 	get_tree().paused = true
 	show()
 	$Hand.show()
@@ -71,6 +73,7 @@ func resume() -> void:
 
 func settings() -> void:
 	if(which_menu=="Resume"):
+		_load_settings()
 		$AnimationPlayer.play("open_settings")
 		which_menu = "Setting"
 	else:
@@ -78,8 +81,15 @@ func settings() -> void:
 		which_menu = "Resume"
 
 func _on_main_menu_pressed() -> void:
-	SettingState.cancel_rebind()
-	get_tree().paused = false
+	if which_menu == "Setting":
+		which_menu = "Resume"
+		$Inside_paper.hide()
+		$Border.show()
+		$AnimationPlayer.play("RESET")
+	resume()
+	Engine.time_scale = 1.0
+	if is_instance_valid(GameState.debug_menu):
+		GameState.debug_menu.visible = false
 	get_tree().change_scene_to_file(START_MENU_SCENE)
 
 func _on_quit_pressed() -> void:

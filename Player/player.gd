@@ -97,9 +97,6 @@ func _unhandled_input(event: InputEvent) -> void:
 				gameplay_ui.moving_around(true)
 		elif event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE:
 			_handle_dialogue_input()
-		elif event.keycode == KEY_QUOTELEFT or event.physical_keycode == KEY_QUOTELEFT or event.keycode == KEY_ASCIITILDE:
-			if GameState.main_node and GameState.main_node.has_method("toggle_debug_menu"):
-				GameState.main_node.toggle_debug_menu()
 	elif event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if _try_world_tool_click():

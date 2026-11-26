@@ -152,23 +152,26 @@ func _update_cursor_visibility() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if should_show else Input.MOUSE_MODE_HIDDEN
 
 func _on_visibility_changed() -> void:
+	if visible:
+		_populate_night_dropdown()
+		_update_species_rep_button_text()
 	_update_cursor_visibility()
 
 func _get_counter_ref() -> Node3D:
-	if GameState.player and "counter" in GameState.player and is_instance_valid(GameState.player.counter):
+	if is_instance_valid(GameState.player) and "counter" in GameState.player and is_instance_valid(GameState.player.counter):
 		return GameState.player.counter
 	if is_instance_valid(GameState.main_node):
 		return GameState.main_node.get_node_or_null("Coutner") as Node3D
 	return null
 
 func _cleanup_tutorial_and_dialogue(remove_story_npcs: bool = true) -> void:
-	if GameState.gameplay_ui:
+	if is_instance_valid(GameState.gameplay_ui):
 		if "tutorial_director" in GameState.gameplay_ui and GameState.gameplay_ui.tutorial_director:
 			GameState.gameplay_ui.tutorial_director.cancel_tutorial(GameState.gameplay_ui)
 		if GameState.gameplay_ui.has_method("_out_down_minigame"):
 			GameState.gameplay_ui._out_down_minigame()
 
-	if GameState.night_manager and is_instance_valid(GameState.main_node):
+	if is_instance_valid(GameState.night_manager) and is_instance_valid(GameState.main_node):
 		GameState.night_manager._clean_tutorial_keys(GameState.main_node)
 
 	var tree := get_tree()
@@ -180,10 +183,14 @@ func _cleanup_tutorial_and_dialogue(remove_story_npcs: bool = true) -> void:
 	GameState.is_dialogue_open = false
 	GameState.character_talking = null
 
-	if remove_story_npcs and GameState.seat_manager:
+	if remove_story_npcs and is_instance_valid(GameState.seat_manager):
 		GameState.seat_manager.clear_all_customers(true, true)
 
 func _on_skip_tutorial_pressed() -> void:
+	if not is_instance_valid(GameState.night_manager):
+		return
+	if is_instance_valid(GameState.main_node) and GameState.main_node.has_method("_finished_night"):
+		return
 	if is_instance_valid(GameState.main_node):
 		var anim := GameState.main_node.get_node_or_null("AnimationPlayer") as AnimationPlayer
 		if anim and anim.is_playing() and anim.current_animation == "opening":
@@ -194,11 +201,11 @@ func _on_skip_tutorial_pressed() -> void:
 	GameState.special_state = false
 	GameState.can_end_night = true
 
-	if GameState.seat_manager:
+	if is_instance_valid(GameState.seat_manager):
 		GameState.seat_manager.set_all_patience_paused(false)
 
 	var nm := GameState.night_manager
-	if nm:
+	if is_instance_valid(nm):
 		if nm.night_timer:
 			nm.night_timer.paused = false
 		if not nm.is_shift_active and not nm.is_shift_ended:
@@ -216,7 +223,7 @@ func _on_speed_pressed() -> void:
 
 func _on_skip_time_pressed() -> void:
 	var nm := GameState.night_manager
-	if not nm or not nm.night_timer or nm.night_timer.is_stopped():
+	if not is_instance_valid(nm) or not nm.night_timer or nm.night_timer.is_stopped():
 		return
 	nm.night_timer.start(maxf(0.5, nm.night_timer.time_left - 60.0))
 
@@ -224,11 +231,16 @@ func _on_end_night_pressed() -> void:
 	Engine.time_scale = 1.0
 	_speed_index = 0
 	speed_btn.text = "Speed: 1x"
+	visible = false
 
 	_cleanup_tutorial_and_dialogue(true)
 
+	if is_instance_valid(GameState.main_node) and GameState.main_node.has_method("_finished_night"):
+		GameState.main_node._finished_night()
+		return
+
 	var sm := GameState.seat_manager
-	if sm:
+	if is_instance_valid(sm):
 		sm.stop_spawning()
 		sm.clear_all_customers(true, false)
 
@@ -237,7 +249,7 @@ func _on_end_night_pressed() -> void:
 	GameState.can_end_night = true
 
 	var nm := GameState.night_manager
-	if nm:
+	if is_instance_valid(nm):
 		if nm.is_shift_ended:
 			nm.check_night_concluded(true)
 		else:
@@ -250,6 +262,9 @@ func _on_jump_night_pressed() -> void:
 	if target_night <= GameState.night and PlayerStats.has_method("reset_tool_unlocks"):
 		PlayerStats.reset_tool_unlocks()
 	Engine.time_scale = 1.0
+	_speed_index = 0
+	speed_btn.text = "Speed: 1x"
+	visible = false
 	_cleanup_tutorial_and_dialogue(false)
 
 	GameState.is_dialogue_open = false
@@ -269,17 +284,17 @@ func _on_jump_night_pressed() -> void:
 	get_tree().change_scene_to_file("res://Main3D.tscn")
 
 func _on_serve_good_pressed() -> void:
-	if GameState.seat_manager:
+	if is_instance_valid(GameState.seat_manager):
 		GameState.seat_manager.debug_serve_all("good")
 
 func _on_serve_bad_pressed() -> void:
-	if GameState.seat_manager:
+	if is_instance_valid(GameState.seat_manager):
 		GameState.seat_manager.debug_serve_all("bad")
 
 func _on_spawn_cup_pressed() -> void:
 	var sm := GameState.seat_manager
 	var main := GameState.main_node
-	if not sm or not is_instance_valid(main):
+	if not is_instance_valid(sm) or not is_instance_valid(main):
 		return
 
 	var target_npc: Base_NPC = null
@@ -306,7 +321,7 @@ func _on_spawn_cup_pressed() -> void:
 		return
 
 	var counter_ref: Node3D = _get_counter_ref()
-	var cup_scale: Vector3 = GameState.player.spawn_scale if (GameState.player and "spawn_scale" in GameState.player) else Vector3(0.2, 0.2, 0.2)
+	var cup_scale: Vector3 = GameState.player.spawn_scale if (is_instance_valid(GameState.player) and "spawn_scale" in GameState.player) else Vector3(0.2, 0.2, 0.2)
 	glass.scale = cup_scale
 	glass._skip_initial_snap = true
 	glass._instiate(counter_ref)
@@ -355,12 +370,12 @@ func _on_spawn_cup_pressed() -> void:
 	glass._remove_displaying_list(true)
 
 func _on_take_orders_pressed() -> void:
-	if GameState.seat_manager:
+	if is_instance_valid(GameState.seat_manager):
 		GameState.seat_manager.take_all_pending_orders()
 
 func _on_low_patience_pressed() -> void:
 	var sm := GameState.seat_manager
-	if not sm:
+	if not is_instance_valid(sm):
 		return
 	for npc in sm.seats:
 		if not is_instance_valid(npc) or npc.is_leaving:
@@ -371,7 +386,7 @@ func _on_low_patience_pressed() -> void:
 			npc.patience_timer.start(minf(npc.patience_timer.time_left, 5.0))
 
 func _on_spawn_pressed() -> void:
-	if not GameState.seat_manager or GameState.seat_manager.get_empty_seat_count() <= 0:
+	if not is_instance_valid(GameState.seat_manager) or GameState.seat_manager.get_empty_seat_count() <= 0:
 		return
 	var sp_id := str(species_option.get_selected_metadata()) if species_option.selected >= 0 else ""
 	var mod_id := str(modifier_option.get_selected_metadata()) if modifier_option.selected >= 0 else "__NATURAL__"
@@ -390,7 +405,7 @@ func _on_unlock_ingredients_pressed() -> void:
 		for ing in PlayerStats.unlocks["Ingredients"]:
 			PlayerStats.unlocks["Ingredients"][ing] = true
 			SpeciesRegistry.on_ingredient_unlocked(str(ing), PlayerStats)
-	if GameState.shelf_manager and is_instance_valid(GameState.main_node):
+	if is_instance_valid(GameState.shelf_manager) and is_instance_valid(GameState.main_node):
 		GameState.shelf_manager.refresh_shelf_bottles(GameState.main_node, _get_counter_ref())
 
 func _on_unlock_upgrades_pressed() -> void:
@@ -409,7 +424,7 @@ func _on_unlock_all_pressed() -> void:
 				PlayerStats.unlocks[cat][key] = true
 
 func _on_refill_pressed() -> void:
-	if not GameState.shelf_manager:
+	if not is_instance_valid(GameState.shelf_manager):
 		return
 	for bottle in GameState.shelf_manager.spawned_bottles.values():
 		if is_instance_valid(bottle) and bottle.has_method("refill"):
@@ -419,13 +434,13 @@ func _on_refill_pressed() -> void:
 			dispenser.refill()
 
 func _on_blood_game_pressed() -> void:
-	if not GameState.minigame_host:
+	if not is_instance_valid(GameState.minigame_host) or not is_instance_valid(GameState.main_node):
 		return
 	if GameState.minigame_host.is_minigame_active or ShakerMinigame.active or GameState.is_dialogue_open:
 		return
 	if PlayerStats.unlocks.has("Ingredients"):
 		PlayerStats.unlocks["Ingredients"]["Blood"] = true
-	if GameState.shelf_manager and is_instance_valid(GameState.main_node):
+	if is_instance_valid(GameState.shelf_manager):
 		GameState.shelf_manager.refresh_shelf_bottles(GameState.main_node, _get_counter_ref())
 	visible = false
 	GameState.minigame_host.start_blood_minigame(GameState.main_node, GameState.player)
@@ -452,11 +467,10 @@ func _on_add_species_rep_pressed() -> void:
 	PlayerStats.change_species_reputation(sp_name, 5.0)
 
 func _on_remove_npc_pressed() -> void:
-	if GameState.seat_manager:
+	if is_instance_valid(GameState.seat_manager):
 		GameState.seat_manager.remove_first_occupied_seat()
 
 func _on_camera_shake_pressed() -> void:
-	if not is_instance_valid(camera):
-		camera = get_viewport().get_camera_3d()
-	if camera and camera.has_method("add_shake"):
+	camera = get_viewport().get_camera_3d()
+	if is_instance_valid(camera) and camera.has_method("add_shake"):
 		camera.add_shake(1.0)

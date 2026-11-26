@@ -9,6 +9,9 @@
 # minigame_host - Minigames and rewards
 extends Node
 
+const PAUSE_MENU_SCENE := preload("res://UI/Gameplay_ui/PauseMenu.tscn")
+const DEBUG_MENU_SCENE := preload("res://UI/Gameplay_ui/Debug_Menu.tscn")
+
 var seat1_order: Array = []
 var seat2_order: Array = []
 var seat3_order: Array = []
@@ -23,6 +26,8 @@ var current_quota: float = 150.0
 var player: Node3D
 var main_node: Node3D
 var gameplay_ui: CanvasLayer
+var pause_menu: CanvasLayer
+var debug_menu: CanvasLayer
 
 # Subsystems
 var night_manager: NightManager
@@ -44,6 +49,35 @@ var scheduled_npcs: Array[Dictionary] = []
 
 func _ready() -> void:
 	TextIcons.install(self)
+	_setup_global_menus()
+
+func _setup_global_menus() -> void:
+	if not is_instance_valid(debug_menu):
+		debug_menu = DEBUG_MENU_SCENE.instantiate()
+		debug_menu.visible = false
+		add_child(debug_menu)
+
+	if not is_instance_valid(pause_menu):
+		pause_menu = PAUSE_MENU_SCENE.instantiate()
+		pause_menu.layer = 102
+		var pause_hand := pause_menu.get_node_or_null("Hand") as CanvasLayer
+		if pause_hand:
+			pause_hand.layer = 103
+		add_child(pause_menu)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_QUOTELEFT or event.physical_keycode == KEY_QUOTELEFT or event.keycode == KEY_ASCIITILDE:
+			toggle_debug_menu()
+			get_viewport().set_input_as_handled()
+
+func toggle_debug_menu() -> void:
+	if not is_instance_valid(debug_menu):
+		return
+	if debug_menu.visible:
+		debug_menu.visible = false
+	elif not get_tree().paused:
+		debug_menu.visible = true
 
 func register_subsystems(main: Node3D, p_player: Node3D, timer: Timer, env: WorldEnvironment, sun_node: DirectionalLight3D, counter_ref: Node3D) -> void:
 	main_node = main

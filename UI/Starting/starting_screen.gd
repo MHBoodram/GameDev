@@ -16,6 +16,7 @@ func _process(delta: float) -> void:
 	$Node2D/Setting/Hand.global_position = get_viewport().get_mouse_position()
 
 func _moving_3d_to_2d():
+	$Node2D/Setting._setting_dictionary_start()
 	$AnimationPlayer.play("move_setting")
 	$Node2D/Setting._moving(false)
 	await $AnimationPlayer.animation_finished

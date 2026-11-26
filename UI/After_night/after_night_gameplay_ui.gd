@@ -8,9 +8,8 @@ extends CanvasLayer
 var camera_rig: Camera = null
 var hud_indicators: HudIndicators = null
 
-# patch to camera rig so existing scripts don't break
 var down: bool:
-	get: return camera_rig.down if camera_rig else false
+	get: return false
 
 var is_transitioning: bool:
 	get: return camera_rig.is_transitioning if camera_rig else false
@@ -25,8 +24,15 @@ func _ready() -> void:
 	if cam is Camera:
 		camera_rig = cam as Camera
 	$FishEye.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	$Right_Button.disabled = true
-	$Left_Button.disabled = true
+	for btn_name in ["Left_Button", "Right_Button", "Bottom_button", "Up_button"]:
+		var btn := get_node_or_null(btn_name) as Button
+		if btn:
+			btn.disabled = true
+			btn.visible = false
+			btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var tool_circle := get_node_or_null("ToolCircle")
+	if tool_circle:
+		tool_circle.queue_free()
 	GameState.gameplay_ui = self
 	_sync_money_display(PlayerStats.money)
 	set_shift_hud_visible(false)
@@ -61,79 +67,41 @@ func _update_quota(quota_value: float) -> void:
 func _update_night_display(night_number: int) -> void:
 	$ColorRect3/Night.text = "Night " + str(night_number)
 
-# toggle for camera rig
 func bendover() -> void:
-	if not camera_rig or camera_rig.is_transitioning or camera_rig.is_moving:
-		return
-	$Bottom_button.disabled = true
-	$Up_button.disabled = true
+	pass
 
-	var was_down: bool = camera_rig.down if camera_rig else false
-	camera_rig.bendover()
-
-	var tree := get_tree()
-	if tree:
-		await tree.create_timer(0.5).timeout
-	if is_inside_tree() and camera_rig:
-		$Bottom_button.disabled = false
-		if not was_down:
-			$Up_button.disabled = false
-		else:
-			$Up_button.disabled = true
-
-func moving_around(right: bool) -> void:
-	if camera_rig:
-		camera_rig.moving_around(right)
+func moving_around(_right: bool) -> void:
+	pass
 
 func _on_left_button_mouse_entered() -> void:
-	if GameState.player:
-		GameState.player._update_hand("interact")
+	pass
 
 func _on_right_button_mouse_entered() -> void:
-	if GameState.player:
-		GameState.player._update_hand("interact")
+	pass
 
 func _on_mouse_exited() -> void:
-	if GameState.player:
-		GameState.player._update_hand("idle")
+	pass
 
 func _on_left_button_pressed() -> void:
-	moving_around(false)
+	pass
 
 func _on_right_button_pressed() -> void:
-	moving_around(true)
+	pass
 
 func _on_bottom_button_pressed() -> void:
-	if !GameState.player.in_shop:
-		return
-	
-	if GameState.player and GameState.player.has_method("handle_counter_edge_action"):
-		if GameState.player.handle_counter_edge_action():
-			_in_down_minigame()
-			return
-	if down:
-		return
-	bendover()
+	pass
 
 func _on_up_button_pressed() -> void:
-	if down:
-		bendover()
+	pass
 
 func _in_down_minigame() -> void:
-	$Bottom_button.disabled = true
-	$Up_button.disabled = true
-	$Bottom_button.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	$Up_button.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pass
 
 func _out_down_minigame() -> void:
-	$Bottom_button.disabled = false
-	$Up_button.disabled = false
-	$Bottom_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	$Up_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	pass
 
 func _on_bottom_button_mouse_entered() -> void:
-	if GameState.player:
-		GameState.player._update_hand("interact")
+	pass
 
 func _on_up_button_mouse_entered() -> void:
 	pass
