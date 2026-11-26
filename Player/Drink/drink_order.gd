@@ -11,6 +11,11 @@ var ice_preference: int = DrinkRecipe.IcePreference.DONT_CARE
 var required_processing: Array[String] = [] # "shaken", "spectral", etc
 var required_glass: String = ""
 var is_tiny: bool = false
+var ideal_fill_ratio: float = -1.0 # < 0.0 falls back to DrinkScorer.IDEAL_FILL_RATIO
+var underfill_exponent: float = -1.0 # < 0.0 falls back to DrinkScorer.UNDERFILL_EXPONENT
+var proportion_tolerance: float = -1.0 # < 0.0 falls back to DrinkScorer.MAX_DIFF
+var penalty_scale: float = 1.0
+var require_ingredient_match: bool = true
 var extra_requirements: Dictionary = {}
 
 func get_normalized_ingredients() -> Dictionary:

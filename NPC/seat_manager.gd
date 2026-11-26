@@ -441,8 +441,15 @@ func debug_serve_all(score_type: String = "good") -> void:
 				if want is DrinkOrder:
 					var order := want as DrinkOrder
 					var mix := DrinkMix.new()
-					for ing_id in order.ingredients:
-						mix.add_liquid(str(ing_id), float(order.ingredients[ing_id]))
+					if order.ingredients.is_empty() and not order.require_ingredient_match:
+						var pool := npc.species_def.get_drink_pool(PlayerStats) if npc.species_def else (["gin"] as Array[String])
+						var fallback_ing := str(pool.pick_random()) if not pool.is_empty() else "gin"
+						var fill_amt := order.ideal_fill_ratio if order.ideal_fill_ratio > 0.0 else 1.0
+						mix.cup_capacity = 1.0
+						mix.add_liquid(fallback_ing, fill_amt)
+					else:
+						for ing_id in order.ingredients:
+							mix.add_liquid(str(ing_id), float(order.ingredients[ing_id]))
 					for tag in order.required_processing:
 						mix.add_processing(str(tag))
 					for g in order.garnishes:

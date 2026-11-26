@@ -55,13 +55,13 @@ horizontal_alignment = 1
 [node name="EasyListeningButton" type="Button" parent="JukeboxPanel/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Easy Listening - 30 coins"
+text = "Easy Listening - 30 {coin}"
 tooltip_text = "New customers get 20% more patience for 30 seconds."
 
 [node name="UpbeatButton" type="Button" parent="JukeboxPanel/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Upbeat - 30 coins"
+text = "Upbeat - 30 {coin}"
 tooltip_text = "New customers get 80% patience and pay double for 30 seconds."
 
 [node name="StatusLabel" type="Label" parent="JukeboxPanel/VBox"]

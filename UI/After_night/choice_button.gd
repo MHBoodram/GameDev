@@ -4,6 +4,11 @@ var parent_node : Node3D
 var id: String = ""
 var type: String = ""
 var cost: int = 0
+var is_interactable: bool = true
+
+func _ready() -> void:
+	if has_node("CollisionShape3D"):
+		$CollisionShape3D.disabled = not is_interactable
 
 func setup(parent : Node3D,_id: String,_type: String,_Cost: int = 0) -> void:
 	print("ID: ",_id)
@@ -29,6 +34,10 @@ func setup(parent : Node3D,_id: String,_type: String,_Cost: int = 0) -> void:
 		TextIcons.set_text($Label3D, str(id))
 
 func _on_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
+	if not is_interactable or GameState.is_dialogue_open:
+		return
+	if is_instance_valid(parent_node) and "_is_advancing_shop" in parent_node and parent_node._is_advancing_shop:
+		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		if cost <= PlayerStats.money:
 			_disable()
@@ -80,10 +89,23 @@ func _apply_deny_shake(t: float) -> void:
 	var decay := 1.0 - t
 	$Sprite3D.offset = _base_offset + Vector2(wave * deny_shake_strength * decay, 0)
 
+func _enable():
+	is_interactable = true
+	if has_node("CollisionShape3D"):
+		$CollisionShape3D.disabled = false
+
 func _disable():
-	$CollisionShape3D.disabled = true
+	is_interactable = false
+	if has_node("CollisionShape3D"):
+		$CollisionShape3D.disabled = true
+	if has_node("OmniLight3D"):
+		$OmniLight3D.light_energy = 0
 
 func _on_mouse_entered() -> void:
+	if not is_interactable or GameState.is_dialogue_open:
+		return
+	if is_instance_valid(parent_node) and "_is_advancing_shop" in parent_node and parent_node._is_advancing_shop:
+		return
 	$OmniLight3D.light_energy = 0.25
 
 func _on_mouse_exited() -> void:

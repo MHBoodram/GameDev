@@ -180,7 +180,9 @@ void main() {
 		float visc_mom = float(in_volume[idx].z) / FIXED_SCALE;
 		cell_visc = clamp(max(pc.viscosity, visc_mom / mass), 0.0, 1.0);
 		v = mom / mass;
-		float base_damp = 0.25 + cell_visc * 8.0;
+		float speed_now = length(v);
+		float quiet_t = 1.0 - smoothstep(0.2, 2.5, speed_now);
+		float base_damp = 1.0 + cell_visc * 8.0 + quiet_t * 8.0;
 		v *= exp(-base_damp * pc.dt);
 		v += pc.dt * vec2(pc.accel_x, pc.accel_y);
 	}
@@ -194,7 +196,7 @@ void main() {
 	if (y <= 0 && v.y < 0.0) v.y = 0.0;
 	if (y >= N - 1 && v.y > 0.0) v.y = 0.0;
 
-	if (sdf.w < 0.5 || sdf.z < 0.5) {
+	if (sdf.w < 0.5 || sdf.z <= 1.05) {
 		vec2 n = sdf.xy;
 		float n_len = length(n);
 		if (n_len > 0.001) {
@@ -469,30 +471,44 @@ void main() {
 		float local_rho = mass_den / max(vol_den, 0.001);
 		vec2 down_dir = accel_vec / accel_len;
 		float rel_diff = clamp((rho_p - local_rho) / rho_p, -1.0, 1.0);
-		float buoy_speed = max(0.0, 40.0 - p_visc * 34.0);
-		vec2 slip = down_dir * (rel_diff * buoy_speed);
-		pos += clamp(pc.dt * slip, vec2(-0.45), vec2(0.45));
-		pos = constrainToContainer(pos);
+		if (abs(rel_diff) > 0.005) {
+			float buoy_speed = max(0.0, 40.0 - p_visc * 34.0);
+			vec2 slip = down_dir * (rel_diff * buoy_speed);
+			pos += clamp(pc.dt * slip, vec2(-0.45), vec2(0.45));
+			pos = constrainToContainer(pos);
 
-		base_coord = ivec2(pos - 0.5);
-		fx = pos - vec2(base_coord);
-		w[0] = 0.5 * (1.5 - fx) * (1.5 - fx);
-		w[1] = 0.75 - (fx - 1.0) * (fx - 1.0);
-		w[2] = 0.5 * (fx - 0.5) * (fx - 0.5);
+			base_coord = ivec2(pos - 0.5);
+			fx = pos - vec2(base_coord);
+			w[0] = 0.5 * (1.5 - fx) * (1.5 - fx);
+			w[1] = 0.75 - (fx - 1.0) * (fx - 1.0);
+			w[2] = 0.5 * (fx - 0.5) * (fx - 0.5);
+		}
+	}
+
+	vec4 post_sdf = sampleSDF(pos);
+	if (post_sdf.z < 0.25) {
+		float vn = dot(v, post_sdf.xy);
+		if (vn < 0.0) {
+			v -= post_sdf.xy * vn;
+		}
 	}
 
 	particles[pid].pos_props.xy = pos;
 
 	float d_rho = max(0.0, vol_den - pc.rest_density);
 	float max_pressure = min(40000.0, 35.0 / max(4.0 * pc.dt * vol_w, 0.0001));
-	float pressure = clamp(pc.stiffness * (d_rho + 1.2 * d_rho * d_rho), 0.0, max_pressure);
+	float div_v = C[0][0] + C[1][1];
+	float raw_pressure = pc.stiffness * (d_rho + 1.2 * d_rho * d_rho);
+	if (vol_den > pc.rest_density * 0.85) {
+		raw_pressure -= 12.0 * div_v;
+	}
+	float pressure = clamp(raw_pressure, 0.0, max_pressure);
 	float m_p = vol_w * rho_p;
 
 	// Stop divergence
 	mat2 C_t = transpose(C);
 	mat2 C_sym = 0.5 * (C + C_t);
 	mat2 C_rot = 0.5 * (C - C_t);
-	float div_v = C[0][0] + C[1][1];
 	mat2 C_dev = C_sym - mat2(0.5 * div_v, 0.0, 0.0, 0.5 * div_v);
 
 	float shear_keep = exp(-pc.dt * mix(2.5, 450.0, p_visc));

@@ -6,13 +6,13 @@ const GRID_CELLS := AtomicFluidShaders.GRID_CELLS
 const MAX_PARTICLES := AtomicFluidShaders.MAX_PARTICLES
 const WORKGROUP_SIZE := AtomicFluidShaders.WORKGROUP_SIZE
 const PARTICLES_PER_CELL := 4
-const PARTICLE_VOLUME_WEIGHT := 0.278
+const PARTICLE_VOLUME_WEIGHT := 0.25
 const PARTICLE_STRIDE := 48
 const GRID_GRAVITY := 65.0
 const MAX_GRID_ACCEL := 550.0
 const MAX_IMPULSE_VEL := 65.0
-const EOS_STIFFNESS := 30000.0
-const CFL_PRESSURE_LIMIT := 0.05
+const EOS_STIFFNESS := 15000.0
+const CFL_PRESSURE_LIMIT := 0.03
 const REST_DENSITY := 1.00
 const MOUTH_WEIGHT_THRESHOLD := 40
 
@@ -320,7 +320,10 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 				assigned_add += cnt
 
 		if assigned_add > 0:
-			_queue_append_stream(spawn_specs, _active_count, pour_info, false)
+			if bool(pour_info.get("from_pour", false)):
+				_queue_append_stream(spawn_specs, _active_count, pour_info, false)
+			else:
+				_queue_append_surface(spawn_specs, _active_count)
 			_active_count += assigned_add
 
 	elif target_count < _active_count:
@@ -588,6 +591,49 @@ func _queue_init_fill(specs: Array[Dictionary], total_particles: int) -> void:
 		"op": "init_upload",
 		"bytes": bytes,
 		"count": pidx,
+	})
+
+
+func _queue_append_surface(specs: Array[Dictionary], start_index: int) -> void:
+	var total_add := 0
+	for sp in specs:
+		total_add += int(sp["count"])
+	if total_add <= 0 or _mask_cells.is_empty():
+		return
+
+	var bytes := PackedByteArray()
+	bytes.resize(total_add * PARTICLE_STRIDE)
+
+	var offsets: Array[Vector2] = [
+		Vector2(0.25, 0.25),
+		Vector2(0.75, 0.25),
+		Vector2(0.25, 0.75),
+		Vector2(0.75, 0.75),
+	]
+
+	var cell_count := _mask_cells.size()
+	var pidx := 0
+	for sp in specs:
+		var cnt := int(sp["count"])
+		var rho := float(sp["rho"])
+		var visc := float(sp.get("visc", 0.0))
+		var col: Color = sp["color"]
+		for _i in cnt:
+			var global_idx := start_index + pidx
+			var cell_idx := clampi(global_idx / PARTICLES_PER_CELL, 0, cell_count - 1)
+			var sub := global_idx % PARTICLES_PER_CELL
+			var cell := _mask_cells[cell_idx]
+			var off: Vector2 = offsets[sub]
+			var px := clampf(float(cell.x) + off.x + randf_range(-0.04, 0.04), 0.55, float(GRID_SIZE) - 1.55)
+			var py := clampf(float(cell.y) + off.y + randf_range(-0.04, 0.04), 0.55, float(GRID_SIZE) - 1.55)
+			_encode_particle(bytes, pidx, px, py, rho, visc, col, 0.0, 0.0, 0.0)
+			pidx += 1
+
+	_pending_ops.append({
+		"op": "append_upload",
+		"offset": start_index * PARTICLE_STRIDE,
+		"bytes": bytes,
+		"count": total_add,
 	})
 
 
@@ -1530,7 +1576,7 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 				var idx := x + y * CPU_N
 				if _cpu_mask[idx] == 1 and _cpu_mass[idx] > 0.001:
 					var cell_visc := clampf(_cpu_cell_visc[idx] / _cpu_mass[idx], 0.0, 1.0)
-					var cell_damp := exp(-(0.25 + cell_visc * 8.0) * dt)
+					var cell_damp := exp(-(1.0 + cell_visc * 8.0) * dt)
 					var grad_px := 0.0
 					var grad_py := 0.0
 					if x > 0 and x < CPU_N - 1 and y > 0 and y < CPU_N - 1:
@@ -1556,12 +1602,14 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 			var p := _cpu_pos[i]
 			var pv := _cpu_pvel[i]
 			var p_visc := clampf(maxf(_cpu_visc[i], viscosity), 0.0, 1.0)
-			var p_damp := exp(-(0.25 + p_visc * 8.0) * dt)
+			var p_damp := exp(-(1.0 + p_visc * 8.0) * dt)
 			var cx := clampi(int(p.x), 1, CPU_N - 2)
 			var cy := clampi(int(p.y), 1, CPU_N - 2)
 			var idx := cx + cy * CPU_N
 			var local_rho := _cpu_mass[idx] / maxf(_cpu_vol[idx], 0.001)
 			var rel := clampf((_cpu_rho[i] - local_rho) / maxf(_cpu_rho[i], 0.25), -1.0, 1.0)
+			if absf(rel) <= 0.005:
+				rel = 0.0
 			var buoy_speed := maxf(0.0, 20.0 - p_visc * 17.0)
 			var step_v := Vector2(_cpu_vx[idx], _cpu_vy[idx]) + pv
 			p += step_v * dt + _last_down_dir * (rel * buoy_speed * dt)

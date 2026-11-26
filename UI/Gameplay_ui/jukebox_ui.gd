@@ -39,4 +39,4 @@ func _show_result(result: String) -> void:
 		"cooldown":
 			status_label.text = "Jukebox currently not available"
 		"insufficient_funds":
-			status_label.text = "You need at least 30 coins to use the jukebox"
+			status_label.text = "You need at least 30 {coin} to use the jukebox"

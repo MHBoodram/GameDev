@@ -5,6 +5,13 @@ signal shift_started
 signal shift_ended
 signal night_concluded
 
+const TOOL_UNLOCK_NIGHTS := {
+	"hand": 1,
+	"knife": 2,
+	"mag": 3,
+	"fishing_rod": 4,
+}
+
 @export var dusk_start_seconds: float = 0.0
 @export var dusk_end_seconds: float = 60.0
 @export var night_hdri_energy: float = 0.025
@@ -27,6 +34,23 @@ var is_night_concluded: bool = false
 
 var _during_night_queue: Array[Dictionary] = []
 
+static func _get_player_stats() -> Node:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree and tree.root:
+		return tree.root.get_node_or_null("PlayerStats")
+	return null
+
+static func get_tool_unlock_night(tool_id: String) -> int:
+	return int(TOOL_UNLOCK_NIGHTS.get(tool_id.to_lower().strip_edges(), 1))
+
+static func unlock_tools_for_night(night_number: int) -> void:
+	var stats := _get_player_stats()
+	if not is_instance_valid(stats) or not stats.has_method("unlock_tool"):
+		return
+	for tool_id in TOOL_UNLOCK_NIGHTS.keys():
+		if night_number >= int(TOOL_UNLOCK_NIGHTS[tool_id]):
+			stats.unlock_tool(str(tool_id))
+
 func setup(timer_node: Timer, env_node: WorldEnvironment, sun_node: DirectionalLight3D) -> void:
 	night_timer = timer_node
 	if night_timer:
@@ -37,6 +61,7 @@ func setup(timer_node: Timer, env_node: WorldEnvironment, sun_node: DirectionalL
 	is_shift_ended = false
 	is_night_concluded = false
 	_during_night_queue.clear()
+	unlock_tools_for_night(GameState.night)
 	_setup_lighting()
 	if night_timer and not night_timer.timeout.is_connected(_on_night_timer_timeout):
 		night_timer.timeout.connect(_on_night_timer_timeout)
@@ -68,6 +93,7 @@ func _setup_lighting() -> void:
 				initial_hdri_energy = sky_material.energy_multiplier
 
 func setup_night_shift(main_root: Node3D) -> void:
+	unlock_tools_for_night(GameState.night)
 	if GameState.gameplay_ui:
 		GameState.gameplay_ui.set_shift_hud_visible(false)
 	_configure_night_story(main_root)

@@ -3,19 +3,36 @@ extends Node
 
 const UI_AUDIO_SCRIPT := preload("res://UI/Audio/UIAudio.gd")
 
-@export var knifedraw_stream: AudioStream = preload("res://Assets/Audio/SFX/Knifesheaf.wav")
-@export var knifestab_stream: AudioStream = preload("res://Assets/Audio/SFX/KnifeStab.wav")
-@export var entranto_stream: AudioStream = preload("res://Assets/Audio/SFX/842380__mihacappy__entrance_open1.wav")
-@export var liquidpour_stream: AudioStream = preload("res://Assets/Audio/SFX/liquidpour.wav")
-@export var shakerrattle_stream: AudioStream = preload("res://Assets/Audio/SFX/Shaker1.mp3")
-@export var mugpickup_stream: AudioStream = preload("res://Assets/Audio/SFX/Pickupglass.wav")
-@export var slime_stream: AudioStream = preload("res://Assets/Audio/SFX/Slime.wav")
+@export var knifedraw_stream: AudioStream
+@export var knifestab_stream: AudioStream
+@export var entranto_stream: AudioStream
+@export var liquidpour_stream: AudioStream
+@export var shakerrattle_stream: AudioStream
+@export var mugpickup_stream: AudioStream
+@export var slime_stream: AudioStream
 @export var bus_name: StringName = &"SFX"
 
 var _players: Dictionary = {}
 
+static func _resolve_stream(current: AudioStream, primary_path: String, fallback_path: String) -> AudioStream:
+	if current != null:
+		return current
+	if ResourceLoader.exists(primary_path):
+		return load(primary_path) as AudioStream
+	if ResourceLoader.exists(fallback_path):
+		return load(fallback_path) as AudioStream
+	return null
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	knifedraw_stream = _resolve_stream(knifedraw_stream, "res://Audio/SFX/Knifesheaf.wav", "res://Assets/Audio/SFX/Knifesheaf.wav")
+	knifestab_stream = _resolve_stream(knifestab_stream, "res://Audio/SFX/KnifeStab.wav", "res://Assets/Audio/SFX/KnifeStab.wav")
+	entranto_stream = _resolve_stream(entranto_stream, "res://Audio/SFX/842380__mihacappy__entrance_open1.wav", "res://Assets/Audio/SFX/842380__mihacappy__entrance_open1.wav")
+	liquidpour_stream = _resolve_stream(liquidpour_stream, "res://Audio/SFX/liquidpour.wav", "res://Assets/Audio/SFX/liquidpour.wav")
+	shakerrattle_stream = _resolve_stream(shakerrattle_stream, "res://Audio/SFX/Shaker1.mp3", "res://Assets/Audio/SFX/Shaker1.mp3")
+	mugpickup_stream = _resolve_stream(mugpickup_stream, "res://Audio/SFX/Pickupglass.wav", "res://Assets/Audio/SFX/Pickupglass.wav")
+	slime_stream = _resolve_stream(slime_stream, "res://Audio/SFX/Slime.wav", "res://Assets/Audio/SFX/Slime.wav")
+
 	var streams := {
 		&"draw": knifedraw_stream,
 		&"stab": knifestab_stream,

@@ -10,7 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://1yul4dtngbg4" path="res://Assets/Items/beer.png" id="6_n4i4h"]
 [ext_resource type="Texture2D" uid="uid://b5l0yoj3yjcmf" path="res://Assets/Items/inside_shot_glass.png" id="7_22u17"]
 [ext_resource type="Texture2D" uid="uid://4sg263uyig2d" path="res://Assets/Items/outside_shot_glass.png" id="8_cotfs"]
-[ext_resource type="Script" uid="uid://kofwuslr42fm" path="res://Player/Beer_Pour.gd" id="9_hkwvl"]
+[ext_resource type="Script" uid="uid://kofwuslr42fm" path="res://Player/areaInteracts/Beer_Pour.gd" id="9_hkwvl"]
 [ext_resource type="Texture2D" uid="uid://dmfxc6txg3mkt" path="res://icon.svg" id="10_bqacp"]
 [ext_resource type="Texture2D" uid="uid://dhwy3spw05iwl" path="res://Assets/Items/Drinks/beer.png" id="11_hcxpf"]
 [ext_resource type="PackedScene" uid="uid://dbd3xmclss4bq" path="res://NPC/Afternight/Afternight_NPC.tscn" id="12_sxjop"]

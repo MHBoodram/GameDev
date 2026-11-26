@@ -61,6 +61,22 @@ func _update_hand(change: String) -> void:
 func handle_counter_edge_action() -> bool:
 	return tool_controller.handle_counter_edge_click(self, GameState.main_node)
 
+func _try_world_tool_click() -> bool:
+	if tool_controller.get_tool() == "hand":
+		return false
+	if in_game or GameState.is_dialogue_open or ShakerMinigame.active:
+		return false
+	if GameState.special_state or GameState.night_paused:
+		return false
+	if GameState.minigame_host and GameState.minigame_host.is_minigame_active:
+		return false
+	if Ingredients.active_dragging_item != null or Ingredients.active_selected_item != null:
+		return false
+	var collider: Object = Ingredients._get_ray_collider_under_mouse(get_viewport())
+	if collider is CollisionObject3D and (collider as CollisionObject3D).input_ray_pickable:
+		return false
+	return tool_controller.handle_world_click(self)
+
 func get_mouse_world_position(cam: Camera3D, plane_y: float) -> Vector3:
 	var mouse_pos := get_viewport().get_mouse_position()
 	var ray_origin := cam.project_ray_origin(mouse_pos)
@@ -85,6 +101,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			if GameState.main_node and GameState.main_node.has_method("toggle_debug_menu"):
 				GameState.main_node.toggle_debug_menu()
 	elif event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if _try_world_tool_click():
+				get_viewport().set_input_as_handled()
+				return
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			if gameplay_ui and gameplay_ui.has_method("bendover"):
 				gameplay_ui.bendover()

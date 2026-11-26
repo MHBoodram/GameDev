@@ -13,7 +13,11 @@ var fallback_texture_path: String = ""
 var fallback_hframes: int = 1
 var default_patience: float = 90.0
 var npc_scale: Vector3 = Vector3(0.5, 0.5, 0.5)
+var patience_scale: float = 1.0
 var seat_y_offset: float = 0.0
+var seat_offset: Vector3 = Vector3.ZERO
+var patience_y_offset: float = 0.0
+var patience_offset: Vector3 = Vector3.ZERO
 
 var base_spawn_weight: float = 5.0
 var default_marketing_weight: float = 0.0
@@ -21,6 +25,12 @@ var spawn_randomly: bool = true
 var can_be_ghost: bool = true
 var can_be_wanted: bool = true
 var disallowed_modifiers: Array[String] = []
+
+func get_seat_offset() -> Vector3:
+	return Vector3(seat_offset.x, seat_offset.y + seat_y_offset, seat_offset.z)
+
+func get_patience_offset() -> Vector3:
+	return Vector3(patience_offset.x, patience_offset.y + patience_y_offset, patience_offset.z)
 
 func get_npc_resource() -> NPC:
 	if npc_resource_path != "" and ResourceLoader.exists(npc_resource_path):
@@ -222,4 +232,7 @@ func can_highlight_glass(_tool_id: String, _glass: Area3D) -> int:
 	return -1
 
 func on_tool_counter_action(_tool_id: String, _player: Node3D, _main_node: Node3D) -> bool:
+	return false
+
+func on_tool_world_click(_tool_id: String, _player: Node3D) -> bool:
 	return false

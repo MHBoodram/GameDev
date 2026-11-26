@@ -3,12 +3,12 @@
 importer="wav"
 type="AudioStreamWAV"
 uid="uid://3ccmoyyogc63"
-path="res://.godot/imported/Pickupglass.wav-3ac29e44e655db39008a2feccc46b56d.sample"
+path="res://.godot/imported/Pickupglass.wav-e5731c11fae26145996ebf1cfcc37485.sample"
 
 [deps]
 
-source_file="res://Assets/Audio/SFX/Pickupglass.wav"
-dest_files=["res://.godot/imported/Pickupglass.wav-3ac29e44e655db39008a2feccc46b56d.sample"]
+source_file="res://Audio/SFX/Pickupglass.wav"
+dest_files=["res://.godot/imported/Pickupglass.wav-e5731c11fae26145996ebf1cfcc37485.sample"]
 
 [params]
 

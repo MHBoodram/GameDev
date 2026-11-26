@@ -6,8 +6,18 @@ extends RefCounted
 
 var tool_in_hand: String = "hand"
 
+func _get_player_stats() -> Node:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree and tree.root:
+		return tree.root.get_node_or_null("PlayerStats")
+	return null
+
 func set_tool(new_tool: String) -> void:
-	tool_in_hand = new_tool.to_lower().strip_edges()
+	var normalized := new_tool.to_lower().strip_edges()
+	var stats := _get_player_stats()
+	if is_instance_valid(stats) and stats.has_method("is_tool_unlocked") and not stats.is_tool_unlocked(normalized):
+		return
+	tool_in_hand = normalized
 
 func get_tool() -> String:
 	return tool_in_hand
@@ -15,6 +25,10 @@ func get_tool() -> String:
 # triggers species/modifier-registered tool actions when clicking bottom screen edge
 func handle_counter_edge_click(player: Node3D, main_node: Node3D = null) -> bool:
 	return SpeciesRegistry.handle_counter_edge_tool(tool_in_hand, player, main_node)
+
+# triggers species-registered tool actions when clicking empty space / bar
+func handle_world_click(player: Node3D = null) -> bool:
+	return SpeciesRegistry.handle_world_tool_click(tool_in_hand, player)
 
 # triggers species/modifier-registered tool actions when clicking a glass
 func handle_glass_click(glass: Area3D, player: Node3D = null) -> bool:

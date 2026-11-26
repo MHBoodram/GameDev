@@ -1,8 +1,12 @@
 extends Sprite3D
 var emo : String = "netural"
-var can_talk = true
+var can_talk : bool = true:
+	set(value):
+		can_talk = value
+		_sync_interactable()
 var speaking_title = "afternight_1"
 var dialogue_resource: DialogueResource
+var _last_dialogue_end_ms: int = -1000
 @onready var custom_balloon = load("res://addons/dialogue_manager/example_balloon/main_balloon.tscn")
 @export var npc_resource: NPC
 
@@ -11,11 +15,32 @@ func _ready() -> void:
 		texture = npc_resource.sprite_sheet
 		hframes = npc_resource.hframe
 		dialogue_resource = npc_resource.dialogue_resource
-	_base_position = position
-	_base_scale = scale
-	if random_start_delay:
-		await get_tree().create_timer(randf_range(0.0, bounce_duration)).timeout
-	start_idle()
+	if not DialogueManager.dialogue_ended.is_connected(_on_dialogue_ended):
+		DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
+	_sync_interactable()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_VISIBILITY_CHANGED:
+		_sync_interactable()
+
+func _sync_interactable() -> void:
+	var col := get_node_or_null("Area3D/CollisionShape3D") as CollisionShape3D
+	if col:
+		col.disabled = not (can_talk and visible)
+
+func _on_dialogue_ended(_resource: DialogueResource) -> void:
+	_last_dialogue_end_ms = Time.get_ticks_msec()
+
+func _is_dialogue_busy() -> bool:
+	if GameState.is_dialogue_open:
+		return true
+	var tree := get_tree()
+	if tree and tree.root:
+		for balloon_name in ["Main_Ballon", "ExampleBalloon"]:
+			var balloon := tree.root.find_child(balloon_name, true, false)
+			if is_instance_valid(balloon) and not balloon.is_queued_for_deletion():
+				return true
+	return false
 
 func _money_checking():
 	print("Money: ",PlayerStats.money)
@@ -63,26 +88,44 @@ func stop_idle() -> void:
 	scale = _base_scale
 
 func _on_interaction_input_event(camera_node: Node, event: InputEvent, _pos: Vector3, _norm: Vector3, _shape: int) -> void:
-	if not can_talk or speaking_title == "" or speaking_title == null:
+	if not is_visible_in_tree() or not can_talk or speaking_title == "" or speaking_title == null:
 		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		GameState.character_talking = self
 		if abs(camera_node.global_position.x - global_position.x) < 2:
 			talk()
 
 func talk() -> void:
-	if GameState.is_dialogue_open:
+	if _is_dialogue_busy():
 		return
-	if not can_talk or speaking_title == "" or speaking_title == null:
+	if not is_visible_in_tree() or not can_talk or speaking_title == "" or speaking_title == null:
+		return
+	if Time.get_ticks_msec() - _last_dialogue_end_ms < 200:
+		return
+	if GameState.main_node and "_is_advancing_shop" in GameState.main_node and GameState.main_node._is_advancing_shop:
 		return
 	if GameState.main_node and "upgrade_time" in GameState.main_node and GameState.main_node.upgrade_time and GameState.main_node.has_method("_get_shop_options_title"):
 		speaking_title = GameState.main_node._get_shop_options_title()
-	if dialogue_resource:
-		DialogueManager.show_dialogue_balloon_scene(custom_balloon, dialogue_resource, speaking_title, [self])
+	if dialogue_resource and dialogue_resource.get_titles().has(speaking_title):
+		GameState.character_talking = self
+		GameState.is_dialogue_open = true
+		var balloon = DialogueManager.show_dialogue_balloon_scene(custom_balloon, dialogue_resource, speaking_title, [self])
+		if balloon == null:
+			GameState.is_dialogue_open = false
 
 func force_dialogue(speaking: String) -> void:
-	if dialogue_resource:
-		DialogueManager.show_dialogue_balloon_scene(custom_balloon, dialogue_resource, speaking, [self])
+	if not is_inside_tree() or not dialogue_resource:
+		return
+	if not dialogue_resource.get_titles().has(speaking):
+		return
+	while is_inside_tree() and _is_dialogue_busy():
+		await get_tree().process_frame
+	if not is_inside_tree():
+		return
+	GameState.character_talking = self
+	GameState.is_dialogue_open = true
+	var balloon = DialogueManager.show_dialogue_balloon_scene(custom_balloon, dialogue_resource, speaking, [self])
+	if balloon == null:
+		GameState.is_dialogue_open = false
 
 func _talking(open_mouth: bool = false) -> void:
 	var frame_check := 0

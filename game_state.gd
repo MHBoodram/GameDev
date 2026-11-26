@@ -103,6 +103,7 @@ func advance_night() -> void:
 	night += 1
 	reset_night_restarts()
 	get_night_quota(night)
+	NightManager.unlock_tools_for_night(night)
 
 func pause_night() -> void:
 	night_paused = true
@@ -130,6 +131,9 @@ func get_story_flag(flag_name: String, default_value: Variant = false) -> Varian
 
 func has_story_flag(flag_name: String) -> bool:
 	return bool(story_flags.get(flag_name, false))
+
+func clear_story_flags() -> void:
+	story_flags.clear()
 
 # Schedule NPCs to appear before nights (trigger_time <= 0) or during nights (trigger_time > 0 in seconds)
 func schedule_npc(npc_source: Variant, target_night: int, trigger_time: float = 0.0, dialogue_title: String = "start", patience: float = 90.0) -> void:

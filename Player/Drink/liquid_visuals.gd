@@ -3,7 +3,7 @@ extends RefCounted
 
 # Handles container liquid physics
 
-const CONTAINER_SHADER := preload("res://Player/Drink/liquid_container.gdshader")
+const CONTAINER_SHADER := preload("res://Shader/liquid_container.gdshader")
 const LIQUID_COLOR := AtomicFluidShaders.LIQUID_COLOR
 const LIQUID_BUOYANCY := AtomicFluidShaders.LIQUID_BUOYANCY
 const LIQUID_VISCOSITY := AtomicFluidShaders.LIQUID_VISCOSITY
@@ -42,6 +42,8 @@ var wave_amplitude: float = 0.0
 
 var last_global_pos: Vector3 = Vector3.ZERO
 var last_velocity: Vector3 = Vector3.ZERO
+var smoothed_velocity: Vector3 = Vector3.ZERO
+var smoothed_accel: Vector3 = Vector3.ZERO
 
 var liquid_shader_mat: ShaderMaterial
 var gradient_texture: GradientTexture2D
@@ -202,14 +204,27 @@ func update_physics(delta: float, current_pos: Vector3, camera: Camera3D, p_visc
 	if pos_delta.length() > 0.4:
 		last_global_pos = current_pos
 		last_velocity = Vector3.ZERO
+		smoothed_velocity = Vector3.ZERO
+		smoothed_accel = Vector3.ZERO
+		pos_delta = Vector3.ZERO
+	elif pos_delta.length() < 0.0003:
 		pos_delta = Vector3.ZERO
 
-	var frame_velocity := pos_delta / delta
-	var frame_accel := (frame_velocity - last_velocity) / delta
-	last_global_pos = current_pos
-	last_velocity = frame_velocity
+	var raw_velocity := pos_delta / delta
+	smoothed_velocity = smoothed_velocity.lerp(raw_velocity, 1.0 - exp(-28.0 * delta))
+	if pos_delta == Vector3.ZERO and smoothed_velocity.length() < 0.005:
+		smoothed_velocity = Vector3.ZERO
 
-	if frame_accel.length() > 50.0:
+	var raw_accel := (smoothed_velocity - last_velocity) / delta
+	smoothed_accel = smoothed_accel.lerp(raw_accel, 1.0 - exp(-24.0 * delta))
+	last_global_pos = current_pos
+	last_velocity = smoothed_velocity
+
+	var frame_velocity := smoothed_velocity
+	var frame_accel := smoothed_accel
+	if frame_accel.length() < 0.35:
+		frame_accel = Vector3.ZERO
+	elif frame_accel.length() > 50.0:
 		frame_accel = frame_accel.normalized() * 50.0
 
 	var h_accel: float = frame_accel.dot(camera.global_transform.basis.x) if camera else frame_accel.x

@@ -3,12 +3,12 @@
 importer="wav"
 type="AudioStreamWAV"
 uid="uid://cycaykicrdjes"
-path="res://.godot/imported/liquidpour.wav-b1fe54500fbabfb8a92f2030b45e60c1.sample"
+path="res://.godot/imported/liquidpour.wav-70bb445a151fa7c47c5e154d2165feb1.sample"
 
 [deps]
 
-source_file="res://Assets/Audio/SFX/liquidpour.wav"
-dest_files=["res://.godot/imported/liquidpour.wav-b1fe54500fbabfb8a92f2030b45e60c1.sample"]
+source_file="res://Audio/SFX/liquidpour.wav"
+dest_files=["res://.godot/imported/liquidpour.wav-70bb445a151fa7c47c5e154d2165feb1.sample"]
 
 [params]
 

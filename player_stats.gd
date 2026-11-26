@@ -27,6 +27,12 @@ var unlocks : Dictionary = {
 		"Fishing_Rod" : false,
 		"Mag" : false
 	},
+	"Tools":{
+		"Hand" : true,
+		"Knife" : false,
+		"Mag" : false,
+		"Fishing_Rod" : false
+	},
 	"Upgrades":{},
 	"Recipes":{
 		"BLOODY MARY" : false,
@@ -90,6 +96,47 @@ func has_knife_unlock(fallback_when_missing: bool = true) -> bool:
 	if unlocks.has("Tools") and unlocks["Tools"].has("Knife"):
 		return has_unlock("Tools", "Knife")
 	return fallback_when_missing
+
+func is_tool_unlocked(tool_id: String) -> bool:
+	var clean_id := tool_id.to_lower().strip_edges()
+	if clean_id == "" or clean_id == "hand":
+		return true
+	return has_unlock("Tools", clean_id) or has_unlock("Ingredients", clean_id)
+
+func unlock_tool(tool_id: String) -> void:
+	var clean_id := tool_id.to_lower().strip_edges()
+	if clean_id == "":
+		return
+	if not unlocks.has("Tools"):
+		unlocks["Tools"] = {}
+	var tools_dict: Dictionary = unlocks["Tools"]
+	var matched_key := ""
+	for k in tools_dict.keys():
+		if str(k).to_lower() == clean_id:
+			matched_key = str(k)
+			break
+	if matched_key == "":
+		matched_key = tool_id
+	tools_dict[matched_key] = true
+
+	if unlocks.has("Ingredients"):
+		var ing_dict: Dictionary = unlocks["Ingredients"]
+		for k in ing_dict.keys():
+			if str(k).to_lower() == clean_id:
+				var was_unlocked := bool(ing_dict[k])
+				ing_dict[k] = true
+				if not was_unlocked:
+					SpeciesRegistry.on_ingredient_unlocked(str(k), self)
+
+func reset_tool_unlocks() -> void:
+	if unlocks.has("Tools"):
+		for k in unlocks["Tools"].keys():
+			unlocks["Tools"][k] = (str(k).to_lower() == "hand")
+	if unlocks.has("Ingredients"):
+		for tool_key in ["Knife", "Mag", "Fishing_Rod"]:
+			for k in unlocks["Ingredients"].keys():
+				if str(k).to_lower() == tool_key.to_lower():
+					unlocks["Ingredients"][k] = false
 
 func set_species_marketing(species: String, value: float) -> void:
 	var key := _find_species_key(species)

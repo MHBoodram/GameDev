@@ -8,7 +8,7 @@ func _init() -> void:
 	sort_order = 4
 	is_named = true
 	is_default_for_species = true
-	can_spawn_randomly = true
+	can_spawn_randomly = false
 	spawn_weight = 1.0
 
 	can_be_ghost = false
@@ -18,6 +18,8 @@ func _init() -> void:
 	sprite_sheet_path = "res://Assets/NPC/Tiny/tiny.webp"
 	hframes = 10
 	npc_scale = Vector3(0.05, 0.05, 0.05)
+	seat_offset = Vector3(0.0, -0.45, 0.35)
+	patience_y_offset = 8.5
 	logo_frame = 1
 	dialogue_path = "res://NPC/Dialogue/Frederick.dialogue"
 	patience_time = 90.0

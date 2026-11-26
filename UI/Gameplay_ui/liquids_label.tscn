@@ -2,7 +2,7 @@
 
 [ext_resource type="Shader" uid="uid://c2uhcavgvfcrw" path="res://Shader/wavy.gdshader" id="1_g8iwa"]
 [ext_resource type="FontFile" uid="uid://cq83j1cam8lw" path="res://Assets/Font/Merchant Copy.ttf" id="2_4yk5p"]
-[ext_resource type="Script" uid="uid://crlrg48otxdtq" path="res://Player/Drink/Glasses/liquids_label.gd" id="3_4yk5p"]
+[ext_resource type="Script" uid="uid://crlrg48otxdtq" path="res://UI/Gameplay_ui/liquids_label.gd" id="3_4yk5p"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_dwiq7"]
 shader = ExtResource("1_g8iwa")
