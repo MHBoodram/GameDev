@@ -4,10 +4,12 @@ class_name BarShelfManager
 extends Node
 
 const LIQUID_SCENE_PATH := "res://Player/Drink/Liquids/liquid.tscn"
+const GARNISH_DISPENSER_SCENE_PATH := "res://Player/Drink/garnish_dispenser.tscn"
 const RESOURCE_BASE_PATH := "res://Player/Drink/Liquids/resource/"
 const NAME_TAG_SCENE := preload("res://UI/Gameplay_ui/NameTag.tscn")
 
 var spawned_bottles: Dictionary = {}
+var spawned_garnishes: Dictionary = {}
 var refill_tags: Dictionary = {}
 
 func refresh_shelf_bottles(host: Node3D, counter_ref: Node3D) -> void:
@@ -21,6 +23,44 @@ func refresh_shelf_bottles(host: Node3D, counter_ref: Node3D) -> void:
 
 	if PlayerStats.unlocks.has("Ingredients") and PlayerStats.unlocks["Ingredients"].get("Blood", false):
 		spawn_bottle_if_missing(host, counter_ref, "blood")
+
+	refresh_shelf_garnishes(host, counter_ref)
+
+func refresh_shelf_garnishes(host: Node3D, counter_ref: Node3D) -> void:
+	if not is_instance_valid(host):
+		return
+	for marker_name in GarnishDefinitions.MARKER_MAP.keys():
+		var garnish_id := str(GarnishDefinitions.MARKER_MAP[marker_name])
+		spawn_garnish_dispenser_if_missing(host, counter_ref, str(marker_name), garnish_id)
+
+func spawn_garnish_dispenser_if_missing(host: Node3D, counter_ref: Node3D, marker_name: String, garnish_id: String) -> Node:
+	if spawned_garnishes.has(marker_name) and is_instance_valid(spawned_garnishes[marker_name]):
+		return spawned_garnishes[marker_name]
+
+	var marker := host.get_node_or_null(marker_name) as Marker3D
+	if not marker:
+		return null
+
+	var node_name := garnish_id + "_dispenser"
+	var existing := host.get_node_or_null(node_name)
+	if existing:
+		spawned_garnishes[marker_name] = existing
+		return existing
+
+	if not ResourceLoader.exists(GARNISH_DISPENSER_SCENE_PATH):
+		return null
+	var dispenser_scene := load(GARNISH_DISPENSER_SCENE_PATH) as PackedScene
+	if not dispenser_scene:
+		return null
+
+	var dispenser := dispenser_scene.instantiate()
+	dispenser.name = node_name
+	host.add_child(dispenser)
+	if dispenser.has_method("setup"):
+		dispenser.setup(marker, counter_ref, garnish_id)
+
+	spawned_garnishes[marker_name] = dispenser
+	return dispenser
 
 func spawn_bottle_if_missing(host: Node3D, counter_ref: Node3D, drink_id: String) -> Node:
 	if spawned_bottles.has(drink_id) and is_instance_valid(spawned_bottles[drink_id]):

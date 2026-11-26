@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Player/Drink/garnish_item.gd" id="1_garnish_item"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_garnish"]
+size = Vector3(0.45, 0.45, 0.25)
+
+[node name="GarnishItem" type="Area3D" node_paths=PackedStringArray("area_body", "sprite") groups=["garnish"]]
+transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0, 0)
+script = ExtResource("1_garnish_item")
+area_body = NodePath("CollisionShape3D")
+sprite = NodePath("Sprite3D")
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+shaded = true
+alpha_cut = 2
+texture_filter = 0
+render_priority = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_garnish")

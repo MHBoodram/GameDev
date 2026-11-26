@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Player/Drink/garnish_dispenser.gd" id="1_garnish_dispenser"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dispenser"]
+size = Vector3(0.45, 0.45, 0.25)
+
+[node name="GarnishDispenser" type="Area3D" groups=["garnish_dispenser"]]
+transform = Transform3D(0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.25, 0, 0, 0)
+script = ExtResource("1_garnish_dispenser")
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+shaded = true
+alpha_cut = 2
+texture_filter = 0
+render_priority = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_dispenser")
+
+[node name="RefillTimer" type="Timer" parent="."]
+wait_time = 2.0
+autostart = true

@@ -133,9 +133,16 @@ func start_pour() -> void:
 	_is_pouring = false
 
 func _on_area_entered(area: Area3D) -> void:
+	if area is GarnishItem:
+		area.set_active_trash(self)
+		return
 	_snap_zone.handle_area_entered(area, _snap_target(), snap_pull_speed, snap_release_speed, snap_break_distance)
 
 func _on_area_exited(area: Area3D) -> void:
+	if area is GarnishItem:
+		if is_instance_valid(area):
+			area.set_active_trash(null)
+		return
 	_snap_zone.handle_area_exited(area, _snap_target(), snap_pull_speed, snap_release_speed, snap_break_distance)
 
 func _on_mouse_entered() -> void:

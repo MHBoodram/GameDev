@@ -350,6 +350,7 @@ func _on_spawn_cup_pressed() -> void:
 			glass.drink_mix.add_garnish(str(g))
 		if order.ice_preference == DrinkRecipe.IcePreference.REQUIRED:
 			glass.drink_mix.add_ice()
+		glass.sync_garnish_visuals()
 
 	glass._remove_displaying_list(true)
 
@@ -413,6 +414,9 @@ func _on_refill_pressed() -> void:
 	for bottle in GameState.shelf_manager.spawned_bottles.values():
 		if is_instance_valid(bottle) and bottle.has_method("refill"):
 			bottle.refill()
+	for dispenser in GameState.shelf_manager.spawned_garnishes.values():
+		if is_instance_valid(dispenser) and dispenser.has_method("refill"):
+			dispenser.refill()
 
 func _on_blood_game_pressed() -> void:
 	if not GameState.minigame_host:

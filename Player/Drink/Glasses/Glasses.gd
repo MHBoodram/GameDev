@@ -17,6 +17,7 @@ const OVERFLOW_EPSILON: float = 0.0005
 
 var drink_mix: DrinkMix = DrinkMix.new()
 var visual_helper: LiquidVisualHelper = LiquidVisualHelper.new()
+var garnish_visuals: CupGarnishVisuals = CupGarnishVisuals.new()
 var _pour_out_stream: PourStreamVisual = null
 var _pour_splash_stream: PourStreamVisual = null
 var _pour_splash_timer: float = 0.0
@@ -99,6 +100,29 @@ func _sync_drink_mix_metadata() -> void:
 func get_drink_mix() -> DrinkMix:
 	_sync_drink_mix_metadata()
 	return drink_mix
+
+func can_add_garnish(garnish_id: String) -> bool:
+	if _is_drag_blocked():
+		return false
+	return GarnishDefinitions.can_add_to_mix(drink_mix, garnish_id)
+
+func add_garnish_item(garnish_id: String) -> bool:
+	if not can_add_garnish(garnish_id):
+		return false
+	var clean_id := GarnishDefinitions.normalize_id(garnish_id)
+	var added := false
+	if GarnishDefinitions.is_ice(clean_id):
+		added = drink_mix.add_ice()
+	else:
+		added = drink_mix.add_garnish(clean_id, 1)
+	if added:
+		sync_garnish_visuals()
+		GameState.play_sfx("play_mugpickup")
+	return added
+
+func sync_garnish_visuals() -> void:
+	if garnish_visuals:
+		garnish_visuals.sync_from_mix(drink_mix)
 
 func get_resource_usage_multiplier(liquid_id: String = "") -> float:
 	return SpeciesRegistry.get_glass_resource_multiplier(self, liquid_id)
@@ -396,6 +420,10 @@ func ready() -> void:
 	_ensure_pour_splash_stream()
 	_ensure_overflow_streams()
 	_setup_liquid_shader()
+	var host_sprite := sprite if is_instance_valid(sprite) else get_node_or_null("Inside") as Sprite3D
+	var outside_sprite := get_node_or_null("Inside/Outside") as Sprite3D
+	garnish_visuals.setup(self, host_sprite, outside_sprite)
+	garnish_visuals.sync_from_mix(drink_mix)
 	if highlight:
 		highlight.modulate = Color(1.5, 1.5, 0.0, 5.0)
 	if camera:
@@ -410,6 +438,7 @@ func ready() -> void:
 
 func _exit_tree() -> void:
 	visual_helper.cleanup()
+	garnish_visuals.clear()
 	if is_instance_valid(_pour_out_stream):
 		_pour_out_stream.set_stream_active(false)
 	_stop_pour_splash()
@@ -483,6 +512,7 @@ func _process(delta: float) -> void:
 	visual_helper.update_physics_from_owner(delta, track_pos, camera, self, -1.0, outside_sprite)
 	if not is_consumed:
 		_update_shader_parameters()
+		garnish_visuals.update(delta, total_liquids, size, visual_helper)
 
 	if _is_drag_blocked():
 		return
@@ -723,6 +753,7 @@ func reset_cup(show_empty_indicator: bool = false) -> void:
 	liquids.clear()
 	total_liquids = 0.0
 	drink_mix.reset()
+	garnish_visuals.clear()
 	_sync_drink_mix_metadata()
 	if visual_helper:
 		visual_helper.set_visual_override({})
