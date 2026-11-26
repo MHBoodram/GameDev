@@ -9,7 +9,8 @@ const VALID_GARNISHES: Array[String] = [
 	"olive",
 	"lemon_whole",
 	"lemon_half",
-	"lemon_sliced"
+	"lemon_sliced",
+	"ice_ball"
 ]
 
 var ingredients: Dictionary = {} # name -> amount (float)

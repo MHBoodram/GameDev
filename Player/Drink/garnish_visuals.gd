@@ -13,6 +13,7 @@ const HERB_SCALE_RATIO: float = 0.22
 const HERB_Z_BASE: float = -0.013
 
 const ICE_CUBE_SCALE_RATIO: float = 0.36
+const ICE_BALL_SCALE_RATIO: float = 0.56
 const ICE_Z_BASE: float = -0.013
 
 static var _layout_cache: Dictionary = {}
@@ -134,6 +135,7 @@ func _rebuild_visuals(mix: DrinkMix) -> void:
 	var left_idx: int = 0
 	var right_idx: int = 0
 	var herb_idx: int = 0
+	var ice_ball_idx: int = 0
 
 	for raw_g in mix.garnishes:
 		var g_id := GarnishDefinitions.normalize_id(str(raw_g))
@@ -170,6 +172,26 @@ func _rebuild_visuals(mix: DrinkMix) -> void:
 					"base_rot": sp.rotation_degrees.z,
 				})
 				herb_idx += 1
+			"liquid_float":
+				var sp := _create_garnish_sprite(g_id, false, inner_width * ICE_BALL_SCALE_RATIO, 3)
+				sp.alpha_cut = SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS
+				sp.modulate = Color.WHITE
+				sp.rotation_degrees.z = randf_range(-18.0, 18.0)
+				var norm_depth := clampf(0.45 + float(ice_ball_idx % 3) * 0.18 + randf_range(-0.08, 0.08), 0.15, 0.90)
+				var norm_x := 0.0 if ice_ball_idx == 0 else clampf(randf_range(-0.4, 0.4), -0.45, 0.45)
+				var init_x := clampf(inner_center_x + norm_x * inner_half_w * 0.5, inner_min_x + inner_half_w * 0.25, inner_max_x - inner_half_w * 0.25)
+				var init_y := lerpf(bottom_y + liquid_h * 0.18, bottom_y + liquid_h * 0.52, norm_depth)
+				sp.position = Vector3(init_x, init_y, ICE_Z_BASE - float(ice_ball_idx) * 0.0005)
+				root.add_child(sp)
+				_ice_entries.append({
+					"sprite": sp,
+					"norm_x": norm_x,
+					"norm_depth": norm_depth,
+					"phase": randf_range(0.0, TAU),
+					"speed": randf_range(1.2, 2.0),
+					"base_rot": sp.rotation_degrees.z,
+				})
+				ice_ball_idx += 1
 
 	if mix.has_ice:
 		var cube_count := GarnishDefinitions.ICE_CUBE_COUNT
@@ -183,7 +205,7 @@ func _rebuild_visuals(mix: DrinkMix) -> void:
 			var norm_x := clampf(randf_range(-0.55, 0.55), -0.55, 0.55)
 			var init_x := clampf(inner_center_x + norm_x * inner_half_w * 0.55, inner_min_x + inner_half_w * 0.22, inner_max_x - inner_half_w * 0.22)
 			var init_y := lerpf(bottom_y + liquid_h * 0.14, bottom_y + liquid_h * 0.48, norm_depth)
-			sp.position = Vector3(init_x, init_y, ICE_Z_BASE - float(i) * 0.0004)
+			sp.position = Vector3(init_x, init_y, ICE_Z_BASE - 0.004 - float(i) * 0.0004)
 			root.add_child(sp)
 			_ice_entries.append({
 				"sprite": sp,

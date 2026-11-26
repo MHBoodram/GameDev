@@ -9,6 +9,8 @@ var _skip_initial_snap: bool = false
 var _active_trash: Area3D = null
 var _previous_counter_position: Vector3 = Vector3.ZERO
 var _trash_tinted: bool = false
+var _base_sprite_scale: Vector3 = Vector3.ONE
+var _cut_bounce_tween: Tween = null
 
 func is_working_area_item() -> bool:
 	return true
@@ -34,6 +36,8 @@ func ready() -> void:
 	rotation = Vector3.ZERO
 	if sprite == null:
 		sprite = get_node_or_null("Sprite3D") as Sprite3D
+	if sprite:
+		_base_sprite_scale = sprite.scale
 	if area_body == null:
 		area_body = get_node_or_null("CollisionShape3D") as CollisionShape3D
 	_apply_visual_texture()
@@ -105,33 +109,50 @@ func _get_active_tool() -> String:
 		return str(GameState.player.return_tool()).to_lower().strip_edges()
 	return "hand"
 
+func is_on_table() -> bool:
+	if is_consumed or in_game or is_balls_dragging or is_selected:
+		return false
+	if _is_returning_to_counter or _waiting_for_working_area or _is_mode_transitioning:
+		return false
+	if not is_inside_tree():
+		return false
+	return absf(global_position.y - get_working_area_surface_y()) <= 0.15
+
 func can_highlight_on_hover() -> bool:
 	if _is_drag_blocked():
 		return false
 	if _get_active_tool() == "knife":
-		return GarnishDefinitions.get_next_cut_variation(garnish_id) != ""
+		return is_on_table() and GarnishDefinitions.get_next_cut_variation(garnish_id) != ""
 	return true
 
 func handle_immediate_tool_click() -> bool:
 	if GameState.is_dialogue_open or ShakerMinigame.active or _is_drag_blocked():
 		return false
 	if _get_active_tool() == "knife":
+		if not is_on_table():
+			return true
 		var next_var := GarnishDefinitions.get_next_cut_variation(garnish_id)
 		if next_var != "":
 			set_garnish_id(next_var)
 			GameState.play_sfx("play_stab")
 			_play_cut_bounce()
+			if GarnishDefinitions.get_next_cut_variation(garnish_id) == "":
+				set_highlight(false)
+				if GameState.player:
+					GameState.player._update_hand("idle")
 			return true
+		return true
 	return false
 
 func _play_cut_bounce() -> void:
 	if not is_instance_valid(sprite):
 		return
-	var base_scale := sprite.scale
-	var tween := create_tween()
-	tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	sprite.scale = base_scale * Vector3(1.22, 0.78, 1.0)
-	tween.tween_property(sprite, "scale", base_scale, 0.16)
+	if _cut_bounce_tween and _cut_bounce_tween.is_valid():
+		_cut_bounce_tween.kill()
+	_cut_bounce_tween = create_tween()
+	_cut_bounce_tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	sprite.scale = _base_sprite_scale * Vector3(1.22, 0.78, 1.0)
+	_cut_bounce_tween.tween_property(sprite, "scale", _base_sprite_scale, 0.16)
 
 func can_interact_with(target: Ingredients) -> bool:
 	if _is_drag_blocked() or not is_instance_valid(target) or target == self:

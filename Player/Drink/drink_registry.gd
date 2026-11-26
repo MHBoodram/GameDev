@@ -168,6 +168,12 @@ static func is_recipe_unlocked(recipe: DrinkRecipe, stats: Node = null) -> bool:
 	if not recipe.garnishes.is_empty() and not _has_ingredient_unlock("Garnishes", stats):
 		return false
 
+	if recipe.garnishes.has("ice_ball"):
+		if not _has_ingredient_unlock("Ice", stats):
+			return false
+		if stats.has_method("has_knife_unlock") and not stats.has_knife_unlock(true):
+			return false
+
 	if recipe.ice_preference == DrinkRecipe.IcePreference.REQUIRED and not _has_ingredient_unlock("Ice", stats):
 		return false
 

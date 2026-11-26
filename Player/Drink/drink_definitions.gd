@@ -19,6 +19,7 @@ const GARNISHES: Array[String] = [
 	"lemon_whole",
 	"lemon_half",
 	"lemon_sliced",
+	"ice_ball",
 ]
 
 const DEFINITIONS: Array[Dictionary] = [

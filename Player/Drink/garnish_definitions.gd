@@ -13,6 +13,7 @@ const SIZE_UPGRADE_STEP_RATIO: float = 0.20
 const CUT_TRANSITIONS: Dictionary = {
 	"lemon_whole": "lemon_half",
 	"lemon_half": "lemon_sliced",
+	"ice": "ice_ball",
 }
 
 const MARKER_MAP: Dictionary = {
@@ -88,6 +89,15 @@ const DEFINITIONS: Dictionary = {
 		# "texture_path": "res://Assets/Items/Ingreidents/Ice.png",
 		# "cube_texture_path": "res://Assets/Items/Ingreidents/Ice_Cube.png",
 	},
+	"ice_ball": {
+		"id": "ice_ball",
+		"display_name": "Ice Ball",
+		"category": "ice",
+		"placement": "liquid_float",
+		"max_count": MAX_GARNISH_STACK,
+		"is_ice": false,
+		# "texture_path": "res://Assets/Items/Ingreidents/Ice_Ball.png",
+	},
 }
 
 static var _white_square_tex: Texture2D = null
@@ -141,6 +151,8 @@ static func can_add_to_mix(mix: DrinkMix, garnish_id: String) -> bool:
 		return false
 	if is_ice(clean_id):
 		return not mix.has_ice
+	if clean_id == "ice_ball":
+		return mix.get_garnish_count(clean_id) < MAX_GARNISH_STACK
 	if is_lemon(clean_id):
 		return get_lemon_count(mix) < MAX_GARNISH_STACK
 	if clean_id == "cherry" or clean_id == "olive":
@@ -185,6 +197,7 @@ static func get_texture(garnish_id: String, for_cup_cube: bool = false) -> Textu
 	# "olive": preload("res://Assets/Items/Ingreidents/Olive.png")
 	# "ice": preload("res://Assets/Items/Ingreidents/Ice.png")
 	# "ice_cube": preload("res://Assets/Items/Ingreidents/Ice_Cube.png")
+	# "ice_ball": preload("res://Assets/Items/Ingreidents/Ice_Ball.png")
 
 	var fallback := get_white_square_texture()
 	_texture_cache[cache_key] = fallback

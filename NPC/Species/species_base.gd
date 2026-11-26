@@ -13,6 +13,8 @@ const GARNISH_DISPLAY_NAMES := {
 	"lemon whole": "Lemon Whole",
 	"lemon half": "Lemon Half",
 	"lemon sliced": "Lemon Sliced",
+	"ice_ball": "Ice Ball",
+	"ice ball": "Ice Ball",
 }
 
 var species_id: String = "BASE"
