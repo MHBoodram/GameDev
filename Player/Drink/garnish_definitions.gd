@@ -5,6 +5,10 @@ const MAX_GARNISH_STACK: int = 10
 const ICE_CUBE_COUNT: int = 8
 const DEFAULT_DISPENSER_STOCK: int = 5
 const DEFAULT_REFILL_TIME: float = 2.0
+const DEFAULT_REFILL_COST_PER_ITEM: int = 2
+const MIN_REFILL_TIME: float = 0.5
+const REFILL_TIME_STEP_PER_LEVEL: float = 0.25
+const SIZE_UPGRADE_STEP_RATIO: float = 0.20
 
 const CUT_TRANSITIONS: Dictionary = {
 	"lemon_whole": "lemon_half",
@@ -108,6 +112,14 @@ static func is_lemon(garnish_id: String) -> bool:
 static func get_placement(garnish_id: String) -> String:
 	var def := get_definition(garnish_id)
 	return str(def.get("placement", ""))
+
+static func get_base_stock(garnish_id: String) -> int:
+	var def := get_definition(garnish_id)
+	return maxi(1, int(def.get("base_stock", DEFAULT_DISPENSER_STOCK)))
+
+static func get_refill_cost_per_item(garnish_id: String) -> int:
+	var def := get_definition(garnish_id)
+	return maxi(1, int(def.get("refill_cost", DEFAULT_REFILL_COST_PER_ITEM)))
 
 static func get_next_cut_variation(garnish_id: String) -> String:
 	return str(CUT_TRANSITIONS.get(normalize_id(garnish_id), ""))

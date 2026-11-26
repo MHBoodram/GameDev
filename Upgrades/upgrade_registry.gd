@@ -35,6 +35,7 @@ static func _register_defaults() -> void:
 		"description": "Pay to instantly refill ingrdients",
 		"sort_order": 2,
 		"on_unlocked": _on_instant_refill_unlocked,
+		"on_reset": _on_ingredient_upgrade_reset,
 	}))
 	register_upgrade(UpgradeDef.from_dict({
 		"id": "Drinks Size Increase",
@@ -43,6 +44,8 @@ static func _register_defaults() -> void:
 		"repeatable": true,
 		"max_level": -1,
 		"passive_key": "Drinks Size Increase",
+		"on_unlocked": _on_ingredient_upgrade_unlocked,
+		"on_reset": _on_ingredient_upgrade_reset,
 	}))
 	register_upgrade(UpgradeDef.from_dict({
 		"id": "Drinks Auto Increase",
@@ -51,6 +54,8 @@ static func _register_defaults() -> void:
 		"repeatable": true,
 		"max_level": 6,
 		"passive_key": "Drinks Auto Increase",
+		"on_unlocked": _on_ingredient_upgrade_unlocked,
+		"on_reset": _on_ingredient_upgrade_reset,
 	}))
 	register_upgrade(UpgradeDef.from_dict({
 		"id": "Combo Extension Increase",
@@ -95,14 +100,26 @@ static func register_upgrade(upg: UpgradeDef) -> void:
 	_upgrades_by_id[key] = upg
 	_ordered_upgrades.append(upg)
 
-static func _on_instant_refill_unlocked(_stats: Node, _level: int) -> void:
+static func _refresh_shelf_ingredients() -> void:
 	if GameState and GameState.shelf_manager and is_instance_valid(GameState.main_node):
 		var counter_ref: Node3D = null
 		if GameState.player and "counter" in GameState.player and is_instance_valid(GameState.player.counter):
 			counter_ref = GameState.player.counter
 		else:
 			counter_ref = GameState.main_node.get_node_or_null("Coutner") as Node3D
-		GameState.shelf_manager.refresh_shelf_bottles(GameState.main_node, counter_ref)
+		if GameState.shelf_manager.has_method("refresh_shelf_upgrades"):
+			GameState.shelf_manager.refresh_shelf_upgrades(GameState.main_node, counter_ref)
+		else:
+			GameState.shelf_manager.refresh_shelf_bottles(GameState.main_node, counter_ref)
+
+static func _on_instant_refill_unlocked(_stats: Node, _level: int) -> void:
+	_refresh_shelf_ingredients()
+
+static func _on_ingredient_upgrade_unlocked(_stats: Node, _level: int) -> void:
+	_refresh_shelf_ingredients()
+
+static func _on_ingredient_upgrade_reset(_stats: Node) -> void:
+	_refresh_shelf_ingredients()
 
 static func _resolve_stats(stats: Node = null) -> Node:
 	if is_instance_valid(stats):

@@ -1,6 +1,8 @@
 extends Area3D
 class_name GarnishDispenser
 
+signal stock_changed(current_stock: int, max_stock: int)
+
 const GARNISH_ITEM_SCENE: PackedScene = preload("res://Player/Drink/garnish_item.tscn")
 
 @export var garnish_id: String = "lemon_whole"
@@ -13,6 +15,7 @@ const GARNISH_ITEM_SCENE: PackedScene = preload("res://Player/Drink/garnish_item
 var counter_origin: Node3D = null
 var original_position: Marker3D = null
 var current_stock: int = GarnishDefinitions.DEFAULT_DISPENSER_STOCK
+var _refill_amount: int = 1
 var _camera: Camera3D = null
 var _is_hovered: bool = false
 var _deny_tween: Tween = null
@@ -40,25 +43,53 @@ func setup(p_marker: Marker3D, p_counter: Node3D, p_garnish_id: String) -> void:
 	_apply_passive_upgrades()
 	current_stock = max_stock
 	_refresh_visual()
+	stock_changed.emit(current_stock, max_stock)
+
+func refresh_upgrades() -> void:
+	var prev_stock: int = current_stock
+	var prev_max: int = max_stock
+	_apply_passive_upgrades()
+	if current_stock != prev_stock or max_stock != prev_max:
+		_refresh_visual()
+		stock_changed.emit(current_stock, max_stock)
+
+func _get_upgrade_level(upgrade_id: String) -> int:
+	var lvl: int = UpgradeRegistry.get_level(upgrade_id, PlayerStats)
+	if PlayerStats and "unlocks" in PlayerStats and PlayerStats.unlocks.has(upgrade_id):
+		lvl = maxi(lvl, int(PlayerStats.unlocks[upgrade_id]))
+	if PlayerStats and "unlock_passive" in PlayerStats and PlayerStats.unlock_passive.has(upgrade_id):
+		lvl = maxi(lvl, int(PlayerStats.unlock_passive[upgrade_id]))
+	return maxi(0, lvl)
 
 func _apply_passive_upgrades() -> void:
-	var size_bonus := 0
-	var auto_bonus := 0
-	if PlayerStats and "unlocks" in PlayerStats and PlayerStats.unlocks.has("Drinks Size Increase"):
-		size_bonus = int(PlayerStats.unlocks["Drinks Size Increase"])
-	if PlayerStats and "unlock_passive" in PlayerStats:
-		if PlayerStats.unlock_passive.has("Drinks Size Increase"):
-			size_bonus = maxi(size_bonus, int(PlayerStats.unlock_passive["Drinks Size Increase"]))
-		if PlayerStats.unlock_passive.has("Drinks Auto Increase"):
-			auto_bonus = int(PlayerStats.unlock_passive["Drinks Auto Increase"])
+	var prev_max_stock: int = max_stock
+	var base_stock: int = GarnishDefinitions.get_base_stock(garnish_id)
+	var size_bonus_level: int = _get_upgrade_level("Drinks Size Increase")
+	var auto_bonus_level: int = _get_upgrade_level("Drinks Auto Increase")
 
-	max_stock = GarnishDefinitions.DEFAULT_DISPENSER_STOCK + size_bonus
-	current_stock = clampi(current_stock, 0, max_stock)
+	var size_bonus: int = 0
+	if size_bonus_level > 0:
+		size_bonus = maxi(size_bonus_level, roundi(float(base_stock) * GarnishDefinitions.SIZE_UPGRADE_STEP_RATIO * float(size_bonus_level)))
+
+	max_stock = maxi(1, base_stock + size_bonus)
+	if max_stock > prev_max_stock:
+		current_stock = clampi(current_stock + (max_stock - prev_max_stock), 0, max_stock)
+	else:
+		current_stock = clampi(current_stock, 0, max_stock)
+
+	var raw_wait: float = GarnishDefinitions.DEFAULT_REFILL_TIME - float(auto_bonus_level) * GarnishDefinitions.REFILL_TIME_STEP_PER_LEVEL
+	var target_wait: float = GarnishDefinitions.MIN_REFILL_TIME
+	if raw_wait >= GarnishDefinitions.MIN_REFILL_TIME:
+		target_wait = raw_wait
+		_refill_amount = 1
+	else:
+		_refill_amount = maxi(1, roundi(GarnishDefinitions.MIN_REFILL_TIME / maxf(raw_wait, 0.1)))
 
 	if is_instance_valid(refill_timer):
-		refill_timer.wait_time = maxf(0.5, GarnishDefinitions.DEFAULT_REFILL_TIME - float(auto_bonus) * 0.25)
-		if refill_timer.is_stopped():
-			refill_timer.start()
+		var was_stopped: bool = refill_timer.is_stopped()
+		refill_timer.wait_time = target_wait
+		if was_stopped or refill_timer.time_left > target_wait:
+			refill_timer.start(target_wait)
 
 func _process(_delta: float) -> void:
 	if not _camera:
@@ -69,14 +100,26 @@ func _process(_delta: float) -> void:
 		if target_flat.distance_squared_to(sprite.global_position) > 0.0001:
 			sprite.look_at(target_flat, Vector3.UP)
 
+func get_refill_cost() -> int:
+	var missing: int = maxi(0, max_stock - current_stock)
+	if missing <= 0:
+		return 0
+	return maxi(1, missing * GarnishDefinitions.get_refill_cost_per_item(garnish_id))
+
 func refill() -> void:
+	var changed: bool = current_stock != max_stock
 	current_stock = max_stock
 	_refresh_visual()
+	if changed:
+		stock_changed.emit(current_stock, max_stock)
 
 func _on_refill_timer_timeout() -> void:
 	if current_stock < max_stock:
-		current_stock += 1
-		_refresh_visual()
+		var prev_stock: int = current_stock
+		current_stock = mini(max_stock, current_stock + maxi(1, int(_refill_amount)))
+		if current_stock != prev_stock:
+			_refresh_visual()
+			stock_changed.emit(current_stock, max_stock)
 
 func _refresh_visual() -> void:
 	if not is_instance_valid(sprite):
@@ -116,6 +159,7 @@ func _spawn_garnish_item() -> void:
 		return
 	current_stock = maxi(0, current_stock - 1)
 	_refresh_visual()
+	stock_changed.emit(current_stock, max_stock)
 
 	var item := GARNISH_ITEM_SCENE.instantiate() as GarnishItem
 	if not item:
