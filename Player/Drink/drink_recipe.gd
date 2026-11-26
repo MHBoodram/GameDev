@@ -6,10 +6,9 @@ extends Resource
 @export var display_name: String = ""
 @export var required_glass: String = "" # "shot", "beer"
 @export var ingredients: Dictionary = {} # "gin": 2.0, "vermouth": 0.5
-@export var garnishes: Array[String] = [] # "olive", "lemon_twist"
+@export var garnishes: Array[String] = [] # "olive", "lemon_whole", "lemon_half", "lemon_sliced"
 @export var processing: Array[String] = [] # "shaken", "spectral"
 @export var is_alcoholic: bool = true
-@export var preferred_by_species: Array[String] = []
 
 enum IcePreference {DONT_CARE, REQUIRED, FORBIDDEN}
 

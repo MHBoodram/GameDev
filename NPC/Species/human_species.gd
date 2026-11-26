@@ -1,6 +1,9 @@
 class_name HumanSpecies
 extends SpeciesBase
 
+const LIKED_DRINKS: Dictionary = {}
+const REQUIRED_INGREDIENTS: Array[String] = []
+
 func _init() -> void:
 	species_id = "HUMAN"
 	display_name = "Human"

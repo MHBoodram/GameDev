@@ -1,6 +1,9 @@
 class_name TinySpecies
 extends SpeciesBase
 
+const LIKED_DRINKS: Dictionary = {}
+const REQUIRED_INGREDIENTS: Array[String] = []
+
 const DIALOGUE_PATH := "res://NPC/Dialogue/Frederick.dialogue"
 const IDEAL_FILL_RATIO := 0.25
 
@@ -56,7 +59,14 @@ func on_ingredient_unlocked(ingredient_key: String, stats: Node = null) -> void:
 func get_drink_pool(stats: Node = null) -> Array[String]:
 	return super.get_drink_pool(stats)
 
-func generate_orders(npc: Sprite3D, modifier: RefCounted = null, _stats: Node = null) -> Array[DrinkOrder]:
+func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = null) -> Array[DrinkOrder]:
+	if not get_liked_drinks().is_empty() or not get_required_ingredients().is_empty():
+		var generated := super.generate_orders(npc, modifier, stats)
+		for order in generated:
+			order.is_tiny = true
+			order.ideal_fill_ratio = IDEAL_FILL_RATIO
+		return generated
+
 	var orders: Array[DrinkOrder] = []
 	var count := maxi(1, get_order_count(npc, modifier))
 	if modifier and modifier.has_method("modify_order_count"):

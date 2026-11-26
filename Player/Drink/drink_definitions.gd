@@ -10,9 +10,15 @@ extends RefCounted
 # - required_glass (String: "", "beer", "shot")
 # - ice_preference (DrinkRecipe.IcePreference, defaults to DONT_CARE which allows Ice or No Ice)
 # - is_alcoholic (bool)
-# - preferred_by_species (Array[String])
 
-const GARNISHES: Array[String] = ["lemons", "herbs", "cherries", "olives"]
+const GARNISHES: Array[String] = [
+	"herb",
+	"cherry",
+	"olive",
+	"lemon_whole",
+	"lemon_half",
+	"lemon_sliced",
+]
 
 const DEFINITIONS: Array[Dictionary] = [
 	{
@@ -78,7 +84,6 @@ const DEFINITIONS: Array[Dictionary] = [
 		"garnishes": [],
 		"processing_tags": [],
 		"is_alcoholic": false,
-		"preferred_by_species": ["VAMPIRE"],
 		"ice_preference": DrinkRecipe.IcePreference.DONT_CARE,
 	},
 

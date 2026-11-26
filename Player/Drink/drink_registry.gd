@@ -75,13 +75,6 @@ static func _build_recipe(data: Dictionary) -> DrinkRecipe:
 			if clean_tag != "" and not recipe.processing.has(clean_tag):
 				recipe.processing.append(clean_tag)
 
-	var raw_species: Variant = data.get("preferred_by_species", [])
-	if raw_species is Array:
-		for sp in raw_species:
-			var clean_sp := str(sp).to_upper().strip_edges()
-			if clean_sp != "" and not recipe.preferred_by_species.has(clean_sp):
-				recipe.preferred_by_species.append(clean_sp)
-
 	return recipe
 
 static func get_all_recipes() -> Array[DrinkRecipe]:
@@ -154,29 +147,45 @@ static func get_available_recipes(stats: Node = null, _species_id: String = "") 
 		available.assign(_ordered_recipes)
 	return available
 
+static func recipe_matches_ingredients(recipe: DrinkRecipe, required_ingredients: Array[String]) -> bool:
+	if recipe == null:
+		return false
+	for req_ing in required_ingredients:
+		var clean_req := str(req_ing).to_lower().strip_edges()
+		if clean_req == "":
+			continue
+		if not recipe.ingredients.has(clean_req) or float(recipe.ingredients[clean_req]) <= 0.0:
+			return false
+	return true
+
+static func get_matching_recipes(required_ingredients: Array[String], stats: Node = null, include_locked_fallback: bool = false) -> Array[DrinkRecipe]:
+	ensure_loaded()
+	var pool := get_available_recipes(stats)
+	if required_ingredients.is_empty():
+		return pool
+
+	var matches: Array[DrinkRecipe] = []
+	for recipe in pool:
+		if recipe_matches_ingredients(recipe, required_ingredients):
+			matches.append(recipe)
+
+	if matches.is_empty() and include_locked_fallback:
+		for recipe in _ordered_recipes:
+			if recipe_matches_ingredients(recipe, required_ingredients):
+				matches.append(recipe)
+
+	return matches
+
 static func pick_random_recipe(stats: Node = null, species_id: String = "") -> DrinkRecipe:
+	if species_id.strip_edges() != "":
+		var sp := SpeciesRegistry.get_species(species_id)
+		if sp:
+			return sp.pick_recipe_for_order(stats)
+
 	var pool := get_available_recipes(stats, species_id)
 	if pool.is_empty():
 		return null
-
-	var normalized_species := species_id.to_upper().strip_edges()
-	if normalized_species == "":
-		return pool.pick_random() as DrinkRecipe
-
-	var total_weight := 0.0
-	var weights: Array[float] = []
-	for recipe in pool:
-		var w := 2.0 if recipe.preferred_by_species.has(normalized_species) else 1.0
-		weights.append(w)
-		total_weight += w
-
-	var roll := randf_range(0.0, total_weight)
-	var acc := 0.0
-	for i in pool.size():
-		acc += weights[i]
-		if roll <= acc:
-			return pool[i]
-	return pool[0]
+	return pool.pick_random() as DrinkRecipe
 
 static func roll_ice_preference(base_preference: int = DrinkRecipe.IcePreference.DONT_CARE) -> int:
 	if base_preference != DrinkRecipe.IcePreference.DONT_CARE:

@@ -4,10 +4,15 @@ extends RefCounted
 # Base class for all customer species definitions, preferences, and gimmicks
 
 const GARNISH_DISPLAY_NAMES := {
-	"lemons": "Lemon",
 	"herbs": "Herb",
 	"cherries": "Cherry",
 	"olives": "Olive",
+	"lemon_whole": "Lemon Whole",
+	"lemon_half": "Lemon Half",
+	"lemon_sliced": "Lemon Sliced",
+	"lemon whole": "Lemon Whole",
+	"lemon half": "Lemon Half",
+	"lemon sliced": "Lemon Sliced",
 }
 
 var species_id: String = "BASE"
@@ -38,6 +43,47 @@ func get_seat_offset() -> Vector3:
 
 func get_patience_offset() -> Vector3:
 	return Vector3(patience_offset.x, patience_offset.y + patience_y_offset, patience_offset.z)
+
+func _get_species_constant(const_name: String, fallback: Variant) -> Variant:
+	var script_res := get_script() as Script
+	while script_res != null:
+		var const_map := script_res.get_script_constant_map()
+		if const_map.has(const_name):
+			return const_map[const_name]
+		script_res = script_res.get_base_script()
+	return fallback
+
+func get_liked_drinks() -> Dictionary:
+	var raw_liked: Variant = _get_species_constant("LIKED_DRINKS", {})
+	var cleaned: Dictionary = {}
+	if not (raw_liked is Dictionary):
+		return cleaned
+
+	var raw_sum := 0.0
+	for k in (raw_liked as Dictionary).keys():
+		var clean_key := str(k).to_lower().strip_edges()
+		var prob := float(raw_liked[k])
+		if clean_key == "" or prob <= 0.0:
+			continue
+		cleaned[clean_key] = float(cleaned.get(clean_key, 0.0)) + prob
+		raw_sum += prob
+
+	if raw_sum > 1.0001:
+		push_warning("Species '%s' LIKED_DRINKS probabilities sum to %.3f (> 1.0); normalizing to 1.0." % [species_id, raw_sum])
+		for k in cleaned.keys():
+			cleaned[k] = float(cleaned[k]) / raw_sum
+
+	return cleaned
+
+func get_required_ingredients() -> Array[String]:
+	var raw_reqs: Variant = _get_species_constant("REQUIRED_INGREDIENTS", [])
+	var cleaned: Array[String] = []
+	if raw_reqs is Array:
+		for item in raw_reqs:
+			var ing_id := str(item).to_lower().strip_edges()
+			if ing_id != "" and not cleaned.has(ing_id):
+				cleaned.append(ing_id)
+	return cleaned
 
 func get_npc_resource() -> NPC:
 	if npc_resource_path != "" and ResourceLoader.exists(npc_resource_path):
@@ -143,20 +189,83 @@ func get_drink_pool(stats: Node = null) -> Array[String]:
 func get_order_count(_npc: Sprite3D, _modifier: RefCounted = null) -> int:
 	return 1
 
+func pick_recipe_for_order(stats: Node = null) -> DrinkRecipe:
+	var req_ingredients := get_required_ingredients()
+	var matching_recipes := DrinkRegistry.get_matching_recipes(req_ingredients, stats, true)
+	if matching_recipes.is_empty():
+		return null
+
+	var liked_drinks := get_liked_drinks()
+	if liked_drinks.is_empty():
+		return matching_recipes.pick_random() as DrinkRecipe
+
+	var raw_liked_sum := 0.0
+	for p in liked_drinks.values():
+		raw_liked_sum += float(p)
+
+	var liked_entries: Array[Dictionary] = []
+	var liked_recipes: Array[DrinkRecipe] = []
+	var valid_liked_sum := 0.0
+
+	for drink_key in liked_drinks.keys():
+		var prob := float(liked_drinks[drink_key])
+		for recipe in matching_recipes:
+			if recipe.recipe_id.to_lower() == drink_key or recipe.display_name.to_lower() == drink_key:
+				liked_entries.append({"recipe": recipe, "prob": prob})
+				if not liked_recipes.has(recipe):
+					liked_recipes.append(recipe)
+				valid_liked_sum += prob
+				break
+
+	if liked_entries.is_empty():
+		return matching_recipes.pick_random() as DrinkRecipe
+
+	var other_recipes: Array[DrinkRecipe] = []
+	for recipe in matching_recipes:
+		if not liked_recipes.has(recipe):
+			other_recipes.append(recipe)
+
+	# If LIKED_DRINKS sums to 1.0, only order from the liked list
+	if raw_liked_sum >= 0.9999 and valid_liked_sum > 0.0:
+		var exclusive_roll := randf_range(0.0, valid_liked_sum)
+		var exclusive_acc := 0.0
+		for entry in liked_entries:
+			exclusive_acc += float(entry["prob"])
+			if exclusive_roll <= exclusive_acc:
+				return entry["recipe"] as DrinkRecipe
+		return liked_entries[liked_entries.size() - 1]["recipe"] as DrinkRecipe
+
+	var roll := randf()
+	var acc := 0.0
+	for entry in liked_entries:
+		acc += float(entry["prob"])
+		if roll < acc:
+			return entry["recipe"] as DrinkRecipe
+
+	if not other_recipes.is_empty():
+		return other_recipes.pick_random() as DrinkRecipe
+	return matching_recipes.pick_random() as DrinkRecipe
+
 func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = null) -> Array[DrinkOrder]:
 	var orders: Array[DrinkOrder] = []
 	var count := maxi(1, get_order_count(npc, modifier))
 	if modifier and modifier.has_method("modify_order_count"):
 		count = maxi(1, int(modifier.modify_order_count(npc, count)))
 
+	var req_ingredients := get_required_ingredients()
 	for i in range(count):
-		var recipe := DrinkRegistry.pick_random_recipe(stats, species_id)
+		var recipe := pick_recipe_for_order(stats)
 		if recipe:
 			orders.append(DrinkRegistry.create_order_from_recipe(recipe, species_id, true))
 		else:
 			var fallback := DrinkOrder.new()
 			fallback.species_id = species_id
-			fallback.ingredients["gin"] = 1.0
+			if not req_ingredients.is_empty():
+				var share := 1.0 / float(req_ingredients.size())
+				for ing_id in req_ingredients:
+					fallback.ingredients[ing_id] = share
+			else:
+				fallback.ingredients["gin"] = 1.0
 			fallback.ice_preference = DrinkRegistry.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
 			orders.append(fallback)
 	return orders
@@ -171,8 +280,8 @@ func format_order_text(order: DrinkOrder, base_text: String) -> String:
 	if order == null:
 		return base_text
 	var out := base_text
-	if order.required_glass != "":
-		out += order.required_glass.capitalize() + " Glass\n"
+	if order.recipe_name != "":
+		out += order.recipe_name + "\n"
 	if not order.garnishes.is_empty():
 		var garnish_counts: Dictionary = {}
 		var garnish_order: Array[String] = []

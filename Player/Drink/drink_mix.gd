@@ -3,7 +3,14 @@ extends RefCounted
 
 # handles the actual contents of a cup
 
-const VALID_GARNISHES: Array[String] = ["lemons", "herbs", "cherries", "olives"]
+const VALID_GARNISHES: Array[String] = [
+	"herb",
+	"cherry",
+	"olive",
+	"lemon_whole",
+	"lemon_half",
+	"lemon_sliced"
+]
 
 var ingredients: Dictionary = {} # name -> amount (float)
 var garnishes: Array[String] = []
