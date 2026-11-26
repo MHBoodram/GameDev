@@ -23,6 +23,7 @@ var unlocks : Dictionary = {
 		"whiskey" : false,
 	},
 	"Ingredients":{
+		"Knife" : false,
 		"Blood" : false,
 		"Fishing_Rod" : false,
 		"Mag" : false
@@ -127,6 +128,11 @@ func unlock_tool(tool_id: String) -> void:
 				ing_dict[k] = true
 				if not was_unlocked:
 					SpeciesRegistry.on_ingredient_unlocked(str(k), self)
+		if clean_id == "knife" and ing_dict.has("Blood"):
+			var had_blood := bool(ing_dict["Blood"])
+			ing_dict["Blood"] = true
+			if not had_blood:
+				SpeciesRegistry.on_ingredient_unlocked("Blood", self)
 
 func reset_tool_unlocks() -> void:
 	if unlocks.has("Tools"):

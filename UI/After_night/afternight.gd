@@ -109,6 +109,13 @@ func _get_locked_unlocks(pick: String) -> Array:
 				temp_array.push_back(x)
 	return temp_array
 
+func _get_available_unlocks(pick: String) -> Array:
+	if GameState.night == 1 and pick == "Ingredients":
+		if not PlayerStats.has_knife_unlock(false):
+			return ["Knife"]
+		return []
+	return _get_locked_unlocks(pick)
+
 func _has_open_dialogue() -> bool:
 	if GameState.is_dialogue_open:
 		return true
@@ -186,9 +193,9 @@ func _advance_shop_step() -> void:
 	if not is_inside_tree():
 		return
 
-	if not ingredient_picked and _get_locked_unlocks("Drinks").is_empty():
+	if not ingredient_picked and _get_available_unlocks("Drinks").is_empty():
 		ingredient_picked = true
-	if ingredient_picked and not drink_picked and _get_locked_unlocks("Ingredients").is_empty():
+	if ingredient_picked and not drink_picked and _get_available_unlocks("Ingredients").is_empty():
 		drink_picked = true
 
 	_pending_choices.clear()
@@ -235,16 +242,24 @@ func _advance_shop_step() -> void:
 
 
 func _produce_unlocks_pick_3(pick: String = "Ingredients") -> void:
-	var temp_array = _get_locked_unlocks(pick)
+	var temp_array = _get_available_unlocks(pick)
 	print("Temp_array",temp_array)
 	print("Temp_array:size",temp_array.size())
 	var count: int = mini(3, temp_array.size())
+	var slot_names: Array[String] = []
+	match count:
+		1:
+			slot_names = ["Choice3"]
+		2:
+			slot_names = ["Choice2", "Choice4"]
+		_:
+			slot_names = ["Choice2", "Choice3", "Choice4"]
 	var last_tween: Tween = null
 	for x in count:
 		if not is_inside_tree():
 			return
 		var random = randi_range(0,temp_array.size()-1)
-		var obtain_node = get_node("ShopKeeper/Choice" + str(x+2))
+		var obtain_node = get_node("ShopKeeper/" + slot_names[x])
 		var random_object = temp_array.pop_at(random)
 		var new_choice = choices.instantiate()
 		new_choice.setup(self,random_object,pick)
