@@ -47,25 +47,43 @@ func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = n
 		if candidate != "blood":
 			non_blood_pool.append(candidate)
 
+	var blood_recipes: Array[DrinkRecipe] = []
+	for recipe in DrinkDefinitions.get_available_recipes(stats, species_id):
+		if recipe.ingredients.has("blood"):
+			blood_recipes.append(recipe)
+
 	var count := maxi(1, get_order_count(npc, modifier))
 	if modifier and modifier.has_method("modify_order_count"):
 		count = maxi(1, int(modifier.modify_order_count(npc, count)))
 	for i in range(count):
-		var order := DrinkOrder.new()
-		order.species_id = species_id
-		# Vampires always order blood at least once, and may order other drinks afterwards
+		# Vampires always order blood at least once, and may order set drinks afterwards
 		if i == 0 or (pool.has("blood") and randf() < 0.5):
-			if not non_blood_pool.is_empty():
-				var second_drink := str(non_blood_pool.pick_random())
-				order.ingredients["blood"] = 0.5
-				order.ingredients[second_drink] = 0.5
-				order.required_processing.append("shaken")
+			if not blood_recipes.is_empty():
+				var picked_blood := blood_recipes.pick_random() as DrinkRecipe
+				orders.append(DrinkDefinitions.create_order_from_recipe(picked_blood, species_id, true))
 			else:
-				order.ingredients["blood"] = 1.0
+				var order := DrinkOrder.new()
+				order.species_id = species_id
+				if not non_blood_pool.is_empty():
+					var second_drink := str(non_blood_pool.pick_random())
+					order.ingredients["blood"] = 0.5
+					order.ingredients[second_drink] = 0.5
+					order.required_processing.append("shaken")
+				else:
+					order.ingredients["blood"] = 1.0
+				order.ice_preference = DrinkDefinitions.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
+				orders.append(order)
 		else:
-			var other_drink := str(non_blood_pool.pick_random()) if not non_blood_pool.is_empty() else str(pool.pick_random())
-			order.ingredients[other_drink] = 1.0
-		orders.append(order)
+			var set_recipe := DrinkDefinitions.pick_random_recipe(stats, species_id)
+			if set_recipe:
+				orders.append(DrinkDefinitions.create_order_from_recipe(set_recipe, species_id, true))
+			else:
+				var fallback_order := DrinkOrder.new()
+				fallback_order.species_id = species_id
+				var other_drink := str(non_blood_pool.pick_random()) if not non_blood_pool.is_empty() else str(pool.pick_random())
+				fallback_order.ingredients[other_drink] = 1.0
+				fallback_order.ice_preference = DrinkDefinitions.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
+				orders.append(fallback_order)
 	return orders
 
 func on_tool_counter_action(tool_id: String, player: Node3D, main_node: Node3D) -> bool:

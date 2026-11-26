@@ -138,28 +138,43 @@ func get_order_count(_npc: Sprite3D, _modifier: RefCounted = null) -> int:
 
 func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = null) -> Array[DrinkOrder]:
 	var orders: Array[DrinkOrder] = []
-	var pool := get_drink_pool(stats)
-	if pool.is_empty():
-		pool.append("gin")
-
 	var count := maxi(1, get_order_count(npc, modifier))
 	if modifier and modifier.has_method("modify_order_count"):
 		count = maxi(1, int(modifier.modify_order_count(npc, count)))
+
 	for i in range(count):
-		var drink_name := str(pool.pick_random())
-		var order := DrinkOrder.new()
-		order.species_id = species_id
-		order.ingredients[drink_name] = 1.0
-		orders.append(order)
+		var recipe := DrinkDefinitions.pick_random_recipe(stats, species_id)
+		if recipe:
+			orders.append(DrinkDefinitions.create_order_from_recipe(recipe, species_id, true))
+		else:
+			var fallback := DrinkOrder.new()
+			fallback.species_id = species_id
+			fallback.ingredients["gin"] = 1.0
+			fallback.ice_preference = DrinkDefinitions.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
+			orders.append(fallback)
 	return orders
 
 func format_order_text(order: DrinkOrder, base_text: String) -> String:
-	if order and not order.required_processing.is_empty():
+	if order == null:
+		return base_text
+	var out := base_text
+	if order.required_glass != "":
+		out += order.required_glass.capitalize() + " Glass\n"
+	if not order.garnishes.is_empty():
+		var garnish_names := PackedStringArray()
+		for g in order.garnishes:
+			garnish_names.append(str(g).replace("_", " ").capitalize())
+		out += "Garnish: " + ", ".join(garnish_names) + "\n"
+	if order.ice_preference == DrinkRecipe.IcePreference.REQUIRED:
+		out += "Ice\n"
+	elif order.ice_preference == DrinkRecipe.IcePreference.FORBIDDEN:
+		out += "No Ice\n"
+	if not order.required_processing.is_empty():
 		var tags := PackedStringArray()
 		for tag in order.required_processing:
 			tags.append(str(tag).capitalize())
-		return base_text + "(" + ", ".join(tags) + ")\n"
-	return base_text
+		out += "(" + ", ".join(tags) + ")\n"
+	return out
 
 func modify_receipt_appearance(_receipt: Node, _receipt_2d: Control) -> void:
 	pass

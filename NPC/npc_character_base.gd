@@ -417,23 +417,29 @@ func generate_orders(npc: Sprite3D, modifier: RefCounted = null, stats: Node = n
 		return []
 
 	var sp := SpeciesRegistry.get_species_or_default(species_id)
-	var pool: Array[String] = custom_drink_pool.duplicate()
-	if pool.is_empty() and sp:
-		pool = sp.get_drink_pool(stats)
-	if pool.is_empty():
-		pool = ["gin"]
-
 	var count := default_order_count if default_order_count > 0 else (sp.get_order_count(npc, modifier) if sp else 1)
 	if modifier and modifier.has_method("modify_order_count"):
 		count = maxi(1, int(modifier.modify_order_count(npc, count)))
 
 	var orders: Array[DrinkOrder] = []
+	if custom_drink_pool.is_empty():
+		for _i in range(maxi(1, count)):
+			var recipe := DrinkDefinitions.pick_random_recipe(stats, species_id)
+			if recipe:
+				orders.append(DrinkDefinitions.create_order_from_recipe(recipe, species_id, true))
+		return orders
+
 	for _i in range(maxi(1, count)):
-		var drink_name := str(pool.pick_random())
-		var order := DrinkOrder.new()
-		order.species_id = species_id
-		order.ingredients[drink_name] = 1.0
-		orders.append(order)
+		var drink_name := str(custom_drink_pool.pick_random())
+		var recipe := DrinkDefinitions.get_recipe(drink_name)
+		if recipe:
+			orders.append(DrinkDefinitions.create_order_from_recipe(recipe, species_id, true))
+		else:
+			var order := DrinkOrder.new()
+			order.species_id = species_id
+			order.ingredients[drink_name.to_lower().strip_edges()] = 1.0
+			order.ice_preference = DrinkDefinitions.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
+			orders.append(order)
 	return orders
 
 func on_npc_setup(_npc: Sprite3D) -> void:

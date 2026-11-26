@@ -454,6 +454,8 @@ func debug_serve_all(score_type: String = "good") -> void:
 						mix.add_processing(str(tag))
 					for g in order.garnishes:
 						mix.add_garnish(str(g))
+					if order.ice_preference == DrinkRecipe.IcePreference.REQUIRED:
+						mix.add_ice()
 					mix.glass_type = order.required_glass
 					mix.is_tiny = order.is_tiny
 					npc.receive_drink(mix)

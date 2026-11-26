@@ -3,6 +3,8 @@ extends RefCounted
 
 # handles the actual contents of a cup
 
+const VALID_GARNISHES: Array[String] = ["lemons", "herbs", "cherries", "olives"]
+
 var ingredients: Dictionary = {} # name -> amount (float)
 var garnishes: Array[String] = []
 var processing_tags: Array[String] = [] # ex. "shaken", "spectral"
@@ -12,6 +14,9 @@ var is_tiny: bool = false
 var overfill_percent: float = 0.0
 var max_garnishes = 2
 var has_ice = false
+
+static func is_valid_garnish(garnish_id: String) -> bool:
+	return VALID_GARNISHES.has(garnish_id.to_lower().strip_edges())
 
 func reset() -> void:
 	ingredients.clear()
@@ -32,7 +37,7 @@ func add_overfill(percent: float) -> void:
 
 func add_garnish(garnish_id: String) -> bool:
 	var clean_id := garnish_id.to_lower().strip_edges()
-	if clean_id.is_empty() or garnishes.has(clean_id) or garnishes.size() >= max_garnishes:
+	if not is_valid_garnish(clean_id) or garnishes.has(clean_id) or garnishes.size() >= max_garnishes:
 		return false
 	garnishes.append(clean_id)
 	return true

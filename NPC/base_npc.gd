@@ -797,6 +797,17 @@ func _give_payment() -> void:
 	_leaving()
 
 # Orders
+func _make_order_from_name(drink_name: String) -> DrinkOrder:
+	var sp_id := species_def.species_id if species_def else "HUMAN"
+	var recipe := DrinkDefinitions.get_recipe(drink_name)
+	if recipe:
+		return DrinkDefinitions.create_order_from_recipe(recipe, sp_id, true)
+	var order := DrinkOrder.new()
+	order.species_id = sp_id
+	order.ingredients[drink_name.to_lower().strip_edges()] = 1.0
+	order.ice_preference = DrinkDefinitions.roll_ice_preference(DrinkRecipe.IcePreference.DONT_CARE)
+	return order
+
 func _want_drink() -> Array:
 	if speaking_title == "tutorial_walk":
 		var tutorial_order := DrinkOrder.new()
@@ -807,10 +818,7 @@ func _want_drink() -> Array:
 
 	if npc_resource and "default_orders" in npc_resource and not npc_resource.default_orders.is_empty():
 		for d in npc_resource.default_orders:
-			var fixed_order := DrinkOrder.new()
-			fixed_order.species_id = species_def.species_id if species_def else "HUMAN"
-			fixed_order.ingredients[str(d).to_lower().strip_edges()] = 1.0
-			drink_list.push_back(fixed_order)
+			drink_list.push_back(_make_order_from_name(str(d)))
 		if modifier:
 			var typed: Array[DrinkOrder] = []
 			typed.assign(drink_list)
@@ -824,9 +832,8 @@ func _want_drink() -> Array:
 		for order in generated:
 			drink_list.push_back(order)
 	else:
-		var fallback_order := DrinkOrder.new()
-		fallback_order.species_id = "HUMAN"
-		fallback_order.ingredients["gin"] = 1.0
+		var fallback_recipe := DrinkDefinitions.pick_random_recipe(PlayerStats, "HUMAN")
+		var fallback_order := DrinkDefinitions.create_order_from_recipe(fallback_recipe, "HUMAN", true) if fallback_recipe else _make_order_from_name("gin")
 		var fallback_orders: Array[DrinkOrder] = [fallback_order]
 		if modifier:
 			modifier.on_generate_orders(self, fallback_orders)
@@ -1028,16 +1035,11 @@ func hop_npc(height: float = 0.15) -> void:
 	tween.tween_property(self, "position:y", origin_y, 0.12).set_ease(Tween.EASE_IN)
 
 func add_order(drink_name: String) -> void:
-	var order := DrinkOrder.new()
-	order.species_id = species_def.species_id if species_def else "HUMAN"
-	order.ingredients[drink_name.to_lower().strip_edges()] = 1.0
-	drink_list.push_back(order)
+	drink_list.push_back(_make_order_from_name(drink_name))
 	_sync_orders_and_receipt()
 
 func change_order(drink_name: String) -> void:
-	var order := DrinkOrder.new()
-	order.species_id = species_def.species_id if species_def else "HUMAN"
-	order.ingredients[drink_name.to_lower().strip_edges()] = 1.0
+	var order := _make_order_from_name(drink_name)
 	if drink_list.is_empty():
 		drink_list.push_back(order)
 	else:

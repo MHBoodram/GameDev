@@ -346,6 +346,10 @@ func _on_spawn_cup_pressed() -> void:
 		if order.required_processing.has("spectral") and not glass.drink_mix.has_processing("spectral"):
 			glass.drink_mix.add_processing("spectral")
 			SpectralEffect.apply_to_glass(glass)
+		for g in order.garnishes:
+			glass.drink_mix.add_garnish(str(g))
+		if order.ice_preference == DrinkRecipe.IcePreference.REQUIRED:
+			glass.drink_mix.add_ice()
 
 	glass._remove_displaying_list(true)
 
