@@ -36,7 +36,6 @@ static func _build_recipe(data: Dictionary) -> DrinkRecipe:
 	var recipe := DrinkRecipe.new()
 	recipe.recipe_id = str(data.get("id", data.get("recipe_id", ""))).to_lower().strip_edges()
 	recipe.display_name = str(data.get("display_name", recipe.recipe_id.capitalize()))
-	recipe.base_price = float(data.get("base_price", 0.0))
 	recipe.required_glass = str(data.get("required_glass", "")).to_lower().strip_edges()
 	recipe.is_alcoholic = bool(data.get("is_alcoholic", true))
 	recipe.ice_preference = int(data.get("ice_preference", DrinkRecipe.IcePreference.DONT_CARE)) as DrinkRecipe.IcePreference

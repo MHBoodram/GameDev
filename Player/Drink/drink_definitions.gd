@@ -9,7 +9,6 @@ extends RefCounted
 # - processing_tags / processing (Array[String])
 # - required_glass (String: "", "beer", "shot")
 # - ice_preference (DrinkRecipe.IcePreference, defaults to DONT_CARE which allows Ice or No Ice)
-# - base_price (float)
 # - is_alcoholic (bool)
 # - preferred_by_species (Array[String])
 
