@@ -48,24 +48,29 @@ var story_flags: Dictionary = {}
 var scheduled_npcs: Array[Dictionary] = []
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	TextIcons.install(self)
 	_setup_global_menus()
 
 func _setup_global_menus() -> void:
 	if not is_instance_valid(debug_menu):
 		debug_menu = DEBUG_MENU_SCENE.instantiate()
+		debug_menu.process_mode = Node.PROCESS_MODE_ALWAYS
+		debug_menu.layer = 205
 		debug_menu.visible = false
 		add_child(debug_menu)
 
 	if not is_instance_valid(pause_menu):
 		pause_menu = PAUSE_MENU_SCENE.instantiate()
-		pause_menu.layer = 102
+		pause_menu.layer = 200
 		var pause_hand := pause_menu.get_node_or_null("Hand") as CanvasLayer
 		if pause_hand:
-			pause_hand.layer = 103
+			pause_hand.layer = 201
 		add_child(pause_menu)
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
+	if SettingState.waiting_keybind:
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_QUOTELEFT or event.physical_keycode == KEY_QUOTELEFT or event.keycode == KEY_ASCIITILDE:
 			toggle_debug_menu()
@@ -74,10 +79,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func toggle_debug_menu() -> void:
 	if not is_instance_valid(debug_menu):
 		return
-	if debug_menu.visible:
-		debug_menu.visible = false
-	elif not get_tree().paused:
-		debug_menu.visible = true
+	debug_menu.visible = not debug_menu.visible
 
 func register_subsystems(main: Node3D, p_player: Node3D, timer: Timer, env: WorldEnvironment, sun_node: DirectionalLight3D, counter_ref: Node3D) -> void:
 	main_node = main

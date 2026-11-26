@@ -44,17 +44,30 @@ func _load_settings() -> void:
 		"invert_pour_btn": $Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Invert_Pour,
 	})
 
-func _unhandled_input(event: InputEvent) -> void:
+func _is_escape_pressed(event: InputEvent) -> bool:
 	if event.is_action_pressed("ui_cancel"):
+		return true
+	if event is InputEventKey and event.pressed and not event.echo:
+		return event.keycode == KEY_ESCAPE or event.physical_keycode == KEY_ESCAPE
+	return false
+
+func _input(event: InputEvent) -> void:
+	if SettingState.waiting_keybind:
+		return
+	if _is_escape_pressed(event):
 		UIAudio.play_pause()
-		if get_tree().paused && which_menu == "Resume":
-			$AnimationPlayer.play_backwards("open_up_pause")
-			resume()
-		elif which_menu == "Resume":
+		if not visible:
+			which_menu = "Resume"
+			$Inside_paper.hide()
+			$Border.show()
+			$AnimationPlayer.play("RESET")
 			$AnimationPlayer.play("open_up_pause")
 			pause()
-		if get_tree().paused && which_menu == "Setting":
+		elif which_menu == "Setting":
 			_on_save_quit_setting_pressed()
+		else:
+			$AnimationPlayer.play_backwards("open_up_pause")
+			resume()
 		get_viewport().set_input_as_handled()
 
 func pause() -> void:
@@ -71,6 +84,14 @@ func resume() -> void:
 	$Hand.hide()
 	hide()
 
+func close_menu() -> void:
+	if which_menu == "Setting":
+		which_menu = "Resume"
+		$Inside_paper.hide()
+		$Border.show()
+		$AnimationPlayer.play("RESET")
+	resume()
+
 func settings() -> void:
 	if(which_menu=="Resume"):
 		_load_settings()
@@ -81,12 +102,7 @@ func settings() -> void:
 		which_menu = "Resume"
 
 func _on_main_menu_pressed() -> void:
-	if which_menu == "Setting":
-		which_menu = "Resume"
-		$Inside_paper.hide()
-		$Border.show()
-		$AnimationPlayer.play("RESET")
-	resume()
+	close_menu()
 	Engine.time_scale = 1.0
 	if is_instance_valid(GameState.debug_menu):
 		GameState.debug_menu.visible = false

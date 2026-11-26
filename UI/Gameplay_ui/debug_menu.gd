@@ -127,8 +127,6 @@ func _populate_modifier_dropdown() -> void:
 	modifier_option.select(0)
 
 func _process(_delta: float) -> void:
-	if get_tree().paused:
-		return
 	_update_cursor_visibility()
 	if visible:
 		fps_label.text = "FPS: " + str(Engine.get_frames_per_second())
@@ -163,6 +161,13 @@ func _get_counter_ref() -> Node3D:
 	if is_instance_valid(GameState.main_node):
 		return GameState.main_node.get_node_or_null("Coutner") as Node3D
 	return null
+
+func _close_pause_menu_if_open() -> void:
+	if is_instance_valid(GameState.pause_menu) and GameState.pause_menu.visible:
+		if GameState.pause_menu.has_method("close_menu"):
+			GameState.pause_menu.close_menu()
+		elif GameState.pause_menu.has_method("resume"):
+			GameState.pause_menu.resume()
 
 func _cleanup_tutorial_and_dialogue(remove_story_npcs: bool = true) -> void:
 	if is_instance_valid(GameState.gameplay_ui):
@@ -228,6 +233,7 @@ func _on_skip_time_pressed() -> void:
 	nm.night_timer.start(maxf(0.5, nm.night_timer.time_left - 60.0))
 
 func _on_end_night_pressed() -> void:
+	_close_pause_menu_if_open()
 	Engine.time_scale = 1.0
 	_speed_index = 0
 	speed_btn.text = "Speed: 1x"
@@ -258,6 +264,7 @@ func _on_end_night_pressed() -> void:
 func _on_jump_night_pressed() -> void:
 	if night_option.selected < 0:
 		return
+	_close_pause_menu_if_open()
 	var target_night := int(night_option.get_item_metadata(night_option.selected))
 	if target_night <= GameState.night and PlayerStats.has_method("reset_tool_unlocks"):
 		PlayerStats.reset_tool_unlocks()
@@ -438,6 +445,7 @@ func _on_blood_game_pressed() -> void:
 		return
 	if GameState.minigame_host.is_minigame_active or ShakerMinigame.active or GameState.is_dialogue_open:
 		return
+	_close_pause_menu_if_open()
 	if PlayerStats.unlocks.has("Ingredients"):
 		PlayerStats.unlocks["Ingredients"]["Blood"] = true
 	if is_instance_valid(GameState.shelf_manager):
