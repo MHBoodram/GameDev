@@ -12,6 +12,7 @@ enum ShopPhase {
 const BASE_SHOP_SLOTS := 4
 const SLOTS_PER_UPGRADE := 2
 const MAX_SHOP_SLOTS := 8
+const REROLL_UPGRADE_ID := "Reroll"
 const SUMMARY_FF_SCOPE := "afternight_summary"
 const SHOP_FF_SCOPE := "afternight_shop"
 
@@ -369,18 +370,32 @@ func _produce_upgrades() -> void:
 	var pool := _build_upgrade_shop_pool()
 	print("Temp_array", pool)
 
-	var count: int = mini(_get_shop_slot_count(), pool.size())
+	var total_slots: int = _get_shop_slot_count()
+	var spawn_entries: Array[Dictionary] = []
+
+	var reroll_upg := UpgradeRegistry.get_upgrade(REROLL_UPGRADE_ID)
+	if reroll_upg != null and reroll_upg.can_purchase(PlayerStats):
+		spawn_entries.append({
+			"id": reroll_upg.upgrade_id,
+			"type": "Upgrades",
+			"cost": reroll_upg.get_shop_cost(GameState.night, PlayerStats),
+		})
+
+	var random_slots: int = mini(maxi(0, total_slots - spawn_entries.size()), pool.size())
+	for _i in random_slots:
+		var random = randi_range(0, pool.size() - 1)
+		spawn_entries.append(pool.pop_at(random))
+
 	_used_shop_slots = 0
 	var last_tween: Tween = null
-	for x in count:
+	for x in spawn_entries.size():
 		if not is_inside_tree():
 			return
 		var obtain_node = $new_bar._get_marker(x + 1)
 		if obtain_node == null:
 			continue
 		_used_shop_slots = x + 1
-		var random = randi_range(0, pool.size() - 1)
-		var entry: Dictionary = pool.pop_at(random)
+		var entry: Dictionary = spawn_entries[x]
 		var new_choice = choices.instantiate()
 
 		new_choice.setup(self, str(entry["id"]), str(entry["type"]), int(entry["cost"]))
@@ -394,44 +409,84 @@ func _produce_upgrades() -> void:
 		tween.tween_property(new_choice, "global_position", obtain_node.global_position, 0.5)
 		FastForward.track_tween(tween, 0.5, SHOP_FF_SCOPE)
 		last_tween = tween
-		if x < count - 1:
+		if x < spawn_entries.size() - 1:
 			await FastForward.wait(0.5, self, SHOP_FF_SCOPE)
 	if is_instance_valid(last_tween) and last_tween.is_running():
 		await last_tween.finished
 
-func _expand_shop_slots() -> void:
-	if _is_expanding_slots or not upgrade_time or _is_finishing_night or not is_inside_tree():
+func _reroll_shop() -> void:
+	if not upgrade_time or _is_advancing_shop or _is_finishing_night:
 		return
-	_is_expanding_slots = true
-	while _used_shop_slots < _get_shop_slot_count():
-		if not is_inside_tree() or _is_finishing_night:
-			break
-		var pool := _build_upgrade_shop_pool(true)
-		if pool.is_empty():
-			break
-		var next_slot: int = _used_shop_slots + 1
-		var obtain_node = $new_bar._get_marker(next_slot)
-		if obtain_node == null:
-			break
-		_used_shop_slots = next_slot
-		var random: int = randi_range(0, pool.size() - 1)
-		var entry: Dictionary = pool.pop_at(random)
-		var new_choice = choices.instantiate()
-		new_choice.setup(self, str(entry["id"]), str(entry["type"]), int(entry["cost"]))
-		new_choice._disable()
-		add_child(new_choice)
-		new_choice.global_position = $ShopKeeper.global_position
-		var tween := get_tree().create_tween()
+	if shop_phase == ShopPhase.TRANSITIONING or shop_phase == ShopPhase.FINISHING:
+		return
+	_is_advancing_shop = true
+	shop_phase = ShopPhase.TRANSITIONING
+	if is_instance_valid(shopkeeper):
+		shopkeeper.can_talk = false
+	_perform_reroll_shop()
+
+func _perform_reroll_shop() -> void:
+	if not is_inside_tree():
+		return
+
+	FastForward.begin_scope(SHOP_FF_SCOPE, {
+		"duration": shop_fast_forward_duration,
+		"allow_when_dialogue_open": false,
+		"priority": 40,
+	})
+
+	var old_nodes = get_tree().get_nodes_in_group("Choice")
+	for node in old_nodes:
+		if is_instance_valid(node) and not node.is_queued_for_deletion() and node.has_method("_disable"):
+			node._disable()
+
+	var shopkeeper_position = shopkeeper.global_position
+	shopkeeper_position.y -= 5
+
+	var clear_tween: Tween = null
+	for node in old_nodes:
+		if not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		var tween = get_tree().create_tween()
 		tween.set_trans(Tween.TRANS_SINE)
 		tween.set_ease(Tween.EASE_OUT)
-		tween.tween_property(new_choice, "global_position", obtain_node.global_position, 0.5)
-		tween.finished.connect(func() -> void:
-			if is_instance_valid(new_choice) and not new_choice.is_queued_for_deletion() and not _is_finishing_night:
-				new_choice._enable()
-		)
-		if _used_shop_slots < _get_shop_slot_count():
-			await get_tree().create_timer(0.35).timeout
-	_is_expanding_slots = false
+		tween.tween_property(node, "global_position", shopkeeper_position, 0.5)
+		FastForward.track_tween(tween, 0.5, SHOP_FF_SCOPE)
+		clear_tween = tween
+
+	if is_instance_valid(clear_tween) and clear_tween.is_running():
+		await clear_tween.finished
+	if not is_inside_tree():
+		FastForward.end_scope(SHOP_FF_SCOPE)
+		return
+
+	for node in old_nodes:
+		if is_instance_valid(node) and not node.is_queued_for_deletion():
+			node.queue_free()
+
+	shopkeeper._play_animation_knocking()
+	await FastForward.wait(1.0, self, SHOP_FF_SCOPE)
+	if not is_inside_tree():
+		FastForward.end_scope(SHOP_FF_SCOPE)
+		return
+
+	_pending_choices.clear()
+	await _produce_upgrades()
+	if not is_inside_tree():
+		FastForward.end_scope(SHOP_FF_SCOPE)
+		return
+
+	FastForward.end_scope(SHOP_FF_SCOPE)
+	if _is_finishing_night:
+		return
+	_enable_choices(_pending_choices)
+	shop_phase = ShopPhase.UPGRADES
+	_is_advancing_shop = false
+	if is_instance_valid(shopkeeper):
+		shopkeeper.can_talk = true
+
+func _expand_shop_slots() -> void:
+	_reroll_shop()
 
 #Temporary Functions
 func _on_button_pressed() -> void:

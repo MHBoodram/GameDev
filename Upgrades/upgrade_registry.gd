@@ -26,6 +26,21 @@ static func reload() -> void:
 
 static func _register_defaults() -> void:
 	register_upgrade(UpgradeDef.from_dict({
+		"id": "Reroll",
+		"display_name": "Reroll",
+		"description": "Reroll shop upgrades and ingredients",
+		# "icon_path": "res://Assets/Upgrades/Reroll.png",
+		"sort_order": 0,
+		"repeatable": true,
+		"max_level": -1,
+		"base_cost": 25,
+		"cost_per_level_mult": 1.25,
+		"cost_per_night_mult": 1.25,
+		"show_in_shop": false,
+		"passive_key": "Shop Reroll",
+		"on_unlocked": _on_reroll_unlocked,
+	}))
+	register_upgrade(UpgradeDef.from_dict({
 		"id": "Jukebox",
 		"description": "Decrease patience for a huge bonus",
 		"sort_order": 1,
@@ -181,9 +196,16 @@ static func _on_ingredient_upgrade_unlocked(_stats: Node, _level: int) -> void:
 static func _on_ingredient_upgrade_reset(_stats: Node) -> void:
 	_refresh_shelf_ingredients()
 
+static func _on_reroll_unlocked(_stats: Node, _level: int) -> void:
+	if GameState and is_instance_valid(GameState.main_node) and GameState.main_node.has_method("_reroll_shop"):
+		GameState.main_node._reroll_shop()
+
 static func _on_shelf_slots_unlocked(_stats: Node, _level: int) -> void:
-	if GameState and is_instance_valid(GameState.main_node) and GameState.main_node.has_method("_expand_shop_slots"):
-		GameState.main_node._expand_shop_slots()
+	if GameState and is_instance_valid(GameState.main_node):
+		if GameState.main_node.has_method("_reroll_shop"):
+			GameState.main_node._reroll_shop()
+		elif GameState.main_node.has_method("_expand_shop_slots"):
+			GameState.main_node._expand_shop_slots()
 
 static func _resolve_stats(stats: Node = null) -> Node:
 	if is_instance_valid(stats):
