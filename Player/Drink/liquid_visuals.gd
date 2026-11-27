@@ -55,6 +55,12 @@ var fluid_sim: AtomicFluidSim = null
 var _outside_sprite: Node = null
 var _last_viscosity: float = 0.0
 
+static func register_liquid_color(id: String, color_val: Color) -> void:
+	AtomicFluidShaders.register_liquid_color(id, color_val)
+
+static func get_liquid_color(id: String) -> Color:
+	return AtomicFluidShaders.get_liquid_color(id)
+
 static func register_liquid_buoyancy(id: String, buoyancy_val: float) -> void:
 	AtomicFluidShaders.register_liquid_buoyancy(id, buoyancy_val)
 
@@ -132,7 +138,7 @@ func setup_shader(outside_sprite: Node) -> ShaderMaterial:
 
 	var init_grid := _compute_pixel_grid(REFERENCE_PIXEL_RESOLUTION)
 	liquid_shader_mat.set_shader_parameter("pixel_grid", init_grid)
-	liquid_shader_mat.set_shader_parameter("pixel_resolution", (init_grid.x + init_grid.y) * 0.5)
+	liquid_shader_mat.set_shader_parameter("pixel_resolution", (init_grid.x + grid_y_fallback(init_grid)) * 0.5)
 
 	gradient_texture = GradientTexture2D.new()
 	gradient_texture.width = 64
@@ -145,6 +151,9 @@ func setup_shader(outside_sprite: Node) -> ShaderMaterial:
 	gradient_texture.gradient = liquid_gradient
 
 	return liquid_shader_mat
+
+static func grid_y_fallback(g: Vector2) -> float:
+	return g.y
 
 func cleanup() -> void:
 	if fluid_sim:
@@ -164,6 +173,7 @@ func sync_container_liquids(liquids: Array, glass_size: float, is_mixed_flag: bo
 		fluid_sim.sync_container_liquids(liquids, glass_size, is_mixed_flag, AtomicFluidShaders._custom_buoyancy, pour_info, AtomicFluidShaders._custom_viscosity)
 
 func sync_bottle_liquid(id: String, current_amount: float, bottle_size: float, color: Color, buoyancy: float = -1.0, viscosity_val: float = -1.0) -> void:
+	register_liquid_color(id, color)
 	if buoyancy > 0.0:
 		register_liquid_buoyancy(id, buoyancy)
 	if viscosity_val >= 0.0:
@@ -387,7 +397,7 @@ func get_layer_color(layer: Array) -> Color:
 		return layer[2]
 	if layer[0] is Array or layer[0] is Dictionary:
 		return get_layer_hsv_color(layer)
-	return LIQUID_COLOR.get(str(layer[0]), Color.WHITE)
+	return get_liquid_color(str(layer[0]))
 
 func get_layer_hsv_color(layer: Array) -> Color:
 	if layer.size() > 2 and layer[2] is Color:
@@ -395,15 +405,15 @@ func get_layer_hsv_color(layer: Array) -> Color:
 	var weights: Array = []
 	if layer.size() > 3 and layer[3] is Dictionary:
 		for ing in layer[3]:
-			weights.append([LIQUID_COLOR.get(str(ing), Color.WHITE), float(layer[3][ing])])
+			weights.append([get_liquid_color(str(ing)), float(layer[3][ing])])
 	elif layer[0] is Array:
 		for ing in layer[0]:
-			weights.append([LIQUID_COLOR.get(str(ing), Color.WHITE), 1.0])
+			weights.append([get_liquid_color(str(ing)), 1.0])
 	elif layer[0] is Dictionary:
 		for ing in layer[0]:
-			weights.append([LIQUID_COLOR.get(str(ing), Color.WHITE), float(layer[0][ing])])
+			weights.append([get_liquid_color(str(ing)), float(layer[0][ing])])
 	else:
-		return LIQUID_COLOR.get(str(layer[0]), Color.WHITE)
+		return get_liquid_color(str(layer[0]))
 	return average_hsv_color(weights)
 
 func average_hsv_color(color_weights: Array) -> Color:

@@ -41,6 +41,9 @@ func format_order_text(_order: DrinkOrder, base_text: String) -> String:
 func modify_receipt_appearance(_receipt: Node, _receipt_2d: Control) -> void:
 	pass
 
+func apply_to_preview_cup(_cup: Area3D, _order: DrinkOrder) -> void:
+	pass
+
 func on_score_drink(_npc: Sprite3D, _served: DrinkMix, _wanted: DrinkOrder, _score_data: Dictionary) -> void:
 	pass
 

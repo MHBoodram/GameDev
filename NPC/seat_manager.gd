@@ -329,6 +329,16 @@ func clear_all_customers(immediate: bool = false, unique_only: bool = false) -> 
 	if not unique_only:
 		reset_serve_combo(immediate)
 
+func _resolve_npc_active_order(npc: Base_NPC) -> DrinkOrder:
+	if not is_instance_valid(npc) or npc.drink_list.is_empty():
+		return null
+	var raw_want: Variant = npc.drink_list[0]
+	if raw_want is DrinkOrder:
+		return raw_want as DrinkOrder
+	if raw_want is Array:
+		return DrinkOrder.from_legacy_want(raw_want as Array)
+	return null
+
 func add_receipt(seat: int, order_text: String, customer_race: String = "", customer_icon: Texture2D = null) -> void:
 	if not main_root:
 		return
@@ -356,7 +366,13 @@ func add_receipt(seat: int, order_text: String, customer_race: String = "", cust
 		)
 	elif recipt_node.has_method("apply_modifier_visuals"):
 		recipt_node.apply_modifier_visuals(npc.modifier if is_instance_valid(npc) else null)
-	recipt_node._write(order_text)
+
+	var active_order: DrinkOrder = _resolve_npc_active_order(npc)
+	if active_order != null and recipt_node.has_method("_set_drink_order"):
+		var drink_title: String = npc._current_order_text() if is_instance_valid(npc) else ""
+		recipt_node._set_drink_order(active_order, drink_title, npc.species_def, npc.modifier)
+	else:
+		recipt_node._write(order_text)
 	recipt_node.ordered = true
 
 	var player = GameState.player
@@ -373,7 +389,14 @@ func update_receipt(seat: int, order_text: String) -> void:
 	if not main_root:
 		return
 	var recipt_node := main_root.get_node_or_null("ReciptPaper" + str(seat))
-	if recipt_node and recipt_node.has_method("_write"):
+	if not recipt_node:
+		return
+	var npc: Base_NPC = get_customer_at_seat(seat)
+	var active_order: DrinkOrder = _resolve_npc_active_order(npc)
+	if active_order != null and recipt_node.has_method("_set_drink_order"):
+		var drink_title: String = npc._current_order_text() if is_instance_valid(npc) else ""
+		recipt_node._set_drink_order(active_order, drink_title, npc.species_def, npc.modifier)
+	elif recipt_node.has_method("_write"):
 		recipt_node._write(order_text)
 
 func clear_receipt_for_seat(seat_number: int) -> void:

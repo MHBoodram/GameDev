@@ -92,6 +92,7 @@ func ready() -> void:
 		_base_size = liquid_resource.liquid_size
 		_apply_passive_upgrades(true)
 		color_liquid = liquid_resource.liquid_color
+		LiquidVisualHelper.register_liquid_color(liquid_resource.id, liquid_resource.liquid_color)
 		if liquid_resource.buoyancy > 0.0:
 			LiquidVisualHelper.register_liquid_buoyancy(liquid_resource.id, liquid_resource.buoyancy)
 		if liquid_resource.viscosity >= 0.0:
@@ -113,6 +114,7 @@ func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 	_apply_passive_upgrades(true)
 	color_liquid = liquid_resource.liquid_color
 
+	LiquidVisualHelper.register_liquid_color(liquid_resource.id, liquid_resource.liquid_color)
 	if liquid_resource.buoyancy > 0.0:
 		LiquidVisualHelper.register_liquid_buoyancy(liquid_resource.id, liquid_resource.buoyancy)
 	if liquid_resource.viscosity >= 0.0:

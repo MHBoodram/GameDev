@@ -70,7 +70,7 @@ var _inside_base_pos: Vector3 = Vector3.ZERO
 @onready var highlight = get_node_or_null("Inside/highlight")
 
 func is_working_area_item() -> bool:
-	return true
+	return not is_preview_only
 
 func _is_drag_blocked() -> bool:
 	return super._is_drag_blocked() or is_being_served or is_consumed or is_pouring_out
@@ -117,7 +117,8 @@ func add_garnish_item(garnish_id: String) -> bool:
 		added = drink_mix.add_garnish(clean_id, 1)
 	if added:
 		sync_garnish_visuals()
-		GameState.play_sfx("play_mugpickup")
+		if not is_preview_only:
+			GameState.play_sfx("play_mugpickup")
 	return added
 
 func sync_garnish_visuals() -> void:
@@ -416,9 +417,10 @@ func ready() -> void:
 	if sprite:
 		_inside_base_scale = sprite.scale
 		_inside_base_pos = sprite.position
-	_ensure_pour_out_stream()
-	_ensure_pour_splash_stream()
-	_ensure_overflow_streams()
+	if not is_preview_only:
+		_ensure_pour_out_stream()
+		_ensure_pour_splash_stream()
+		_ensure_overflow_streams()
 	_setup_liquid_shader()
 	var host_sprite := sprite if is_instance_valid(sprite) else get_node_or_null("Inside") as Sprite3D
 	var outside_sprite := get_node_or_null("Inside/Outside") as Sprite3D
@@ -428,7 +430,14 @@ func ready() -> void:
 		highlight.modulate = Color(1.5, 1.5, 0.0, 5.0)
 	if camera:
 		_face_camera()
-	if not _skip_initial_snap:
+	if is_preview_only:
+		remove_from_group("glass")
+		remove_from_group("interactable")
+		input_ray_pickable = false
+		if area_body:
+			area_body.disabled = true
+		base_y_position = global_position.y
+	elif not _skip_initial_snap:
 		_snap_to_working_area()
 	else:
 		base_y_position = get_working_area_surface_y()
@@ -443,9 +452,10 @@ func _exit_tree() -> void:
 		_pour_out_stream.set_stream_active(false)
 	_stop_pour_splash()
 	_stop_overflow_streams()
-	var hud := HudIndicators.get_current()
-	if hud:
-		hud.hide_pouring_indicator(self)
+	if not is_preview_only:
+		var hud := HudIndicators.get_current()
+		if hud:
+			hud.hide_pouring_indicator(self)
 
 func start_drag_from_spawn(press_screen_pos: Vector2, from_shelf: bool = false) -> void:
 	if from_shelf:
@@ -493,19 +503,21 @@ func _update_hand_position(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	super._process(delta)
-	_update_snap(delta)
-	if _spill_indicator_cooldown > 0.0:
-		_spill_indicator_cooldown = maxf(0.0, _spill_indicator_cooldown - delta)
+	if not is_preview_only:
+		_update_snap(delta)
+		if _spill_indicator_cooldown > 0.0:
+			_spill_indicator_cooldown = maxf(0.0, _spill_indicator_cooldown - delta)
 
-	if is_pouring_out and not (_pour_tilt_tween and _pour_tilt_tween.is_valid()):
-		pour_tilt_degrees = lerpf(pour_tilt_degrees, _target_pour_tilt_degrees, 1.0 - exp(-18.0 * delta))
+		if is_pouring_out and not (_pour_tilt_tween and _pour_tilt_tween.is_valid()):
+			pour_tilt_degrees = lerpf(pour_tilt_degrees, _target_pour_tilt_degrees, 1.0 - exp(-18.0 * delta))
 
-	if camera and not is_balls_dragging and _is_drag_blocked():
+	if camera and (is_preview_only or (not is_balls_dragging and _is_drag_blocked())):
 		_face_camera()
 
-	_update_pour_out_stream()
-	_update_pour_splash(delta)
-	_update_overflow_streams(delta)
+	if not is_preview_only:
+		_update_pour_out_stream()
+		_update_pour_splash(delta)
+		_update_overflow_streams(delta)
 
 	var track_pos: Vector3 = sprite.global_position if sprite else global_position
 	var outside_sprite := get_node_or_null("Inside/Outside") as Node3D
@@ -679,7 +691,7 @@ func _rebuild_liquid_gradient(show_hud: bool = true) -> void:
 	for l in liquids:
 		total_liquids += float(l[1])
 	visual_helper.rebuild_gradient(liquids, total_liquids, size, is_mixed())
-	if show_hud and not liquids.is_empty() and total_liquids > 0.0:
+	if show_hud and not is_preview_only and not liquids.is_empty() and total_liquids > 0.0:
 		var hud := HudIndicators.get_current()
 		if hud:
 			hud.update_pouring_indicator(self, liquids, size, visual_helper)
@@ -740,7 +752,7 @@ func _pouring(id: String, liquids_num: float, pour_info: Dictionary = {}) -> flo
 		visual_helper.add_agitation(Vector2(vx_imp, 3.2))
 		visual_helper.slosh_vertical_velocity += randf_range(-0.1, 0.04)
 		var hud := HudIndicators.get_current()
-		if hud and not liquids.is_empty():
+		if hud and not is_preview_only and not liquids.is_empty():
 			hud.update_pouring_indicator(self, liquids, size, visual_helper)
 
 	if added > 0.0 or overflow > OVERFLOW_EPSILON:
@@ -777,7 +789,7 @@ func reset_cup(show_empty_indicator: bool = false) -> void:
 	_rebuild_liquid_gradient(false)
 	_update_shader_parameters()
 	_remove_displaying_list(true)
-	if show_empty_indicator:
+	if show_empty_indicator and not is_preview_only:
 		var hud := HudIndicators.get_current()
 		if hud:
 			hud.show_cup_empty_indicator(self)
@@ -988,6 +1000,8 @@ func _dranked() -> void:
 	queue_free()
 
 func _on_area_3d_area_entered(area: Area3D) -> void:
+	if is_preview_only:
+		return
 	if area.is_in_group("glass") and get_drag_mode() == DragMode.COLLISION and not is_balls_dragging:
 		_pushing_glass(area)
 
@@ -1062,6 +1076,8 @@ func _on_returned_to_counter(target_pos: Vector3) -> void:
 		_previous_counter_position = target_pos
 
 func _remove_displaying_list(immediate: bool = false) -> void:
+	if is_preview_only:
+		return
 	var hud := HudIndicators.get_current()
 	if hud:
 		hud.hide_pouring_indicator(self, immediate)
@@ -1098,10 +1114,12 @@ func mark_mixed() -> void:
 			continue
 		total_amount += layer_amt
 		if layer.size() > 3 and layer[3] is Dictionary:
+			var fallback_col: Variant = layer[2] if (layer.size() > 2 and layer[2] is Color and not (layer[0] is Array or layer[0] is Dictionary)) else null
 			for ing in layer[3]:
 				var a := float(layer[3][ing])
 				combined_amounts[str(ing)] = combined_amounts.get(str(ing), 0.0) + a
-				color_weights.append([visual_helper.LIQUID_COLOR.get(str(ing), Color.WHITE), a])
+				var c: Color = fallback_col if fallback_col is Color else visual_helper.LIQUID_COLOR.get(str(ing), Color.WHITE)
+				color_weights.append([c, a])
 		elif layer[0] is Array:
 			var split_a := layer_amt / maxf(float(layer[0].size()), 1.0)
 			for ing in layer[0]:
@@ -1111,7 +1129,8 @@ func mark_mixed() -> void:
 		else:
 			var s := str(layer[0])
 			combined_amounts[s] = combined_amounts.get(s, 0.0) + layer_amt
-			color_weights.append([visual_helper.LIQUID_COLOR.get(s, Color.WHITE), layer_amt])
+			var c: Color = layer[2] if (layer.size() > 2 and layer[2] is Color) else visual_helper.LIQUID_COLOR.get(s, Color.WHITE)
+			color_weights.append([c, layer_amt])
 
 	var mixed_color := visual_helper.average_hsv_color(color_weights)
 	var mixed_names: Array[String] = []
@@ -1122,7 +1141,7 @@ func mark_mixed() -> void:
 	liquids.clear()
 	liquids.push_back([mixed_names, total_amount, mixed_color, combined_amounts])
 	drink_mix.add_processing("shaken")
-	_rebuild_liquid_gradient(true)
+	_rebuild_liquid_gradient(not is_preview_only)
 
 func get_mixed_ingredients() -> Array[String]:
 	return get_unique_liquids_ids()

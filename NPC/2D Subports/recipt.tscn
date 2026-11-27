@@ -76,7 +76,7 @@ offset_right = -20.0
 offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 8
 
 [node name="Header" type="HBoxContainer" parent="VBoxContainer" unique_id=1741290411]
 layout_mode = 2
@@ -116,12 +116,31 @@ text = "?"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="DrinkNameLabel" type="Label" parent="VBoxContainer" unique_id=1741290418]
+layout_mode = 2
+theme = SubResource("Theme_mfd7k")
+theme_override_constants/outline_size = 20
+theme_override_font_sizes/font_size = 76
+text = "Beer"
+horizontal_alignment = 1
+autowrap_mode = 3
+
 [node name="Divider" type="ColorRect" parent="VBoxContainer" unique_id=1741290417]
 custom_minimum_size = Vector2(0, 6)
 layout_mode = 2
 color = Color(0, 0, 0, 1)
 
+[node name="DrinkPreview" type="TextureRect" parent="VBoxContainer" unique_id=1741290419]
+texture_filter = 1
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
 [node name="Label" type="Label" parent="VBoxContainer" unique_id=598583150]
+visible = false
 layout_mode = 2
 size_flags_vertical = 3
 theme = SubResource("Theme_mfd7k")

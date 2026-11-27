@@ -51,9 +51,20 @@ const LIQUID_PRICE_PER_CUP_PERCENT := {
 	"blood": 0.1
 }
 
+static var _custom_color: Dictionary = {}
 static var _custom_buoyancy: Dictionary = {}
 static var _custom_viscosity: Dictionary = {}
 static var _custom_price_per_cup_percent: Dictionary = {}
+
+static func register_liquid_color(id: String, color_val: Color) -> void:
+	_custom_color[id] = color_val
+
+static func get_liquid_color(id: String) -> Color:
+	if _custom_color.has(id):
+		return _custom_color[id]
+	if LIQUID_COLOR.has(id):
+		return LIQUID_COLOR[id]
+	return Color.WHITE
 
 static func register_liquid_price(id: String, price_val: float) -> void:
 	if price_val >= 0.0:

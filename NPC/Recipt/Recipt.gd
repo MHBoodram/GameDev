@@ -59,6 +59,15 @@ func get_receipt_dimensions() -> Vector2:
 	var base_dims := get_base_receipt_dimensions()
 	return Vector2(base_dims.x * absf(scale.x), base_dims.y * absf(scale.z))
 
+func get_viewport_aspect_compensation() -> float:
+	var base_vp := get_node_or_null("Base_viewport") as Sprite3D
+	if is_instance_valid(base_vp):
+		var sx := absf(base_vp.scale.x)
+		var sy := absf(base_vp.scale.y)
+		if sx > 0.0001 and sy > 0.0001:
+			return sy / sx
+	return 1.4715
+
 func _moving_to_board(target_pos: Vector3, target_basis: Basis, duration: float = 0.5, target_scale: Vector3 = Vector3.ONE) -> void:
 	has_board_slot = true
 	board_slot_position = target_pos
@@ -81,6 +90,8 @@ func clear_board_slot() -> void:
 	if _move_tween and _move_tween.is_valid():
 		_move_tween.kill()
 	scale = Vector3.ONE
+	if recipt_2d and recipt_2d.has_method("clear_drink_order"):
+		recipt_2d.clear_drink_order()
 
 func _moving_to(to: Marker3D) -> void:
 	if _move_tween and _move_tween.is_valid():
@@ -94,6 +105,13 @@ func _write(words: String) -> void:
 	if recipt_2d:
 		recipt_2d._label_change(words)
 		recipt_2d._set_seat_number(seat_num)
+
+func _set_drink_order(order: DrinkOrder, drink_name: String = "", species_def: SpeciesBase = null, modifier: ModifierBase = null) -> void:
+	if recipt_2d:
+		if recipt_2d.has_method("_set_drink_order"):
+			recipt_2d._set_drink_order(order, drink_name, species_def, modifier, get_viewport_aspect_compensation())
+		if recipt_2d.has_method("_set_seat_number"):
+			recipt_2d._set_seat_number(seat_num)
 
 func _set_customer_info(seat: int, race: String = "", icon_texture: Texture2D = null) -> void:
 	seat_num = seat

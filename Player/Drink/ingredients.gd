@@ -20,6 +20,7 @@ var is_balls_dragging: bool = false:
 			active_dragging_item = null
 
 var is_selected: bool = false
+var is_preview_only: bool = false
 var camera: Camera3D
 @export var counter_origin: Node3D
 @export var area_body: CollisionShape3D
@@ -55,7 +56,8 @@ var _mode_transition_duration: float = 0.35
 var _mode_transition_start_pos: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
-	add_to_group("interactable")
+	if not is_preview_only:
+		add_to_group("interactable")
 	camera = get_viewport().get_camera_3d()
 	if not input_event.is_connected(_on_area_3d_input_event):
 		input_event.connect(_on_area_3d_input_event)
@@ -95,7 +97,7 @@ func uses_working_area_drag_plane() -> bool:
 	return get_drag_mode() == DragMode.COLLISION
 
 func _is_drag_blocked() -> bool:
-	return in_game
+	return in_game or is_preview_only
 
 func _get_drag_follow_speed() -> float:
 	return follow_speed
