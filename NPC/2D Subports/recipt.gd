@@ -2,7 +2,7 @@ extends Control
 
 const LOGOS_SHEET := preload("res://Assets/NPC/UI/Logos-Sheet.png")
 
-@onready var seat_label: Label = $VBoxContainer/Header/SeatLabel
+@onready var seat_label: Label = get_node_or_null("VBoxContainer/Header/SeatLabel")
 @onready var customer_icon: TextureRect = get_node_or_null("VBoxContainer/Header/CustomerIconFrame/CustomerIcon")
 @onready var placeholder_label: Label = get_node_or_null("VBoxContainer/Header/CustomerIconFrame/PlaceholderLabel")
 @onready var drink_name_label: Label = $VBoxContainer/DrinkNameLabel
@@ -10,6 +10,8 @@ const LOGOS_SHEET := preload("res://Assets/NPC/UI/Logos-Sheet.png")
 @onready var order_label: Label = $VBoxContainer/Label
 
 var _has_order_render: bool = false
+var _seat_num: int = 1
+var _drink_name: String = ""
 
 func _ready() -> void:
 	if customer_icon and customer_icon.texture == null:
@@ -17,6 +19,17 @@ func _ready() -> void:
 		_set_placeholder_frame(default_sp.logo_frame if default_sp else 10)
 	if order_label:
 		order_label.visible = false
+	_update_header_text()
+
+func _update_header_text() -> void:
+	if seat_label:
+		seat_label.text = "#" + str(_seat_num)
+	if drink_name_label:
+		var header_text := "#" + str(_seat_num)
+		if _drink_name != "":
+			header_text += ": " + _drink_name
+		drink_name_label.visible = true
+		TextIcons.set_text(drink_name_label, header_text)
 
 func _label_change(change: String) -> void:
 	if _has_order_render:
@@ -27,7 +40,7 @@ func _label_change(change: String) -> void:
 		drink_preview.visible = false
 	if order_label:
 		order_label.visible = true
-		order_label.text = change
+		order_label.text = "#" + str(_seat_num) + ": " + change
 
 func _set_drink_order(
 	order: DrinkOrder,
@@ -42,9 +55,8 @@ func _set_drink_order(
 	if resolved_name == "":
 		resolved_name = ReceiptDrinkRenderer.get_order_display_name(order)
 
-	if drink_name_label:
-		drink_name_label.visible = resolved_name != ""
-		TextIcons.set_text(drink_name_label, resolved_name)
+	_drink_name = resolved_name
+	_update_header_text()
 
 	if order_label:
 		order_label.visible = false
@@ -59,6 +71,12 @@ func _apply_preview_texture(tex: Texture2D) -> void:
 	drink_preview.visible = true
 	if drink_preview is TextureRect:
 		(drink_preview as TextureRect).texture = tex
+	elif drink_preview is AspectRatioContainer:
+		if tex != null and tex.get_height() > 0:
+			(drink_preview as AspectRatioContainer).ratio = float(tex.get_width()) / float(tex.get_height())
+		var tex_rect := drink_preview.get_node_or_null("Texture") as TextureRect
+		if is_instance_valid(tex_rect):
+			tex_rect.texture = tex
 	else:
 		for child in drink_preview.get_children():
 			drink_preview.remove_child(child)
@@ -74,17 +92,16 @@ func _apply_preview_texture(tex: Texture2D) -> void:
 
 func clear_drink_order() -> void:
 	_has_order_render = false
-	if drink_name_label:
-		drink_name_label.visible = true
-		TextIcons.set_text(drink_name_label, "")
+	_drink_name = ""
+	_update_header_text()
 	_apply_preview_texture(null)
 	if order_label:
 		order_label.visible = false
 		order_label.text = ""
 
 func _set_seat_number(seat_num: int) -> void:
-	if seat_label:
-		seat_label.text = "#" + str(seat_num)
+	_seat_num = seat_num
+	_update_header_text()
 
 func _set_customer_race(race: String) -> void:
 	if not customer_icon:

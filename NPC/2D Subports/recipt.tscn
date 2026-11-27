@@ -54,34 +54,20 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 20.0
-offset_top = 20.0
-offset_right = -20.0
-offset_bottom = -20.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -38.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 8
-
-[node name="Header" type="HBoxContainer" parent="VBoxContainer" unique_id=1741290411]
-layout_mode = 2
-alignment = 1
-
-[node name="SeatLabel" type="Label" parent="VBoxContainer/Header" unique_id=1741290412]
-layout_mode = 2
-size_flags_horizontal = 3
-theme = SubResource("Theme_mfd7k")
-theme_override_constants/outline_size = 28
-theme_override_font_sizes/font_size = 110
-text = "#1"
-horizontal_alignment = 1
-vertical_alignment = 1
+theme_override_constants/separation = 4
 
 [node name="DrinkNameLabel" type="Label" parent="VBoxContainer" unique_id=1741290418]
 layout_mode = 2
 theme = SubResource("Theme_mfd7k")
 theme_override_constants/outline_size = 20
 theme_override_font_sizes/font_size = 76
-text = "Beer"
+text = "#1: Beer"
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -90,11 +76,17 @@ custom_minimum_size = Vector2(0, 6)
 layout_mode = 2
 color = Color(0, 0, 0, 1)
 
-[node name="DrinkPreview" type="TextureRect" parent="VBoxContainer" unique_id=1741290419]
-texture_filter = 1
+[node name="DrinkPreview" type="AspectRatioContainer" parent="VBoxContainer" unique_id=1741290419]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
+stretch_mode = 2
+alignment_vertical = 0
+
+[node name="Texture" type="TextureRect" parent="VBoxContainer/DrinkPreview" unique_id=1741290420]
+texture_filter = 1
+layout_mode = 2
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5

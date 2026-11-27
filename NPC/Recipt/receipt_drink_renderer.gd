@@ -33,6 +33,7 @@ const CUP_PAD_LEFT: float = 0.14
 const CUP_PAD_RIGHT: float = 0.14
 const CUP_PAD_TOP: float = 0.20
 const CUP_PAD_BOTTOM: float = 0.06
+const TRIM_MARGIN_RATIO: float = 0.075
 
 static var _glass_spec_cache: Dictionary = {}
 static var _order_tex_cache: Dictionary = {}
@@ -145,7 +146,18 @@ static func get_or_render_order_texture(
 		var cy := pad_t + roundi(float(entry["v"]) * float(cup_h))
 		_blend_rotated_image(canvas_img, scaled_g, Vector2i(cx, cy), float(entry["rotation_deg"]))
 
-	# 4. Compensate for Base_viewport Sprite3D vertical stretch
+	# 4. Trim excess empty border and leave a small uniform margin on all sides
+	var used_rect: Rect2i = _get_visible_used_rect(canvas_img, 0.05)
+	if used_rect.size.x > 0 and used_rect.size.y > 0:
+		var margin := maxi(2, roundi(float(maxi(used_rect.size.x, used_rect.size.y)) * TRIM_MARGIN_RATIO))
+		var trimmed_w := used_rect.size.x + margin * 2
+		var trimmed_h := used_rect.size.y + margin * 2
+		var trimmed_img := Image.create(trimmed_w, trimmed_h, false, Image.FORMAT_RGBA8)
+		trimmed_img.fill(Color(0, 0, 0, 0))
+		trimmed_img.blit_rect(canvas_img, used_rect, Vector2i(margin, margin))
+		canvas_img = trimmed_img
+
+	# 5. Compensate for Base_viewport Sprite3D vertical stretch
 	if not is_equal_approx(eff_aspect, 1.0):
 		var target_w := maxi(1, roundi(float(canvas_img.get_width()) * eff_aspect))
 		canvas_img.resize(target_w, canvas_img.get_height(), Image.INTERPOLATE_BILINEAR)
@@ -156,6 +168,30 @@ static func get_or_render_order_texture(
 	var out_tex := ImageTexture.create_from_image(canvas_img)
 	_order_tex_cache[cache_key] = out_tex
 	return out_tex
+
+static func _get_visible_used_rect(img: Image, alpha_threshold: float = 0.05) -> Rect2i:
+	if img == null or img.is_empty():
+		return Rect2i()
+	var w := img.get_width()
+	var h := img.get_height()
+	var min_x := w
+	var max_x := -1
+	var min_y := h
+	var max_y := -1
+	for y in h:
+		for x in w:
+			if img.get_pixel(x, y).a > alpha_threshold:
+				if x < min_x:
+					min_x = x
+				if x > max_x:
+					max_x = x
+				if y < min_y:
+					min_y = y
+				if y > max_y:
+					max_y = y
+	if max_x < min_x or max_y < min_y:
+		return img.get_used_rect()
+	return Rect2i(min_x, min_y, max_x - min_x + 1, max_y - min_y + 1)
 
 static func _count_visible_pixels(img: Image) -> int:
 	if img == null or img.is_empty():
