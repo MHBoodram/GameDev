@@ -24,11 +24,24 @@ func _exit_tree() -> void:
 
 func setup(host: Node3D) -> void:
 	main_root = host
+	_sync_seat_capacity(host)
 	receipt_board.setup(host)
 	if not DialogueManager.dialogue_started.is_connected(_on_dialogue_started):
 		DialogueManager.dialogue_started.connect(_on_dialogue_started)
 	if not DialogueManager.dialogue_ended.is_connected(_on_dialogue_ended):
 		DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
+
+func _sync_seat_capacity(host: Node3D) -> void:
+	var max_seat: int = 3
+	if is_instance_valid(host):
+		for child in host.get_children():
+			var cname := str(child.name)
+			if cname.begins_with("Seat") and not cname.begins_with("SeatDrink"):
+				var suffix := cname.substr(4)
+				if suffix.is_valid_int():
+					max_seat = maxi(max_seat, suffix.to_int())
+	if seats.size() != max_seat:
+		seats.resize(max_seat)
 
 func start_spawning() -> void:
 	is_spawning_allowed = true

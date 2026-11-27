@@ -3,8 +3,8 @@ extends Control
 const LOGOS_SHEET := preload("res://Assets/NPC/UI/Logos-Sheet.png")
 
 @onready var seat_label: Label = $VBoxContainer/Header/SeatLabel
-@onready var customer_icon: TextureRect = $VBoxContainer/Header/CustomerIconFrame/CustomerIcon
-@onready var placeholder_label: Label = $VBoxContainer/Header/CustomerIconFrame/PlaceholderLabel
+@onready var customer_icon: TextureRect = get_node_or_null("VBoxContainer/Header/CustomerIconFrame/CustomerIcon")
+@onready var placeholder_label: Label = get_node_or_null("VBoxContainer/Header/CustomerIconFrame/PlaceholderLabel")
 @onready var drink_name_label: Label = $VBoxContainer/DrinkNameLabel
 @onready var drink_preview: Control = get_node_or_null("VBoxContainer/DrinkPreview")
 @onready var order_label: Label = $VBoxContainer/Label
@@ -87,6 +87,8 @@ func _set_seat_number(seat_num: int) -> void:
 		seat_label.text = "#" + str(seat_num)
 
 func _set_customer_race(race: String) -> void:
+	if not customer_icon:
+		return
 	var sp := SpeciesRegistry.get_species_or_default(race)
 	var frame_idx: int = sp.logo_frame if sp else 10
 	_set_placeholder_frame(frame_idx)

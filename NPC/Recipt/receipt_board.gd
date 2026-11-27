@@ -1,11 +1,14 @@
 class_name ReceiptBoard
 extends RefCounted
 
+const DEFAULT_SLOT_COUNT := 3
+
 var search_root: Node
 var _slots: Array = []
 var _board_node: Node3D = null
 var _cached_transform: Transform3D = Transform3D.IDENTITY
 var _cached_data: Dictionary = {}
+var _last_layout_slot_count: int = 0
 
 func _init(p_search_root: Node = null) -> void:
 	search_root = p_search_root
@@ -15,6 +18,14 @@ func setup(p_search_root: Node) -> void:
 	_slots.clear()
 	_board_node = null
 	_cached_data.clear()
+	_last_layout_slot_count = 0
+
+func get_total_slot_count() -> int:
+	var count: int = DEFAULT_SLOT_COUNT
+	if GameState and is_instance_valid(GameState.seat_manager):
+		count = maxi(count, GameState.seat_manager.seats.size())
+	count = maxi(count, _slots.size())
+	return count
 
 func mount_receipt(receipt: Node3D, duration: float = 0.5) -> bool:
 	if not is_instance_valid(receipt):
@@ -25,13 +36,24 @@ func mount_receipt(receipt: Node3D, duration: float = 0.5) -> bool:
 		return false
 
 	var slot_index: int = allocate_slot(receipt)
-	var r_size: Vector2 = Vector2(0.25, 0.35)
-	if receipt.has_method("get_base_receipt_dimensions"):
-		r_size = receipt.get_base_receipt_dimensions()
-	elif receipt.has_method("get_receipt_dimensions"):
-		r_size = receipt.get_receipt_dimensions()
+	var total_slots: int = get_total_slot_count()
+	if _last_layout_slot_count != 0 and _last_layout_slot_count != total_slots:
+		_relayout_mounted_receipts(board_data, total_slots, duration, receipt)
+	_last_layout_slot_count = total_slots
 
-	var slot_xf: Dictionary = compute_slot_transform(board_data, slot_index, r_size)
+	var r_size: Vector2 = _get_receipt_dimensions_for(receipt)
+	var slot_xf: Dictionary = compute_slot_transform(board_data, slot_index, r_size, total_slots)
+	_apply_slot_transform(receipt, slot_xf, duration)
+	return true
+
+func _get_receipt_dimensions_for(receipt: Node3D) -> Vector2:
+	if receipt.has_method("get_base_receipt_dimensions"):
+		return receipt.get_base_receipt_dimensions()
+	if receipt.has_method("get_receipt_dimensions"):
+		return receipt.get_receipt_dimensions()
+	return Vector2(0.25, 0.35)
+
+func _apply_slot_transform(receipt: Node3D, slot_xf: Dictionary, duration: float) -> void:
 	var target_scale: Vector3 = slot_xf.get("scale", Vector3.ONE)
 	if receipt.has_method("_moving_to_board"):
 		receipt._moving_to_board(slot_xf["position"], slot_xf["basis"], duration, target_scale)
@@ -39,7 +61,20 @@ func mount_receipt(receipt: Node3D, duration: float = 0.5) -> bool:
 		receipt.global_position = slot_xf["position"]
 		receipt.basis = slot_xf["basis"]
 		receipt.scale = target_scale
-	return true
+
+func _relayout_mounted_receipts(board_data: Dictionary, total_slots: int, duration: float, skip_receipt: Node3D = null) -> void:
+	for i in _slots.size():
+		var other := _slots[i] as Node3D
+		if not is_instance_valid(other) or other == skip_receipt:
+			continue
+		if "ordered" in other and not other.ordered:
+			continue
+		if "has_board_slot" in other and not other.has_board_slot:
+			continue
+		if "is_balls_dragging" in other and other.is_balls_dragging:
+			continue
+		var other_xf: Dictionary = compute_slot_transform(board_data, i, _get_receipt_dimensions_for(other), total_slots)
+		_apply_slot_transform(other, other_xf, duration)
 
 func release_receipt(receipt: Node3D) -> void:
 	if not is_instance_valid(receipt):
@@ -55,7 +90,17 @@ func release_receipt(receipt: Node3D) -> void:
 func allocate_slot(receipt: Node3D) -> int:
 	for i in _slots.size():
 		if _slots[i] == receipt:
-			return i
+			_slots[i] = null
+
+	var seat_num: int = int(receipt.get("seat_num")) if (is_instance_valid(receipt) and "seat_num" in receipt) else 0
+	if seat_num >= 1:
+		var target_idx: int = seat_num - 1
+		while _slots.size() <= target_idx:
+			_slots.append(null)
+		if not is_instance_valid(_slots[target_idx]):
+			_slots[target_idx] = receipt
+			return target_idx
+
 	for i in _slots.size():
 		if not is_instance_valid(_slots[i]):
 			_slots[i] = receipt
@@ -176,31 +221,43 @@ func get_board_data() -> Dictionary:
 	}
 	return _cached_data
 
-func compute_slot_transform(board_data: Dictionary, slot_index: int, receipt_size: Vector2) -> Dictionary:
+func compute_slot_transform(board_data: Dictionary, slot_index: int, receipt_size: Vector2, total_slots: int = -1) -> Dictionary:
 	var board_w: float = board_data["width"]
 	var board_h: float = board_data["height"]
 	var base_w: float = maxf(receipt_size.x, 0.01)
 	var base_h: float = maxf(receipt_size.y, 0.01)
+
+	var slot_count: int = total_slots if total_slots > 0 else get_total_slot_count()
+	slot_count = maxi(slot_count, slot_index + 1)
 
 	var edge_pad_x: float = board_w * 0.04
 	var edge_pad_y: float = board_h * 0.05
 	var inner_gap_x: float = board_w * 0.025
 	var inner_gap_y: float = board_h * 0.03
 
-	var cols: int = 3
+	var cols: int = slot_count
 	var rows: int = 1
 	var best_scale: float = -1.0
+	var best_waste: int = 999999
+	var tried: Dictionary = {}
 
-	for candidate in [[3, 1], [2, 2], [1, 3]]:
-		var c: int = candidate[0]
-		var r: int = candidate[1]
-		var avail_w: float = maxf(0.01, board_w - edge_pad_x * 2.0 - inner_gap_x * float(c - 1))
-		var avail_h: float = maxf(0.01, board_h - edge_pad_y * 2.0 - inner_gap_y * float(r - 1))
+	for r in range(1, slot_count + 1):
+		var c: int = ceili(float(slot_count) / float(r))
+		var grid_key := Vector2i(c, r)
+		if tried.has(grid_key):
+			continue
+		tried[grid_key] = true
+
+		var avail_w: float = maxf(0.01, board_w - edge_pad_x * 2.0 - inner_gap_x * float(maxi(c - 1, 0)))
+		var avail_h: float = maxf(0.01, board_h - edge_pad_y * 2.0 - inner_gap_y * float(maxi(r - 1, 0)))
 		var cell_w: float = avail_w / float(c)
 		var cell_h: float = avail_h / float(r)
 		var candidate_scale: float = minf(cell_w / base_w, cell_h / base_h)
-		if candidate_scale > best_scale:
+		var waste: int = c * r - slot_count
+
+		if candidate_scale > best_scale + 0.0001 or (is_equal_approx(candidate_scale, best_scale) and (waste < best_waste or (waste == best_waste and r < rows))):
 			best_scale = candidate_scale
+			best_waste = waste
 			cols = c
 			rows = r
 
