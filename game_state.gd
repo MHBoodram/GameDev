@@ -51,6 +51,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	TextIcons.install(self)
 	FastForward.install(self)
+	CooldownManager.install(self)
 	_setup_global_menus()
 
 func _setup_global_menus() -> void:
@@ -119,6 +120,7 @@ func reset_game() -> void:
 
 	ShakerMinigame.active = false
 	FastForward.reset_all()
+	CooldownManager.clear_all()
 	Ingredients.reset_interaction_state()
 	PlayerStats.reset_for_new_game()
 

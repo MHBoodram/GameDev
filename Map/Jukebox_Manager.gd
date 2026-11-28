@@ -3,20 +3,30 @@ extends Node
 
 enum Mode {OFF, EASY_LISTENING, UPBEAT}
 
+const COOLDOWN_ID := "jukebox"
 const COST := 30
 const EFFECT_SECONDS := 30
 const COOLDOWN_SECONDS := 45.0
 
 var active_mode: int = Mode.OFF
 var effect_time_left := 0.0
-var cooldown_time_left := 0.0
+var cooldown_time_left: float:
+	get:
+		return CooldownManager.get_time_left(COOLDOWN_ID)
+	set(value):
+		if value <= 0.0:
+			CooldownManager.clear(COOLDOWN_ID)
+		else:
+			CooldownManager.start(COOLDOWN_ID, value, {
+				"group": "shift",
+				"respect_night_pause": true,
+			})
 
 func _process(delta: float) -> void:
 	if GameState.night_paused:
 		return
 
 	effect_time_left = maxf(0.0, effect_time_left - delta)
-	cooldown_time_left = maxf(0.0, cooldown_time_left - delta)
 
 	if effect_time_left == 0.0:
 		active_mode = Mode.OFF
@@ -28,7 +38,7 @@ func activate_upbeat() -> String:
 	return _activate(Mode.UPBEAT)
 
 func _activate(mode: int) -> String:
-	if cooldown_time_left > 0.0:
+	if CooldownManager.is_on_cooldown(COOLDOWN_ID):
 		return "cooldown"
 	if PlayerStats.money < COST:
 		return "insufficient_funds"
@@ -36,7 +46,10 @@ func _activate(mode: int) -> String:
 	PlayerStats._change_money(PlayerStats.money - COST)
 	active_mode = mode
 	effect_time_left = EFFECT_SECONDS
-	cooldown_time_left = COOLDOWN_SECONDS
+	CooldownManager.start(COOLDOWN_ID, COOLDOWN_SECONDS, {
+		"group": "shift",
+		"respect_night_pause": true,
+	})
 	return "activated"
 
 func get_customer_effect() -> Dictionary:
@@ -53,4 +66,4 @@ func get_customer_effect() -> Dictionary:
 func reset_for_shift() -> void:
 	active_mode = Mode.OFF
 	effect_time_left = 0.0
-	cooldown_time_left = 0.0
+	CooldownManager.clear(COOLDOWN_ID)

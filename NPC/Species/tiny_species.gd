@@ -7,6 +7,8 @@ const REQUIRED_DRINKS: Array[String] = []
 
 const DIALOGUE_PATH := "res://NPC/Dialogue/Frederick.dialogue"
 const IDEAL_FILL_RATIO := 0.25
+const SPAWN_COOLDOWN_ID := "mag_spawn_tiny"
+const SPAWN_COOLDOWN_SECONDS := 15.0
 
 func _init() -> void:
 	species_id = "TINY"
@@ -94,6 +96,8 @@ func format_order_text(order: DrinkOrder, base_text: String) -> String:
 func on_tool_world_click(tool_id: String, _player: Node3D) -> bool:
 	if tool_id != "mag":
 		return false
+	if CooldownManager.is_on_cooldown(SPAWN_COOLDOWN_ID):
+		return true
 	if not GameState.seat_manager:
 		return false
 	if GameState.night_manager and GameState.night_manager.is_shift_ended:
@@ -101,4 +105,10 @@ func on_tool_world_click(tool_id: String, _player: Node3D) -> bool:
 	if GameState.seat_manager.get_empty_seat_count() <= 0:
 		return false
 	var spawned := GameState.seat_manager.spawn_customer_by_species(self)
-	return is_instance_valid(spawned)
+	if is_instance_valid(spawned):
+		CooldownManager.start(SPAWN_COOLDOWN_ID, SPAWN_COOLDOWN_SECONDS, {
+			"group": "shift",
+			"respect_night_pause": true,
+		})
+		return true
+	return false

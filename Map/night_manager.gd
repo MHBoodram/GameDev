@@ -64,6 +64,7 @@ func setup(timer_node: Timer, env_node: WorldEnvironment, sun_node: DirectionalL
 	is_shift_ended = false
 	is_night_concluded = false
 	_during_night_queue.clear()
+	CooldownManager.clear_group("shift")
 	unlock_tools_for_night(GameState.night)
 	_setup_lighting()
 	if night_timer and not night_timer.timeout.is_connected(_on_night_timer_timeout):
@@ -154,6 +155,7 @@ func start_shift(duration: float, quota: float) -> void:
 	is_night_concluded = false
 	GameState.night_paused = false
 	GameState.special_state = false
+	CooldownManager.clear_group("shift")
 	if is_instance_valid(GameState.jukebox_manager):
 		GameState.jukebox_manager.reset_for_shift()
 
