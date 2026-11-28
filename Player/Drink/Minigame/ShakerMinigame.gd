@@ -52,6 +52,7 @@ var _icon: Control
 var _progress_fill: ColorRect
 var _hint: Label
 var _result: Label
+var _timer: MinigameTimer
 
 func _ready() -> void:
 	layer = 50
@@ -178,6 +179,11 @@ func _build_ui() -> void:
 	_result.size = Vector2(screen.x, 80.0)
 	_ui.add_child(_result)
 
+	_timer = MinigameTimer.new()
+	_ui.add_child(_timer)
+	_timer.timed_out.connect(_on_timer_timed_out)
+	_timer.start(time_limit)
+
 func _make_label(text: String, font_size: int, font: Font) -> Label:
 	var label := Label.new()
 	label.text = text
@@ -241,7 +247,9 @@ func _process(delta: float) -> void:
 
 	if _progress >= 1.0:
 		_finish(true, "MIXED!", Color(0.4, 1.0, 0.5))
-	elif time_limit > 0.0 and _elapsed >= time_limit:
+
+func _on_timer_timed_out() -> void:
+	if not _done:
 		_finish(false, "TOO SLOW", Color(1.0, 0.4, 0.4))
 
 func _refresh(in_zone: bool) -> void:
@@ -260,8 +268,6 @@ func _refresh(in_zone: bool) -> void:
 		_cap_pop[i] = maxf(0.0, _cap_pop[i] - 5.0 * get_process_delta_time())
 
 	var text := "Alternate %s and %s" % [OS.get_keycode_string(key_a), OS.get_keycode_string(key_b)]
-	if time_limit > 0.0:
-		text += "   %ds" % ceili(maxf(time_limit - _elapsed, 0.0))
 	_hint.text = text + "\nRight-click to cancel"
 
 func _input(event: InputEvent) -> void:
@@ -312,6 +318,8 @@ func _finish(success: bool, message: String = "", color: Color = Color.WHITE) ->
 		return
 	_done = true
 	active = false
+	if is_instance_valid(_timer):
+		_timer.stop()
 	_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_result.text = message
 	_result.add_theme_color_override("font_color", color)

@@ -1,10 +1,15 @@
 extends CanvasLayer
 
+const BLOOD_TIME_LIMIT: float = 12.0
+
 @onready var blood_cells_scene := load("res://Player/Drink/Minigame/Blood/blood_cells.tscn")
 var blood_cells_obtain: float = 0.0
 var previous_cells: float = 0.0
 var blood_cells_total: int = 10
 var phase: float = 0.0
+var _is_finishing: bool = false
+var _spawning_stopped: bool = false
+var _minigame_timer: MinigameTimer = null
 #@onready var inside_glass = $Inside
 #@onready var outside_glass = $Inside/Outside
 
@@ -17,12 +22,20 @@ func _ready() -> void:
 		previous_cells = bottle.current_liquid if bottle and "current_liquid" in bottle else 0.0
 	set_fill(previous_cells)
 
+	_minigame_timer = MinigameTimer.new()
+	add_child(_minigame_timer)
+	_minigame_timer.timed_out.connect(_on_timer_timed_out)
+
 	SFXAudio.play_draw()
 	$AnimationPlayer.play("hurt")
 	await $AnimationPlayer.animation_finished
+	if not is_inside_tree() or _is_finishing:
+		return
+
+	_minigame_timer.start(BLOOD_TIME_LIMIT)
 
 	for i in 10:
-		if not is_inside_tree():
+		if not is_inside_tree() or _spawning_stopped or _is_finishing:
 			return
 		_spawn_blood_drops()
 		await get_tree().create_timer(randf_range(0.4, 0.75)).timeout
@@ -33,7 +46,22 @@ func _check_all_finished() -> void:
 	if blood_cells_total <= 0:
 		_finish_game()
 
+func _on_timer_timed_out() -> void:
+	if _is_finishing:
+		return
+	_spawning_stopped = true
+	for node in get_tree().get_nodes_in_group("blood_buttons"):
+		if is_instance_valid(node) and not ("cutted" in node and node.cutted):
+			node.queue_free()
+	_finish_game()
+
 func _finish_game() -> void:
+	if _is_finishing:
+		return
+	_is_finishing = true
+	_spawning_stopped = true
+	if is_instance_valid(_minigame_timer):
+		_minigame_timer.stop()
 	$AnimationPlayer.play_backwards("hurt")
 	await $AnimationPlayer.animation_finished
 	if GameState.minigame_host:
@@ -47,6 +75,8 @@ func _return_nothing() -> void:
 # collects sliced blood drop and tweens particles toward vial
 func _return_blood(blood: float = 0.0, node_position: Vector2 = Vector2.ZERO) -> void:
 	blood_cells_total -= 1
+	if blood_cells_total <= 0 and is_instance_valid(_minigame_timer):
+		_minigame_timer.set_paused(true)
 	var explosion := make_red_particles_2d_explsion()
 	var particle := make_red_particles_2d()
 	explosion.global_position = node_position
