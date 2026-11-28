@@ -96,7 +96,7 @@ func _try_world_tool_click() -> bool:
 	if Ingredients.active_dragging_item != null or Ingredients.active_selected_item != null:
 		return false
 	var collider: Object = Ingredients._get_ray_collider_under_mouse(get_viewport())
-	if collider is Glasses or (collider is CollisionObject3D and (collider as CollisionObject3D).input_ray_pickable):
+	if collider is Glasses or (collider is CollisionObject3D and ((collider as CollisionObject3D).is_in_group("visual_pickable") or (collider as CollisionObject3D).input_ray_pickable)):
 		return false
 	return tool_controller.handle_world_click(self)
 

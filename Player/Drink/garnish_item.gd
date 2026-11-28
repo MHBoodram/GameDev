@@ -10,7 +10,11 @@ var _active_trash: Area3D = null
 var _previous_counter_position: Vector3 = Vector3.ZERO
 var _trash_tinted: bool = false
 var _base_sprite_scale: Vector3 = Vector3.ONE
+var _has_base_sprite_scale: bool = false
 var _cut_bounce_tween: Tween = null
+
+func uses_visual_2d_hitbox() -> bool:
+	return true
 
 func is_working_area_item() -> bool:
 	return true
@@ -31,7 +35,11 @@ func _apply_visual_texture() -> void:
 	var sp := sprite if is_instance_valid(sprite) else get_node_or_null("Sprite3D") as Sprite3D
 	if sp:
 		sprite = sp
+		if _has_base_sprite_scale:
+			sp.scale = _base_sprite_scale
 		sp.texture = GarnishDefinitions.get_texture(garnish_id, false)
+		if is_node_ready():
+			_init_cup_2d_hitbox()
 
 func ready() -> void:
 	rotation = Vector3.ZERO
@@ -39,6 +47,7 @@ func ready() -> void:
 		sprite = get_node_or_null("Sprite3D") as Sprite3D
 	if sprite:
 		_base_sprite_scale = sprite.scale
+		_has_base_sprite_scale = true
 	if area_body == null:
 		area_body = get_node_or_null("CollisionShape3D") as CollisionShape3D
 	_apply_visual_texture()
@@ -178,7 +187,7 @@ func _spawn_split_duplicate(next_var: String) -> void:
 	var base_pos := _clamp_to_counter(global_position)
 	base_pos.y = surface_y
 
-	var split_sep := 0.065
+	var split_sep := 0.075
 	var left_pos := _clamp_to_counter(base_pos + Vector3(-split_sep, 0.0, 0.0))
 	left_pos.y = surface_y
 	var right_pos := _clamp_to_counter(base_pos + Vector3(split_sep, 0.0, 0.0))

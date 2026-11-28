@@ -7,9 +7,10 @@ const GARNISH_ITEM_SCENE: PackedScene = preload("res://Player/Drink/garnish_item
 
 @export var garnish_id: String = "lemon_whole"
 @export var max_stock: int = GarnishDefinitions.DEFAULT_DISPENSER_STOCK
-@export var item_spawn_scale: Vector3 = Vector3(0.2, 0.2, 0.2)
+@export var item_spawn_scale: Vector3 = Vector3(0.32, 0.32, 0.32)
 
 @onready var sprite: Sprite3D = $Sprite3D
+@onready var area_body: CollisionShape3D = $CollisionShape3D
 @onready var refill_timer: Timer = $RefillTimer
 
 var counter_origin: Node3D = null
@@ -20,9 +21,14 @@ var _camera: Camera3D = null
 var _is_hovered: bool = false
 var _deny_tween: Tween = null
 var _base_sprite_offset: Vector2 = Vector2.ZERO
+var _hitbox_data: Dictionary = {}
+var _hitbox_texture_rid: int = -1
 
 func _ready() -> void:
 	_camera = get_viewport().get_camera_3d()
+	input_ray_pickable = false
+	add_to_group("visual_pickable")
+	Ingredients._ensure_cup_picker_runtime()
 	if not input_event.is_connected(_on_input_event):
 		input_event.connect(_on_input_event)
 	if not mouse_entered.is_connected(_on_mouse_entered):
@@ -101,6 +107,7 @@ func _process(_delta: float) -> void:
 		target_flat.y = sprite.global_position.y
 		if target_flat.distance_squared_to(sprite.global_position) > 0.0001:
 			sprite.look_at(target_flat, Vector3.UP)
+	Ingredients.sync_hitbox_transform(area_body, sprite, _hitbox_data)
 
 func get_refill_cost() -> int:
 	var missing: int = maxi(0, max_stock - current_stock)
@@ -123,10 +130,24 @@ func _on_refill_timer_timeout() -> void:
 			_refresh_visual()
 			stock_changed.emit(current_stock, max_stock)
 
+func _refresh_visual_hitbox() -> void:
+	if not is_instance_valid(sprite) or sprite.texture == null:
+		return
+	var tex_id := sprite.texture.get_rid().get_id()
+	if tex_id == _hitbox_texture_rid and bool(_hitbox_data.get("has_rect", false)):
+		return
+	_hitbox_texture_rid = tex_id
+	_hitbox_data = Ingredients.compute_sprite_hitbox_data(sprite, "")
+	Ingredients.apply_hitbox_data_to_collision(area_body, sprite, _hitbox_data, 0.12)
+
+func _get_visual_hit(viewport: Viewport, screen_pos: Vector2) -> Dictionary:
+	return Ingredients.test_visual_sprite_hit(self, sprite, _hitbox_data, viewport, screen_pos, _camera)
+
 func _refresh_visual() -> void:
 	if not is_instance_valid(sprite):
 		return
 	sprite.texture = GarnishDefinitions.get_texture(garnish_id, false)
+	_refresh_visual_hitbox()
 	if current_stock <= 0:
 		sprite.modulate = Color(0.5, 0.5, 0.5, 0.35)
 	elif _is_hovered:

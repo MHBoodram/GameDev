@@ -6,7 +6,7 @@
 size = Vector3(0.45, 0.45, 0.25)
 
 [node name="GarnishItem" type="Area3D" node_paths=PackedStringArray("area_body", "sprite") groups=["garnish"]]
-transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0, 0)
+transform = Transform3D(0.32, 0, 0, 0, 0.32, 0, 0, 0, 0.32, 0, 0, 0)
 script = ExtResource("1_garnish_item")
 area_body = NodePath("CollisionShape3D")
 sprite = NodePath("Sprite3D")

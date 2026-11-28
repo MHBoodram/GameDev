@@ -3,17 +3,17 @@ extends RefCounted
 
 const GARNISH_ROOT_NAME: String = "GarnishRoot"
 
-const RIM_SCALE_RATIO: float = 0.25
+const RIM_SCALE_RATIO: float = 0.34
 const RIM_SHIFT_RATIO: float = 0.055
 const RIM_CENTER_SPREAD: float = 0.70
 const RIM_Z_BASE: float = -0.015
 const RIM_Z_STEP: float = -0.002
 
-const HERB_SCALE_RATIO: float = 0.22
+const HERB_SCALE_RATIO: float = 0.30
 const HERB_Z_BASE: float = -0.013
 
-const ICE_CUBE_SCALE_RATIO: float = 0.36
-const ICE_BALL_SCALE_RATIO: float = 0.72
+const ICE_CUBE_SCALE_RATIO: float = 0.40
+const ICE_BALL_SCALE_RATIO: float = 0.78
 const ICE_Z_BASE: float = -0.013
 
 static var _layout_cache: Dictionary = {}
@@ -349,8 +349,10 @@ func update(delta: float, total_liquids: float, cup_size: float, visual_helper: 
 func hit_test(mouse_pos: Vector2, cam: Camera3D) -> Dictionary:
 	if not is_instance_valid(cam) or _interactive_entries.is_empty():
 		return {}
-	var from := cam.project_ray_origin(mouse_pos)
-	var dir := cam.project_ray_normal(mouse_pos)
+	var vp := cam.get_viewport()
+	var ray_pos := Ingredients._unwarp_fisheye_screen_pos(vp, mouse_pos) if is_instance_valid(vp) else mouse_pos
+	var from := cam.project_ray_origin(ray_pos)
+	var dir := cam.project_ray_normal(ray_pos)
 	var best_entry: Dictionary = {}
 	var best_dist: float = INF
 	var best_prio: int = -999
@@ -367,18 +369,21 @@ func hit_test(mouse_pos: Vector2, cam: Camera3D) -> Dictionary:
 			continue
 		var hit_vec: Vector3 = hit as Vector3
 		var local_p := sp.global_transform.affine_inverse() * hit_vec
-		var dims: Rect2 = sp.get_item_rect()
-		var ps := sp.pixel_size
-		if dims.size.x <= 0.0 or dims.size.y <= 0.0 or ps <= 0.000001:
-			continue
-		var px_x := local_p.x / ps
-		var px_y := local_p.y / ps
-		var pad_x := dims.size.x * 0.12
-		var pad_y := dims.size.y * 0.12
-		if px_x < dims.position.x - pad_x or px_x > dims.end.x + pad_x:
-			continue
-		if px_y < dims.position.y - pad_y or px_y > dims.end.y + pad_y:
-			continue
+
+		var opaque_rect = Ingredients.compute_sprite_opaque_rect(sp)
+		if opaque_rect is Rect2:
+			var r := opaque_rect as Rect2
+			if local_p.x < r.position.x or local_p.x > r.end.x or local_p.y < r.position.y or local_p.y > r.end.y:
+				continue
+		else:
+			var dims: Rect2 = sp.get_item_rect()
+			var ps := sp.pixel_size
+			if dims.size.x <= 0.0 or dims.size.y <= 0.0 or ps <= 0.000001:
+				continue
+			var px_x := local_p.x / ps
+			var px_y := local_p.y / ps
+			if px_x < dims.position.x or px_x > dims.end.x or px_y < dims.position.y or px_y > dims.end.y:
+				continue
 
 		var dist := from.distance_to(hit_vec)
 		var prio := sp.render_priority

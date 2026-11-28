@@ -12,7 +12,7 @@ static var current_hovered_npc: Base_NPC = null
 static var _cached_query: PhysicsRayQueryParameters3D = null
 static var _cup_opaque_rect_cache: Dictionary = {}
 static var _cup_picker_runtime: _CupPickerRuntime = null
-static var _visual_hovered_cup: Ingredients = null
+static var _visual_hovered_cup: Node3D = null
 
 static func reset_interaction_state() -> void:
 	active_selected_item = null
@@ -163,7 +163,7 @@ static func _unwarp_fisheye_screen_pos(viewport: Viewport, screen_pos: Vector2) 
 	return Vector2(uv.x * vp_size.x, uv.y * vp_size.y)
 
 
-static func _compute_cup_opaque_rect(s: Sprite3D) -> Variant:
+static func compute_sprite_opaque_rect(s: Sprite3D) -> Variant:
 	if not is_instance_valid(s):
 		return null
 	var dims: Rect2 = s.get_item_rect()
@@ -228,6 +228,153 @@ static func _compute_cup_opaque_rect(s: Sprite3D) -> Variant:
 	return Rect2(min_lx, min_ly, maxf(max_lx - min_lx, 0.001), maxf(max_ly - min_ly, 0.001))
 
 
+static func _compute_cup_opaque_rect(s: Sprite3D) -> Variant:
+	return compute_sprite_opaque_rect(s)
+
+
+static func compute_sprite_hitbox_data(visual: Sprite3D, extra_child_name: String = "Outside") -> Dictionary:
+	if not is_instance_valid(visual):
+		return {"has_rect": false}
+
+	var base_pos := visual.position
+	var base_scale := visual.scale
+
+	var combined_min := Vector2(INF, INF)
+	var combined_max := Vector2(-INF, -INF)
+	var has_rect := false
+
+	var in_rect = compute_sprite_opaque_rect(visual)
+	if in_rect is Rect2:
+		var r := in_rect as Rect2
+		combined_min = r.position
+		combined_max = r.end
+		has_rect = true
+
+	var center_z := 0.0
+	if extra_child_name != "":
+		var outside_sp := visual.get_node_or_null(extra_child_name) as Sprite3D
+		var out_rect = compute_sprite_opaque_rect(outside_sp)
+		if out_rect is Rect2:
+			center_z = outside_sp.position.z * 0.5
+			var r_out := out_rect as Rect2
+			var out_xf := outside_sp.transform
+			var corners: Array[Vector3] = [
+				out_xf * Vector3(r_out.position.x, r_out.position.y, 0.0),
+				out_xf * Vector3(r_out.end.x, r_out.position.y, 0.0),
+				out_xf * Vector3(r_out.position.x, r_out.end.y, 0.0),
+				out_xf * Vector3(r_out.end.x, r_out.end.y, 0.0),
+			]
+			for c in corners:
+				if not has_rect:
+					combined_min = Vector2(c.x, c.y)
+					combined_max = Vector2(c.x, c.y)
+					has_rect = true
+				else:
+					combined_min.x = minf(combined_min.x, c.x)
+					combined_min.y = minf(combined_min.y, c.y)
+					combined_max.x = maxf(combined_max.x, c.x)
+					combined_max.y = maxf(combined_max.y, c.y)
+
+	if not has_rect:
+		return {"has_rect": false}
+
+	var min_x := minf(combined_min.x * base_scale.x, combined_max.x * base_scale.x)
+	var max_x := maxf(combined_min.x * base_scale.x, combined_max.x * base_scale.x)
+	var min_y := minf(combined_min.y * base_scale.y, combined_max.y * base_scale.y)
+	var max_y := maxf(combined_min.y * base_scale.y, combined_max.y * base_scale.y)
+
+	return {
+		"has_rect": true,
+		"min": Vector2(min_x, min_y),
+		"max": Vector2(max_x, max_y),
+		"local_center": Vector3((min_x + max_x) * 0.5, (min_y + max_y) * 0.5, center_z * base_scale.z),
+		"base_pos": base_pos,
+		"base_scale": base_scale,
+	}
+
+
+static func apply_hitbox_data_to_collision(area_body: CollisionShape3D, visual: Node3D, hitbox_data: Dictionary, thickness: float = 0.12) -> void:
+	if not is_instance_valid(area_body) or not bool(hitbox_data.get("has_rect", false)):
+		return
+	var h_min: Vector2 = hitbox_data["min"]
+	var h_max: Vector2 = hitbox_data["max"]
+
+	var box := area_body.shape as BoxShape3D
+	if box == null:
+		box = BoxShape3D.new()
+		area_body.shape = box
+	elif not box.has_meta("_unique_cup_hitbox"):
+		box = box.duplicate() as BoxShape3D
+		area_body.shape = box
+	box.set_meta("_unique_cup_hitbox", true)
+	box.size = Vector3(maxf(h_max.x - h_min.x, 0.01), maxf(h_max.y - h_min.y, 0.01), thickness)
+
+	sync_hitbox_transform(area_body, visual, hitbox_data)
+
+
+static func sync_hitbox_transform(area_body: CollisionShape3D, visual: Node3D, hitbox_data: Dictionary) -> void:
+	if not bool(hitbox_data.get("has_rect", false)) or not is_instance_valid(area_body) or not is_instance_valid(visual):
+		return
+	var rot_basis := visual.transform.basis.orthonormalized()
+	var base_pos: Vector3 = hitbox_data["base_pos"]
+	var local_center: Vector3 = hitbox_data["local_center"]
+	area_body.transform = Transform3D(rot_basis, base_pos + rot_basis * local_center)
+
+
+static func test_visual_sprite_hit(owner_node: Node3D, visual: Node3D, hitbox_data: Dictionary, viewport: Viewport, screen_pos: Vector2, cam: Camera3D = null) -> Dictionary:
+	if not bool(hitbox_data.get("has_rect", false)) or not is_instance_valid(owner_node) or not is_instance_valid(visual):
+		return {}
+	if not owner_node.is_inside_tree() or not owner_node.is_visible_in_tree() or not visual.is_inside_tree():
+		return {}
+
+	var active_cam := cam if is_instance_valid(cam) else viewport.get_camera_3d()
+	if not is_instance_valid(active_cam):
+		return {}
+
+	var ray_pos := _unwarp_fisheye_screen_pos(viewport, screen_pos)
+	var from := active_cam.project_ray_origin(ray_pos)
+	var dir := active_cam.project_ray_normal(ray_pos)
+
+	var base_pos: Vector3 = hitbox_data["base_pos"]
+	var local_center: Vector3 = hitbox_data["local_center"]
+	var h_min: Vector2 = hitbox_data["min"]
+	var h_max: Vector2 = hitbox_data["max"]
+
+	var rot_basis := visual.transform.basis.orthonormalized()
+	var plane_point_world := owner_node.global_transform * (base_pos + rot_basis * local_center)
+	var plane_normal_world := (owner_node.global_transform.basis * rot_basis.z).normalized()
+	if plane_normal_world.length_squared() < 0.0001:
+		return {}
+
+	var hit = Plane(plane_normal_world, plane_point_world).intersects_ray(from, dir)
+	if hit == null:
+		return {}
+	var hit_world := hit as Vector3
+	if (hit_world - from).dot(dir) <= 0.0:
+		return {}
+
+	var node_local := owner_node.global_transform.affine_inverse() * hit_world
+	var rel := rot_basis.inverse() * (node_local - base_pos)
+	if (
+		rel.x >= h_min.x
+		and rel.x <= h_max.x
+		and rel.y >= h_min.y
+		and rel.y <= h_max.y
+	):
+		return {
+			"pos": hit_world,
+			"normal": plane_normal_world,
+			"distance": from.distance_to(hit_world),
+			"ray_from": from,
+			"ray_dir": dir,
+		}
+	return {}
+
+
+func uses_visual_2d_hitbox() -> bool:
+	return self is Glasses
+
+
 func _init_cup_2d_hitbox() -> void:
 	if area_body == null:
 		area_body = get_node_or_null("CollisionShape3D") as CollisionShape3D
@@ -238,70 +385,23 @@ func _init_cup_2d_hitbox() -> void:
 	if not is_instance_valid(visual):
 		visual = get_node_or_null("Inside") as Sprite3D
 	if not is_instance_valid(visual):
+		visual = get_node_or_null("Sprite3D") as Sprite3D
+	if not is_instance_valid(visual):
 		return
 
-	_cup_inside_base_pos = visual.position
-	_cup_inside_base_scale = visual.scale
-
-	var combined_min := Vector2(INF, INF)
-	var combined_max := Vector2(-INF, -INF)
-	var has_rect := false
-
-	var in_rect = _compute_cup_opaque_rect(visual)
-	if in_rect is Rect2:
-		var r := in_rect as Rect2
-		combined_min = r.position
-		combined_max = r.end
-		has_rect = true
-
-	var center_z := 0.0
-	var outside_sp := visual.get_node_or_null("Outside") as Sprite3D
-	var out_rect = _compute_cup_opaque_rect(outside_sp)
-	if out_rect is Rect2:
-		center_z = outside_sp.position.z * 0.5
-		var r_out := out_rect as Rect2
-		var out_xf := outside_sp.transform
-		var corners: Array[Vector3] = [
-			out_xf * Vector3(r_out.position.x, r_out.position.y, 0.0),
-			out_xf * Vector3(r_out.end.x, r_out.position.y, 0.0),
-			out_xf * Vector3(r_out.position.x, r_out.end.y, 0.0),
-			out_xf * Vector3(r_out.end.x, r_out.end.y, 0.0),
-		]
-		for c in corners:
-			if not has_rect:
-				combined_min = Vector2(c.x, c.y)
-				combined_max = Vector2(c.x, c.y)
-				has_rect = true
-			else:
-				combined_min.x = minf(combined_min.x, c.x)
-				combined_min.y = minf(combined_min.y, c.y)
-				combined_max.x = maxf(combined_max.x, c.x)
-				combined_max.y = maxf(combined_max.y, c.y)
-
-	if not has_rect:
+	var hitbox_data := compute_sprite_hitbox_data(visual, "Outside")
+	if not bool(hitbox_data.get("has_rect", false)):
+		_has_cup_hitbox = false
 		return
 
-	var min_x := minf(combined_min.x * _cup_inside_base_scale.x, combined_max.x * _cup_inside_base_scale.x)
-	var max_x := maxf(combined_min.x * _cup_inside_base_scale.x, combined_max.x * _cup_inside_base_scale.x)
-	var min_y := minf(combined_min.y * _cup_inside_base_scale.y, combined_max.y * _cup_inside_base_scale.y)
-	var max_y := maxf(combined_min.y * _cup_inside_base_scale.y, combined_max.y * _cup_inside_base_scale.y)
-
-	_cup_hitbox_min = Vector2(min_x, min_y)
-	_cup_hitbox_max = Vector2(max_x, max_y)
-	_cup_hitbox_local_center = Vector3((min_x + max_x) * 0.5, (min_y + max_y) * 0.5, center_z * _cup_inside_base_scale.z)
+	_cup_inside_base_pos = hitbox_data["base_pos"]
+	_cup_inside_base_scale = hitbox_data["base_scale"]
+	_cup_hitbox_min = hitbox_data["min"]
+	_cup_hitbox_max = hitbox_data["max"]
+	_cup_hitbox_local_center = hitbox_data["local_center"]
 	_has_cup_hitbox = true
 
-	var box := area_body.shape as BoxShape3D
-	if box == null:
-		box = BoxShape3D.new()
-		area_body.shape = box
-	elif not box.has_meta("_unique_cup_hitbox"):
-		box = box.duplicate() as BoxShape3D
-		area_body.shape = box
-	box.set_meta("_unique_cup_hitbox", true)
-	box.size = Vector3(maxf(max_x - min_x, 0.01), maxf(max_y - min_y, 0.01), 0.12)
-
-	_sync_cup_2d_hitbox_transform()
+	apply_hitbox_data_to_collision(area_body, visual, hitbox_data, 0.12)
 
 
 func _sync_cup_2d_hitbox_transform() -> void:
@@ -310,6 +410,8 @@ func _sync_cup_2d_hitbox_transform() -> void:
 	var visual: Node3D = get("sprite") as Node3D
 	if not is_instance_valid(visual):
 		visual = get_node_or_null("Inside") as Node3D
+	if not is_instance_valid(visual):
+		visual = get_node_or_null("Sprite3D") as Node3D
 	if not is_instance_valid(visual):
 		return
 	var rot_basis := visual.transform.basis.orthonormalized()
@@ -326,48 +428,23 @@ func _get_cup_visual_hit(viewport: Viewport, screen_pos: Vector2) -> Dictionary:
 	if "is_delivering" in self and bool(get("is_delivering")):
 		return {}
 
-	var cam := camera if is_instance_valid(camera) else viewport.get_camera_3d()
-	if not is_instance_valid(cam):
-		return {}
 	var visual: Node3D = get("sprite") as Node3D
 	if not is_instance_valid(visual):
 		visual = get_node_or_null("Inside") as Node3D
-	if not is_instance_valid(visual) or not visual.is_inside_tree():
+	if not is_instance_valid(visual):
+		visual = get_node_or_null("Sprite3D") as Node3D
+	if not is_instance_valid(visual):
 		return {}
 
-	var ray_pos := _unwarp_fisheye_screen_pos(viewport, screen_pos)
-	var from := cam.project_ray_origin(ray_pos)
-	var dir := cam.project_ray_normal(ray_pos)
-
-	var rot_basis := visual.transform.basis.orthonormalized()
-	var plane_point_world := global_transform * (_cup_inside_base_pos + rot_basis * _cup_hitbox_local_center)
-	var plane_normal_world := (global_transform.basis * rot_basis.z).normalized()
-	if plane_normal_world.length_squared() < 0.0001:
-		return {}
-
-	var hit = Plane(plane_normal_world, plane_point_world).intersects_ray(from, dir)
-	if hit == null:
-		return {}
-	var hit_world := hit as Vector3
-	if (hit_world - from).dot(dir) <= 0.0:
-		return {}
-
-	var cup_local := global_transform.affine_inverse() * hit_world
-	var rel := rot_basis.inverse() * (cup_local - _cup_inside_base_pos)
-	if (
-		rel.x >= _cup_hitbox_min.x
-		and rel.x <= _cup_hitbox_max.x
-		and rel.y >= _cup_hitbox_min.y
-		and rel.y <= _cup_hitbox_max.y
-	):
-		return {
-			"pos": hit_world,
-			"normal": plane_normal_world,
-			"distance": from.distance_to(hit_world),
-			"ray_from": from,
-			"ray_dir": dir,
-		}
-	return {}
+	var hitbox_data := {
+		"has_rect": _has_cup_hitbox,
+		"min": _cup_hitbox_min,
+		"max": _cup_hitbox_max,
+		"local_center": _cup_hitbox_local_center,
+		"base_pos": _cup_inside_base_pos,
+		"base_scale": _cup_inside_base_scale,
+	}
+	return test_visual_sprite_hit(self, visual, hitbox_data, viewport, screen_pos, camera)
 
 
 static func _pick_cup_hit_at_screen_pos(viewport: Viewport, screen_pos: Vector2, exclude_rid: RID = RID()) -> Dictionary:
@@ -376,24 +453,37 @@ static func _pick_cup_hit_at_screen_pos(viewport: Viewport, screen_pos: Vector2,
 	var tree := viewport.get_tree()
 	if tree == null:
 		return {}
+
+	var candidates: Array[Node] = []
+	for node in tree.get_nodes_in_group("visual_pickable"):
+		candidates.append(node)
+	for node in tree.get_nodes_in_group("glass"):
+		if not candidates.has(node):
+			candidates.append(node)
+
 	var best_hit: Dictionary = {}
 	var best_dist := INF
-	for node in tree.get_nodes_in_group("glass"):
-		if not (node is Ingredients):
+	for node in candidates:
+		if not (node is Node3D):
 			continue
-		var cup := node as Ingredients
-		if not is_instance_valid(cup) or not cup.is_inside_tree():
+		var target := node as Node3D
+		if not is_instance_valid(target) or not target.is_inside_tree():
 			continue
-		if exclude_rid.is_valid() and cup.get_rid() == exclude_rid:
+		if exclude_rid.is_valid() and target is CollisionObject3D and (target as CollisionObject3D).get_rid() == exclude_rid:
 			continue
-		var hit_data := cup._get_cup_visual_hit(viewport, screen_pos)
+		var hit_data: Dictionary = {}
+		if target is Ingredients:
+			hit_data = (target as Ingredients)._get_cup_visual_hit(viewport, screen_pos)
+		elif target.has_method("_get_visual_hit"):
+			hit_data = target.call("_get_visual_hit", viewport, screen_pos) as Dictionary
 		if hit_data.is_empty():
 			continue
 		var dist := float(hit_data["distance"])
 		if dist < best_dist:
 			best_dist = dist
 			best_hit = hit_data
-			best_hit["cup"] = cup
+			best_hit["cup"] = target
+			best_hit["node"] = target
 	return best_hit
 
 
@@ -414,7 +504,7 @@ static func _has_closer_pickable_blocker(viewport: Viewport, from: Vector3, dir:
 		if hit.is_empty():
 			return false
 		var col: Object = hit.get("collider")
-		if col is Glasses:
+		if col is CollisionObject3D and (col is Glasses or (col as Node).is_in_group("visual_pickable")):
 			excluded.append((col as CollisionObject3D).get_rid())
 			continue
 		if col is CollisionObject3D:
@@ -460,11 +550,15 @@ static func _is_cup_picking_blocked(viewport: Viewport) -> bool:
 
 static func _clear_visual_cup_hover() -> void:
 	if is_instance_valid(_visual_hovered_cup) and _visual_hovered_cup.is_inside_tree():
-		var old_cup := _visual_hovered_cup
+		var old_node := _visual_hovered_cup
 		_visual_hovered_cup = null
-		old_cup._on_area_3d_mouse_exited()
-		if old_cup == active_dragging_item:
-			old_cup.set_highlight(false)
+		if old_node is Ingredients:
+			var old_ing := old_node as Ingredients
+			old_ing._on_area_3d_mouse_exited()
+			if old_ing == active_dragging_item:
+				old_ing.set_highlight(false)
+		elif old_node.has_method("_on_mouse_exited"):
+			old_node.call("_on_mouse_exited")
 	else:
 		_visual_hovered_cup = null
 
@@ -474,24 +568,27 @@ static func _sync_visual_cup_hover(viewport: Viewport) -> void:
 		_clear_visual_cup_hover()
 		return
 	var tree := viewport.get_tree()
-	if tree == null or tree.get_nodes_in_group("glass").is_empty():
+	if tree == null or (tree.get_nodes_in_group("visual_pickable").is_empty() and tree.get_nodes_in_group("glass").is_empty()):
 		_clear_visual_cup_hover()
 		return
 	if active_dragging_item != null or _is_cup_picking_blocked(viewport):
 		_clear_visual_cup_hover()
 		return
 
-	var target_cup: Ingredients = null
+	var target_node: Node3D = null
 	var hit_data := _pick_cup_hit_at_screen_pos(viewport, viewport.get_mouse_position())
 	if not hit_data.is_empty():
 		if not _has_closer_pickable_blocker(viewport, hit_data["ray_from"] as Vector3, hit_data["ray_dir"] as Vector3, float(hit_data["distance"])):
-			target_cup = hit_data["cup"] as Ingredients
+			target_node = hit_data["node"] as Node3D
 
-	if target_cup != _visual_hovered_cup:
+	if target_node != _visual_hovered_cup:
 		_clear_visual_cup_hover()
-		_visual_hovered_cup = target_cup
+		_visual_hovered_cup = target_node
 		if is_instance_valid(_visual_hovered_cup):
-			_visual_hovered_cup._on_area_3d_mouse_entered()
+			if _visual_hovered_cup is Ingredients:
+				(_visual_hovered_cup as Ingredients)._on_area_3d_mouse_entered()
+			elif _visual_hovered_cup.has_method("_on_mouse_entered"):
+				_visual_hovered_cup.call("_on_mouse_entered")
 
 
 static func _handle_visual_cup_click(viewport: Viewport, mb: InputEventMouseButton) -> void:
@@ -500,13 +597,18 @@ static func _handle_visual_cup_click(viewport: Viewport, mb: InputEventMouseButt
 	var hit_data := _pick_cup_hit_at_screen_pos(viewport, viewport.get_mouse_position())
 	if hit_data.is_empty():
 		return
-	var cup := hit_data["cup"] as Ingredients
-	if not is_instance_valid(cup) or cup._is_drag_blocked():
+	var target := hit_data["node"] as Node3D
+	if not is_instance_valid(target):
+		return
+	if target is Ingredients and (target as Ingredients)._is_drag_blocked():
 		return
 	if _has_closer_pickable_blocker(viewport, hit_data["ray_from"] as Vector3, hit_data["ray_dir"] as Vector3, float(hit_data["distance"])):
 		return
-	var cam_ref := cup.camera if is_instance_valid(cup.camera) else viewport.get_camera_3d()
-	cup._on_area_3d_input_event(cam_ref, mb, hit_data["pos"] as Vector3, hit_data["normal"] as Vector3, 0)
+	var cam_ref: Camera3D = (target as Ingredients).camera if (target is Ingredients and is_instance_valid((target as Ingredients).camera)) else viewport.get_camera_3d()
+	if target is Ingredients:
+		(target as Ingredients)._on_area_3d_input_event(cam_ref, mb, hit_data["pos"] as Vector3, hit_data["normal"] as Vector3, 0)
+	elif target.has_method("_on_input_event"):
+		target.call("_on_input_event", cam_ref, mb, hit_data["pos"] as Vector3, hit_data["normal"] as Vector3, 0)
 
 
 func _ready() -> void:
@@ -522,9 +624,10 @@ func _ready() -> void:
 	_cache_visual_nodes()
 	_setup_render_priority()
 	ready()
-	if self is Glasses:
+	if uses_visual_2d_hitbox():
 		input_ray_pickable = false
 		if not is_preview_only:
+			add_to_group("visual_pickable")
 			_ensure_cup_picker_runtime()
 			_init_cup_2d_hitbox()
 
@@ -938,11 +1041,12 @@ static func _get_ray_collider_under_mouse(viewport: Viewport, exclude_rid: RID =
 
 	var cup_hit: Dictionary = _pick_cup_hit_at_screen_pos(viewport, mouse_pos, exclude_rid)
 	if not cup_hit.is_empty():
-		var cup := cup_hit["cup"] as Ingredients
+		var cup: Object = cup_hit["node"]
 		var cup_dist := float(cup_hit["distance"])
 		if (
 			phys_collider == null
 			or phys_collider is Glasses
+			or (phys_collider is Node and (phys_collider as Node).is_in_group("visual_pickable"))
 			or not (phys_collider is CollisionObject3D and (phys_collider as CollisionObject3D).input_ray_pickable)
 			or cup_dist <= phys_dist
 		):
