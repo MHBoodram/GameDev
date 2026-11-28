@@ -38,6 +38,38 @@ func _init() -> void:
 	snap_to_glass = true
 	follow_speed = 30.0
 
+func _is_drag_blocked() -> bool:
+	var minigame_busy := GameState.minigame_host != null and GameState.minigame_host.is_minigame_active
+	return super._is_drag_blocked() or minigame_busy
+
+func _get_active_tool() -> String:
+	if GameState.player and GameState.player.has_method("return_tool"):
+		return str(GameState.player.return_tool()).to_lower().strip_edges()
+	return "hand"
+
+func _is_blood_bottle() -> bool:
+	if liquid_resource and liquid_resource.id.to_lower().strip_edges() == "blood":
+		return true
+	return name.to_lower().strip_edges() == "blood"
+
+func can_highlight_on_hover() -> bool:
+	if _is_drag_blocked():
+		return false
+	if _get_active_tool() == "knife":
+		return _is_blood_bottle()
+	return true
+
+func handle_immediate_tool_click() -> bool:
+	if GameState.is_dialogue_open or ShakerMinigame.active or _is_drag_blocked():
+		return false
+	if _get_active_tool() == "knife" and _is_blood_bottle():
+		if GameState.minigame_host:
+			var host_node: Node = GameState.main_node if is_instance_valid(GameState.main_node) else get_tree().current_scene
+			set_highlight(false)
+			GameState.minigame_host.start_blood_minigame(host_node, GameState.player)
+		return true
+	return false
+
 func _ensure_pour_stream() -> void:
 	if not is_instance_valid(_pour_stream):
 		_pour_stream = PourStreamVisual.new()

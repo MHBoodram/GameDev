@@ -44,14 +44,3 @@ func get_drink_pool(stats: Node = null) -> Array[String]:
 		if not pool.has("blood"):
 			pool.append("blood")
 	return pool
-
-func on_tool_counter_action(tool_id: String, player: Node3D, main_node: Node3D) -> bool:
-	if tool_id != "knife":
-		return false
-	if player == null or ("in_game" in player and player.in_game):
-		return false
-	if GameState.minigame_host:
-		var host_node: Node = main_node if is_instance_valid(main_node) else GameState.main_node
-		GameState.minigame_host.start_blood_minigame(host_node, player)
-		return true
-	return false
