@@ -67,9 +67,18 @@ func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: V
 		_last_sfx_ms = -1
 		if is_instance_valid(keg_water_particle):
 			keg_water_particle.emitting = false
+		var focused_glass: Glasses = in_pour_zone
+		if is_instance_valid(focused_glass):
+			focused_glass.set_fill_guides_visible(true)
 		var cam_rig: Camera3D = PourStreamVisual.focus_station_camera(self, "beer_camera_marker", 0.55)
 
 		while PourStreamVisual.is_pour_button_held() and is_inside_tree():
+			if focused_glass != in_pour_zone:
+				if is_instance_valid(focused_glass):
+					focused_glass.set_fill_guides_visible(false)
+				focused_glass = in_pour_zone
+				if is_instance_valid(focused_glass):
+					focused_glass.set_fill_guides_visible(true)
 			var rate_mult: float = PourStreamVisual.get_pour_rate_multiplier(get_viewport())
 			if rate_mult > 0.02 and in_pour_zone and is_instance_valid(in_pour_zone):
 				var target_pos := _get_beer_stream_target()
@@ -79,6 +88,8 @@ func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: V
 				_last_sfx_ms = PourStreamVisual.play_throttled_pour_sfx(_last_sfx_ms, SFX_INTERVAL_MS)
 			await get_tree().create_timer(POUR_INTERVAL).timeout
 			if not is_inside_tree():
+				if is_instance_valid(focused_glass):
+					focused_glass.set_fill_guides_visible(false)
 				_is_pouring = false
 				return
 		keg_sprite.rotation_degrees.x = KEG_IDLE_ROT_X
@@ -91,8 +102,14 @@ func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: V
 		if cam_rig:
 			await get_tree().create_timer(0.15).timeout
 			if not is_inside_tree():
+				if is_instance_valid(focused_glass):
+					focused_glass.set_fill_guides_visible(false)
 				return
+			if is_instance_valid(focused_glass):
+				focused_glass.set_fill_guides_visible(false)
 			await PourStreamVisual.return_station_camera(self, cam_rig, 0.55)
+		elif is_instance_valid(focused_glass):
+			focused_glass.set_fill_guides_visible(false)
 
 func _process(delta: float) -> void:
 	if _is_pouring:

@@ -160,6 +160,24 @@ func get_cell_fill_fraction(u: float, v: float, fill_ratio: float) -> float:
 	return clampf(float(order_idx) / filled_cells, 0.0, 1.0)
 
 
+func get_fill_line_uv(fill_ratio: float) -> Dictionary:
+	if _mask_cells.is_empty():
+		return {}
+	var clamped_fill := clampf(fill_ratio, 0.0, 1.0)
+	var cell_count := _mask_cells.size()
+	var target_idx := clampi(roundi(clamped_fill * float(cell_count)) - 1, 0, cell_count - 1)
+	var grid_y: int = _mask_cells[target_idx].y
+	var min_x: int = _row_min_x[grid_y] if grid_y >= 0 and grid_y < _row_min_x.size() else -1
+	var max_x: int = _row_max_x[grid_y] if grid_y >= 0 and grid_y < _row_max_x.size() else -1
+	if min_x < 0 or max_x < min_x:
+		return {}
+	return {
+		"v": (float(grid_y) + 0.5) / float(GRID_SIZE),
+		"u_left": float(min_x) / float(GRID_SIZE),
+		"u_right": float(max_x + 1) / float(GRID_SIZE),
+	}
+
+
 func set_mouth_monitoring(enabled: bool) -> void:
 	_monitor_mouth = enabled
 	if not enabled and _active_count <= 0:

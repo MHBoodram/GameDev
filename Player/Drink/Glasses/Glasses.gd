@@ -10,6 +10,7 @@ const SPILL_INDICATOR_COOLDOWN: float = 0.55
 const OVERFLOW_EPSILON: float = 0.0005
 const INSPECT_DROP_OUTSIDE_MARGIN: float = 0.06
 const INSPECT_MIN_DRAG_DISTANCE: float = 0.035
+const FILL_GUIDE_Z_OFFSET: float = -0.015
 
 @export var liquids: Array = []
 @export var size: float = 1.0
@@ -38,6 +39,10 @@ var is_delivering: bool = false
 var is_consumed: bool = false
 var is_pouring_out: bool = false
 var is_inspecting: bool = false
+var target_fill_ratio: float = -1.0
+var _show_fill_guides: bool = false
+var _fill_guide_lines: Array[DottedLine3D] = []
+var _cached_fill_ratios: Array[float] = []
 var _inspect_enter_ms: int = 0
 var _is_mouse_hovered: bool = false
 var _hovered_liquid_idx: int = -1
@@ -110,6 +115,150 @@ func _sync_drink_mix_metadata() -> void:
 func get_drink_mix() -> DrinkMix:
 	_sync_drink_mix_metadata()
 	return drink_mix
+
+func set_target_fill_ratio(ratio: float) -> void:
+	target_fill_ratio = ratio
+	_cached_fill_ratios.clear()
+	if _show_fill_guides:
+		_sync_fill_guides()
+
+func set_fill_guides_visible(enabled: bool) -> void:
+	if _show_fill_guides == enabled and not (enabled and _fill_guide_lines.is_empty()):
+		if enabled:
+			_sync_fill_guides()
+		return
+	_show_fill_guides = enabled
+	_sync_fill_guides()
+
+func get_ideal_fill_ratios() -> Array[float]:
+	if target_fill_ratio >= 0.0:
+		return [clampf(target_fill_ratio, 0.05, 1.0)]
+	if drink_mix != null and drink_mix.is_tiny:
+		return [TinySpecies.IDEAL_FILL_RATIO]
+
+	var ratios: Array[float] = []
+	if GameState and is_instance_valid(GameState.seat_manager):
+		for npc in GameState.seat_manager.seats:
+			if not is_instance_valid(npc) or npc.is_leaving or npc.drink_list.is_empty():
+				continue
+			var raw_want: Variant = npc.drink_list[0]
+			var order: DrinkOrder = raw_want if raw_want is DrinkOrder else (DrinkOrder.from_legacy_want(raw_want as Array) if raw_want is Array else null)
+			if order == null:
+				continue
+			var ideal := clampf(order.ideal_fill_ratio if order.ideal_fill_ratio >= 0.0 else DrinkScorer.IDEAL_FILL_RATIO, 0.05, 1.0)
+			var already_has := false
+			for existing in ratios:
+				if absf(existing - ideal) <= 0.005:
+					already_has = true
+					break
+			if not already_has:
+				ratios.append(ideal)
+
+	if ratios.is_empty():
+		ratios.append(clampf(DrinkScorer.IDEAL_FILL_RATIO, 0.05, 1.0))
+	ratios.sort()
+	return ratios
+
+func _compute_fill_line_segment(fill_ratio: float) -> Dictionary:
+	var sp := _get_container_sprite()
+	if not is_instance_valid(sp):
+		return {}
+
+	var dims: Rect2 = sp.get_item_rect()
+	var ps: float = sp.pixel_size
+	if dims.size.x <= 0.0 or dims.size.y <= 0.0 or ps <= 0.000001:
+		return {}
+
+	var u_left := 0.15
+	var u_right := 0.85
+	var v := lerpf(0.88, 0.12, clampf(fill_ratio, 0.0, 1.0))
+
+	if visual_helper and visual_helper.fluid_sim:
+		var sim_line := visual_helper.fluid_sim.get_fill_line_uv(fill_ratio)
+		if not sim_line.is_empty():
+			v = float(sim_line["v"])
+			u_left = float(sim_line["u_left"])
+			u_right = float(sim_line["u_right"])
+		elif sp.texture:
+			var bounds := CupGarnishVisuals._scan_opaque_uv_bounds(sp.texture)
+			u_left = float(bounds["min_u"])
+			u_right = float(bounds["max_u"])
+			v = lerpf(float(bounds["bottom_v"]), float(bounds["top_v"]), clampf(fill_ratio, 0.0, 1.0))
+	elif sp.texture:
+		var bounds := CupGarnishVisuals._scan_opaque_uv_bounds(sp.texture)
+		u_left = float(bounds["min_u"])
+		u_right = float(bounds["max_u"])
+		v = lerpf(float(bounds["bottom_v"]), float(bounds["top_v"]), clampf(fill_ratio, 0.0, 1.0))
+
+	var eff_u_l := (1.0 - u_left) if sp.flip_h else u_left
+	var eff_u_r := (1.0 - u_right) if sp.flip_h else u_right
+	var eff_v := (1.0 - v) if sp.flip_v else v
+
+	var lx_a := lerpf(dims.position.x, dims.end.x, eff_u_l) * ps
+	var lx_b := lerpf(dims.position.x, dims.end.x, eff_u_r) * ps
+	var ly := lerpf(dims.end.y, dims.position.y, eff_v) * ps
+	var ref_width := dims.size.x * ps
+
+	return {
+		"host": sp,
+		"min_x": minf(lx_a, lx_b),
+		"max_x": maxf(lx_a, lx_b),
+		"y": ly,
+		"ref_width": ref_width,
+	}
+
+func _sync_fill_guides() -> void:
+	if not _show_fill_guides or is_preview_only or is_consumed:
+		for line in _fill_guide_lines:
+			if is_instance_valid(line):
+				line.visible = false
+		return
+
+	var ratios := get_ideal_fill_ratios()
+	var same_ratios := ratios.size() == _cached_fill_ratios.size()
+	if same_ratios:
+		for i in ratios.size():
+			if absf(ratios[i] - _cached_fill_ratios[i]) > 0.001:
+				same_ratios = false
+				break
+
+	if same_ratios and _fill_guide_lines.size() == ratios.size():
+		var all_valid := true
+		for line in _fill_guide_lines:
+			if not is_instance_valid(line):
+				all_valid = false
+				break
+			line.visible = true
+		if all_valid:
+			return
+
+	_cached_fill_ratios = ratios.duplicate()
+	while _fill_guide_lines.size() < ratios.size():
+		var line := DottedLine3D.new()
+		line.name = "FillGuideLine_%d" % _fill_guide_lines.size()
+		line.render_priority = 5
+		_fill_guide_lines.append(line)
+
+	for i in _fill_guide_lines.size():
+		var line := _fill_guide_lines[i]
+		if not is_instance_valid(line):
+			continue
+		if i >= ratios.size():
+			line.visible = false
+			continue
+		var seg := _compute_fill_line_segment(ratios[i])
+		if seg.is_empty():
+			line.visible = false
+			continue
+		var host := seg["host"] as Node3D
+		if line.get_parent() != host:
+			if line.get_parent():
+				line.get_parent().remove_child(line)
+			host.add_child(line)
+		var ref_w: float = maxf(float(seg["ref_width"]), 0.05)
+		line.set_dash_metrics(ref_w * 0.065, ref_w * 0.045, ref_w * 0.025, ref_w * 0.010)
+		line.set_horizontal(float(seg["y"]), float(seg["min_x"]), float(seg["max_x"]), FILL_GUIDE_Z_OFFSET)
+		line.visible = true
 
 func can_add_garnish(garnish_id: String) -> bool:
 	if _is_drag_blocked():
@@ -234,6 +383,7 @@ func enter_inspection_mode() -> void:
 	_dragged_garnish.clear()
 	_dragged_garnish_outside = false
 	set_highlight(false)
+	set_fill_guides_visible(true)
 	_show_hud_ingredients()
 
 func exit_inspection_mode() -> void:
@@ -243,6 +393,7 @@ func exit_inspection_mode() -> void:
 	_hovered_liquid_idx = -1
 	_cancel_garnish_drag()
 	garnish_visuals.clear_interaction_states()
+	set_fill_guides_visible(false)
 	if GameState.player:
 		GameState.player._update_hand("idle")
 	if _is_mouse_hovered:
@@ -770,6 +921,11 @@ func ready() -> void:
 	visual_helper.last_global_pos = sprite.global_position if sprite else global_position
 
 func _exit_tree() -> void:
+	set_fill_guides_visible(false)
+	for line in _fill_guide_lines:
+		if is_instance_valid(line):
+			line.queue_free()
+	_fill_guide_lines.clear()
 	visual_helper.cleanup()
 	garnish_visuals.clear()
 	if is_instance_valid(_pour_out_stream):
@@ -842,6 +998,8 @@ func _process(delta: float) -> void:
 		_update_pour_out_stream()
 		_update_pour_splash(delta)
 		_update_overflow_streams(delta)
+		if _show_fill_guides and not is_consumed:
+			_sync_fill_guides()
 
 	var track_pos: Vector3 = sprite.global_position if sprite else global_position
 	var outside_sprite := get_node_or_null("Inside/Outside") as Node3D
@@ -1294,6 +1452,7 @@ func return_to_previous_location(duration: float = 0.3) -> void:
 
 func _out_of_game() -> void:
 	in_game = false
+	set_fill_guides_visible(false)
 	if is_inspecting:
 		exit_inspection_mode()
 	_spill_indicator_cooldown = 0.0
@@ -1331,6 +1490,7 @@ func _on_hover(hovered: bool) -> void:
 	set_highlight(hovered)
 
 func _giving_drink() -> void:
+	set_fill_guides_visible(false)
 	if input_event.is_connected(_on_area_3d_input_event):
 		input_event.disconnect(_on_area_3d_input_event)
 	is_balls_dragging = false
@@ -1339,6 +1499,7 @@ func _dranked() -> void:
 	if is_consumed:
 		return
 	is_consumed = true
+	set_fill_guides_visible(false)
 	if is_inspecting:
 		exit_inspection_mode()
 	_is_actively_pouring_out = false

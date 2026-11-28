@@ -174,6 +174,7 @@ func _enter_cup_focus(glass: Glasses, drink: Drinks = null, inspect_mode: bool =
 		glass_home_pos = glass._get_saved_counter_position(glass._last_counter_position)
 	in_game_drinks["Glass"]["position"] = glass_home_pos
 	glass._in_game()
+	glass.set_fill_guides_visible(true)
 	if inspect_mode:
 		glass.enter_inspection_mode()
 
@@ -217,8 +218,10 @@ func _out_of_game() -> void:
 	in_game_drinks["Drink"]["Node"] = null
 	in_game_drinks["Glass"]["Node"] = null
 
-	if is_instance_valid(glass) and glass is Glasses and (glass as Glasses).is_inspecting:
-		(glass as Glasses).exit_inspection_mode()
+	if is_instance_valid(glass) and glass is Glasses:
+		(glass as Glasses).set_fill_guides_visible(false)
+		if (glass as Glasses).is_inspecting:
+			(glass as Glasses).exit_inspection_mode()
 
 	_pour_tween = get_tree().create_tween().set_parallel(true)
 	if is_instance_valid(drink):
