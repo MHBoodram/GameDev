@@ -49,6 +49,7 @@ var scheduled_npcs: Array[Dictionary] = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	InkTheme.install(self)
 	TextIcons.install(self)
 	FastForward.install(self)
 	CooldownManager.install(self)
@@ -70,8 +71,20 @@ func _setup_global_menus() -> void:
 			pause_hand.layer = 201
 		add_child(pause_menu)
 
+func is_in_main_menu() -> bool:
+	var tree := get_tree()
+	if not tree or not is_instance_valid(tree.current_scene):
+		return false
+	var scene_path := tree.current_scene.scene_file_path
+	if scene_path == "res://UI/Starting/Starting_screen.tscn" or scene_path == "res://UI/Starting/StartMenu.tscn":
+		return true
+	var scene_name := str(tree.current_scene.name)
+	return scene_name == "StartingScreen" or scene_name == "StartMenu"
+
 func _input(event: InputEvent) -> void:
 	if SettingState.waiting_keybind:
+		return
+	if is_in_main_menu():
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_QUOTELEFT or event.physical_keycode == KEY_QUOTELEFT or event.keycode == KEY_ASCIITILDE:
@@ -80,6 +93,9 @@ func _input(event: InputEvent) -> void:
 
 func toggle_debug_menu() -> void:
 	if not is_instance_valid(debug_menu):
+		return
+	if is_in_main_menu():
+		debug_menu.visible = false
 		return
 	debug_menu.visible = not debug_menu.visible
 

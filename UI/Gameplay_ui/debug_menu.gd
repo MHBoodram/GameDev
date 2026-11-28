@@ -35,11 +35,10 @@ var _cursor_over_debug: bool = false
 @onready var sub_money_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/MoneyRow/Sub_Money
 @onready var add_rep_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/RepRow/Add_Rep
 @onready var add_species_rep_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/RepRow/Add_Species_Rep
-@onready var remove_npc_btn: Button = $TextureRect/VBoxContainer/HBoxContainer/MiscRow/Remove_NPC
-@onready var shake_btn: Button = $"TextureRect/VBoxContainer/HBoxContainer/MiscRow/Camera Shake"
 
 func _ready() -> void:
 	camera = get_viewport().get_camera_3d()
+	_apply_ink_paper_theme()
 	_disable_focus_recursive(box_root)
 	_populate_night_dropdown()
 	_populate_species_dropdown()
@@ -67,10 +66,23 @@ func _ready() -> void:
 	sub_money_btn.pressed.connect(_on_sub_money_pressed)
 	add_rep_btn.pressed.connect(_on_add_rep_pressed)
 	add_species_rep_btn.pressed.connect(_on_add_species_rep_pressed)
-	remove_npc_btn.pressed.connect(_on_remove_npc_pressed)
-	shake_btn.pressed.connect(_on_camera_shake_pressed)
 
 	visibility_changed.connect(_on_visibility_changed)
+
+func _apply_ink_paper_theme() -> void:
+	InkTheme.ensure_color_rect_paper(box_root, "cream", true)
+	box_root.theme = InkTheme.get_compact_theme()
+	for node in box_root.find_children("*", "Control", true, false):
+		if node is OptionButton:
+			(node as Control).custom_minimum_size.y = 36.0
+			InkTheme.apply_button_variant(node as OptionButton, "paper", true, 18)
+		elif node is CheckBox:
+			(node as Control).custom_minimum_size.y = 36.0
+			InkTheme.apply_check_box(node as CheckBox, 18)
+		elif node is Button:
+			(node as Control).custom_minimum_size.y = 36.0
+			InkTheme.apply_button_variant(node as Button, "paper", true, 18)
+	InkTheme.apply_button_variant(end_night_btn, "primary", true, 18)
 
 func reset_state() -> void:
 	visible = false
@@ -490,12 +502,3 @@ func _on_add_species_rep_pressed() -> void:
 		sp = SpeciesRegistry.get_species_or_default(sp_id)
 	var sp_name := sp.display_name if sp else "Human"
 	PlayerStats.change_species_reputation(sp_name, 5.0)
-
-func _on_remove_npc_pressed() -> void:
-	if is_instance_valid(GameState.seat_manager):
-		GameState.seat_manager.remove_first_occupied_seat()
-
-func _on_camera_shake_pressed() -> void:
-	camera = get_viewport().get_camera_3d()
-	if is_instance_valid(camera) and camera.has_method("add_shake"):
-		camera.add_shake(1.0)

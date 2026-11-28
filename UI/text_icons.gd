@@ -615,7 +615,7 @@ static func _apply_control_overlay(ctrl: Control, raw_text: String) -> void:
 		str(ctrl.texture_filter),
 	]
 
-	var font_id: int = font.get_rid().get_id() if font else 0
+	var font_id: int = font.get_instance_id() if font else 0
 	var state_sig := "%s|%d|%d|%d|%d|%d|%d|%d" % [
 		raw_text,
 		font_id,
@@ -870,7 +870,7 @@ static func _sync_label3d(lbl: Label3D, raw_text_override: String = _USE_NODE_TE
 	var font_size := maxi(1, lbl.font_size)
 	var default_icon_h := get_default_icon_height(font, font_size)
 	var wrap_w := maxf(lbl.width, 32.0) if lbl.autowrap_mode != TextServer.AUTOWRAP_OFF else 0.0
-	var font_id: int = font.get_rid().get_id() if font else 0
+	var font_id: int = font.get_instance_id() if font else 0
 	var sig := "%s|%d|%d|%s|%s|%d|%f|%d|%d|%d|%f" % [
 		raw_text,
 		font_id,

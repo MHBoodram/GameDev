@@ -6,52 +6,51 @@
 [ext_resource type="Texture2D" uid="uid://b44jk20tj2uhc" path="res://Assets/UI/slider_start.png" id="4_ojdcy"]
 [ext_resource type="Texture2D" uid="uid://bgorgi1bb54q7" path="res://Assets/UI/volume_slider.png" id="5_fk3ay"]
 [ext_resource type="PackedScene" uid="uid://b40r1f7bd864j" path="res://UI/Hand.tscn" id="6_ojdcy"]
-[ext_resource type="Texture2D" uid="uid://dg7r8hb0gj200" path="res://Assets/Items/shaker.png" id="7_shaker"]
 [ext_resource type="PackedScene" path="res://UI/KeybindsScroll.tscn" id="8_kbscroll"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_hover"]
-bg_color = Color(0.84, 0.88, 0.92, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0, 0, 0, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+bg_color = Color(0.964706, 0.913725, 0.796078, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.117647, 0.101961, 0.086275, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 content_margin_left = 10.0
 content_margin_top = 4.0
 content_margin_right = 10.0
 content_margin_bottom = 4.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
-bg_color = Color(0.96, 0.94, 0.9, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0, 0, 0, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+bg_color = Color(1, 0.992157, 0.968627, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.117647, 0.101961, 0.086275, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 content_margin_left = 10.0
 content_margin_top = 4.0
 content_margin_right = 10.0
 content_margin_bottom = 4.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_pressed"]
-bg_color = Color(0.72, 0.76, 0.8, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0, 0, 0, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+bg_color = Color(0.894118, 0.843137, 0.729412, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.117647, 0.101961, 0.086275, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 content_margin_left = 10.0
 content_margin_top = 4.0
 content_margin_right = 10.0
@@ -60,29 +59,29 @@ content_margin_bottom = 4.0
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_settings"]
 
 [sub_resource type="Theme" id="Theme_settings"]
-Button/colors/font_color = Color(0, 0, 0, 1)
-Button/colors/font_hover_color = Color(0.05, 0.35, 0.45, 1)
-Button/colors/font_pressed_color = Color(0.1, 0.1, 0.1, 1)
+Button/colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+Button/colors/font_hover_color = Color(0.117647, 0.101961, 0.086275, 1)
+Button/colors/font_pressed_color = Color(0.117647, 0.101961, 0.086275, 1)
 Button/constants/outline_size = 0
-Button/font_sizes/font_size = 30
+Button/font_sizes/font_size = 24
 Button/fonts/font = ExtResource("3_8o6ow")
 Button/styles/focus = SubResource("StyleBoxEmpty_settings")
 Button/styles/hover = SubResource("StyleBoxFlat_btn_hover")
 Button/styles/normal = SubResource("StyleBoxFlat_btn_normal")
 Button/styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
-CheckButton/colors/font_color = Color(0, 0, 0, 1)
-CheckButton/colors/font_hover_color = Color(0.05, 0.35, 0.45, 1)
-CheckButton/colors/font_hover_pressed_color = Color(0.05, 0.35, 0.45, 1)
-CheckButton/colors/font_pressed_color = Color(0, 0, 0, 1)
+CheckButton/colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+CheckButton/colors/font_hover_color = Color(0.117647, 0.101961, 0.086275, 1)
+CheckButton/colors/font_hover_pressed_color = Color(0.117647, 0.101961, 0.086275, 1)
+CheckButton/colors/font_pressed_color = Color(0.117647, 0.101961, 0.086275, 1)
 CheckButton/constants/outline_size = 0
-CheckButton/font_sizes/font_size = 28
+CheckButton/font_sizes/font_size = 24
 CheckButton/fonts/font = ExtResource("3_8o6ow")
 CheckButton/styles/focus = SubResource("StyleBoxEmpty_settings")
 CheckButton/styles/hover = SubResource("StyleBoxEmpty_settings")
 CheckButton/styles/hover_pressed = SubResource("StyleBoxEmpty_settings")
 CheckButton/styles/normal = SubResource("StyleBoxEmpty_settings")
 CheckButton/styles/pressed = SubResource("StyleBoxEmpty_settings")
-Label/colors/font_color = Color(0, 0, 0, 1)
+Label/colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
 Label/fonts/font = ExtResource("3_8o6ow")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q1278"]
@@ -281,7 +280,7 @@ tracks/13/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Vector2(520, 646)]
+"values": [Vector2(520, 658)]
 }
 
 [sub_resource type="Animation" id="Animation_5lsp1"]
@@ -319,10 +318,10 @@ tracks/2/path = NodePath("Border:visible")
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/keys = {
-"times": PackedFloat32Array(0, 0.25),
-"transitions": PackedFloat32Array(1, 1),
+"times": PackedFloat32Array(0, 0.24, 0.25),
+"transitions": PackedFloat32Array(1, 1, 1),
 "update": 1,
-"values": [true, false]
+"values": [true, true, false]
 }
 tracks/3/type = "value"
 tracks/3/imported = false
@@ -367,10 +366,10 @@ tracks/6/path = NodePath("Inside_paper/Left_color:visible")
 tracks/6/interp = 1
 tracks/6/loop_wrap = true
 tracks/6/keys = {
-"times": PackedFloat32Array(0, 0.25),
-"transitions": PackedFloat32Array(1, 1),
+"times": PackedFloat32Array(0, 0.25, 0.26),
+"transitions": PackedFloat32Array(1, 1, 1),
 "update": 1,
-"values": [false, true]
+"values": [false, false, true]
 }
 tracks/7/type = "value"
 tracks/7/imported = false
@@ -415,10 +414,10 @@ tracks/10/path = NodePath("Inside_paper/Save_Quit_Setting:visible")
 tracks/10/interp = 1
 tracks/10/loop_wrap = true
 tracks/10/keys = {
-"times": PackedFloat32Array(0, 0.25),
-"transitions": PackedFloat32Array(1, 1),
+"times": PackedFloat32Array(0, 0.25, 0.26),
+"transitions": PackedFloat32Array(1, 1, 1),
 "update": 1,
-"values": [false, true]
+"values": [false, false, true]
 }
 tracks/11/type = "value"
 tracks/11/imported = false
@@ -454,7 +453,7 @@ tracks/13/keys = {
 "times": PackedFloat32Array(0.25, 0.5),
 "transitions": PackedFloat32Array(0.5, 1),
 "update": 0,
-"values": [Vector2(520, 646), Vector2(520, 626)]
+"values": [Vector2(520, 658), Vector2(520, 638)]
 }
 
 [sub_resource type="Animation" id="Animation_o3fl8"]
@@ -493,7 +492,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(1, 1, 1, 0.09411765)
+color = Color(0.117647, 0.101961, 0.086275, 0.28)
 
 [node name="Inside_paper" type="ColorRect" parent="." unique_id=266261478]
 visible = false
@@ -519,7 +518,7 @@ offset_left = -18.0
 offset_right = 19.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.9529412, 0.65882355, 0, 1)
+color = Color(0.878431, 0.701961, 0.329412, 1)
 
 [node name="Left_color" type="ColorRect" parent="Inside_paper" unique_id=552548662]
 layout_mode = 1
@@ -531,7 +530,7 @@ offset_right = -638.0
 grow_horizontal = 2
 grow_vertical = 2
 pivot_offset = Vector2(601, 0)
-color = Color(1, 0.8901961, 0.73333335, 1)
+color = Color(0.980392, 0.960784, 0.894118, 1)
 
 [node name="Left_Page" type="VBoxContainer" parent="Inside_paper/Left_color" unique_id=2136895224]
 layout_mode = 1
@@ -541,23 +540,23 @@ anchor_bottom = 1.0
 offset_left = 24.0
 offset_top = 16.0
 offset_right = -24.0
-offset_bottom = -70.0
+offset_bottom = -56.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 
 [node name="Video_Label" type="Label" parent="Inside_paper/Left_color/Left_Page" unique_id=722944258]
 layout_mode = 2
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 54
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
+theme_override_font_sizes/font_size = 36
 text = "Video"
 horizontal_alignment = 1
 
 [node name="Video_Divider" type="ColorRect" parent="Inside_paper/Left_color/Left_Page"]
-custom_minimum_size = Vector2(0, 2)
+custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
-color = Color(0, 0, 0, 0.45)
+color = Color(0.117647, 0.101961, 0.086275, 0.45)
 
 [node name="Video" type="VBoxContainer" parent="Inside_paper/Left_color/Left_Page" unique_id=141873692]
 layout_mode = 2
@@ -566,38 +565,46 @@ theme_override_constants/separation = 8
 [node name="Full_Screen" type="CheckButton" parent="Inside_paper/Left_color/Left_Page/Video" unique_id=46790681]
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 24
 text = "Full Screen"
 
 [node name="World_Environment" type="CheckButton" parent="Inside_paper/Left_color/Left_Page/Video" unique_id=46790682]
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 24
 button_pressed = true
 text = "World Environment"
 
-[node name="Shaken_Receipt" type="Button" parent="Inside_paper/Left_color/Left_Page/Video" unique_id=46790683]
+[node name="Shaken_Receipt" type="HBoxContainer" parent="Inside_paper/Left_color/Left_Page/Video" unique_id=46790683]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Inside_paper/Left_color/Left_Page/Video/Shaken_Receipt" unique_id=46790684]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
+theme_override_fonts/font = ExtResource("3_8o6ow")
+theme_override_font_sizes/font_size = 24
+text = "Shaken Receipt"
+
+[node name="Shaken_Receipt_Option" type="OptionButton" parent="Inside_paper/Left_color/Left_Page/Video/Shaken_Receipt" unique_id=46790685]
 layout_mode = 2
 focus_mode = 0
-theme_override_constants/h_separation = 10
-theme_override_constants/icon_max_width = 24
-theme_override_font_sizes/font_size = 30
-text = "Shaken Receipt: Vertical Split"
-icon = ExtResource("7_shaker")
-expand_icon = true
+theme_override_font_sizes/font_size = 22
 
 [node name="Audio_Label" type="Label" parent="Inside_paper/Left_color/Left_Page" unique_id=235630147]
 layout_mode = 2
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 54
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
+theme_override_font_sizes/font_size = 36
 text = "Audio"
 horizontal_alignment = 1
 
 [node name="Audio_Divider" type="ColorRect" parent="Inside_paper/Left_color/Left_Page"]
-custom_minimum_size = Vector2(0, 2)
+custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
-color = Color(0, 0, 0, 0.45)
+color = Color(0.117647, 0.101961, 0.086275, 0.45)
 
 [node name="Audio_Container" type="VBoxContainer" parent="Inside_paper/Left_color/Left_Page" unique_id=1340278807]
 layout_mode = 2
@@ -608,13 +615,12 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="Label" type="Label" parent="Inside_paper/Left_color/Left_Page/Audio_Container/Master" unique_id=1327331504]
-custom_minimum_size = Vector2(115, 0)
+custom_minimum_size = Vector2(105, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 2
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
 theme_override_fonts/font = ExtResource("3_8o6ow")
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 24
 text = "Master"
 
 [node name="Master_slider" type="HSlider" parent="Inside_paper/Left_color/Left_Page/Audio_Container/Master" unique_id=1877489898]
@@ -635,13 +641,12 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="Label" type="Label" parent="Inside_paper/Left_color/Left_Page/Audio_Container/UI" unique_id=715792613]
-custom_minimum_size = Vector2(115, 0)
+custom_minimum_size = Vector2(105, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 2
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
 theme_override_fonts/font = ExtResource("3_8o6ow")
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 24
 text = "UI / SFX"
 
 [node name="UI_slider" type="HSlider" parent="Inside_paper/Left_color/Left_Page/Audio_Container/UI" unique_id=199137189]
@@ -663,13 +668,12 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="Label" type="Label" parent="Inside_paper/Left_color/Left_Page/Audio_Container/SFX" unique_id=361319398]
-custom_minimum_size = Vector2(115, 0)
+custom_minimum_size = Vector2(105, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 2
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
 theme_override_fonts/font = ExtResource("3_8o6ow")
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 24
 text = "SFX"
 
 [node name="SFX_slider" type="HSlider" parent="Inside_paper/Left_color/Left_Page/Audio_Container/SFX" unique_id=116862716]
@@ -690,13 +694,12 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="Label" type="Label" parent="Inside_paper/Left_color/Left_Page/Audio_Container/Music" unique_id=2002894559]
-custom_minimum_size = Vector2(115, 0)
+custom_minimum_size = Vector2(105, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 2
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
 theme_override_fonts/font = ExtResource("3_8o6ow")
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 24
 text = "Music"
 
 [node name="Music_slider" type="HSlider" parent="Inside_paper/Left_color/Left_Page/Audio_Container/Music" unique_id=1783862253]
@@ -715,7 +718,7 @@ max_value = 24.0
 [node name="Audio_reset" type="Button" parent="Inside_paper/Left_color/Left_Page/Audio_Container" unique_id=1496962428]
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 24
 text = "Reset Audio to Default"
 autowrap_mode = 2
 
@@ -728,7 +731,7 @@ anchor_bottom = 1.0
 offset_left = 639.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(1, 0.8901961, 0.73333335, 1)
+color = Color(0.980392, 0.960784, 0.894118, 1)
 
 [node name="Right_Page" type="VBoxContainer" parent="Inside_paper/Right_Color" unique_id=2039156386]
 layout_mode = 1
@@ -738,23 +741,23 @@ anchor_bottom = 1.0
 offset_left = 24.0
 offset_top = 16.0
 offset_right = -24.0
-offset_bottom = -70.0
+offset_bottom = -56.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10
 
 [node name="Control_Label" type="Label" parent="Inside_paper/Right_Color/Right_Page" unique_id=1809275779]
 layout_mode = 2
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 54
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
+theme_override_font_sizes/font_size = 36
 text = "Controls"
 horizontal_alignment = 1
 
 [node name="Control_Divider" type="ColorRect" parent="Inside_paper/Right_Color/Right_Page"]
-custom_minimum_size = Vector2(0, 2)
+custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
-color = Color(0, 0, 0, 0.45)
+color = Color(0.117647, 0.101961, 0.086275, 0.45)
 
 [node name="Controls" type="VBoxContainer" parent="Inside_paper/Right_Color/Right_Page" unique_id=1788923169]
 layout_mode = 2
@@ -764,17 +767,22 @@ theme_override_constants/separation = 10
 [node name="Invert_Pour" type="CheckButton" parent="Inside_paper/Right_Color/Right_Page/Controls" unique_id=790685814]
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 24
 text = "Invert Pouring Angle"
 
 [node name="KeybindsScroll" parent="Inside_paper/Right_Color/Right_Page/Controls" instance=ExtResource("8_kbscroll")]
 custom_minimum_size = Vector2(0, 320)
 layout_mode = 2
+label_font_size = 24
+button_font_size = 22
+button_min_size = Vector2(96, 30)
+icon_button_size = Vector2(30, 30)
+action_icon_size = Vector2(20, 20)
 
 [node name="Control_reset" type="Button" parent="Inside_paper/Right_Color/Right_Page/Controls" unique_id=790685813]
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 24
 text = "Reset All Keybinds"
 autowrap_mode = 2
 
@@ -787,15 +795,15 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -100.0
-offset_top = -54.0
+offset_top = -42.0
 offset_right = 100.0
-offset_bottom = -14.0
+offset_bottom = -2.0
 grow_horizontal = 2
 grow_vertical = 0
 pivot_offset = Vector2(100, 20)
 size_flags_horizontal = 4
 focus_mode = 0
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 26
 text = "Save & Quit"
 
 [node name="Border" type="ColorRect" parent="." unique_id=469519247]
@@ -808,9 +816,10 @@ offset_right = -317.99774
 offset_bottom = -21.999512
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.95438164, 0.65986764, 0, 1)
+color = Color(0.878431, 0.701961, 0.329412, 1)
 
 [node name="ColorRect" type="ColorRect" parent="Border" unique_id=1199760933]
+visible = false
 layout_mode = 0
 offset_left = 21.0
 offset_top = -7.0
@@ -827,7 +836,7 @@ offset_left = 21.0
 offset_right = 1.999939
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(1, 0.8901961, 0.73333335, 1)
+color = Color(0.980392, 0.960784, 0.894118, 1)
 
 [node name="CenterContainer" type="CenterContainer" parent="Border/Dim" unique_id=1292509556]
 layout_mode = 1
@@ -840,42 +849,44 @@ theme = ExtResource("2_71dvj")
 
 [node name="VBox2" type="VBoxContainer" parent="Border/Dim/CenterContainer" unique_id=1941080870]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 
 [node name="Label" type="Label" parent="Border/Dim/CenterContainer/VBox2" unique_id=1228745160]
 layout_mode = 2
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 20
-theme_override_font_sizes/font_size = 150
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
+theme_override_fonts/font = ExtResource("3_8o6ow")
+theme_override_font_sizes/font_size = 54
 text = "Paused
 Menu"
 horizontal_alignment = 1
 
 [node name="ResumeButton" type="Button" parent="Border/Dim/CenterContainer/VBox2" unique_id=1542880020]
-custom_minimum_size = Vector2(240, 48)
+custom_minimum_size = Vector2(220, 44)
 layout_mode = 2
 size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 30
 text = "Play"
 
 [node name="SettingButton" type="Button" parent="Border/Dim/CenterContainer/VBox2" unique_id=1396203697]
-custom_minimum_size = Vector2(240, 48)
+custom_minimum_size = Vector2(220, 42)
 layout_mode = 2
 size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 28
 text = "Setting"
 
 [node name="MainMenuButton" type="Button" parent="Border/Dim/CenterContainer/VBox2" unique_id=1313055353]
-custom_minimum_size = Vector2(240, 48)
+custom_minimum_size = Vector2(220, 42)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 81
-text = "Main Menu
-"
+theme_override_font_sizes/font_size = 28
+text = "Main Menu"
 
 [node name="QuitButton" type="Button" parent="Border/Dim/CenterContainer/VBox2" unique_id=2093627335]
-custom_minimum_size = Vector2(240, 48)
+custom_minimum_size = Vector2(220, 42)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 92
+theme_override_font_sizes/font_size = 28
 text = "Exit to Desktop"
 
 [node name="Hand" parent="." unique_id=2062940456 instance=ExtResource("6_ojdcy")]

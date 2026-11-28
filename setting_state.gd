@@ -169,6 +169,20 @@ static func _raster_triangle(img: Image, a: Vector2, b: Vector2, c: Vector2, col
 			if Geometry2D.point_is_inside_triangle(p, a, b, c):
 				img.set_pixel(x, y, col)
 
+func _populate_shaken_receipt_option(opt: OptionButton) -> void:
+	if not is_instance_valid(opt):
+		return
+	if opt.item_count == 0:
+		opt.add_item("Vertical Split")
+		opt.set_item_metadata(0, SHAKEN_MODE_SPLIT)
+		opt.add_item("Averaged Color")
+		opt.set_item_metadata(1, SHAKEN_MODE_AVERAGED)
+	var cur_mode := get_shaken_receipt_mode()
+	for i in opt.item_count:
+		if str(opt.get_item_metadata(i)) == cur_mode:
+			opt.select(i)
+			break
+
 func bind_settings_panel(config: Dictionary) -> void:
 	cancel_rebind()
 	var master_slider := config.get("master_slider") as Range
@@ -178,6 +192,7 @@ func bind_settings_panel(config: Dictionary) -> void:
 	var fullscreen_btn := config.get("fullscreen_btn") as BaseButton
 	var world_env_btn := config.get("world_env_btn") as BaseButton
 	var shaken_receipt_btn := config.get("shaken_receipt_btn") as BaseButton
+	var shaken_receipt_option := config.get("shaken_receipt_option") as OptionButton
 	var audio_reset_btn := config.get("audio_reset_btn") as BaseButton
 	var control_reset_btn := config.get("control_reset_btn") as BaseButton
 	var invert_pour_btn := config.get("invert_pour_btn") as BaseButton
@@ -188,7 +203,8 @@ func bind_settings_panel(config: Dictionary) -> void:
 	var delete_buttons: Dictionary = config.get("delete_buttons", {})
 
 	_active_control_buttons = control_buttons
-	apply_settings_to_ui(master_slider, ui_slider, music_slider, fullscreen_btn, world_env_btn, control_buttons, invert_pour_btn, shaken_receipt_btn)
+	_populate_shaken_receipt_option(shaken_receipt_option)
+	apply_settings_to_ui(master_slider, ui_slider, music_slider, fullscreen_btn, world_env_btn, control_buttons, invert_pour_btn, shaken_receipt_btn, shaken_receipt_option)
 
 	if is_instance_valid(master_slider) and not master_slider.get_meta("_setting_state_bound", false):
 		master_slider.set_meta("_setting_state_bound", true)
@@ -232,6 +248,15 @@ func bind_settings_panel(config: Dictionary) -> void:
 		shaken_receipt_btn.pressed.connect(func() -> void:
 			toggle_shaken_receipt_mode()
 			shaken_receipt_btn.text = get_shaken_receipt_mode_label()
+		)
+
+	if is_instance_valid(shaken_receipt_option) and not shaken_receipt_option.get_meta("_setting_state_bound", false):
+		shaken_receipt_option.set_meta("_setting_state_bound", true)
+		shaken_receipt_option.item_selected.connect(func(idx: int) -> void:
+			if has_node("/root/UIAudio"):
+				get_node("/root/UIAudio").call("play_click")
+			var mode := str(shaken_receipt_option.get_item_metadata(idx))
+			set_shaken_receipt_mode(mode)
 		)
 
 	if is_instance_valid(invert_pour_btn) and not invert_pour_btn.get_meta("_setting_state_bound", false):
@@ -536,7 +561,8 @@ func apply_settings_to_ui(
 	world_env_btn: BaseButton,
 	control_buttons: Dictionary,
 	invert_pour_btn: BaseButton = null,
-	shaken_receipt_btn: BaseButton = null
+	shaken_receipt_btn: BaseButton = null,
+	shaken_receipt_option: OptionButton = null
 ) -> void:
 	if is_instance_valid(master_slider):
 		master_slider.value = setting_dic["Audio"]["Master_value"]
@@ -557,6 +583,8 @@ func apply_settings_to_ui(
 
 	if is_instance_valid(shaken_receipt_btn):
 		shaken_receipt_btn.text = get_shaken_receipt_mode_label()
+	if is_instance_valid(shaken_receipt_option):
+		_populate_shaken_receipt_option(shaken_receipt_option)
 
 	for action_name in control_buttons:
 		var btn := control_buttons[action_name] as Button

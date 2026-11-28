@@ -46,12 +46,28 @@ const MANDATORY_INGREDIENT_COST: float = 50.0
 const MANDATORY_MARKETING_COST: float = 50.0
 
 func _ready() -> void:
+	_apply_ink_paper_theme()
 	pay_quota_button.pressed.connect(_on_pay_quota_pressed)
 	buy_ingredient_button.pressed.connect(_on_buy_ingredient_pressed)
 	buy_marketing_button.pressed.connect(_on_buy_marketing_pressed)
 	restart_button.pressed.connect(_on_restart_pressed)
 	next_night_button.pressed.connect(_on_next_night_pressed)
 	_refresh_display()
+
+func _apply_ink_paper_theme() -> void:
+	theme = InkTheme.get_theme()
+	InkTheme.ensure_color_rect_paper($TextureRect, "cream", false)
+	InkTheme.ensure_color_rect_paper($Recipt/Recipt, "cream", false)
+	InkTheme.ensure_color_rect_paper($Marketing/Marketing, "cream", false)
+
+	InkTheme.apply_button_variant(pay_quota_button, "paper", false, 28)
+	InkTheme.apply_button_variant(buy_ingredient_button, "paper", false, 28)
+	InkTheme.apply_button_variant(buy_marketing_button, "paper", false, 28)
+	InkTheme.apply_button_variant(restart_button, "muted", false, 28)
+	InkTheme.apply_button_variant(next_night_button, "primary", false, 28)
+	InkTheme.apply_button_variant($Recipt/Recipt/Reset, "primary", false, 38)
+	InkTheme.apply_button_variant($Marketing/Marketing/VBoxContainer/Last/next_night, "primary", false, 40)
+	InkTheme.apply_button_variant($Stats, "paper", false, 36)
 
 func _exit_tree() -> void:
 	if _owns_summary_scope:
@@ -99,9 +115,9 @@ func _display_recipt() -> void:
 		return
 	var net_profit: float = PlayerStats.money - GameState.get_night_quota(GameState.night)
 	if net_profit < 0:
-		proft_number.add_theme_color_override("font_color", Color(1.0, 0.0, 0.0, 1.0))
+		proft_number.add_theme_color_override("font_color", Color(0.82, 0.14, 0.12, 1.0))
 	else:
-		proft_number.add_theme_color_override("font_color", Color(0.424, 0.91, 0.0, 1.0))
+		proft_number.add_theme_color_override("font_color", Color(0.24, 0.65, 0.12, 1.0))
 	NumberInterpolator.set_number(proft_number, PlayerStats.money, " {coin}")
 	await _display_container($Recipt/Recipt/VBoxContainer/Profit_number)
 	if not is_inside_tree():
@@ -118,7 +134,6 @@ func _display_recipt() -> void:
 	if net_profit < 0:
 		PlayerStats._change_money(net_profit)
 		_finish_owned_summary_scope(owns_scope)
-		#$Animation.play("failed_night")
 		return
 	else:
 		PlayerStats._change_money(net_profit)

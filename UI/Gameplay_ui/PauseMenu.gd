@@ -11,6 +11,7 @@ var which_menu = "Resume"
 func _ready() -> void:
 	#DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	# The rest of ht egame stops when the tree is paused; this menu must keep running.
+	_apply_ink_paper_theme()
 	_load_settings()
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	hide()
@@ -21,6 +22,51 @@ func _ready() -> void:
 	quit_button.pressed.connect(_on_quit_pressed)
 	if OS.has_feature("web"):
 		quit_button.hide()
+
+func _apply_ink_paper_theme() -> void:
+	var ink_theme := InkTheme.get_theme()
+	$Border/Dim/CenterContainer.theme = ink_theme
+	$Inside_paper.theme = ink_theme
+
+	InkTheme.ensure_color_rect_paper($Border, "gold_static", false)
+	$Border/ColorRect.visible = false
+	InkTheme.ensure_color_rect_paper($Border/Dim, "cream", false, Vector4(6.0, 0.0, 0.0, 0.0))
+
+	InkTheme.ensure_color_rect_paper($Inside_paper/Left_color, "cream", false, Vector4(0.0, 0.0, 6.0, 0.0))
+	InkTheme.ensure_color_rect_paper($Inside_paper/Right_Color, "cream", false, Vector4(6.0, 0.0, 0.0, 0.0))
+	InkTheme.ensure_color_rect_paper($Inside_paper/Divder, "gold_static", false, Vector4(4.0, 0.0, 4.0, 0.0))
+	$Inside_paper.move_child($Inside_paper/Divder, $Inside_paper/Right_Color.get_index())
+
+	for div_node in [
+		$Inside_paper/Left_color/Left_Page/Video_Divider,
+		$Inside_paper/Left_color/Left_Page/Audio_Divider,
+		$Inside_paper/Right_Color/Right_Page/Control_Divider,
+	]:
+		if div_node is Control:
+			InkTheme.style_divider(div_node as Control, false)
+
+	InkTheme.apply_button_variant(resume_button, "primary", false, 30)
+	InkTheme.apply_button_variant(setting_button, "paper", false, 28)
+	InkTheme.apply_button_variant(menu_button, "paper", false, 28)
+	InkTheme.apply_button_variant(quit_button, "muted", false, 28)
+
+	InkTheme.apply_check_button($Inside_paper/Left_color/Left_Page/Video/Full_Screen, 24)
+	InkTheme.apply_check_button($Inside_paper/Left_color/Left_Page/Video/World_Environment, 24)
+	InkTheme.apply_check_button($Inside_paper/Right_Color/Right_Page/Controls/Invert_Pour, 24)
+
+	InkTheme.apply_button_variant($Inside_paper/Left_color/Left_Page/Video/Shaken_Receipt/Shaken_Receipt_Option, "paper", false, 22)
+	InkTheme.apply_button_variant($Inside_paper/Left_color/Left_Page/Audio_Container/Audio_reset, "paper", false, 24)
+	InkTheme.apply_button_variant($Inside_paper/Right_Color/Right_Page/Controls/Control_reset, "paper", false, 24)
+	InkTheme.apply_button_variant($Inside_paper/Save_Quit_Setting, "primary", false, 26)
+
+	for slider in [
+		$Inside_paper/Left_color/Left_Page/Audio_Container/Master/Master_slider,
+		$Inside_paper/Left_color/Left_Page/Audio_Container/UI/UI_slider,
+		$Inside_paper/Left_color/Left_Page/Audio_Container/SFX/SFX_slider,
+		$Inside_paper/Left_color/Left_Page/Audio_Container/Music/Music_slider,
+	]:
+		if slider is HSlider:
+			InkTheme.apply_dithered_beer_slider(slider as HSlider)
 
 func _collect_keybind_buttons() -> Dictionary:
 	var scroll := $Inside_paper/Right_Color/Right_Page/Controls/KeybindsScroll as KeybindsScroll
@@ -45,7 +91,7 @@ func _load_settings() -> void:
 		"audio_reset_btn": $Inside_paper/Left_color/Left_Page/Audio_Container/Audio_reset,
 		"fullscreen_btn": $Inside_paper/Left_color/Left_Page/Video/Full_Screen,
 		"world_env_btn": $Inside_paper/Left_color/Left_Page/Video/World_Environment,
-		"shaken_receipt_btn": $Inside_paper/Left_color/Left_Page/Video/Shaken_Receipt,
+		"shaken_receipt_option": $Inside_paper/Left_color/Left_Page/Video/Shaken_Receipt/Shaken_Receipt_Option,
 		"control_buttons": keybind_maps["control_buttons"],
 		"reset_buttons": keybind_maps["reset_buttons"],
 		"delete_buttons": keybind_maps["delete_buttons"],
@@ -64,6 +110,8 @@ func _input(event: InputEvent) -> void:
 	if SettingState.waiting_keybind:
 		return
 	if _is_escape_pressed(event):
+		if not visible and GameState.is_in_main_menu():
+			return
 		UIAudio.play_pause()
 		if not visible:
 			which_menu = "Resume"
@@ -80,6 +128,8 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func pause() -> void:
+	if GameState.is_in_main_menu():
+		return
 	_load_settings()
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 	get_tree().paused = true
@@ -116,10 +166,11 @@ func settings() -> void:
 		which_menu = "Resume"
 		if anim_player.is_playing() and anim_player.current_animation == "open_settings":
 			var cur_pos: float = anim_player.current_animation_position
-			anim_player.play("open_settings", -1, -1.0, false)
+			anim_player.play("open_settings", -1, -1.0, true)
 			anim_player.seek(cur_pos, true)
 		else:
 			anim_player.play_backwards("open_settings")
+		resume_button.grab_focus()
 
 func _on_main_menu_pressed() -> void:
 	close_menu()

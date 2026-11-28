@@ -44,6 +44,8 @@ func setup(text: String, type_: String,own: Control,yes_3: bool):
 func _ready() -> void:
 	#$SelectionRect.hide()
 	$EquippedPanel.hide()
+	InkTheme.apply_button_variant(self, "cream", false)
+	InkTheme.apply_panel_variant($EquippedPanel, "gold", false, Vector4(0.0, 0.0, 0.0, 0.0))
 
 func _on_resized() -> void:
 	custom_minimum_size.y = get_rect().size.x

@@ -233,6 +233,10 @@ static func _create_button_overlay(button: BaseButton, options: Dictionary) -> D
 	var overlay := Control.new()
 	overlay.name = "__CooldownOverlay"
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.offset_left = 3.0
+	overlay.offset_top = 3.0
+	overlay.offset_right = -3.0
+	overlay.offset_bottom = -3.0
 	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	overlay.clip_contents = true
 	overlay.visible = false
@@ -248,17 +252,17 @@ static func _create_button_overlay(button: BaseButton, options: Dictionary) -> D
 	bar.max_value = 1.0
 	bar.step = 0.0
 
-	var bg_col: Color = options.get("bg_color", Color(0.15, 0.15, 0.18, 0.32))
-	var fill_col: Color = options.get("bar_color", Color(0.08, 0.08, 0.10, 0.62))
+	var bg_col: Color = options.get("bg_color", Color(0.18, 0.14, 0.10, 0.14))
+	var fill_col: Color = options.get("bar_color", Color(0.18, 0.14, 0.10, 0.35))
 
 	var bg_style := StyleBoxFlat.new()
 	bg_style.bg_color = bg_col
-	bg_style.set_corner_radius_all(3)
+	bg_style.set_corner_radius_all(5)
 	bar.add_theme_stylebox_override("background", bg_style)
 
 	var fill_style := StyleBoxFlat.new()
 	fill_style.bg_color = fill_col
-	fill_style.set_corner_radius_all(3)
+	fill_style.set_corner_radius_all(5)
 	bar.add_theme_stylebox_override("fill", fill_style)
 	overlay.add_child(bar)
 
@@ -270,10 +274,10 @@ static func _create_button_overlay(button: BaseButton, options: Dictionary) -> D
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	lbl.add_theme_font_size_override("font_size", int(options.get("countdown_font_size", 14)))
-	lbl.add_theme_color_override("font_color", Color(0.88, 0.88, 0.90, 0.95))
-	lbl.add_theme_color_override("font_outline_color", Color.BLACK)
-	lbl.add_theme_constant_override("outline_size", 4)
+	lbl.add_theme_font_size_override("font_size", int(options.get("countdown_font_size", 16)))
+	lbl.add_theme_color_override("font_color", InkTheme.INK_DARK)
+	lbl.add_theme_color_override("font_outline_color", InkTheme.PAPER_LIGHT)
+	lbl.add_theme_constant_override("outline_size", 3)
 	overlay.add_child(lbl)
 
 	return {

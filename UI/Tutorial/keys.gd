@@ -9,8 +9,24 @@ var right_tutorial: bool = false
 var _is_finishing: bool = false
 
 func _ready() -> void:
+	_apply_ink_paper_theme()
 	if visible:
 		popup()
+
+func _apply_ink_paper_theme() -> void:
+	InkTheme.apply_panel_variant(self, "cream", false, Vector4(8.0, 8.0, 8.0, 8.0))
+	for keycap in [$Panel, $Panel2, $Panel3, $Panel4]:
+		if is_instance_valid(keycap):
+			InkTheme.apply_panel_variant(keycap, "paper", true, Vector4(4.0, 4.0, 4.0, 4.0))
+	for caption in [$Panel/Label2, $Panel2/Label2, $Panel3/Label2, $Panel4/Label2]:
+		if is_instance_valid(caption):
+			caption.add_theme_color_override("font_color", InkTheme.INK_DARK)
+			caption.add_theme_constant_override("outline_size", 0)
+	for key_lbl in [$Panel/up/Label, $Panel2/left/Label, $Panel3/down/Label, $Panel4/right/Label]:
+		if is_instance_valid(key_lbl):
+			key_lbl.add_theme_color_override("font_color", Color.WHITE)
+			key_lbl.add_theme_color_override("font_outline_color", InkTheme.INK_DARK)
+			key_lbl.add_theme_constant_override("outline_size", 6)
 
 func popup() -> void:
 	show()

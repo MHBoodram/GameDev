@@ -3,11 +3,19 @@
 [ext_resource type="Script" uid="uid://tc486c40axux" path="res://UI/After_night/item_button.gd" id="1_fsn26"]
 [ext_resource type="Texture2D" uid="uid://bqfkwfepnejxy" path="res://Assets/Items/Drinks/gin.png" id="2_fsn26"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_awvil"]
-bg_color = Color(0.0431373, 0.623529, 1, 0.588235)
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_awvil"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n3ax7"]
-bg_color = Color(0.417712, 0.743363, 1, 0.788235)
+bg_color = Color(0.878431, 0.701961, 0.329412, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.117647, 0.101961, 0.086275, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [node name="ItemButton" type="Button" unique_id=1656221561]
 anchors_preset = 15
@@ -15,7 +23,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/focus = SubResource("StyleBoxFlat_awvil")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_awvil")
 script = ExtResource("1_fsn26")
 
 [node name="EquippedPanel" type="Panel" parent="." unique_id=1878933373]
@@ -26,6 +34,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_n3ax7")
 
 [node name="AspectRatioContainer" type="AspectRatioContainer" parent="." unique_id=1498988772]
@@ -33,23 +42,41 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 26.0
+offset_right = -10.0
+offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="TextureRect" type="TextureRect" parent="AspectRatioContainer" unique_id=422921982]
 layout_mode = 2
+mouse_filter = 2
 texture = ExtResource("2_fsn26")
 
 [node name="Label" type="Label" parent="." unique_id=1575918971]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 6.0
+offset_top = 4.0
+offset_right = -6.0
+offset_bottom = 26.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
 text = "dfs"
+horizontal_alignment = 1
 
 [node name="Label2" type="Label" parent="." unique_id=404298409]
 layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
+offset_left = 6.0
+offset_top = 24.0
+offset_right = 46.0
+offset_bottom = 47.0
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
 
 [connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
 [connection signal="pressed" from="." to="." method="_on_pressed"]

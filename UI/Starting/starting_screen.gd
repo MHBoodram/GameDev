@@ -6,6 +6,10 @@ const TITLE_INTRO_FF_SCOPE := "title_intro"
 @onready var start_menu = get_node("Menu2/Menu3/Viewport/SubViewport/StartMenu")
 
 func _ready() -> void:
+	if is_instance_valid(GameState.pause_menu) and GameState.pause_menu.visible:
+		GameState.pause_menu.close_menu()
+	if is_instance_valid(GameState.debug_menu):
+		GameState.debug_menu.visible = false
 	MusicPlayer.play_menu()
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 	await SettingState._loading_setting()

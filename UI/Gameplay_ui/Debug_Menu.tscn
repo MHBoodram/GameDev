@@ -7,27 +7,33 @@ layer = 100
 script = ExtResource("1_4urve")
 
 [node name="TextureRect" type="ColorRect" parent="." unique_id=271145910]
-offset_top = 41.0
-offset_right = 310.0
-offset_bottom = 600.0
-color = Color(0.36282945, 0.36282945, 0.36282945, 1)
+offset_left = 12.0
+offset_top = 20.0
+offset_right = 440.0
+offset_bottom = 700.0
+color = Color(0.980392, 0.960784, 0.894118, 0)
 
 [node name="VBoxContainer" type="VBoxContainer" parent="TextureRect" unique_id=1303611127]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = 12.0
+offset_right = -14.0
+offset_bottom = -12.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="HBoxContainer" type="VBoxContainer" parent="TextureRect/VBoxContainer" unique_id=1210498679]
 layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="Fps" type="Label" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1785563584]
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 5
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
+theme_override_font_sizes/font_size = 20
 text = "FPS:"
 
 [node name="Skip_Tutorial" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498686]
@@ -36,6 +42,7 @@ text = "Skip Tutorial"
 
 [node name="FlowRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498685]
 layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="Speed" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/FlowRow" unique_id=1210498687]
 layout_mode = 2
@@ -49,6 +56,7 @@ text = "-60s"
 
 [node name="NightEndRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498689]
 layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="End_Night" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/NightEndRow" unique_id=-475765348]
 layout_mode = 2
@@ -57,6 +65,7 @@ text = "End Night"
 
 [node name="JumpNightRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498691]
 layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="Jump_Night" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/JumpNightRow" unique_id=1210498692]
 layout_mode = 2
@@ -69,6 +78,7 @@ size_flags_horizontal = 3
 
 [node name="ServeRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498702]
 layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="Serve_Good" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/ServeRow" unique_id=981240182]
 layout_mode = 2
@@ -82,6 +92,7 @@ text = "Serve Bad (0.0)"
 
 [node name="CupRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498699]
 layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="Spawn_Order_Cup" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/CupRow" unique_id=1210498700]
 layout_mode = 2
@@ -94,6 +105,7 @@ text = "Ready"
 
 [node name="OrderRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498696]
 layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="Take_Orders" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/OrderRow" unique_id=1210498697]
 layout_mode = 2
@@ -107,6 +119,7 @@ text = "5s Patience"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1736779845]
 layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="Add_NPC_Specific" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/HBoxContainer" unique_id=816879133]
 layout_mode = 2
@@ -125,6 +138,7 @@ clip_text = true
 
 [node name="ItemsRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498705]
 layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="Unlock_All" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/ItemsRow" unique_id=1210498706]
 layout_mode = 2
@@ -143,6 +157,7 @@ text = "Blood Game"
 
 [node name="UnlocksRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498720]
 layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="Unlock_Tools" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/UnlocksRow" unique_id=1210498721]
 layout_mode = 2
@@ -156,6 +171,7 @@ text = "Unlock Ingredients"
 
 [node name="UpgradesRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer"]
 layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="Unlock_Upgrades" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/UpgradesRow"]
 layout_mode = 2
@@ -164,6 +180,7 @@ text = "Unlock Upgrades"
 
 [node name="MoneyRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498709]
 layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="Add_Money" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/MoneyRow" unique_id=1948123910]
 layout_mode = 2
@@ -177,6 +194,7 @@ text = "-$1000"
 
 [node name="RepRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498712]
 layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="Add_Rep" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/RepRow" unique_id=-1445864449]
 layout_mode = 2
@@ -187,16 +205,3 @@ text = "+10 Rep"
 layout_mode = 2
 size_flags_horizontal = 3
 text = "+5 Sp. Rep"
-
-[node name="MiscRow" type="HBoxContainer" parent="TextureRect/VBoxContainer/HBoxContainer" unique_id=1210498714]
-layout_mode = 2
-
-[node name="Remove_NPC" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/MiscRow" unique_id=546257271]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Remove NPC"
-
-[node name="Camera Shake" type="Button" parent="TextureRect/VBoxContainer/HBoxContainer/MiscRow" unique_id=488105334]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Camera Shake"

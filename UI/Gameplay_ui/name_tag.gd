@@ -40,7 +40,7 @@ const UI_FONT: Font = preload("res://Assets/Font/Merchant Copy.ttf")
 @export var pressed_color: Color = Color(0.75, 0.75, 0.75, 1.0)
 @export var disabled_bg_color: Color = Color(0.92, 0.92, 0.92, 0.85)
 @export var border_color: Color = Color.BLACK
-@export var text_color: Color = Color.BLACK
+@export var text_color: Color = Color(0.117647, 0.101961, 0.086275, 1.0)
 @export var disabled_text_color: Color = Color(0.45, 0.45, 0.45, 1.0)
 
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
@@ -51,10 +51,10 @@ const UI_FONT: Font = preload("res://Assets/Font/Merchant Copy.ttf")
 var _is_hovered: bool = false
 var _is_pressed: bool = false
 var _deny_tween: Tween = null
-var _normal_style: StyleBoxFlat
-var _hover_style: StyleBoxFlat
-var _pressed_style: StyleBoxFlat
-var _disabled_style: StyleBoxFlat
+var _normal_style: StyleBox
+var _hover_style: StyleBox
+var _pressed_style: StyleBox
+var _disabled_style: StyleBox
 
 func _ready() -> void:
 	if collision_shape and collision_shape.shape:
@@ -115,16 +115,24 @@ func _process(_delta: float) -> void:
 			look_at(cam.global_position, Vector3.UP, true)
 
 func _build_styles() -> void:
-	_normal_style = _make_style(bg_color)
-	_hover_style = _make_style(hover_color)
-	_pressed_style = _make_style(pressed_color)
-	_disabled_style = _make_style(disabled_bg_color)
+	if bg_color == Color.WHITE and border_color == Color.BLACK:
+		var pad := Vector4(10.0, 6.0, 10.0, 6.0)
+		_normal_style = InkTheme.make_box_style("paper", true, pad)
+		_hover_style = InkTheme.make_box_style("gold_hover", true, pad)
+		_pressed_style = InkTheme.make_box_style("pressed", true, pad)
+		_disabled_style = InkTheme.make_box_style("disabled", true, pad)
+	else:
+		_normal_style = _make_style(bg_color)
+		_hover_style = _make_style(hover_color)
+		_pressed_style = _make_style(pressed_color)
+		_disabled_style = _make_style(disabled_bg_color)
 
 func _make_style(fill_col: Color) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = fill_col
 	sb.border_color = border_color
 	sb.set_border_width_all(border_width)
+	sb.set_corner_radius_all(6)
 	sb.content_margin_left = 10.0
 	sb.content_margin_right = 10.0
 	sb.content_margin_top = 6.0
@@ -140,12 +148,14 @@ func _sync_collision_enabled() -> void:
 func _refresh_tag() -> void:
 	if not is_node_ready() or not tag_button:
 		return
+	tag_button.set_meta("_ink_paper_styled", true)
 	tag_button.icon = tag_icon
 	tag_button.expand_icon = (tag_icon != null)
 	tag_button.add_theme_font_override("font", UI_FONT)
 	tag_button.add_theme_font_size_override("font_size", font_size)
 	tag_button.add_theme_constant_override("icon_max_width", icon_size)
 	tag_button.add_theme_constant_override("h_separation", 6)
+	tag_button.add_theme_constant_override("outline_size", 0)
 	_update_button_visual()
 	TextIcons.apply_to_control(tag_button, tag_text)
 	_refresh_layout()
@@ -168,7 +178,7 @@ func _refresh_layout() -> void:
 func _update_button_visual() -> void:
 	if not is_node_ready() or not tag_button:
 		return
-	var active_style: StyleBoxFlat = _normal_style
+	var active_style: StyleBox = _normal_style
 	var active_text_col: Color = text_color
 	if is_disabled:
 		active_style = _disabled_style

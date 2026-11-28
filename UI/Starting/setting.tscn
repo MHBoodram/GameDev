@@ -4,76 +4,75 @@
 [ext_resource type="Script" uid="uid://cpqwjs4u8japt" path="res://UI/Starting/setting.gd" id="1_x505p"]
 [ext_resource type="Texture2D" uid="uid://b44jk20tj2uhc" path="res://Assets/UI/slider_start.png" id="2_8hy2n"]
 [ext_resource type="Texture2D" uid="uid://bgorgi1bb54q7" path="res://Assets/UI/volume_slider.png" id="3_8hy2n"]
-[ext_resource type="Texture2D" uid="uid://dg7r8hb0gj200" path="res://Assets/Items/shaker.png" id="4_shaker"]
 [ext_resource type="PackedScene" path="res://UI/KeybindsScroll.tscn" id="5_kbscroll"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_check"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qacnc"]
-bg_color = Color(0.84, 0.88, 0.92, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0, 0, 0, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+bg_color = Color(0.964706, 0.913725, 0.796078, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.117647, 0.101961, 0.086275, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 content_margin_left = 10.0
 content_margin_top = 4.0
 content_margin_right = 10.0
 content_margin_bottom = 4.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8hy2n"]
-bg_color = Color(0.96474224, 0.96474224, 0.9647421, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0, 0, 0, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+bg_color = Color(1, 0.992157, 0.968627, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.117647, 0.101961, 0.086275, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 content_margin_left = 10.0
 content_margin_top = 4.0
 content_margin_right = 10.0
 content_margin_bottom = 4.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_x505p"]
-bg_color = Color(0.72, 0.76, 0.8, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0, 0, 0, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+bg_color = Color(0.894118, 0.843137, 0.729412, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.117647, 0.101961, 0.086275, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 content_margin_left = 10.0
 content_margin_top = 4.0
 content_margin_right = 10.0
 content_margin_bottom = 4.0
 
 [sub_resource type="Theme" id="Theme_vvki5"]
-Button/colors/font_color = Color(0, 0, 0, 1)
-Button/colors/font_hover_color = Color(0.05, 0.35, 0.45, 1)
-Button/colors/font_pressed_color = Color(0.12955844, 0.12955847, 0.12955844, 1)
+Button/colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+Button/colors/font_hover_color = Color(0.117647, 0.101961, 0.086275, 1)
+Button/colors/font_pressed_color = Color(0.117647, 0.101961, 0.086275, 1)
 Button/constants/outline_size = 0
-Button/font_sizes/font_size = 30
+Button/font_sizes/font_size = 26
 Button/fonts/font = ExtResource("1_jiptt")
 Button/styles/focus = SubResource("StyleBoxEmpty_check")
 Button/styles/hover = SubResource("StyleBoxFlat_qacnc")
 Button/styles/normal = SubResource("StyleBoxFlat_8hy2n")
 Button/styles/pressed = SubResource("StyleBoxFlat_x505p")
-CheckButton/colors/font_color = Color(0, 0, 0, 1)
-CheckButton/colors/font_hover_color = Color(0.05, 0.35, 0.45, 1)
-CheckButton/colors/font_hover_pressed_color = Color(0.05, 0.35, 0.45, 1)
-CheckButton/colors/font_pressed_color = Color(0, 0, 0, 1)
+CheckButton/colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+CheckButton/colors/font_hover_color = Color(0.117647, 0.101961, 0.086275, 1)
+CheckButton/colors/font_hover_pressed_color = Color(0.117647, 0.101961, 0.086275, 1)
+CheckButton/colors/font_pressed_color = Color(0.117647, 0.101961, 0.086275, 1)
 CheckButton/constants/outline_size = 0
-CheckButton/font_sizes/font_size = 28
+CheckButton/font_sizes/font_size = 26
 CheckButton/fonts/font = ExtResource("1_jiptt")
 CheckButton/styles/focus = SubResource("StyleBoxEmpty_check")
 CheckButton/styles/hover = SubResource("StyleBoxEmpty_check")
@@ -82,16 +81,16 @@ CheckButton/styles/normal = SubResource("StyleBoxEmpty_check")
 CheckButton/styles/pressed = SubResource("StyleBoxEmpty_check")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(1, 0.8901961, 0.73333335, 0.96)
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
-border_color = Color(0, 0, 0, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
+bg_color = Color(0.980392, 0.960784, 0.894118, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.117647, 0.101961, 0.086275, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jiptt"]
 bg_color = Color(0, 0, 0, 1)
@@ -190,7 +189,7 @@ layout_mode = 2
 theme_override_constants/margin_left = 28
 theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 28
-theme_override_constants/margin_bottom = 16
+theme_override_constants/margin_bottom = 0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer" unique_id=1717091295]
 layout_mode = 2
@@ -198,18 +197,17 @@ theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=88548650]
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 4
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
 theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 64
+theme_override_font_sizes/font_size = 54
 text = "Settings"
 horizontal_alignment = 1
 
 [node name="TopDivider" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 2)
+custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
-color = Color(0, 0, 0, 0.75)
+color = Color(0.117647, 0.101961, 0.086275, 0.85)
 
 [node name="Columns" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -223,18 +221,17 @@ theme_override_constants/separation = 10
 
 [node name="Video_Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn" unique_id=1532746307]
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 3
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
 theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 40
 text = "Video"
 horizontal_alignment = 1
 
 [node name="Video_Divider" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn"]
-custom_minimum_size = Vector2(0, 2)
+custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
-color = Color(0, 0, 0, 0.45)
+color = Color(0.117647, 0.101961, 0.086275, 0.45)
 
 [node name="Video" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn" unique_id=1064638581]
 layout_mode = 2
@@ -243,40 +240,47 @@ theme_override_constants/separation = 6
 [node name="Full_Screen" type="CheckButton" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video" unique_id=1565457149]
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 26
 text = "Full Screen"
 
 [node name="World_Environment" type="CheckButton" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video" unique_id=1565457150]
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 26
 button_pressed = true
 text = "World Environment"
 
-[node name="Shaken_Receipt" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video" unique_id=1565457151]
+[node name="Shaken_Receipt" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video" unique_id=1565457151]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Shaken_Receipt" unique_id=1565457152]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 26
+text = "Shaken Receipt"
+
+[node name="Shaken_Receipt_Option" type="OptionButton" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Shaken_Receipt" unique_id=1565457153]
 layout_mode = 2
 focus_mode = 0
-theme_override_constants/h_separation = 10
-theme_override_constants/icon_max_width = 24
-theme_override_font_sizes/font_size = 28
-text = "Shaken Receipt: Vertical Split"
-icon = ExtResource("4_shaker")
-expand_icon = true
+theme_override_font_sizes/font_size = 24
 
 [node name="Audio_Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn" unique_id=815385343]
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 3
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
 theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 40
 text = "Audio"
 horizontal_alignment = 1
 
 [node name="Audio_Divider" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn"]
-custom_minimum_size = Vector2(0, 2)
+custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
-color = Color(0, 0, 0, 0.45)
+color = Color(0.117647, 0.101961, 0.086275, 0.45)
 
 [node name="Audio_Container" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn" unique_id=204822112]
 layout_mode = 2
@@ -289,11 +293,10 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Master" unique_id=282188916]
 custom_minimum_size = Vector2(115, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 2
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
 theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 26
 text = "Master"
 
 [node name="Master_slider" type="HSlider" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Master" unique_id=224350312]
@@ -316,11 +319,10 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/UI" unique_id=486948423]
 custom_minimum_size = Vector2(115, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 2
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
 theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 26
 text = "UI / SFX"
 
 [node name="UI_slider" type="HSlider" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/UI" unique_id=1942127309]
@@ -344,11 +346,10 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/SFX" unique_id=144430740]
 custom_minimum_size = Vector2(115, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 2
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
 theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 26
 text = "SFX"
 
 [node name="SFX_slider" type="HSlider" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/SFX" unique_id=34580196]
@@ -371,11 +372,10 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Music" unique_id=308845476]
 custom_minimum_size = Vector2(115, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 2
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
 theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 26
 text = "Music"
 
 [node name="Music_slider" type="HSlider" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Music" unique_id=1568376555]
@@ -394,14 +394,14 @@ max_value = 24.0
 [node name="Audio_reset" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container" unique_id=1035674778]
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 26
 text = "Reset Audio to Default"
 autowrap_mode = 2
 
 [node name="ColumnDivider" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns"]
-custom_minimum_size = Vector2(2, 0)
+custom_minimum_size = Vector2(4, 0)
 layout_mode = 2
-color = Color(0, 0, 0, 0.25)
+color = Color(0.117647, 0.101961, 0.086275, 0.3)
 
 [node name="RightColumn" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns"]
 layout_mode = 2
@@ -410,18 +410,17 @@ theme_override_constants/separation = 10
 
 [node name="Control_Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn" unique_id=954628279]
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 3
+theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
+theme_override_constants/outline_size = 0
 theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 40
 text = "Controls"
 horizontal_alignment = 1
 
 [node name="Control_Divider" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn"]
-custom_minimum_size = Vector2(0, 2)
+custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
-color = Color(0, 0, 0, 0.45)
+color = Color(0.117647, 0.101961, 0.086275, 0.45)
 
 [node name="Controls" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn" unique_id=201704516]
 layout_mode = 2
@@ -431,26 +430,31 @@ theme_override_constants/separation = 8
 [node name="Invert_Pour" type="CheckButton" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls" unique_id=1763667782]
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 26
 text = "Invert Pouring Angle"
 
 [node name="KeybindsScroll" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls" instance=ExtResource("5_kbscroll")]
 custom_minimum_size = Vector2(0, 260)
 layout_mode = 2
+label_font_size = 26
+button_font_size = 24
+button_min_size = Vector2(102, 32)
+icon_button_size = Vector2(32, 32)
+action_icon_size = Vector2(22, 22)
 
 [node name="Control_reset" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls" unique_id=1370199940]
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 26
 text = "Reset All Keybinds"
 autowrap_mode = 2
 
 [node name="SaveQuit" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=167641846]
-custom_minimum_size = Vector2(180, 38)
+custom_minimum_size = Vector2(180, 40)
 layout_mode = 2
 size_flags_horizontal = 4
 focus_mode = 0
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 28
 text = "Save & Quit"
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=166343418]
@@ -460,8 +464,8 @@ libraries/ = SubResource("AnimationLibrary_vvki5")
 [connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Full_Screen" to="." method="_on_master_slider_mouse_exited"]
 [connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/World_Environment" to="." method="_on_master_slider_mouse_entered"]
 [connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/World_Environment" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Shaken_Receipt" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Shaken_Receipt" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Shaken_Receipt/Shaken_Receipt_Option" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Shaken_Receipt/Shaken_Receipt_Option" to="." method="_on_master_slider_mouse_exited"]
 [connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Master/Master_slider" to="." method="_on_master_slider_mouse_entered"]
 [connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Master/Master_slider" to="." method="_on_master_slider_mouse_exited"]
 [connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/UI/UI_slider" to="." method="_on_master_slider_mouse_entered"]
