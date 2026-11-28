@@ -109,7 +109,7 @@ func resume() -> void:
 	hide()
 
 func close_menu() -> void:
-	if which_menu == "Setting":
+	if which_menu == "Setting" or ($AnimationPlayer.is_playing() and $AnimationPlayer.current_animation == "open_settings"):
 		which_menu = "Resume"
 		$Inside_paper.hide()
 		$Border.show()
@@ -117,13 +117,24 @@ func close_menu() -> void:
 	resume()
 
 func settings() -> void:
-	if(which_menu=="Resume"):
+	var anim_player: AnimationPlayer = $AnimationPlayer
+	if which_menu == "Resume":
 		_load_settings()
-		$AnimationPlayer.play("open_settings")
 		which_menu = "Setting"
+		if anim_player.is_playing() and anim_player.current_animation == "open_settings":
+			var cur_pos: float = anim_player.current_animation_position
+			anim_player.play("open_settings", -1, 1.0, false)
+			anim_player.seek(cur_pos, true)
+		else:
+			anim_player.play("open_settings")
 	else:
-		$AnimationPlayer.play_backwards("open_settings")
 		which_menu = "Resume"
+		if anim_player.is_playing() and anim_player.current_animation == "open_settings":
+			var cur_pos: float = anim_player.current_animation_position
+			anim_player.play("open_settings", -1, -1.0, false)
+			anim_player.seek(cur_pos, true)
+		else:
+			anim_player.play_backwards("open_settings")
 
 func _on_main_menu_pressed() -> void:
 	close_menu()
