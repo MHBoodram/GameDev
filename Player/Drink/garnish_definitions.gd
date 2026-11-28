@@ -181,6 +181,12 @@ static func get_texture(garnish_id: String, for_cup_cube: bool = false) -> Textu
 	elif def.has("texture_path"):
 		tex_path = str(def["texture_path"])
 
+	if tex_path != "" and ResourceLoader.exists(tex_path):
+		var loaded := load(tex_path) as Texture2D
+		if loaded:
+			_texture_cache[cache_key] = loaded
+			return loaded
+
 	# Future texture loading
 	# if tex_path != "" and ResourceLoader.exists(tex_path):
 	#     var loaded := load(tex_path) as Texture2D

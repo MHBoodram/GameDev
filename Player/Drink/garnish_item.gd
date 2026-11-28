@@ -140,6 +140,12 @@ func handle_immediate_tool_click() -> bool:
 					set_highlight(false)
 					GameState.minigame_host.start_lemon_minigame(host_node, GameState.player, self)
 				return true
+			if GarnishDefinitions.is_ice(garnish_id):
+				if GameState.minigame_host:
+					var host_node: Node = GameState.main_node if is_instance_valid(GameState.main_node) else get_tree().current_scene
+					set_highlight(false)
+					GameState.minigame_host.start_ice_minigame(host_node, GameState.player, self)
+				return true
 			apply_slice_result(next_var, false)
 			return true
 		return true

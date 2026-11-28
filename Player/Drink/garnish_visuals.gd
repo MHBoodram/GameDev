@@ -13,7 +13,7 @@ const HERB_SCALE_RATIO: float = 0.22
 const HERB_Z_BASE: float = -0.013
 
 const ICE_CUBE_SCALE_RATIO: float = 0.36
-const ICE_BALL_SCALE_RATIO: float = 0.56
+const ICE_BALL_SCALE_RATIO: float = 0.72
 const ICE_Z_BASE: float = -0.013
 
 static var _layout_cache: Dictionary = {}
@@ -203,21 +203,22 @@ func _rebuild_visuals(mix: DrinkMix) -> void:
 				var sp := _create_garnish_sprite(g_id, false, inner_width * ICE_BALL_SCALE_RATIO, 3)
 				sp.alpha_cut = SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS
 				sp.modulate = Color.WHITE
-				sp.rotation_degrees.z = randf_range(-18.0, 18.0)
-				var norm_depth := clampf(0.45 + float(ice_ball_idx % 3) * 0.18 + randf_range(-0.08, 0.08), 0.15, 0.90)
-				var norm_x := 0.0 if ice_ball_idx == 0 else clampf(randf_range(-0.4, 0.4), -0.45, 0.45)
-				var init_x := clampf(inner_center_x + norm_x * inner_half_w * 0.5, inner_min_x + inner_half_w * 0.25, inner_max_x - inner_half_w * 0.25)
-				var init_y := lerpf(bottom_y + liquid_h * 0.18, bottom_y + liquid_h * 0.52, norm_depth)
+				sp.rotation_degrees.z = 0.0 if ice_ball_idx == 0 else randf_range(-14.0, 14.0)
+				var norm_depth := 0.56 if ice_ball_idx == 0 else clampf(0.45 + float(ice_ball_idx % 3) * 0.18 + randf_range(-0.08, 0.08), 0.20, 0.85)
+				var norm_x := 0.0 if ice_ball_idx == 0 else clampf(randf_range(-0.35, 0.35), -0.38, 0.38)
+				var init_x := clampf(inner_center_x + norm_x * inner_half_w * 0.28, inner_center_x - inner_half_w * 0.28, inner_center_x + inner_half_w * 0.28)
+				var init_y := bottom_y + liquid_h * 0.36
 				sp.position = Vector3(init_x, init_y, ICE_Z_BASE - float(ice_ball_idx) * 0.0005)
 				root.add_child(sp)
 				var i_entry := _register_interactive_entry(sp, g_id, false)
 				_ice_entries.append({
 					"sprite": sp,
 					"interactive_entry": i_entry,
+					"is_ball": true,
 					"norm_x": norm_x,
 					"norm_depth": norm_depth,
 					"phase": randf_range(0.0, TAU),
-					"speed": randf_range(1.2, 2.0),
+					"speed": randf_range(1.1, 1.7),
 					"base_rot": sp.rotation_degrees.z,
 				})
 				ice_ball_idx += 1
@@ -240,6 +241,7 @@ func _rebuild_visuals(mix: DrinkMix) -> void:
 			_ice_entries.append({
 				"sprite": sp,
 				"interactive_entry": i_entry,
+				"is_ball": false,
 				"norm_x": norm_x,
 				"norm_depth": norm_depth,
 				"phase": randf_range(0.0, TAU),
@@ -298,23 +300,42 @@ func update(delta: float, total_liquids: float, cup_size: float, visual_helper: 
 		var sp := entry.get("sprite") as Sprite3D
 		if not is_instance_valid(sp):
 			continue
+		var is_ball := bool(entry.get("is_ball", false))
 		var norm_x: float = float(entry["norm_x"])
 		var norm_depth: float = float(entry["norm_depth"])
 		var phase: float = float(entry["phase"])
 		var spd: float = float(entry["speed"])
 		var base_rot: float = float(entry["base_rot"])
-		var local_x := clampf(inner_center_x + norm_x * inner_half_w * 0.55, inner_min_x + inner_half_w * 0.22, inner_max_x - inner_half_w * 0.22)
-		var rest_y := lerpf(bottom_y + liquid_h * 0.14, bottom_y + liquid_h * 0.48, norm_depth)
-		var local_y := rest_y
+
+		var local_x: float
+		var rest_y: float
+		var local_y: float
 		var target_rot := base_rot
-		if has_liquid:
-			var col_top := clampf(surface_y - liquid_h * 0.06, bottom_y + liquid_h * 0.14, top_y)
-			var float_y := lerpf(bottom_y + liquid_h * 0.14, col_top, norm_depth)
-			var sway_x := sin(_time * spd + phase) * inner_half_w * 0.08 + slosh_angle * inner_half_w * 0.16
-			var bob_y := cos(_time * (spd * 0.85) + phase) * liquid_h * 0.03
-			local_x = clampf(local_x + sway_x, inner_min_x + inner_half_w * 0.22, inner_max_x - inner_half_w * 0.22)
-			local_y = clampf(maxf(rest_y, float_y) + bob_y, bottom_y + liquid_h * 0.12, maxf(rest_y, col_top))
-			target_rot = base_rot + sin(_time * spd * 0.7 + phase) * 8.0 + rad_to_deg(slosh_angle) * 0.4
+		if is_ball:
+			local_x = clampf(inner_center_x + norm_x * inner_half_w * 0.28, inner_center_x - inner_half_w * 0.28, inner_center_x + inner_half_w * 0.28)
+			rest_y = bottom_y + liquid_h * 0.36
+			local_y = rest_y
+			if has_liquid:
+				var col_top := clampf(surface_y - liquid_h * 0.14, bottom_y + liquid_h * 0.34, top_y)
+				var float_y := lerpf(bottom_y + liquid_h * 0.32, col_top, norm_depth)
+				var sway_x := sin(_time * spd + phase) * inner_half_w * 0.04 + slosh_angle * inner_half_w * 0.10
+				var bob_y := cos(_time * (spd * 0.85) + phase) * liquid_h * 0.025
+				local_x = clampf(local_x + sway_x, inner_center_x - inner_half_w * 0.28, inner_center_x + inner_half_w * 0.28)
+				local_y = clampf(maxf(rest_y, float_y) + bob_y, bottom_y + liquid_h * 0.30, maxf(rest_y, col_top))
+				target_rot = base_rot + sin(_time * spd * 0.6 + phase) * 5.0 + rad_to_deg(slosh_angle) * 0.3
+		else:
+			local_x = clampf(inner_center_x + norm_x * inner_half_w * 0.55, inner_min_x + inner_half_w * 0.22, inner_max_x - inner_half_w * 0.22)
+			rest_y = lerpf(bottom_y + liquid_h * 0.14, bottom_y + liquid_h * 0.48, norm_depth)
+			local_y = rest_y
+			if has_liquid:
+				var col_top := clampf(surface_y - liquid_h * 0.06, bottom_y + liquid_h * 0.14, top_y)
+				var float_y := lerpf(bottom_y + liquid_h * 0.14, col_top, norm_depth)
+				var sway_x := sin(_time * spd + phase) * inner_half_w * 0.08 + slosh_angle * inner_half_w * 0.16
+				var bob_y := cos(_time * (spd * 0.85) + phase) * liquid_h * 0.03
+				local_x = clampf(local_x + sway_x, inner_min_x + inner_half_w * 0.22, inner_max_x - inner_half_w * 0.22)
+				local_y = clampf(maxf(rest_y, float_y) + bob_y, bottom_y + liquid_h * 0.12, maxf(rest_y, col_top))
+				target_rot = base_rot + sin(_time * spd * 0.7 + phase) * 8.0 + rad_to_deg(slosh_angle) * 0.4
+
 		var i_entry: Variant = entry.get("interactive_entry", null)
 		if i_entry is Dictionary:
 			(i_entry as Dictionary)["home_local_pos"] = Vector3(local_x, local_y, sp.position.z)

@@ -9,6 +9,7 @@ signal minigame_finished(game_name: String, result: Variant)
 
 const BLOOD_GAME_SCENE := preload("res://Player/Drink/Minigame/Blood/BloodMinigame.tscn")
 const LEMON_GAME_SCENE := preload("res://Player/Drink/Minigame/Lemon/LemonMinigame.tscn")
+const ICE_GAME_SCENE := preload("res://Player/Drink/Minigame/Ice/IceMinigame.tscn")
 
 var is_minigame_active: bool = false
 var current_minigame_instance: Node = null
@@ -34,6 +35,19 @@ func start_blood_minigame(host_parent: Node, player_node: Node3D) -> void:
 	, CONNECT_ONE_SHOT)
 
 func start_lemon_minigame(host_parent: Node, player_node: Node3D, garnish_item: GarnishItem) -> void:
+	_start_garnish_slice_minigame(LEMON_GAME_SCENE, "lemon", host_parent, player_node, garnish_item, true)
+
+func start_ice_minigame(host_parent: Node, player_node: Node3D, garnish_item: GarnishItem) -> void:
+	_start_garnish_slice_minigame(ICE_GAME_SCENE, "ice", host_parent, player_node, garnish_item, false)
+
+func _start_garnish_slice_minigame(
+	game_scene: PackedScene,
+	game_name: String,
+	host_parent: Node,
+	player_node: Node3D,
+	garnish_item: GarnishItem,
+	spawn_split_duplicate: bool
+) -> void:
 	if is_minigame_active or not is_instance_valid(garnish_item):
 		return
 	if not is_instance_valid(host_parent):
@@ -47,12 +61,12 @@ func start_lemon_minigame(host_parent: Node, player_node: Node3D, garnish_item: 
 	is_minigame_active = true
 	_lock_player_and_ui(player_node, true)
 
-	var game_instance := LEMON_GAME_SCENE.instantiate()
+	var game_instance := game_scene.instantiate()
 	if game_instance.has_method("setup"):
 		game_instance.setup(target_id)
 	current_minigame_instance = game_instance
 	host_parent.add_child(game_instance)
-	minigame_started.emit("lemon")
+	minigame_started.emit(game_name)
 
 	var result_box := {"result": "cancelled"}
 	if game_instance.has_signal("finished"):
@@ -68,11 +82,11 @@ func start_lemon_minigame(host_parent: Node, player_node: Node3D, garnish_item: 
 		var final_result := str(result_box["result"])
 		if is_instance_valid(garnish_item):
 			if final_result == "success":
-				garnish_item.apply_slice_result(next_var, true)
+				garnish_item.apply_slice_result(next_var, spawn_split_duplicate)
 			elif final_result == "wasted":
 				garnish_item.waste_and_remove()
 
-		minigame_finished.emit("lemon", final_result)
+		minigame_finished.emit(game_name, final_result)
 	, CONNECT_ONE_SHOT)
 
 func get_blood_bottle(search_root: Node = null) -> Node:

@@ -59,7 +59,7 @@ func _ready() -> void:
 	layer = 5
 	setup(garnish_id)
 	_build_ui()
-	_compute_lemon_geometry()
+	_compute_target_geometry()
 	_spawn_cut_guides()
 	SFXAudio.play_draw()
 	_timer.start(_time_limit)
@@ -68,6 +68,31 @@ func _exit_tree() -> void:
 	if not _done:
 		_done = true
 		finished.emit("cancelled")
+
+func _get_title_text() -> String:
+	return "Slice!" if _is_half_stage else "Slice in half!"
+
+func _build_target_visual(_screen: Vector2) -> void:
+	var tex := GarnishDefinitions.get_texture(garnish_id, false)
+	_lemon_rect_ctrl = TextureRect.new()
+	_lemon_rect_ctrl.texture = tex
+	_lemon_rect_ctrl.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_lemon_rect_ctrl.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_lemon_rect_ctrl.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_lemon_rect_ctrl.size = lemon_display_size
+	_lemon_rect_ctrl.pivot_offset = lemon_display_size * 0.5
+	_lemon_rect_ctrl.position = _lemon_base_pos
+	_lemon_rect_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui.add_child(_lemon_rect_ctrl)
+
+func _compute_target_geometry() -> void:
+	_compute_lemon_geometry()
+
+func _get_shake_target() -> Control:
+	return _lemon_rect_ctrl
+
+func _get_shake_base_pos() -> Vector2:
+	return _lemon_base_pos
 
 func _build_ui() -> void:
 	var screen := get_viewport().get_visible_rect().size
@@ -87,18 +112,8 @@ func _build_ui() -> void:
 	_dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	_ui.add_child(_dim)
 
-	var tex := GarnishDefinitions.get_texture(garnish_id, false)
-	_lemon_rect_ctrl = TextureRect.new()
-	_lemon_rect_ctrl.texture = tex
-	_lemon_rect_ctrl.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_lemon_rect_ctrl.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_lemon_rect_ctrl.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_lemon_rect_ctrl.size = lemon_display_size
-	_lemon_rect_ctrl.pivot_offset = lemon_display_size * 0.5
 	_lemon_base_pos = Vector2(screen.x * 0.5, screen.y * 0.52) - lemon_display_size * 0.5
-	_lemon_rect_ctrl.position = _lemon_base_pos
-	_lemon_rect_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui.add_child(_lemon_rect_ctrl)
+	_build_target_visual(screen)
 
 	_guides_layer = Control.new()
 	_guides_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -110,8 +125,7 @@ func _build_ui() -> void:
 	_slash_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(_slash_layer)
 
-	var title_text := "SLICE THE LEMON!" if _is_half_stage else "SLICE IN HALF!"
-	_title_label = _make_label(title_text, 56, font)
+	_title_label = _make_label(_get_title_text(), 56, font)
 	_title_label.position = Vector2(0.0, 32.0)
 	_title_label.size = Vector2(screen.x, 60.0)
 	_ui.add_child(_title_label)
@@ -244,7 +258,7 @@ func _update_progress_label() -> void:
 func _update_hint_label() -> void:
 	if not is_instance_valid(_hint_label):
 		return
-	var msg := "Drag a straight line all the way through a green guide"
+	var msg := "Drag a straight line all the way through the green"
 	if _cuts_attempted == 0:
 		msg += "\nRight-click to cancel"
 	_hint_label.text = msg
@@ -287,15 +301,17 @@ func _spawn_animated_slash(p0: Vector2, p1: Vector2, line_col: Color, fade_durat
 		sweep_tween.finished.connect(slash.queue_free)
 
 func _shake_lemon(strength: float = 8.0) -> void:
-	if not is_instance_valid(_lemon_rect_ctrl):
+	var target := _get_shake_target()
+	if not is_instance_valid(target):
 		return
+	var base_pos := _get_shake_base_pos()
 	if _lemon_shake_tween and _lemon_shake_tween.is_valid():
 		_lemon_shake_tween.kill()
-	_lemon_rect_ctrl.position = _lemon_base_pos
+	target.position = base_pos
 	_lemon_shake_tween = create_tween()
-	_lemon_shake_tween.tween_property(_lemon_rect_ctrl, "position", _lemon_base_pos + Vector2(-strength, strength * 0.5), 0.04)
-	_lemon_shake_tween.tween_property(_lemon_rect_ctrl, "position", _lemon_base_pos + Vector2(strength, -strength * 0.5), 0.04)
-	_lemon_shake_tween.tween_property(_lemon_rect_ctrl, "position", _lemon_base_pos, 0.06)
+	_lemon_shake_tween.tween_property(target, "position", base_pos + Vector2(-strength, strength * 0.5), 0.04)
+	_lemon_shake_tween.tween_property(target, "position", base_pos + Vector2(strength, -strength * 0.5), 0.04)
+	_lemon_shake_tween.tween_property(target, "position", base_pos, 0.06)
 
 func _input(event: InputEvent) -> void:
 	if _done:
@@ -348,7 +364,7 @@ func _evaluate_drag_cut(p0: Vector2, p1: Vector2) -> void:
 
 	if status == "missed":
 		_spawn_animated_slash(p0, p1, Color(0.90, 0.90, 0.95, 0.55), 0.25, false)
-		_show_feedback("SLICE THROUGH THE LEMON!", Color(0.95, 0.85, 0.4))
+		_show_feedback("Slice!", Color(0.95, 0.85, 0.4))
 		return
 
 	_cuts_attempted += 1
@@ -361,13 +377,13 @@ func _evaluate_drag_cut(p0: Vector2, p1: Vector2) -> void:
 			SFXAudio.play_stab()
 			if is_instance_valid(_lemon_rect_ctrl):
 				_lemon_rect_ctrl.modulate = Color(1.0, 0.45, 0.45, 0.75)
-			_finish("wasted", "LEMON WASTED!", Color(1.0, 0.35, 0.35))
+			_finish("wasted", "Lemon wasted!", Color(1.0, 0.35, 0.35))
 		"incomplete":
 			_wasted_cuts += 1
 			_spawn_animated_slash(p0, p1, Color(1.0, 0.68, 0.22, 0.90), 0.65, false)
 			_shake_lemon(5.0)
 			SFXAudio.play_draw()
-			_show_feedback("INCOMPLETE! WASTED CUT", Color(1.0, 0.68, 0.22))
+			_show_feedback("Incomplete cut", Color(1.0, 0.68, 0.22))
 		"success":
 			var matched_guide := eval.get("guide", null) as DottedLine2D
 			_retire_guide(matched_guide)
@@ -382,20 +398,20 @@ func _evaluate_drag_cut(p0: Vector2, p1: Vector2) -> void:
 
 			var accuracy := float(eval.get("accuracy", 0.0))
 			if accuracy >= 0.85:
-				_show_feedback("PERFECT!", Color(0.38, 0.96, 1.0))
+				_show_feedback("Perfect!", Color(0.38, 0.96, 1.0))
 			elif accuracy >= 0.60:
-				_show_feedback("GREAT!", Color(0.35, 0.96, 0.45))
+				_show_feedback("Great!", Color(0.35, 0.96, 0.45))
 			else:
-				_show_feedback("GOOD!", Color(0.85, 0.95, 0.35))
+				_show_feedback("Good!", Color(0.85, 0.95, 0.35))
 
 			if _cuts_completed >= _required_cuts:
-				var win_text := "SLICED!" if _is_half_stage else "HALVED!"
+				var win_text := "Sliced!" if _is_half_stage else "Halved!"
 				_finish("success", win_text, Color(0.4, 1.0, 0.5))
 
 func _on_timer_timed_out() -> void:
 	if not _done:
 		_is_dragging = false
-		_finish("wasted", "TOO SLOW!", Color(1.0, 0.4, 0.4))
+		_finish("wasted", "Too slow!", Color(1.0, 0.4, 0.4))
 
 func _finish(result: String, message: String = "", color: Color = Color.WHITE) -> void:
 	if _done:
