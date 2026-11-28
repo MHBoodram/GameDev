@@ -6,10 +6,10 @@ const SHAKEN_MODE_SPLIT = "split"
 const SHAKEN_MODE_AVERAGED = "averaged"
 
 const CONTROL_KEYBIND_DEFS: Array[Dictionary] = [
-	{"action": "Up", "label": "Up"},
-	{"action": "Down", "label": "Down"},
-	{"action": "Left", "label": "Left"},
-	{"action": "Right", "label": "Right"},
+	{"action": "Up", "label": "Move Up"},
+	{"action": "Down", "label": "Move Down"},
+	{"action": "Left", "label": "Move Left"},
+	{"action": "Right", "label": "Move Right"},
 	{"action": "PourUp", "label": "Pour Up"},
 	{"action": "PourDown", "label": "Pour Down"},
 	{"action": "Hand", "label": "Hand"},
@@ -43,7 +43,7 @@ const DEFAULT_SETTING = {
 		"Fishing_Rod" : "4",
 		"InteractCustomer" : "Space",
 		"ContinueDialog" : "Space",
-		"FastForward" : "F",
+		"FastForward" : "Space",
 		"InvertPouringAngle" : false,
 		},
 	"Audio" :

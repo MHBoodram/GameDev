@@ -4,62 +4,94 @@
 [ext_resource type="Script" uid="uid://cpqwjs4u8japt" path="res://UI/Starting/setting.gd" id="1_x505p"]
 [ext_resource type="Texture2D" uid="uid://b44jk20tj2uhc" path="res://Assets/UI/slider_start.png" id="2_8hy2n"]
 [ext_resource type="Texture2D" uid="uid://bgorgi1bb54q7" path="res://Assets/UI/volume_slider.png" id="3_8hy2n"]
-[ext_resource type="Texture2D" path="res://Assets/UI/keybind_reset.svg" id="4_reset"]
-[ext_resource type="Texture2D" path="res://Assets/UI/keybind_delete.svg" id="5_delete"]
+[ext_resource type="Texture2D" uid="uid://dg7r8hb0gj200" path="res://Assets/Items/shaker.png" id="4_shaker"]
+[ext_resource type="PackedScene" path="res://UI/KeybindsScroll.tscn" id="5_kbscroll"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_check"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qacnc"]
-bg_color = Color(0.5569488, 0.5569549, 0.55695194, 1)
-border_width_left = 5
-border_width_top = 5
-border_width_right = 5
-border_width_bottom = 5
+bg_color = Color(0.84, 0.88, 0.92, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
 border_color = Color(0, 0, 0, 1)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
-shadow_size = 11
-anti_aliasing_size = 0.01
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 10.0
+content_margin_top = 4.0
+content_margin_right = 10.0
+content_margin_bottom = 4.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8hy2n"]
 bg_color = Color(0.96474224, 0.96474224, 0.9647421, 1)
-border_width_left = 5
-border_width_top = 5
-border_width_right = 5
-border_width_bottom = 5
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
 border_color = Color(0, 0, 0, 1)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
-shadow_size = 11
-anti_aliasing_size = 0.01
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 10.0
+content_margin_top = 4.0
+content_margin_right = 10.0
+content_margin_bottom = 4.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_x505p"]
-bg_color = Color(0, 0, 0, 1)
-border_width_left = 5
-border_width_top = 5
-border_width_right = 5
-border_width_bottom = 5
+bg_color = Color(0.72, 0.76, 0.8, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
 border_color = Color(0, 0, 0, 1)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
-shadow_size = 11
-anti_aliasing_size = 0.01
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 10.0
+content_margin_top = 4.0
+content_margin_right = 10.0
+content_margin_bottom = 4.0
 
 [sub_resource type="Theme" id="Theme_vvki5"]
 Button/colors/font_color = Color(0, 0, 0, 1)
-Button/colors/font_hover_color = Color(0.45694035, 0.8566054, 0.86007994, 1)
-Button/colors/font_outline_color = Color(1, 1, 1, 1)
+Button/colors/font_hover_color = Color(0.05, 0.35, 0.45, 1)
 Button/colors/font_pressed_color = Color(0.12955844, 0.12955847, 0.12955844, 1)
-Button/constants/outline_size = 5
-Button/font_sizes/font_size = 100
+Button/constants/outline_size = 0
+Button/font_sizes/font_size = 30
 Button/fonts/font = ExtResource("1_jiptt")
+Button/styles/focus = SubResource("StyleBoxEmpty_check")
 Button/styles/hover = SubResource("StyleBoxFlat_qacnc")
 Button/styles/normal = SubResource("StyleBoxFlat_8hy2n")
 Button/styles/pressed = SubResource("StyleBoxFlat_x505p")
+CheckButton/colors/font_color = Color(0, 0, 0, 1)
+CheckButton/colors/font_hover_color = Color(0.05, 0.35, 0.45, 1)
+CheckButton/colors/font_hover_pressed_color = Color(0.05, 0.35, 0.45, 1)
+CheckButton/colors/font_pressed_color = Color(0, 0, 0, 1)
+CheckButton/constants/outline_size = 0
+CheckButton/font_sizes/font_size = 28
+CheckButton/fonts/font = ExtResource("1_jiptt")
+CheckButton/styles/focus = SubResource("StyleBoxEmpty_check")
+CheckButton/styles/hover = SubResource("StyleBoxEmpty_check")
+CheckButton/styles/hover_pressed = SubResource("StyleBoxEmpty_check")
+CheckButton/styles/normal = SubResource("StyleBoxEmpty_check")
+CheckButton/styles/pressed = SubResource("StyleBoxEmpty_check")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(1, 0.8901961, 0.73333335, 0.96)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jiptt"]
 bg_color = Color(0, 0, 0, 1)
@@ -103,7 +135,7 @@ tracks/0/keys = {
 "times": PackedFloat32Array(0, 0.45),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Vector2(0, -24), Vector2(0, 716)]
+"values": [Vector2(0, 0), Vector2(0, 720)]
 }
 
 [sub_resource type="Animation" id="Animation_x505p"]
@@ -118,7 +150,7 @@ tracks/0/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Vector2(0, 716)]
+"values": [Vector2(0, 720)]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_vvki5"]
@@ -142,819 +174,306 @@ grow_vertical = 2
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 716.0
-offset_bottom = 751.0006
+offset_top = 720.0
+offset_bottom = 720.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = SubResource("Theme_vvki5")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer" unique_id=1717091295]
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(1080, 620)
 layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer" unique_id=1717091295]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=88548650]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 64
+text = "Settings"
+horizontal_alignment = 1
+
+[node name="TopDivider" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 2)
+layout_mode = 2
+color = Color(0, 0, 0, 0.75)
+
+[node name="Columns" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="LeftColumn" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/VBoxContainer" unique_id=706828015]
-layout_mode = 2
-
-[node name="Title" type="ColorRect" parent="CenterContainer/VBoxContainer" unique_id=1624604257]
-custom_minimum_size = Vector2(75, 62)
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Title" unique_id=88548650]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/shadow_offset_y = 10
-theme_override_constants/outline_size = 6
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 100
-text = "Setting"
-horizontal_alignment = 1
-
-[node name="Audio_Container" type="VBoxContainer" parent="CenterContainer/VBoxContainer" unique_id=204822112]
-layout_mode = 2
-theme_override_constants/separation = 7
-
-[node name="ColorRect" type="ColorRect" parent="CenterContainer/VBoxContainer/Audio_Container" unique_id=1383684942]
-custom_minimum_size = Vector2(2.12, 40)
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Audio_Container/ColorRect" unique_id=815385343]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/shadow_offset_y = 10
-theme_override_constants/outline_size = 6
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 60
-text = "Audio"
-horizontal_alignment = 1
-
-[node name="Master" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Audio_Container" unique_id=563278775]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Audio_Container/Master" unique_id=282188916]
+[node name="Video_Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn" unique_id=1532746307]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 4
+theme_override_constants/outline_size = 3
 theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 30
-text = "Master      "
-
-[node name="Master_slider" type="HSlider" parent="CenterContainer/VBoxContainer/Audio_Container/Master" unique_id=224350312]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/center_grabber = 1
-theme_override_icons/grabber = ExtResource("2_8hy2n")
-theme_override_icons/grabber_highlight = ExtResource("3_8hy2n")
-theme_override_styles/slider = SubResource("StyleBoxFlat_jiptt")
-theme_override_styles/grabber_area = SubResource("StyleBoxTexture_8hy2n")
-theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_8hy2n")
-min_value = -24.0
-max_value = 24.0
-
-[node name="UI" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Audio_Container" unique_id=495278573]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Audio_Container/UI" unique_id=486948423]
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 4
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 30
-text = "UI          "
-
-[node name="UI_slider" type="HSlider" parent="CenterContainer/VBoxContainer/Audio_Container/UI" unique_id=1942127309]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/center_grabber = 1
-theme_override_icons/grabber = ExtResource("2_8hy2n")
-theme_override_icons/grabber_highlight = ExtResource("3_8hy2n")
-theme_override_styles/slider = SubResource("StyleBoxFlat_jiptt")
-theme_override_styles/grabber_area = SubResource("StyleBoxTexture_8hy2n")
-theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_8hy2n")
-min_value = -24.0
-max_value = 24.0
-
-[node name="SFX" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Audio_Container" unique_id=1210301951]
-visible = false
-layout_mode = 2
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Audio_Container/SFX" unique_id=144430740]
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 4
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 30
-text = "SFX         "
-
-[node name="SFX_slider" type="HSlider" parent="CenterContainer/VBoxContainer/Audio_Container/SFX" unique_id=34580196]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/center_grabber = 1
-theme_override_icons/grabber = ExtResource("2_8hy2n")
-theme_override_icons/grabber_highlight = ExtResource("3_8hy2n")
-theme_override_styles/slider = SubResource("StyleBoxFlat_jiptt")
-theme_override_styles/grabber_area = SubResource("StyleBoxTexture_8hy2n")
-theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_8hy2n")
-min_value = -24.0
-max_value = 24.0
-
-[node name="Music" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Audio_Container" unique_id=1719718920]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Audio_Container/Music" unique_id=308845476]
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 4
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 30
-text = "Music       "
-
-[node name="Music_slider" type="HSlider" parent="CenterContainer/VBoxContainer/Audio_Container/Music" unique_id=1568376555]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/center_grabber = 1
-theme_override_icons/grabber = ExtResource("2_8hy2n")
-theme_override_icons/grabber_highlight = ExtResource("3_8hy2n")
-theme_override_styles/slider = SubResource("StyleBoxFlat_jiptt")
-theme_override_styles/grabber_area = SubResource("StyleBoxTexture_8hy2n")
-theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_8hy2n")
-min_value = -24.0
-max_value = 24.0
-
-[node name="Audio_reset" type="Button" parent="CenterContainer/VBoxContainer/Audio_Container" unique_id=1035674778]
-layout_mode = 2
-theme_override_font_sizes/font_size = 35
-text = "Reset to Default"
-autowrap_mode = 2
-
-[node name="Video" type="VBoxContainer" parent="CenterContainer/VBoxContainer" unique_id=732675533]
-layout_mode = 2
-theme_override_constants/separation = 7
-
-[node name="ColorRect" type="ColorRect" parent="CenterContainer/VBoxContainer/Video" unique_id=876576083]
-custom_minimum_size = Vector2(2.12, 40)
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Video/ColorRect" unique_id=1532746307]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/shadow_offset_y = 10
-theme_override_constants/outline_size = 6
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 60
+theme_override_font_sizes/font_size = 48
 text = "Video"
 horizontal_alignment = 1
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Video" unique_id=1064638581]
+[node name="Video_Divider" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn"]
+custom_minimum_size = Vector2(0, 2)
 layout_mode = 2
+color = Color(0, 0, 0, 0.45)
 
-[node name="Full_Screen" type="CheckButton" parent="CenterContainer/VBoxContainer/Video/HBoxContainer" unique_id=1565457149]
+[node name="Video" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn" unique_id=1064638581]
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_constants/separation = 6
+
+[node name="Full_Screen" type="CheckButton" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video" unique_id=1565457149]
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 28
 text = "Full Screen"
 
-[node name="World_Environment" type="CheckButton" parent="CenterContainer/VBoxContainer/Video/HBoxContainer" unique_id=1565457150]
+[node name="World_Environment" type="CheckButton" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video" unique_id=1565457150]
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+focus_mode = 0
+theme_override_font_sizes/font_size = 28
 button_pressed = true
 text = "World Environment"
 
-[node name="Shaken_Receipt" type="Button" parent="CenterContainer/VBoxContainer/Video/HBoxContainer" unique_id=1565457151]
+[node name="Shaken_Receipt" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video" unique_id=1565457151]
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+focus_mode = 0
+theme_override_constants/h_separation = 10
+theme_override_constants/icon_max_width = 24
+theme_override_font_sizes/font_size = 28
 text = "Shaken Receipt: Vertical Split"
+icon = ExtResource("4_shaker")
+expand_icon = true
 
-[node name="Controls" type="VBoxContainer" parent="CenterContainer/VBoxContainer" unique_id=656008568]
+[node name="Audio_Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn" unique_id=815385343]
 layout_mode = 2
-theme_override_constants/separation = 7
-
-[node name="ColorRect" type="ColorRect" parent="CenterContainer/VBoxContainer/Controls" unique_id=284890143]
-custom_minimum_size = Vector2(2.12, 40)
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/ColorRect" unique_id=954628279]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/shadow_offset_y = 10
-theme_override_constants/outline_size = 6
+theme_override_constants/outline_size = 3
 theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 60
+theme_override_font_sizes/font_size = 48
+text = "Audio"
+horizontal_alignment = 1
+
+[node name="Audio_Divider" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn"]
+custom_minimum_size = Vector2(0, 2)
+layout_mode = 2
+color = Color(0, 0, 0, 0.45)
+
+[node name="Audio_Container" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn" unique_id=204822112]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Master" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container" unique_id=563278775]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Master" unique_id=282188916]
+custom_minimum_size = Vector2(115, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 2
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 30
+text = "Master"
+
+[node name="Master_slider" type="HSlider" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Master" unique_id=224350312]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/center_grabber = 1
+theme_override_icons/grabber = ExtResource("2_8hy2n")
+theme_override_icons/grabber_highlight = ExtResource("3_8hy2n")
+theme_override_styles/slider = SubResource("StyleBoxFlat_jiptt")
+theme_override_styles/grabber_area = SubResource("StyleBoxTexture_8hy2n")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_8hy2n")
+min_value = -24.0
+max_value = 24.0
+
+[node name="UI" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container" unique_id=495278573]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/UI" unique_id=486948423]
+custom_minimum_size = Vector2(115, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 2
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 30
+text = "UI / SFX"
+
+[node name="UI_slider" type="HSlider" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/UI" unique_id=1942127309]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/center_grabber = 1
+theme_override_icons/grabber = ExtResource("2_8hy2n")
+theme_override_icons/grabber_highlight = ExtResource("3_8hy2n")
+theme_override_styles/slider = SubResource("StyleBoxFlat_jiptt")
+theme_override_styles/grabber_area = SubResource("StyleBoxTexture_8hy2n")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_8hy2n")
+min_value = -24.0
+max_value = 24.0
+
+[node name="SFX" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container" unique_id=1210301951]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/SFX" unique_id=144430740]
+custom_minimum_size = Vector2(115, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 2
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 30
+text = "SFX"
+
+[node name="SFX_slider" type="HSlider" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/SFX" unique_id=34580196]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/center_grabber = 1
+theme_override_icons/grabber = ExtResource("2_8hy2n")
+theme_override_icons/grabber_highlight = ExtResource("3_8hy2n")
+theme_override_styles/slider = SubResource("StyleBoxFlat_jiptt")
+theme_override_styles/grabber_area = SubResource("StyleBoxTexture_8hy2n")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_8hy2n")
+min_value = -24.0
+max_value = 24.0
+
+[node name="Music" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container" unique_id=1719718920]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Music" unique_id=308845476]
+custom_minimum_size = Vector2(115, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 2
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 30
+text = "Music"
+
+[node name="Music_slider" type="HSlider" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Music" unique_id=1568376555]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/center_grabber = 1
+theme_override_icons/grabber = ExtResource("2_8hy2n")
+theme_override_icons/grabber_highlight = ExtResource("3_8hy2n")
+theme_override_styles/slider = SubResource("StyleBoxFlat_jiptt")
+theme_override_styles/grabber_area = SubResource("StyleBoxTexture_8hy2n")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_8hy2n")
+min_value = -24.0
+max_value = 24.0
+
+[node name="Audio_reset" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container" unique_id=1035674778]
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+text = "Reset Audio to Default"
+autowrap_mode = 2
+
+[node name="ColumnDivider" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns"]
+custom_minimum_size = Vector2(2, 0)
+layout_mode = 2
+color = Color(0, 0, 0, 0.25)
+
+[node name="RightColumn" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Control_Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn" unique_id=954628279]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 48
 text = "Controls"
 horizontal_alignment = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/VBoxContainer/Controls" unique_id=201704516]
+[node name="Control_Divider" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn"]
+custom_minimum_size = Vector2(0, 2)
 layout_mode = 2
-theme_override_constants/separation = 7
+color = Color(0, 0, 0, 0.45)
 
-[node name="KeybindsScroll" type="ScrollContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer"]
-custom_minimum_size = Vector2(0, 185)
+[node name="Controls" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn" unique_id=201704516]
 layout_mode = 2
-horizontal_scroll_mode = 0
+size_flags_vertical = 3
+theme_override_constants/separation = 8
 
-[node name="KeybindsList" type="VBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 6
-
-[node name="UpRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList" unique_id=1848254874]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/UpRow" unique_id=153414800]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 5
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 34
-text = "Up"
-
-[node name="Up" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/UpRow" unique_id=1476786696]
-custom_minimum_size = Vector2(115, 36)
+[node name="Invert_Pour" type="CheckButton" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls" unique_id=1763667782]
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 30
-text = "W"
-
-[node name="Up_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/UpRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Reset keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("4_reset")
-icon_alignment = 1
-expand_icon = true
-
-[node name="Up_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/UpRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Delete keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("5_delete")
-icon_alignment = 1
-expand_icon = true
-
-[node name="DownRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList" unique_id=1515831805]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/DownRow" unique_id=925046376]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 5
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 34
-text = "Down"
-
-[node name="Down" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/DownRow" unique_id=1462468400]
-custom_minimum_size = Vector2(115, 36)
-layout_mode = 2
-focus_mode = 0
-theme_override_font_sizes/font_size = 30
-text = "S"
-
-[node name="Down_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/DownRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Reset keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("4_reset")
-icon_alignment = 1
-expand_icon = true
-
-[node name="Down_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/DownRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Delete keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("5_delete")
-icon_alignment = 1
-expand_icon = true
-
-[node name="LeftRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList" unique_id=1280800168]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/LeftRow" unique_id=1824583741]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 5
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 34
-text = "Left"
-
-[node name="Left" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/LeftRow" unique_id=687718415]
-custom_minimum_size = Vector2(115, 36)
-layout_mode = 2
-focus_mode = 0
-theme_override_font_sizes/font_size = 30
-text = "A"
-
-[node name="Left_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/LeftRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Reset keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("4_reset")
-icon_alignment = 1
-expand_icon = true
-
-[node name="Left_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/LeftRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Delete keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("5_delete")
-icon_alignment = 1
-expand_icon = true
-
-[node name="RightRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList" unique_id=1594521604]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/RightRow" unique_id=807248610]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 5
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 34
-text = "Right"
-
-[node name="Right" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/RightRow" unique_id=1763667781]
-custom_minimum_size = Vector2(115, 36)
-layout_mode = 2
-focus_mode = 0
-theme_override_font_sizes/font_size = 30
-text = "D"
-
-[node name="Right_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/RightRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Reset keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("4_reset")
-icon_alignment = 1
-expand_icon = true
-
-[node name="Right_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/RightRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Delete keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("5_delete")
-icon_alignment = 1
-expand_icon = true
-
-[node name="PourUpRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/PourUpRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 5
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 34
-text = "Pour Up"
-
-[node name="PourUp" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/PourUpRow"]
-custom_minimum_size = Vector2(115, 36)
-layout_mode = 2
-focus_mode = 0
-theme_override_font_sizes/font_size = 30
-text = "Up"
-
-[node name="PourUp_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/PourUpRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Reset keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("4_reset")
-icon_alignment = 1
-expand_icon = true
-
-[node name="PourUp_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/PourUpRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Delete keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("5_delete")
-icon_alignment = 1
-expand_icon = true
-
-[node name="PourDownRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/PourDownRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 5
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 34
-text = "Pour Down"
-
-[node name="PourDown" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/PourDownRow"]
-custom_minimum_size = Vector2(115, 36)
-layout_mode = 2
-focus_mode = 0
-theme_override_font_sizes/font_size = 30
-text = "Down"
-
-[node name="PourDown_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/PourDownRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Reset keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("4_reset")
-icon_alignment = 1
-expand_icon = true
-
-[node name="PourDown_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/PourDownRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Delete keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("5_delete")
-icon_alignment = 1
-expand_icon = true
-
-[node name="HandRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/HandRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 5
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 34
-text = "Hand"
-
-[node name="Hand" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/HandRow"]
-custom_minimum_size = Vector2(115, 36)
-layout_mode = 2
-focus_mode = 0
-theme_override_font_sizes/font_size = 30
-text = "1"
-
-[node name="Hand_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/HandRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Reset keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("4_reset")
-icon_alignment = 1
-expand_icon = true
-
-[node name="Hand_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/HandRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Delete keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("5_delete")
-icon_alignment = 1
-expand_icon = true
-
-[node name="KnifeRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/KnifeRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 5
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 34
-text = "Knife"
-
-[node name="Knife" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/KnifeRow"]
-custom_minimum_size = Vector2(115, 36)
-layout_mode = 2
-focus_mode = 0
-theme_override_font_sizes/font_size = 30
-text = "2"
-
-[node name="Knife_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/KnifeRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Reset keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("4_reset")
-icon_alignment = 1
-expand_icon = true
-
-[node name="Knife_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/KnifeRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Delete keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("5_delete")
-icon_alignment = 1
-expand_icon = true
-
-[node name="MagRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/MagRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 5
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 34
-text = "Mag"
-
-[node name="Mag" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/MagRow"]
-custom_minimum_size = Vector2(115, 36)
-layout_mode = 2
-focus_mode = 0
-theme_override_font_sizes/font_size = 30
-text = "3"
-
-[node name="Mag_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/MagRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Reset keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("4_reset")
-icon_alignment = 1
-expand_icon = true
-
-[node name="Mag_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/MagRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Delete keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("5_delete")
-icon_alignment = 1
-expand_icon = true
-
-[node name="Fishing_RodRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/Fishing_RodRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 5
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 34
-text = "Fishing Rod"
-
-[node name="Fishing_Rod" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/Fishing_RodRow"]
-custom_minimum_size = Vector2(115, 36)
-layout_mode = 2
-focus_mode = 0
-theme_override_font_sizes/font_size = 30
-text = "4"
-
-[node name="Fishing_Rod_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/Fishing_RodRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Reset keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("4_reset")
-icon_alignment = 1
-expand_icon = true
-
-[node name="Fishing_Rod_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/Fishing_RodRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Delete keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("5_delete")
-icon_alignment = 1
-expand_icon = true
-
-[node name="InteractCustomerRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/InteractCustomerRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 5
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 34
-text = "Interact Customer"
-
-[node name="InteractCustomer" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/InteractCustomerRow"]
-custom_minimum_size = Vector2(115, 36)
-layout_mode = 2
-focus_mode = 0
-theme_override_font_sizes/font_size = 30
-text = "Space"
-
-[node name="InteractCustomer_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/InteractCustomerRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Reset keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("4_reset")
-icon_alignment = 1
-expand_icon = true
-
-[node name="InteractCustomer_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/InteractCustomerRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Delete keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("5_delete")
-icon_alignment = 1
-expand_icon = true
-
-[node name="ContinueDialogRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/ContinueDialogRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 5
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 34
-text = "Continue Dialog"
-
-[node name="ContinueDialog" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/ContinueDialogRow"]
-custom_minimum_size = Vector2(115, 36)
-layout_mode = 2
-focus_mode = 0
-theme_override_font_sizes/font_size = 30
-text = "Space"
-
-[node name="ContinueDialog_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/ContinueDialogRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Reset keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("4_reset")
-icon_alignment = 1
-expand_icon = true
-
-[node name="ContinueDialog_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/ContinueDialogRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Delete keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("5_delete")
-icon_alignment = 1
-expand_icon = true
-
-[node name="FastForwardRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/FastForwardRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/outline_size = 5
-theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 34
-text = "Fast Forward"
-
-[node name="FastForward" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/FastForwardRow"]
-custom_minimum_size = Vector2(115, 36)
-layout_mode = 2
-focus_mode = 0
-theme_override_font_sizes/font_size = 30
-text = "F"
-
-[node name="FastForward_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/FastForwardRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Reset keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("4_reset")
-icon_alignment = 1
-expand_icon = true
-
-[node name="FastForward_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/FastForwardRow"]
-custom_minimum_size = Vector2(36, 36)
-layout_mode = 2
-tooltip_text = "Delete keybind"
-focus_mode = 0
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("5_delete")
-icon_alignment = 1
-expand_icon = true
-
-[node name="Invert_Pour" type="CheckButton" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer" unique_id=1763667782]
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 28
 text = "Invert Pouring Angle"
 
-[node name="Control_reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer" unique_id=1370199940]
+[node name="KeybindsScroll" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls" instance=ExtResource("5_kbscroll")]
+custom_minimum_size = Vector2(0, 260)
 layout_mode = 2
-theme_override_font_sizes/font_size = 35
+
+[node name="Control_reset" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls" unique_id=1370199940]
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
 text = "Reset All Keybinds"
 autowrap_mode = 2
 
-[node name="SaveQuit" type="Button" parent="CenterContainer/VBoxContainer" unique_id=167641846]
+[node name="SaveQuit" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=167641846]
+custom_minimum_size = Vector2(180, 38)
 layout_mode = 2
-theme_override_font_sizes/font_size = 63
+size_flags_horizontal = 4
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
 text = "Save & Quit"
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=166343418]
 libraries/ = SubResource("AnimationLibrary_vvki5")
 
-[connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Audio_Container/Master/Master_slider" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Audio_Container/Master/Master_slider" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Audio_Container/UI/UI_slider" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Audio_Container/UI/UI_slider" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Audio_Container/Music/Music_slider" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Audio_Container/Music/Music_slider" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Video/HBoxContainer/Full_Screen" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Video/HBoxContainer/Full_Screen" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Video/HBoxContainer/World_Environment" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Video/HBoxContainer/World_Environment" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Video/HBoxContainer/Shaken_Receipt" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Video/HBoxContainer/Shaken_Receipt" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Invert_Pour" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Invert_Pour" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Control_reset" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Control_reset" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/VBoxContainer/SaveQuit" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/VBoxContainer/SaveQuit" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="pressed" from="CenterContainer/VBoxContainer/SaveQuit" to="." method="_on_save_quit_pressed"]
+[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Full_Screen" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Full_Screen" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/World_Environment" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/World_Environment" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Shaken_Receipt" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Shaken_Receipt" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Master/Master_slider" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Master/Master_slider" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/UI/UI_slider" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/UI/UI_slider" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Music/Music_slider" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Music/Music_slider" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Audio_reset" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Audio_reset" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls/Invert_Pour" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls/Invert_Pour" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls/Control_reset" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls/Control_reset" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/SaveQuit" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/SaveQuit" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="pressed" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/SaveQuit" to="." method="_on_save_quit_pressed"]

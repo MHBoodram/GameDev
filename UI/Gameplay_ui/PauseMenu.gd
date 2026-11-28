@@ -23,28 +23,13 @@ func _ready() -> void:
 		quit_button.hide()
 
 func _collect_keybind_buttons() -> Dictionary:
-	var list := $Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/KeybindsScroll/KeybindsList
-	var control_buttons: Dictionary = {}
-	var reset_buttons: Dictionary = {}
-	var delete_buttons: Dictionary = {}
-	for def in SettingState.CONTROL_KEYBIND_DEFS:
-		var action_name := str(def["action"])
-		var row := list.get_node_or_null(action_name + "Row")
-		if row == null:
-			continue
-		var bind_btn := row.get_node_or_null(action_name) as Button
-		var reset_btn := row.get_node_or_null(action_name + "_Reset") as Button
-		var delete_btn := row.get_node_or_null(action_name + "_Delete") as Button
-		if bind_btn:
-			control_buttons[action_name] = bind_btn
-		if reset_btn:
-			reset_buttons[action_name] = reset_btn
-		if delete_btn:
-			delete_buttons[action_name] = delete_btn
+	var scroll := $Inside_paper/Right_Color/Right_Page/Controls/KeybindsScroll as KeybindsScroll
+	if is_instance_valid(scroll):
+		return scroll.get_keybind_bindings()
 	return {
-		"control_buttons": control_buttons,
-		"reset_buttons": reset_buttons,
-		"delete_buttons": delete_buttons,
+		"control_buttons": {},
+		"reset_buttons": {},
+		"delete_buttons": {},
 	}
 
 func _get_control_buttons() -> Dictionary:
@@ -64,8 +49,8 @@ func _load_settings() -> void:
 		"control_buttons": keybind_maps["control_buttons"],
 		"reset_buttons": keybind_maps["reset_buttons"],
 		"delete_buttons": keybind_maps["delete_buttons"],
-		"control_reset_btn": $Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Control_reset,
-		"invert_pour_btn": $Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Invert_Pour,
+		"control_reset_btn": $Inside_paper/Right_Color/Right_Page/Controls/Control_reset,
+		"invert_pour_btn": $Inside_paper/Right_Color/Right_Page/Controls/Invert_Pour,
 	})
 
 func _is_escape_pressed(event: InputEvent) -> bool:
