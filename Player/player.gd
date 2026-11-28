@@ -16,8 +16,8 @@ var _pour_tween: Tween = null
 var tool_controller: ToolController = ToolController.new()
 
 var in_game_drinks: Dictionary = {
-	"Drink": {"Node": Node3D, "position": Vector3.ZERO},
-	"Glass": {"Node": Node3D, "position": Vector3.ZERO}
+	"Drink": {"Node": null, "position": Vector3.ZERO},
+	"Glass": {"Node": null, "position": Vector3.ZERO}
 }
 
 @export var counter_min_x: float = -1.0
@@ -85,6 +85,8 @@ func get_mouse_world_position(cam: Camera3D, plane_y: float) -> Vector3:
 	return hit if hit != null else global_position
 
 func _unhandled_input(event: InputEvent) -> void:
+	if in_game:
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.is_action_pressed("Up") or event.is_action_pressed("Down"):
 			if gameplay_ui and gameplay_ui.has_method("bendover"):
@@ -119,6 +121,7 @@ func _input(event: InputEvent) -> void:
 		summoning = false
 		if in_game:
 			_out_of_game()
+			get_viewport().set_input_as_handled()
 
 func _spawn_and_begin_drag(scene: PackedScene, cup_name: String, spawn_world_pos: Variant = null) -> void:
 	var new_instance = scene.instantiate()
@@ -147,28 +150,42 @@ func _spawn_and_begin_drag(scene: PackedScene, cup_name: String, spawn_world_pos
 	if new_instance.has_method("start_drag_from_spawn"):
 		new_instance.start_drag_from_spawn(get_viewport().get_mouse_position(), spawn_world_pos is Vector3)
 
-# locks bottle and cup in front of camera marks to run pour minigame
-func _perfect_pour(drink: Drinks, glass: Glasses) -> void:
+# Shared cup focus helper used by both pouring and magnifying-glass inspection
+func _enter_cup_focus(glass: Glasses, drink: Drinks = null, inspect_mode: bool = false) -> void:
+	if not is_instance_valid(glass):
+		return
 	if _pour_tween and _pour_tween.is_valid():
 		_pour_tween.kill()
 	if gameplay_ui:
 		gameplay_ui._in_down_minigame()
 	in_game = true
-	in_game_drinks["Drink"]["Node"] = drink
-	in_game_drinks["Drink"]["position"] = drink.global_position
-	in_game_drinks["Drink"]["position"].x = drink.global_position.x + 0.5
-	in_game_drinks["Glass"]["Node"] = glass
 
+	if is_instance_valid(drink):
+		in_game_drinks["Drink"]["Node"] = drink
+		in_game_drinks["Drink"]["position"] = drink.global_position
+		in_game_drinks["Drink"]["position"].x = drink.global_position.x + 0.5
+		drink._in_game()
+	else:
+		in_game_drinks["Drink"]["Node"] = null
+
+	in_game_drinks["Glass"]["Node"] = glass
 	var glass_home_pos: Vector3 = glass.global_position
 	if glass.has_method("_get_saved_counter_position"):
 		glass_home_pos = glass._get_saved_counter_position(glass._last_counter_position)
 	in_game_drinks["Glass"]["position"] = glass_home_pos
-	drink._in_game()
 	glass._in_game()
+	if inspect_mode:
+		glass.enter_inspection_mode()
+
+	var glass_target_pos: Vector3 = $Camera3D/glass_mark.global_position
+	if inspect_mode and camera_rig:
+		var gm_local: Vector3 = $Camera3D/glass_mark.position
+		glass_target_pos = camera_rig.to_global(Vector3(0.0, gm_local.y, gm_local.z * 0.85))
 
 	_pour_tween = get_tree().create_tween().set_parallel(true)
-	_pour_tween.tween_property(drink, "global_position", $Camera3D/drink_mark.global_position, 0.5)
-	_pour_tween.tween_property(glass, "global_position", $Camera3D/glass_mark.global_position, 0.5)
+	if is_instance_valid(drink):
+		_pour_tween.tween_property(drink, "global_position", $Camera3D/drink_mark.global_position, 0.5)
+	_pour_tween.tween_property(glass, "global_position", glass_target_pos, 0.5)
 	_pour_tween.tween_property(glass, "rotation_degrees:y", 0, 0.5)
 
 	await _pour_tween.finished
@@ -178,7 +195,17 @@ func _perfect_pour(drink: Drinks, glass: Glasses) -> void:
 	if in_game and is_instance_valid(drink):
 		drink.look_at($Camera3D.global_position)
 
-# returns bottle to shelf and cup to counter when canceling or finishing pour
+# locks bottle and cup in front of camera marks to run pour minigame
+func _perfect_pour(drink: Drinks, glass: Glasses) -> void:
+	await _enter_cup_focus(glass, drink, false)
+
+# brings cup in front of camera for magnifying glass inspection
+func inspect_cup(glass: Glasses) -> void:
+	if in_game or not is_instance_valid(glass):
+		return
+	await _enter_cup_focus(glass, null, true)
+
+# returns bottle to shelf and cup to counter when canceling or finishing pour/inspection
 func _out_of_game() -> void:
 	if not in_game:
 		return
@@ -187,6 +214,11 @@ func _out_of_game() -> void:
 		_pour_tween.kill()
 	var drink = in_game_drinks["Drink"]["Node"]
 	var glass = in_game_drinks["Glass"]["Node"]
+	in_game_drinks["Drink"]["Node"] = null
+	in_game_drinks["Glass"]["Node"] = null
+
+	if is_instance_valid(glass) and glass is Glasses and (glass as Glasses).is_inspecting:
+		(glass as Glasses).exit_inspection_mode()
 
 	_pour_tween = get_tree().create_tween().set_parallel(true)
 	if is_instance_valid(drink):

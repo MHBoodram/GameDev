@@ -50,6 +50,7 @@ var _flip_flop: bool = false
 var _tex_cleared: bool = false
 
 var _mask_cells: Array[Vector2i] = [] # sorted bottom-to-top up to brim
+var _cell_order_map: PackedInt32Array = PackedInt32Array()
 var _mask_bytes: PackedByteArray = PackedByteArray()
 var _mouth_mask_bytes: PackedByteArray = PackedByteArray()
 var _mouth_cell_count: int = 0
@@ -141,6 +142,22 @@ func get_texture() -> Texture2D:
 	if _gpu_available:
 		return _display_tex_rd
 	return _cpu_fallback_tex
+
+
+func get_cell_fill_fraction(u: float, v: float, fill_ratio: float) -> float:
+	if _active_count <= 0 or _mask_cells.is_empty() or _cell_order_map.size() != GRID_CELLS:
+		return -1.0
+	if u < 0.0 or u > 1.0 or v < 0.0 or v > 1.0:
+		return -1.0
+	var gx := clampi(int(floorf(u * float(GRID_SIZE))), 0, GRID_SIZE - 1)
+	var gy := clampi(int(floorf(v * float(GRID_SIZE))), 0, GRID_SIZE - 1)
+	var order_idx := _cell_order_map[gx + gy * GRID_SIZE]
+	if order_idx < 0:
+		return -1.0
+	var filled_cells := clampf(fill_ratio * float(_mask_cells.size()), 1.0, float(_mask_cells.size()))
+	if float(order_idx) > filled_cells:
+		return -1.0
+	return clampf(float(order_idx) / filled_cells, 0.0, 1.0)
 
 
 func set_mouth_monitoring(enabled: bool) -> void:
@@ -859,6 +876,7 @@ func _build_container_mask(tex: Texture2D) -> void:
 	if cache_key != -1 and _mask_cache.has(cache_key):
 		var cached: Dictionary = _mask_cache[cache_key]
 		_mask_cells = cached["cells"]
+		_cell_order_map = cached["cell_order_map"]
 		_mask_bytes = cached["mask_bytes"]
 		_mouth_mask_bytes = cached["mouth_mask_bytes"]
 		_mouth_cell_count = int(cached["mouth_cell_count"])
@@ -899,6 +917,13 @@ func _build_container_mask(tex: Texture2D) -> void:
 			for x in GRID_SIZE:
 				if mask[x + y * GRID_SIZE] == 1:
 					cells.append(Vector2i(x, y))
+
+	var cell_order_map := PackedInt32Array()
+	cell_order_map.resize(GRID_CELLS)
+	cell_order_map.fill(-1)
+	for i in cells.size():
+		var c := cells[i]
+		cell_order_map[c.x + c.y * GRID_SIZE] = i
 
 	var row_min_x := PackedInt32Array()
 	var row_max_x := PackedInt32Array()
@@ -981,6 +1006,7 @@ func _build_container_mask(tex: Texture2D) -> void:
 			sdf_bytes.encode_float(off + 12, wall_flag)
 
 	_mask_cells = cells
+	_cell_order_map = cell_order_map
 	_mask_bytes = mask
 	_mouth_mask_bytes = mouth_mask
 	_mouth_cell_count = mouth_cell_count
@@ -994,6 +1020,7 @@ func _build_container_mask(tex: Texture2D) -> void:
 	if cache_key != -1:
 		_mask_cache[cache_key] = {
 			"cells": cells,
+			"cell_order_map": cell_order_map,
 			"mask_bytes": mask,
 			"mouth_mask_bytes": mouth_mask,
 			"mouth_cell_count": mouth_cell_count,

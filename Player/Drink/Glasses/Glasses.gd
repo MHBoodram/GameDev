@@ -8,6 +8,8 @@ const POUR_SPLASH_HOLD_TIME: float = 0.075
 const MIN_POUR_OUT_TILT_DEGREES: float = 5.0
 const SPILL_INDICATOR_COOLDOWN: float = 0.55
 const OVERFLOW_EPSILON: float = 0.0005
+const INSPECT_DROP_OUTSIDE_MARGIN: float = 0.06
+const INSPECT_MIN_DRAG_DISTANCE: float = 0.035
 
 @export var liquids: Array = []
 @export var size: float = 1.0
@@ -35,6 +37,14 @@ var is_being_served: bool = false
 var is_delivering: bool = false
 var is_consumed: bool = false
 var is_pouring_out: bool = false
+var is_inspecting: bool = false
+var _inspect_enter_ms: int = 0
+var _is_mouse_hovered: bool = false
+var _hovered_liquid_idx: int = -1
+var _dragged_garnish: Dictionary = {}
+var _dragged_garnish_start_world: Vector3 = Vector3.ZERO
+var _dragged_garnish_outside: bool = false
+var _garnish_snap_tween: Tween = null
 var _is_actively_pouring_out: bool = false
 var pour_tilt_degrees: float = 0.0
 var _target_pour_tilt_degrees: float = 0.0
@@ -73,7 +83,7 @@ func is_working_area_item() -> bool:
 	return not is_preview_only
 
 func _is_drag_blocked() -> bool:
-	return super._is_drag_blocked() or is_being_served or is_consumed or is_pouring_out
+	return super._is_drag_blocked() or is_being_served or is_consumed or is_pouring_out or is_inspecting
 
 func _on_drag_started() -> void:
 	if not is_instance_valid(_active_trash) and not _is_returning_to_counter and absf(global_position.y - get_working_area_surface_y()) <= 0.15:
@@ -117,9 +127,24 @@ func add_garnish_item(garnish_id: String) -> bool:
 		added = drink_mix.add_garnish(clean_id, 1)
 	if added:
 		sync_garnish_visuals()
+		_refresh_hud_if_active()
 		if not is_preview_only:
 			GameState.play_sfx("play_mugpickup")
 	return added
+
+func remove_garnish_item(garnish_id: String, is_ice_cube: bool = false) -> bool:
+	var clean_id := GarnishDefinitions.normalize_id(garnish_id)
+	var removed := false
+	if is_ice_cube or GarnishDefinitions.is_ice(clean_id):
+		removed = drink_mix.remove_ice()
+	else:
+		removed = drink_mix.remove_garnish(clean_id, 1)
+	if removed:
+		sync_garnish_visuals()
+		_refresh_hud_if_active()
+		if not is_preview_only:
+			GameState.play_sfx("play_mugpickup")
+	return removed
 
 func sync_garnish_visuals() -> void:
 	if garnish_visuals:
@@ -133,21 +158,32 @@ func _get_tool_controller() -> ToolController:
 		return GameState.player.get("tool_controller") as ToolController
 	return null
 
+func _get_active_tool_id() -> String:
+	var tool_ctrl := _get_tool_controller()
+	if tool_ctrl:
+		return tool_ctrl.get_tool()
+	if GameState.player and GameState.player.has_method("return_tool"):
+		return str(GameState.player.return_tool()).to_lower().strip_edges()
+	return "hand"
+
 func can_highlight_on_hover() -> bool:
 	if _is_drag_blocked():
 		return false
 	var tool_ctrl := _get_tool_controller()
 	if tool_ctrl:
 		return tool_ctrl.can_highlight_glass(self)
-	var active_tool: String = GameState.player.return_tool() if GameState.player and GameState.player.has_method("return_tool") else "hand"
-	return SpeciesRegistry.can_highlight_glass(active_tool, self)
+	return SpeciesRegistry.can_highlight_glass(_get_active_tool_id(), self)
 
 func handle_immediate_tool_click() -> bool:
 	if GameState.is_dialogue_open or ShakerMinigame.active or _is_drag_blocked():
 		return false
 	var tool_ctrl := _get_tool_controller()
+	var active_tool := _get_active_tool_id()
+	if active_tool == "mag":
+		if GameState.player and GameState.player.has_method("inspect_cup"):
+			GameState.player.inspect_cup(self)
+		return true
 	if tool_ctrl:
-		var active_tool: String = tool_ctrl.get_tool()
 		if active_tool != "hand":
 			if tool_ctrl.handle_glass_click(self, GameState.player):
 				return true
@@ -166,6 +202,294 @@ func handle_non_drag_click() -> bool:
 	if tool_ctrl:
 		return tool_ctrl.handle_glass_click(self, GameState.player)
 	return false
+
+func _show_hud_ingredients() -> void:
+	if is_preview_only or is_consumed:
+		return
+	var hud := HudIndicators.get_current()
+	if hud:
+		hud.show_cup_ingredients(self, _hovered_liquid_idx if is_inspecting else -1, visual_helper)
+
+func _refresh_hud_if_active() -> void:
+	if is_preview_only or is_consumed:
+		return
+	if is_inspecting or _is_mouse_hovered or is_snapped() or in_game:
+		_show_hud_ingredients()
+		return
+	var hud := HudIndicators.get_current()
+	if hud and hud.get_status_group_owner("pouring") == self:
+		hud.show_cup_ingredients(self, -1, visual_helper)
+
+func _set_hovered_liquid_idx(new_idx: int) -> void:
+	if _hovered_liquid_idx == new_idx:
+		return
+	_hovered_liquid_idx = new_idx
+	if is_inspecting:
+		_show_hud_ingredients()
+
+func enter_inspection_mode() -> void:
+	is_inspecting = true
+	_inspect_enter_ms = Time.get_ticks_msec()
+	_hovered_liquid_idx = -1
+	_dragged_garnish.clear()
+	_dragged_garnish_outside = false
+	set_highlight(false)
+	_show_hud_ingredients()
+
+func exit_inspection_mode() -> void:
+	if not is_inspecting:
+		return
+	is_inspecting = false
+	_hovered_liquid_idx = -1
+	_cancel_garnish_drag()
+	garnish_visuals.clear_interaction_states()
+	if GameState.player:
+		GameState.player._update_hand("idle")
+	if _is_mouse_hovered:
+		_show_hud_ingredients()
+	else:
+		_remove_displaying_list()
+
+func get_hovered_liquid_layer_index(mouse_pos: Vector2, cam: Camera3D) -> int:
+	if not is_instance_valid(cam) or liquids.is_empty() or total_liquids <= 0.0001:
+		return -1
+	if not visual_helper or not visual_helper.fluid_sim:
+		return -1
+
+	var sp := _get_container_sprite()
+	if not is_instance_valid(sp):
+		return -1
+
+	var normal := sp.global_transform.basis.z.normalized()
+	if normal.length_squared() < 0.0001:
+		return -1
+
+	var from := cam.project_ray_origin(mouse_pos)
+	var dir := cam.project_ray_normal(mouse_pos)
+	var hit = Plane(normal, sp.global_position).intersects_ray(from, dir)
+	if hit == null:
+		return -1
+
+	var local_p := sp.global_transform.affine_inverse() * (hit as Vector3)
+	var dims: Rect2 = sp.get_item_rect()
+	var ps := sp.pixel_size
+	if dims.size.x <= 0.0 or dims.size.y <= 0.0 or ps <= 0.000001:
+		return -1
+
+	var px_x := local_p.x / ps
+	var px_y := local_p.y / ps
+	var eff_u := inverse_lerp(dims.position.x, dims.end.x, px_x)
+	var eff_v := inverse_lerp(dims.end.y, dims.position.y, px_y)
+	var u := (1.0 - eff_u) if sp.flip_h else eff_u
+	var v := (1.0 - eff_v) if sp.flip_v else eff_v
+
+	var fill_ratio := clampf(total_liquids / maxf(size, 0.001), 0.0, 1.0)
+	var frac := visual_helper.fluid_sim.get_cell_fill_fraction(u, v, fill_ratio)
+	if frac < 0.0:
+		return -1
+
+	var sorted_indices: Array[int] = []
+	for i in liquids.size():
+		var l = liquids[i]
+		if l is Array and l.size() >= 2 and float(l[1]) > 0.0001:
+			sorted_indices.append(i)
+	if sorted_indices.is_empty():
+		return -1
+
+	sorted_indices.sort_custom(func(a: int, b: int) -> bool:
+		var ba := LiquidVisualHelper.get_layer_buoyancy(liquids[a])
+		var bb := LiquidVisualHelper.get_layer_buoyancy(liquids[b])
+		if is_equal_approx(ba, bb):
+			return a < b
+		return ba < bb
+	)
+
+	var cursor := 0.0
+	for idx_pos in sorted_indices.size():
+		var orig_idx := sorted_indices[idx_pos]
+		var share := float(liquids[orig_idx][1]) / maxf(total_liquids, 0.0001)
+		cursor += share
+		if frac <= cursor or idx_pos == sorted_indices.size() - 1:
+			return orig_idx
+
+	return -1
+
+func _is_mouse_over_cup(mouse_pos: Vector2, cam: Camera3D) -> bool:
+	if not is_instance_valid(cam):
+		return false
+	var sp := sprite if is_instance_valid(sprite) else get_node_or_null("Inside") as Sprite3D
+	if not is_instance_valid(sp):
+		return false
+	var normal := sp.global_transform.basis.z.normalized()
+	if normal.length_squared() < 0.0001:
+		return false
+	var from := cam.project_ray_origin(mouse_pos)
+	var dir := cam.project_ray_normal(mouse_pos)
+	var hit = Plane(normal, sp.global_position).intersects_ray(from, dir)
+	if hit == null:
+		return false
+	var local_p := sp.global_transform.affine_inverse() * (hit as Vector3)
+	var dims: Rect2 = sp.get_item_rect()
+	var ps := sp.pixel_size
+	if dims.size.x <= 0.0 or dims.size.y <= 0.0 or ps <= 0.000001:
+		return false
+	var px_x := local_p.x / ps
+	var px_y := local_p.y / ps
+	return px_x >= dims.position.x and px_x <= dims.end.x and px_y >= dims.position.y and px_y <= dims.end.y
+
+func _get_inspection_drag_world_pos(mouse_pos: Vector2, cam: Camera3D, ref_world_pos: Vector3) -> Variant:
+	if not is_instance_valid(cam):
+		return null
+	var sp := sprite if is_instance_valid(sprite) else get_node_or_null("Inside") as Sprite3D
+	var normal := sp.global_transform.basis.z.normalized() if is_instance_valid(sp) else cam.global_transform.basis.z.normalized()
+	if normal.length_squared() < 0.0001:
+		return null
+	var from := cam.project_ray_origin(mouse_pos)
+	var dir := cam.project_ray_normal(mouse_pos)
+	return Plane(normal, ref_world_pos).intersects_ray(from, dir)
+
+func _is_world_pos_outside_cup(world_pos: Vector3) -> bool:
+	var sp := sprite if is_instance_valid(sprite) else get_node_or_null("Inside") as Sprite3D
+	if not is_instance_valid(sp):
+		return false
+	var local_p := sp.global_transform.affine_inverse() * world_pos
+	var dims: Rect2 = sp.get_item_rect()
+	var ps := sp.pixel_size
+	var min_x := dims.position.x * ps - INSPECT_DROP_OUTSIDE_MARGIN
+	var max_x := dims.end.x * ps + INSPECT_DROP_OUTSIDE_MARGIN
+	var min_y := dims.position.y * ps - INSPECT_DROP_OUTSIDE_MARGIN
+	var max_y := dims.end.y * ps + INSPECT_DROP_OUTSIDE_MARGIN
+	return local_p.x < min_x or local_p.x > max_x or local_p.y < min_y or local_p.y > max_y
+
+func _begin_garnish_drag(entry: Dictionary, cam: Camera3D) -> void:
+	var sp := entry.get("sprite") as Sprite3D
+	if not is_instance_valid(sp):
+		return
+	if _garnish_snap_tween and _garnish_snap_tween.is_valid():
+		_garnish_snap_tween.kill()
+	_dragged_garnish = entry
+	_dragged_garnish_outside = false
+	_dragged_garnish_start_world = sp.global_position
+	garnish_visuals.set_hovered_sprite(null)
+	garnish_visuals.set_dragged_sprite(sp, false)
+	_set_hovered_liquid_idx(-1)
+	GameState.play_sfx("play_mugpickup")
+	if GameState.player:
+		GameState.player._update_hand("holding")
+	_update_active_garnish_drag(get_viewport().get_mouse_position(), cam)
+
+func _update_active_garnish_drag(mouse_pos: Vector2, cam: Camera3D) -> void:
+	var sp := _dragged_garnish.get("sprite") as Sprite3D
+	if not is_instance_valid(sp):
+		_dragged_garnish.clear()
+		return
+	var hit = _get_inspection_drag_world_pos(mouse_pos, cam, _dragged_garnish_start_world)
+	if hit is Vector3:
+		var hit_vec := hit as Vector3
+		sp.global_position = hit_vec
+		var moved_dist := hit_vec.distance_to(_dragged_garnish_start_world)
+		_dragged_garnish_outside = _is_world_pos_outside_cup(hit_vec) and moved_dist > INSPECT_MIN_DRAG_DISTANCE
+		garnish_visuals.set_dragged_sprite(sp, _dragged_garnish_outside)
+
+func _finish_garnish_drag() -> void:
+	if _dragged_garnish.is_empty():
+		return
+	var entry := _dragged_garnish
+	var should_remove := _dragged_garnish_outside
+	var sp := entry.get("sprite") as Sprite3D
+	var g_id := str(entry.get("garnish_id", ""))
+	var is_cube := bool(entry.get("is_ice_cube", false))
+	_dragged_garnish.clear()
+	_dragged_garnish_outside = false
+
+	if should_remove and g_id != "":
+		garnish_visuals.set_dragged_sprite(null)
+		remove_garnish_item(g_id, is_cube)
+	elif is_instance_valid(sp):
+		garnish_visuals.set_dragged_sprite(null)
+		sp.modulate = Color.WHITE
+		var home_pos: Vector3 = entry.get("home_local_pos", sp.position)
+		var home_rot: float = float(entry.get("home_rot_z", sp.rotation_degrees.z))
+		if _garnish_snap_tween and _garnish_snap_tween.is_valid():
+			_garnish_snap_tween.kill()
+		_garnish_snap_tween = create_tween().set_parallel(true)
+		_garnish_snap_tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		_garnish_snap_tween.tween_property(sp, "position", home_pos, 0.18)
+		_garnish_snap_tween.tween_property(sp, "rotation_degrees:z", home_rot, 0.18)
+
+	if GameState.player:
+		GameState.player._update_hand("idle")
+
+func _cancel_garnish_drag() -> void:
+	if _garnish_snap_tween and _garnish_snap_tween.is_valid():
+		_garnish_snap_tween.kill()
+	if _dragged_garnish.is_empty():
+		return
+	var sp := _dragged_garnish.get("sprite") as Sprite3D
+	if is_instance_valid(sp):
+		sp.position = _dragged_garnish.get("home_local_pos", sp.position)
+		sp.rotation_degrees.z = float(_dragged_garnish.get("home_rot_z", sp.rotation_degrees.z))
+		sp.modulate = Color.WHITE
+	_dragged_garnish.clear()
+	_dragged_garnish_outside = false
+	garnish_visuals.set_dragged_sprite(null)
+
+func _update_inspection() -> void:
+	var cam := camera if is_instance_valid(camera) else get_viewport().get_camera_3d()
+	if not is_instance_valid(cam):
+		return
+	var mouse_pos := get_viewport().get_mouse_position()
+
+	if not _dragged_garnish.is_empty():
+		if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			_finish_garnish_drag()
+			return
+		_update_active_garnish_drag(mouse_pos, cam)
+		if GameState.player:
+			GameState.player._update_hand("holding")
+		return
+
+	var hit_entry := garnish_visuals.hit_test(mouse_pos, cam)
+	if not hit_entry.is_empty():
+		garnish_visuals.set_hovered_sprite(hit_entry.get("sprite") as Sprite3D)
+		_set_hovered_liquid_idx(-1)
+		if GameState.player:
+			GameState.player._update_hand("interact")
+	else:
+		garnish_visuals.set_hovered_sprite(null)
+		var liq_idx := get_hovered_liquid_layer_index(mouse_pos, cam)
+		_set_hovered_liquid_idx(liq_idx)
+		if GameState.player:
+			GameState.player._update_hand("idle")
+
+func _input(event: InputEvent) -> void:
+	if not is_inspecting or is_consumed:
+		return
+	if get_tree().paused or GameState.is_dialogue_open:
+		return
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		var cam := camera if is_instance_valid(camera) else get_viewport().get_camera_3d()
+		var mouse_pos := get_viewport().get_mouse_position()
+		if event.pressed:
+			if Time.get_ticks_msec() - _inspect_enter_ms < 150:
+				return
+			if is_instance_valid(GameState.debug_menu) and GameState.debug_menu.visible:
+				var dbg_box := GameState.debug_menu.get_node_or_null("TextureRect") as Control
+				if is_instance_valid(dbg_box) and dbg_box.get_global_rect().has_point(mouse_pos):
+					return
+			var hit_entry := garnish_visuals.hit_test(mouse_pos, cam)
+			if not hit_entry.is_empty():
+				_begin_garnish_drag(hit_entry, cam)
+				get_viewport().set_input_as_handled()
+			elif not _is_mouse_over_cup(mouse_pos, cam):
+				if GameState.player and GameState.player.has_method("_out_of_game"):
+					GameState.player._out_of_game()
+				else:
+					exit_inspection_mode()
+				get_viewport().set_input_as_handled()
+		elif not _dragged_garnish.is_empty():
+			_finish_garnish_drag()
+			get_viewport().set_input_as_handled()
 
 func _get_free_drag_target(delta: float) -> Vector3:
 	if _waiting_for_working_area:
@@ -455,7 +779,7 @@ func _exit_tree() -> void:
 	if not is_preview_only:
 		var hud := HudIndicators.get_current()
 		if hud:
-			hud.hide_pouring_indicator(self)
+			hud.hide_cup_ingredients(self, true)
 
 func start_drag_from_spawn(press_screen_pos: Vector2, from_shelf: bool = false) -> void:
 	if from_shelf:
@@ -525,6 +849,10 @@ func _process(delta: float) -> void:
 	if not is_consumed:
 		_update_shader_parameters()
 		garnish_visuals.update(delta, total_liquids, size, visual_helper)
+
+	if is_inspecting and not is_consumed:
+		_update_inspection()
+		return
 
 	if _is_drag_blocked():
 		return
@@ -691,10 +1019,8 @@ func _rebuild_liquid_gradient(show_hud: bool = true) -> void:
 	for l in liquids:
 		total_liquids += float(l[1])
 	visual_helper.rebuild_gradient(liquids, total_liquids, size, is_mixed())
-	if show_hud and not is_preview_only and not liquids.is_empty() and total_liquids > 0.0:
-		var hud := HudIndicators.get_current()
-		if hud:
-			hud.update_pouring_indicator(self, liquids, size, visual_helper)
+	if show_hud and not is_preview_only:
+		_show_hud_ingredients()
 
 func _pouring(id: String, liquids_num: float, pour_info: Dictionary = {}) -> float:
 	if liquids_num <= 0.0:
@@ -751,9 +1077,7 @@ func _pouring(id: String, liquids_num: float, pour_info: Dictionary = {}) -> flo
 		var vx_imp := float(pour_info.get("stream_vx", 0.0)) * 0.25 + randf_range(-1.6, 1.6)
 		visual_helper.add_agitation(Vector2(vx_imp, 3.2))
 		visual_helper.slosh_vertical_velocity += randf_range(-0.1, 0.04)
-		var hud := HudIndicators.get_current()
-		if hud and not is_preview_only and not liquids.is_empty():
-			hud.update_pouring_indicator(self, liquids, size, visual_helper)
+		_show_hud_ingredients()
 
 	if added > 0.0 or overflow > OVERFLOW_EPSILON:
 		_trigger_pour_splash(id, liquids_num, pour_info)
@@ -970,14 +1294,38 @@ func return_to_previous_location(duration: float = 0.3) -> void:
 
 func _out_of_game() -> void:
 	in_game = false
+	if is_inspecting:
+		exit_inspection_mode()
 	_spill_indicator_cooldown = 0.0
 	_spill_accumulated_percent = 0.0
 	_stop_pour_splash()
 	_stop_overflow_streams()
 	if area_body:
 		area_body.disabled = false
-	_remove_displaying_list()
+	if not _is_mouse_hovered:
+		_remove_displaying_list()
 	return_to_location(_last_counter_position, 0.3, false)
+
+func _on_area_3d_mouse_entered() -> void:
+	if active_dragging_item != self and not is_preview_only and not is_consumed and not is_being_served and not is_delivering:
+		_is_mouse_hovered = true
+		_show_hud_ingredients()
+	super._on_area_3d_mouse_entered()
+
+func _on_area_3d_mouse_exited() -> void:
+	_is_mouse_hovered = false
+	super._on_area_3d_mouse_exited()
+	if not is_preview_only and not is_consumed and not is_inspecting and not in_game and not is_snapped() and not is_balls_dragging:
+		_remove_displaying_list()
+
+func set_highlight(enabled: bool) -> void:
+	super.set_highlight(enabled)
+	if is_preview_only or is_consumed or is_being_served or is_delivering:
+		return
+	if enabled:
+		_show_hud_ingredients()
+	elif not _is_mouse_hovered and not is_inspecting and not in_game and not is_snapped():
+		_remove_displaying_list()
 
 func _on_hover(hovered: bool) -> void:
 	set_highlight(hovered)
@@ -991,6 +1339,8 @@ func _dranked() -> void:
 	if is_consumed:
 		return
 	is_consumed = true
+	if is_inspecting:
+		exit_inspection_mode()
 	_is_actively_pouring_out = false
 	visual_helper.set_mouth_monitoring(false)
 	if is_instance_valid(_pour_out_stream):
@@ -1080,7 +1430,7 @@ func _remove_displaying_list(immediate: bool = false) -> void:
 		return
 	var hud := HudIndicators.get_current()
 	if hud:
-		hud.hide_pouring_indicator(self, immediate)
+		hud.hide_cup_ingredients(self, immediate, 0.35 if not immediate else 0.0)
 
 func get_unique_liquids_ids() -> Array[String]:
 	return drink_mix.get_unique_ingredient_ids()

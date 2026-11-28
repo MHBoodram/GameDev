@@ -12,6 +12,18 @@ const CLEAN_COLOR: Color = Color(0.55, 0.92, 1.0, 1.0)
 const OUTLINE_COLOR: Color = Color(0.0, 0.0, 0.0, 1.0)
 const SHADOW_COLOR: Color = Color(0.0, 0.0, 0.0, 0.75)
 
+const DEFAULT_HIGHLIGHT_GLOW_COLOR: Color = Color(1.0, 0.96, 0.55, 1.0)
+const GARNISH_HUD_COLORS: Dictionary = {
+	"lemon_whole": Color(1.0, 0.92, 0.25, 1.0),
+	"lemon_half": Color(1.0, 0.92, 0.25, 1.0),
+	"lemon_sliced": Color(1.0, 0.92, 0.25, 1.0),
+	"herb": Color(0.28, 0.9, 0.38, 1.0),
+	"cherry": Color(0.96, 0.22, 0.3, 1.0),
+	"olive": Color(0.6, 0.82, 0.24, 1.0),
+	"ice": Color(0.68, 0.94, 1.0, 1.0),
+	"ice_ball": Color(0.68, 0.94, 1.0, 1.0),
+}
+
 const COMBO_COMPONENT_COLOR: Color = Color(1.0, 0.82, 0.24, 1.0)
 const COMBO_FINAL_COLOR: Color = Color(1.0, 0.62, 0.16, 1.0)
 const COMBO_INITIAL_DELAY: float = 0.0
@@ -69,6 +81,150 @@ static func format_number(value: float, currency_decimals: bool = false) -> Stri
 	if absf(abs_val - tenths) < 0.005:
 		return "%.1f" % tenths
 	return "%.2f" % snappedf(abs_val, 0.01)
+
+static func get_garnish_display_name(garnish_id: String) -> String:
+	var clean_id := GarnishDefinitions.normalize_id(garnish_id)
+	var def := GarnishDefinitions.get_definition(clean_id)
+	var raw_name := str(def.get("display_name", ""))
+	if raw_name != "":
+		return raw_name
+	return clean_id.replace("_", " ").capitalize()
+
+static func get_garnish_hud_color(garnish_id: String) -> Color:
+	var clean_id := GarnishDefinitions.normalize_id(garnish_id)
+	return GARNISH_HUD_COLORS.get(clean_id, Color(0.95, 0.95, 0.95, 1.0)) as Color
+
+static func build_mix_ingredient_entries(
+	mix: DrinkMix,
+	liquids: Array = [],
+	glass_size: float = 1.0,
+	visual_helper: LiquidVisualHelper = null,
+	highlighted_layer_idx: int = -1
+) -> Array[Dictionary]:
+	var helper: LiquidVisualHelper = visual_helper if visual_helper else LiquidVisualHelper.new()
+	var has_tint: bool = helper._visual_override.has("liquid_tint_color")
+	var tint_col: Color = helper._visual_override.get("liquid_tint_color", Color.WHITE)
+	var tint_mix: float = float(helper._visual_override.get("liquid_tint_strength", 0.35))
+
+	var entries: Array[Dictionary] = []
+	var eff_size := maxf(glass_size, 0.001)
+
+	if not liquids.is_empty():
+		var sorted_indices: Array[int] = []
+		for i in liquids.size():
+			var l = liquids[i]
+			if l is Array and l.size() >= 2 and float(l[1]) > 0.0001:
+				sorted_indices.append(i)
+		sorted_indices.sort_custom(func(a: int, b: int) -> bool:
+			var ba := LiquidVisualHelper.get_layer_buoyancy(liquids[a])
+			var bb := LiquidVisualHelper.get_layer_buoyancy(liquids[b])
+			if is_equal_approx(ba, bb):
+				return a < b
+			return ba < bb
+		)
+		for idx_pos in range(sorted_indices.size() - 1, -1, -1):
+			var orig_idx := sorted_indices[idx_pos]
+			var layer = liquids[orig_idx]
+			var amt := float(layer[1])
+			var col: Color = helper.get_layer_color(layer)
+			if has_tint:
+				col = col.lerp(tint_col, tint_mix)
+			var layer_name: String = helper.format_layer_name(layer[0])
+			var pct: float = (amt / eff_size) * 100.0
+			entries.append({
+				"text": layer_name + ": " + str(snappedf(pct, 0.1)) + "%",
+				"color": col,
+				"highlighted": orig_idx == highlighted_layer_idx,
+				"highlight_color": DEFAULT_HIGHLIGHT_GLOW_COLOR,
+			})
+	elif mix != null and not mix.is_empty():
+		var ref_cap := mix.cup_capacity if mix.cup_capacity > 0.001 else eff_size
+		var ing_entries: Array[Dictionary] = []
+		var idx := 0
+		for ing_id in mix.ingredients.keys():
+			var amt := float(mix.ingredients[ing_id])
+			if amt <= 0.001:
+				continue
+			ing_entries.append({
+				"id": str(ing_id),
+				"amt": amt,
+				"buoy": AtomicFluidShaders.get_liquid_buoyancy(str(ing_id)),
+				"orig_idx": idx,
+			})
+			idx += 1
+		ing_entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			var ba := float(a["buoy"])
+			var bb := float(b["buoy"])
+			if is_equal_approx(ba, bb):
+				return int(a["orig_idx"]) > int(b["orig_idx"])
+			return ba > bb
+		)
+		for item in ing_entries:
+			var ing_name := str(item["id"])
+			var amt := float(item["amt"])
+			var col := LiquidVisualHelper.get_liquid_color(ing_name)
+			if has_tint:
+				col = col.lerp(tint_col, tint_mix)
+			var pct: float = (amt / maxf(ref_cap, 0.001)) * 100.0
+			entries.append({
+				"text": ing_name + ": " + str(snappedf(pct, 0.1)) + "%",
+				"color": col,
+				"highlighted": int(item["orig_idx"]) == highlighted_layer_idx,
+				"highlight_color": DEFAULT_HIGHLIGHT_GLOW_COLOR,
+			})
+
+	if mix != null:
+		var garnish_order: Array[String] = []
+		var garnish_counts: Dictionary = {}
+		for raw_g in mix.garnishes:
+			var clean_g := GarnishDefinitions.normalize_id(str(raw_g))
+			if clean_g == "":
+				continue
+			if not garnish_counts.has(clean_g):
+				garnish_counts[clean_g] = 0
+				garnish_order.append(clean_g)
+			garnish_counts[clean_g] = int(garnish_counts[clean_g]) + 1
+
+		for g_id in garnish_order:
+			var count := int(garnish_counts[g_id])
+			var g_col := get_garnish_hud_color(g_id)
+			entries.append({
+				"text": get_garnish_display_name(g_id) + " x" + str(count),
+				"color": g_col,
+				"secondary_color": g_col.lightened(0.35),
+				"highlighted": false,
+			})
+
+		if mix.has_ice:
+			var ice_col := get_garnish_hud_color("ice")
+			entries.append({
+				"text": get_garnish_display_name("ice"),
+				"color": ice_col,
+				"secondary_color": Color.WHITE,
+				"highlighted": false,
+			})
+
+		if mix.overfill_percent > 0.05:
+			entries.append({
+				"text": "Spilled!",
+				"color": DECREASE_COLOR,
+				"secondary_color": DECREASE_COLOR,
+				"highlighted": false,
+			})
+
+	return entries
+
+static func build_cup_ingredient_entries(glass: Node, visual_helper: LiquidVisualHelper = null, highlighted_layer_idx: int = -1) -> Array[Dictionary]:
+	if not is_instance_valid(glass):
+		return []
+	var mix: DrinkMix = glass.get("drink_mix") as DrinkMix if "drink_mix" in glass else null
+	var raw_liquids: Variant = glass.get("liquids") if "liquids" in glass else []
+	var liqs: Array = raw_liquids if raw_liquids is Array else []
+	var cup_size: float = float(glass.get("size")) if "size" in glass else 1.0
+	var helper: LiquidVisualHelper = visual_helper
+	if helper == null and "visual_helper" in glass:
+		helper = glass.get("visual_helper") as LiquidVisualHelper
+	return build_mix_ingredient_entries(mix, liqs, cup_size, helper, highlighted_layer_idx)
 
 func _enter_tree() -> void:
 	current = self
@@ -635,6 +791,14 @@ func update_status_group(group_id: String, entries: Array[Dictionary], owner_obj
 				var shader_mat := lbl.material as ShaderMaterial
 				shader_mat.set_shader_parameter("base_color", entry_color)
 				shader_mat.set_shader_parameter("secondary_color", entry.get("secondary_color", Color(0.5, 0.9, 1.0, 1.0)))
+			var is_hl: bool = bool(entry.get("highlighted", false))
+			var hl_col: Color = entry.get("highlight_color", DEFAULT_HIGHLIGHT_GLOW_COLOR)
+			if lbl.has_method("set_highlighted"):
+				lbl.set_highlighted(is_hl, hl_col)
+			elif lbl.material is ShaderMaterial:
+				var shader_mat := lbl.material as ShaderMaterial
+				shader_mat.set_shader_parameter("highlight_amount", 1.0 if is_hl else 0.0)
+				shader_mat.set_shader_parameter("highlight_glow_color", hl_col)
 		else:
 			lbl.add_theme_color_override("font_color", entry_color)
 			TextIcons.apply_to_control(lbl)
@@ -690,38 +854,30 @@ func hide_status_group(group_id: String, owner_obj: Object = null, immediate: bo
 			box.visible = false
 	)
 
-func update_pouring_indicator(glass: Node, liquids: Array, glass_size: float, visual_helper: LiquidVisualHelper = null) -> void:
-	if liquids.is_empty():
+func get_status_group_owner(group_id: String) -> Variant:
+	if not _status_groups.has(group_id):
+		return null
+	return _status_groups[group_id].get("owner", null)
+
+func show_cup_ingredients(glass: Node, highlighted_layer_idx: int = -1, visual_helper: LiquidVisualHelper = null) -> void:
+	if not is_instance_valid(glass):
+		return
+	var entries := build_cup_ingredient_entries(glass, visual_helper, highlighted_layer_idx)
+	if entries.is_empty():
+		hide_cup_ingredients(glass, true)
+		return
+	update_status_group("pouring", entries, glass, true)
+
+func hide_cup_ingredients(glass: Node = null, immediate: bool = false, fade_duration: float = 0.35) -> void:
+	hide_status_group("pouring", glass, immediate, fade_duration)
+
+func update_pouring_indicator(glass: Node, liquids: Array, glass_size: float, visual_helper: LiquidVisualHelper = null, highlighted_layer_idx: int = -1) -> void:
+	var mix: DrinkMix = glass.get("drink_mix") as DrinkMix if (is_instance_valid(glass) and "drink_mix" in glass) else null
+	var helper: LiquidVisualHelper = visual_helper if visual_helper else _fallback_visual_helper
+	var entries := build_mix_ingredient_entries(mix, liquids, glass_size, helper, highlighted_layer_idx)
+	if entries.is_empty():
 		hide_pouring_indicator(glass, true)
 		return
-
-	var helper: LiquidVisualHelper = visual_helper if visual_helper else _fallback_visual_helper
-	var has_tint: bool = helper._visual_override.has("liquid_tint_color")
-	var tint_col: Color = helper._visual_override.get("liquid_tint_color", Color.WHITE)
-	var tint_mix: float = float(helper._visual_override.get("liquid_tint_strength", 0.35))
-
-	var entries: Array[Dictionary] = []
-	for layer in liquids:
-		if not (layer is Array) or layer.size() < 2:
-			continue
-		var col: Color = helper.get_layer_color(layer)
-		if has_tint:
-			col = col.lerp(tint_col, tint_mix)
-		var layer_name: String = helper.format_layer_name(layer[0])
-		var pct: float = (float(layer[1]) / maxf(glass_size, 0.001)) * 100.0
-		entries.append({
-			"text": layer_name + ": " + str(snappedf(pct, 0.1)) + "%",
-			"color": col
-		})
-
-	var dm: Variant = glass.get("drink_mix") if is_instance_valid(glass) else null
-	if dm is DrinkMix and (dm as DrinkMix).overfill_percent > 0.05:
-		entries.append({
-			"text": "Spilled!",
-			"color": DECREASE_COLOR,
-			"secondary_color": DECREASE_COLOR
-		})
-
 	update_status_group("pouring", entries, glass, true)
 
 func hide_pouring_indicator(glass: Node = null, immediate: bool = false) -> void:

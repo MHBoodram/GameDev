@@ -50,6 +50,19 @@ func add_garnish(garnish_id: String, amount: int = 1) -> bool:
 		garnishes.append(clean_id)
 	return true
 
+func remove_garnish(garnish_id: String, amount: int = 1) -> bool:
+	var clean_id := garnish_id.to_lower().strip_edges()
+	if amount < 1 or clean_id == "":
+		return false
+	var removed := false
+	for _i in range(amount):
+		var idx := garnishes.find(clean_id)
+		if idx == -1:
+			break
+		garnishes.remove_at(idx)
+		removed = true
+	return removed
+
 func get_garnish_counts() -> Dictionary:
 	var counts: Dictionary = {}
 	for g in garnishes:
@@ -70,6 +83,12 @@ func add_ice() -> bool:
 	if has_ice:
 		return false
 	has_ice = true
+	return true
+
+func remove_ice() -> bool:
+	if not has_ice:
+		return false
+	has_ice = false
 	return true
 
 func add_processing(tag: String) -> void:

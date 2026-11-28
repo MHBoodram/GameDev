@@ -67,6 +67,14 @@ func _get_grayscale_icon(tex: Texture2D) -> Texture2D:
 	return gray_tex
 
 func _input(event):
+	if GameState.is_dialogue_open or ShakerMinigame.active:
+		if visible:
+			hide()
+		return
+	if GameState.player and "in_game" in GameState.player and GameState.player.in_game:
+		if visible:
+			hide()
+		return
 	if event.is_action_pressed("Right_click"):
 		_build_options()
 		position = get_viewport().get_mouse_position()
