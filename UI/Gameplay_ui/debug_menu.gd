@@ -72,6 +72,23 @@ func _ready() -> void:
 
 	visibility_changed.connect(_on_visibility_changed)
 
+func reset_state() -> void:
+	visible = false
+	_cursor_over_debug = false
+	_speed_index = 0
+	Engine.time_scale = 1.0
+	if is_instance_valid(speed_btn):
+		speed_btn.text = "Speed: 1x"
+	if is_instance_valid(ready_check):
+		ready_check.button_pressed = false
+	if is_instance_valid(species_option) and species_option.item_count > 0:
+		species_option.select(0)
+		_update_species_rep_button_text()
+	if is_instance_valid(modifier_option) and modifier_option.item_count > 0:
+		modifier_option.select(0)
+	if is_instance_valid(night_option):
+		_populate_night_dropdown()
+
 func _exit_tree() -> void:
 	Engine.time_scale = 1.0
 	if _cursor_over_debug and is_inside_tree() and not get_tree().paused:

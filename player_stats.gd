@@ -5,6 +5,7 @@ signal overall_reputation_changed(new_value: float, delta: float)
 signal species_reputation_changed(species_name: String, new_value: float, delta: float)
 
 const MIN_INGREDIENT_UNLOCK_NIGHT: int = 3
+const INITIAL_MONEY: float = 500.0
 
 const INGREDIENT_UNLOCK_NIGHTS := {
 	"Hand": 1,
@@ -19,16 +20,7 @@ const INGREDIENT_COST_OVERRIDES := {}
 const INGREDIENT_COST_PER_NIGHT_ADD: float = 0.0
 const INGREDIENT_COST_PER_NIGHT_MULT: float = 1.25
 
-var previous_money : float = 0
-var money : float = 500
-var overall_reputation : float = 0.0
-var reputation_species : Dictionary = {}
-var night_species_delta : Dictionary = {}
-var overall_marketing : float = 1.0
-var species_marketing : Dictionary = {}
-var species_banners : Dictionary = {}
-
-var unlocks : Dictionary = {
+const DEFAULT_UNLOCKS := {
 	"Drinks" :{
 		"gin" : true,
 		"rum" : false,
@@ -58,11 +50,37 @@ var unlocks : Dictionary = {
 	}
 }
 
+var previous_money : float = 0
+var money : float = INITIAL_MONEY
+var overall_reputation : float = 0.0
+var reputation_species : Dictionary = {}
+var night_species_delta : Dictionary = {}
+var overall_marketing : float = 1.0
+var species_marketing : Dictionary = {}
+var species_banners : Dictionary = {}
+
+var unlocks : Dictionary = DEFAULT_UNLOCKS.duplicate(true)
+
 var unlock_passive: Dictionary = {}
 
 
 
 func _ready() -> void:
+	sync_species_registry()
+	sync_upgrade_registry()
+
+func reset_for_new_game() -> void:
+	previous_money = 0.0
+	money = INITIAL_MONEY
+	overall_reputation = 0.0
+	reputation_species.clear()
+	night_species_delta.clear()
+	overall_marketing = 1.0
+	species_marketing.clear()
+	species_banners.clear()
+	unlocks = DEFAULT_UNLOCKS.duplicate(true)
+	unlock_passive.clear()
+	UpgradeRegistry.reset_all_upgrades(self)
 	sync_species_registry()
 	sync_upgrade_registry()
 

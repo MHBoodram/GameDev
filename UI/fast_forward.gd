@@ -147,6 +147,11 @@ static func end_scope(scope_id: String) -> void:
 	_scopes.erase(key)
 
 
+static func reset_all() -> void:
+	for key in _scopes.keys():
+		end_scope(str(key))
+
+
 static func set_dialogue_fast_forward(duration: float, enabled: bool = true, snap_on_repeat: bool = true) -> void:
 	dialogue_fast_forward_duration = maxf(0.0, duration)
 	auto_hook_dialogue_labels = enabled

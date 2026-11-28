@@ -104,9 +104,7 @@ func settings() -> void:
 
 func _on_main_menu_pressed() -> void:
 	close_menu()
-	Engine.time_scale = 1.0
-	if is_instance_valid(GameState.debug_menu):
-		GameState.debug_menu.visible = false
+	GameState.reset_game()
 	get_tree().change_scene_to_file(START_MENU_SCENE)
 
 func _on_quit_pressed() -> void:

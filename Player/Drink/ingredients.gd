@@ -11,6 +11,12 @@ static var current_hovered_target: Ingredients = null
 static var current_hovered_npc: Base_NPC = null
 static var _cached_query: PhysicsRayQueryParameters3D = null
 
+static func reset_interaction_state() -> void:
+	active_selected_item = null
+	active_dragging_item = null
+	current_hovered_target = null
+	current_hovered_npc = null
+
 var is_balls_dragging: bool = false:
 	set(value):
 		is_balls_dragging = value

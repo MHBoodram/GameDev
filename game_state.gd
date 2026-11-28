@@ -82,6 +82,52 @@ func toggle_debug_menu() -> void:
 		return
 	debug_menu.visible = not debug_menu.visible
 
+func reset_game() -> void:
+	Engine.time_scale = 1.0
+
+	seat1_order = []
+	seat2_order = []
+	seat3_order = []
+	night = 1
+	restarts_left = MAX_RESTARTS
+	current_quota = BASE_QUOTA
+
+	special_state = true
+	night_paused = false
+	can_end_night = true
+	is_dialogue_open = false
+	character_talking = null
+
+	story_flags.clear()
+	scheduled_npcs.clear()
+
+	player = null
+	main_node = null
+	gameplay_ui = null
+	night_manager = null
+	seat_manager = null
+	shelf_manager = null
+	minigame_host = null
+	jukebox_manager = null
+
+	var tree := get_tree()
+	if tree and tree.root:
+		for balloon_name in ["Main_Ballon", "ExampleBalloon"]:
+			var balloon := tree.root.find_child(balloon_name, true, false)
+			if is_instance_valid(balloon) and not balloon.is_queued_for_deletion():
+				balloon.queue_free()
+
+	ShakerMinigame.active = false
+	FastForward.reset_all()
+	Ingredients.reset_interaction_state()
+	PlayerStats.reset_for_new_game()
+
+	if is_instance_valid(debug_menu):
+		if debug_menu.has_method("reset_state"):
+			debug_menu.reset_state()
+		else:
+			debug_menu.visible = false
+
 func register_subsystems(main: Node3D, p_player: Node3D, timer: Timer, env: WorldEnvironment, sun_node: DirectionalLight3D, counter_ref: Node3D) -> void:
 	main_node = main
 	player = p_player
