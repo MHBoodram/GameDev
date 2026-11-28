@@ -41,6 +41,15 @@ func _ready() -> void:
 		await get_tree().create_timer(randf_range(0.4, 0.75)).timeout
 	#_finish_game()
 
+func _input(event: InputEvent) -> void:
+	if _is_finishing:
+		return
+	if get_tree().paused or GameState.is_dialogue_open:
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+		_on_timer_timed_out()
+		get_viewport().set_input_as_handled()
+
 func _check_all_finished() -> void:
 	#blood_cells_total -= 1
 	if blood_cells_total <= 0:

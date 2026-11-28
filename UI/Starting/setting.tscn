@@ -4,6 +4,8 @@
 [ext_resource type="Script" uid="uid://cpqwjs4u8japt" path="res://UI/Starting/setting.gd" id="1_x505p"]
 [ext_resource type="Texture2D" uid="uid://b44jk20tj2uhc" path="res://Assets/UI/slider_start.png" id="2_8hy2n"]
 [ext_resource type="Texture2D" uid="uid://bgorgi1bb54q7" path="res://Assets/UI/volume_slider.png" id="3_8hy2n"]
+[ext_resource type="Texture2D" path="res://Assets/UI/keybind_reset.svg" id="4_reset"]
+[ext_resource type="Texture2D" path="res://Assets/UI/keybind_delete.svg" id="5_delete"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qacnc"]
 bg_color = Color(0.5569488, 0.5569549, 0.55695194, 1)
@@ -373,86 +375,550 @@ horizontal_alignment = 1
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/VBoxContainer/Controls" unique_id=201704516]
 layout_mode = 2
+theme_override_constants/separation = 7
 
-[node name="Up" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer" unique_id=1848254874]
+[node name="KeybindsScroll" type="ScrollContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer"]
+custom_minimum_size = Vector2(0, 185)
 layout_mode = 2
+horizontal_scroll_mode = 0
 
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Up" unique_id=153414800]
+[node name="KeybindsList" type="VBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll"]
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="UpRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList" unique_id=1848254874]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/UpRow" unique_id=153414800]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/shadow_offset_y = 10
-theme_override_constants/outline_size = 6
+theme_override_constants/outline_size = 5
 theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 60
+theme_override_font_sizes/font_size = 34
 text = "Up"
-horizontal_alignment = 1
 
-[node name="Up" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Up" unique_id=1476786696]
+[node name="Up" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/UpRow" unique_id=1476786696]
+custom_minimum_size = Vector2(115, 36)
 layout_mode = 2
-size_flags_horizontal = 10
-theme_override_font_sizes/font_size = 50
-text = "w"
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+text = "W"
 
-[node name="Down" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer" unique_id=1515831805]
+[node name="Up_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/UpRow"]
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
+tooltip_text = "Reset keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("4_reset")
+icon_alignment = 1
+expand_icon = true
 
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Down" unique_id=925046376]
+[node name="Up_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/UpRow"]
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
+tooltip_text = "Delete keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("5_delete")
+icon_alignment = 1
+expand_icon = true
+
+[node name="DownRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList" unique_id=1515831805]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/DownRow" unique_id=925046376]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/shadow_offset_y = 10
-theme_override_constants/outline_size = 6
+theme_override_constants/outline_size = 5
 theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 60
+theme_override_font_sizes/font_size = 34
 text = "Down"
-horizontal_alignment = 1
 
-[node name="Down" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Down" unique_id=1462468400]
+[node name="Down" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/DownRow" unique_id=1462468400]
+custom_minimum_size = Vector2(115, 36)
 layout_mode = 2
-size_flags_horizontal = 10
-theme_override_font_sizes/font_size = 50
-text = "s"
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+text = "S"
 
-[node name="Left" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer" unique_id=1280800168]
+[node name="Down_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/DownRow"]
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
+tooltip_text = "Reset keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("4_reset")
+icon_alignment = 1
+expand_icon = true
 
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Left" unique_id=1824583741]
+[node name="Down_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/DownRow"]
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
+tooltip_text = "Delete keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("5_delete")
+icon_alignment = 1
+expand_icon = true
+
+[node name="LeftRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList" unique_id=1280800168]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/LeftRow" unique_id=1824583741]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/shadow_offset_y = 10
-theme_override_constants/outline_size = 6
+theme_override_constants/outline_size = 5
 theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 60
+theme_override_font_sizes/font_size = 34
 text = "Left"
-horizontal_alignment = 1
 
-[node name="Left" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Left" unique_id=687718415]
+[node name="Left" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/LeftRow" unique_id=687718415]
+custom_minimum_size = Vector2(115, 36)
 layout_mode = 2
-size_flags_horizontal = 10
-theme_override_font_sizes/font_size = 50
-text = "a"
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+text = "A"
 
-[node name="Right" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer" unique_id=1594521604]
+[node name="Left_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/LeftRow"]
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
+tooltip_text = "Reset keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("4_reset")
+icon_alignment = 1
+expand_icon = true
 
-[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Right" unique_id=807248610]
+[node name="Left_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/LeftRow"]
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
+tooltip_text = "Delete keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("5_delete")
+icon_alignment = 1
+expand_icon = true
+
+[node name="RightRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList" unique_id=1594521604]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/RightRow" unique_id=807248610]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
-theme_override_constants/shadow_offset_y = 10
-theme_override_constants/outline_size = 6
+theme_override_constants/outline_size = 5
 theme_override_fonts/font = ExtResource("1_jiptt")
-theme_override_font_sizes/font_size = 60
+theme_override_font_sizes/font_size = 34
 text = "Right"
-horizontal_alignment = 1
 
-[node name="Right" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/Right" unique_id=1763667781]
+[node name="Right" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/RightRow" unique_id=1763667781]
+custom_minimum_size = Vector2(115, 36)
 layout_mode = 2
-size_flags_horizontal = 10
-theme_override_font_sizes/font_size = 50
-text = "d"
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+text = "D"
+
+[node name="Right_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/RightRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Reset keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("4_reset")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Right_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/RightRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Delete keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("5_delete")
+icon_alignment = 1
+expand_icon = true
+
+[node name="PourUpRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/PourUpRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 34
+text = "Pour Up"
+
+[node name="PourUp" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/PourUpRow"]
+custom_minimum_size = Vector2(115, 36)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+text = "Up"
+
+[node name="PourUp_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/PourUpRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Reset keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("4_reset")
+icon_alignment = 1
+expand_icon = true
+
+[node name="PourUp_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/PourUpRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Delete keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("5_delete")
+icon_alignment = 1
+expand_icon = true
+
+[node name="PourDownRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/PourDownRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 34
+text = "Pour Down"
+
+[node name="PourDown" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/PourDownRow"]
+custom_minimum_size = Vector2(115, 36)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+text = "Down"
+
+[node name="PourDown_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/PourDownRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Reset keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("4_reset")
+icon_alignment = 1
+expand_icon = true
+
+[node name="PourDown_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/PourDownRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Delete keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("5_delete")
+icon_alignment = 1
+expand_icon = true
+
+[node name="HandRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/HandRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 34
+text = "Hand"
+
+[node name="Hand" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/HandRow"]
+custom_minimum_size = Vector2(115, 36)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+text = "1"
+
+[node name="Hand_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/HandRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Reset keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("4_reset")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Hand_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/HandRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Delete keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("5_delete")
+icon_alignment = 1
+expand_icon = true
+
+[node name="KnifeRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/KnifeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 34
+text = "Knife"
+
+[node name="Knife" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/KnifeRow"]
+custom_minimum_size = Vector2(115, 36)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+text = "2"
+
+[node name="Knife_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/KnifeRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Reset keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("4_reset")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Knife_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/KnifeRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Delete keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("5_delete")
+icon_alignment = 1
+expand_icon = true
+
+[node name="MagRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/MagRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 34
+text = "Mag"
+
+[node name="Mag" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/MagRow"]
+custom_minimum_size = Vector2(115, 36)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+text = "3"
+
+[node name="Mag_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/MagRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Reset keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("4_reset")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Mag_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/MagRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Delete keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("5_delete")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Fishing_RodRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/Fishing_RodRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 34
+text = "Fishing Rod"
+
+[node name="Fishing_Rod" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/Fishing_RodRow"]
+custom_minimum_size = Vector2(115, 36)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+text = "4"
+
+[node name="Fishing_Rod_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/Fishing_RodRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Reset keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("4_reset")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Fishing_Rod_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/Fishing_RodRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Delete keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("5_delete")
+icon_alignment = 1
+expand_icon = true
+
+[node name="InteractCustomerRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/InteractCustomerRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 34
+text = "Interact Customer"
+
+[node name="InteractCustomer" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/InteractCustomerRow"]
+custom_minimum_size = Vector2(115, 36)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+text = "Space"
+
+[node name="InteractCustomer_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/InteractCustomerRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Reset keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("4_reset")
+icon_alignment = 1
+expand_icon = true
+
+[node name="InteractCustomer_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/InteractCustomerRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Delete keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("5_delete")
+icon_alignment = 1
+expand_icon = true
+
+[node name="ContinueDialogRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/ContinueDialogRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 34
+text = "Continue Dialog"
+
+[node name="ContinueDialog" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/ContinueDialogRow"]
+custom_minimum_size = Vector2(115, 36)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+text = "Space"
+
+[node name="ContinueDialog_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/ContinueDialogRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Reset keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("4_reset")
+icon_alignment = 1
+expand_icon = true
+
+[node name="ContinueDialog_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/ContinueDialogRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Delete keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("5_delete")
+icon_alignment = 1
+expand_icon = true
+
+[node name="FastForwardRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/FastForwardRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("1_jiptt")
+theme_override_font_sizes/font_size = 34
+text = "Fast Forward"
+
+[node name="FastForward" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/FastForwardRow"]
+custom_minimum_size = Vector2(115, 36)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 30
+text = "F"
+
+[node name="FastForward_Reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/FastForwardRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Reset keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("4_reset")
+icon_alignment = 1
+expand_icon = true
+
+[node name="FastForward_Delete" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer/KeybindsScroll/KeybindsList/FastForwardRow"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+tooltip_text = "Delete keybind"
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("5_delete")
+icon_alignment = 1
+expand_icon = true
 
 [node name="Invert_Pour" type="CheckButton" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer" unique_id=1763667782]
 layout_mode = 2
@@ -462,7 +928,7 @@ text = "Invert Pouring Angle"
 [node name="Control_reset" type="Button" parent="CenterContainer/VBoxContainer/Controls/VBoxContainer" unique_id=1370199940]
 layout_mode = 2
 theme_override_font_sizes/font_size = 35
-text = "Reset to Default"
+text = "Reset All Keybinds"
 autowrap_mode = 2
 
 [node name="SaveQuit" type="Button" parent="CenterContainer/VBoxContainer" unique_id=167641846]
@@ -487,6 +953,8 @@ libraries/ = SubResource("AnimationLibrary_vvki5")
 [connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Video/HBoxContainer/Shaken_Receipt" to="." method="_on_master_slider_mouse_exited"]
 [connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Invert_Pour" to="." method="_on_master_slider_mouse_entered"]
 [connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Invert_Pour" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Control_reset" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Control_reset" to="." method="_on_master_slider_mouse_exited"]
 [connection signal="mouse_entered" from="CenterContainer/VBoxContainer/SaveQuit" to="." method="_on_master_slider_mouse_entered"]
 [connection signal="mouse_exited" from="CenterContainer/VBoxContainer/SaveQuit" to="." method="_on_master_slider_mouse_exited"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/SaveQuit" to="." method="_on_save_quit_pressed"]

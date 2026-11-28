@@ -58,6 +58,29 @@ func _update_hand(change: String) -> void:
 	var anim_player: AnimationPlayer = $GameplayUi/Hand/AnimationPlayer
 	tool_controller.update_hand_visual(anim_player, change)
 
+func _can_use_tool_shortcut() -> bool:
+	if in_game or get_tree().paused or SettingState.waiting_keybind:
+		return false
+	if GameState.is_dialogue_open or ShakerMinigame.active:
+		return false
+	if GameState.minigame_host and GameState.minigame_host.is_minigame_active:
+		return false
+	if Ingredients.active_dragging_item != null or PourStreamVisual.is_pour_session_active():
+		return false
+	var focus_owner := get_viewport().gui_get_focus_owner()
+	if focus_owner is LineEdit or focus_owner is TextEdit:
+		return false
+	return true
+
+func _select_tool(tool_id: String) -> void:
+	if not _can_use_tool_shortcut():
+		return
+	if PlayerStats.is_tool_unlocked(tool_id):
+		_change_tool(tool_id)
+		var tool_circle := gameplay_ui.get_node_or_null("ToolCircle") as Control if gameplay_ui else null
+		if is_instance_valid(tool_circle) and tool_circle.visible:
+			tool_circle.hide()
+
 func handle_counter_edge_action() -> bool:
 	return tool_controller.handle_counter_edge_click(self, GameState.main_node)
 
@@ -97,19 +120,26 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.is_action_pressed("Right"):
 			if gameplay_ui and not gameplay_ui.down and gameplay_ui.has_method("moving_around"):
 				gameplay_ui.moving_around(true)
-		elif event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE:
+		elif InputMap.has_action("InteractCustomer") and event.is_action_pressed("InteractCustomer"):
 			_handle_dialogue_input()
+			get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if _try_world_tool_click():
 				get_viewport().set_input_as_handled()
 				return
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			if PourStreamVisual.is_pour_session_active() or GameState.is_dialogue_open or ShakerMinigame.active or (GameState.minigame_host and GameState.minigame_host.is_minigame_active):
+				return
 			if gameplay_ui and gameplay_ui.has_method("bendover"):
 				gameplay_ui.bendover()
 
 func _handle_dialogue_input() -> void:
-	if GameState.is_dialogue_open or (gameplay_ui and gameplay_ui.down) or not GameState.seat_manager:
+	if GameState.is_dialogue_open or ShakerMinigame.active or (gameplay_ui and gameplay_ui.down) or not GameState.seat_manager:
+		return
+	if GameState.minigame_host and GameState.minigame_host.is_minigame_active:
+		return
+	if Ingredients.active_dragging_item != null:
 		return
 	var seat_num: int = 4 - gameplay_ui.current_position
 	var npc = GameState.seat_manager.get_customer_at_seat(seat_num)
@@ -122,6 +152,13 @@ func _input(event: InputEvent) -> void:
 		if in_game and not (GameState.minigame_host and GameState.minigame_host.is_minigame_active):
 			_out_of_game()
 			get_viewport().set_input_as_handled()
+	elif event is InputEventKey and event.pressed and not event.echo:
+		if _can_use_tool_shortcut():
+			for tool_action in ["Hand", "Knife", "Mag", "Fishing_Rod"]:
+				if InputMap.has_action(tool_action) and event.is_action_pressed(tool_action):
+					_select_tool(tool_action)
+					get_viewport().set_input_as_handled()
+					return
 
 func _spawn_and_begin_drag(scene: PackedScene, cup_name: String, spawn_world_pos: Variant = null) -> void:
 	var new_instance = scene.instantiate()

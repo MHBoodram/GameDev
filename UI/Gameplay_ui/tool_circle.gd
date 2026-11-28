@@ -67,7 +67,11 @@ func _get_grayscale_icon(tex: Texture2D) -> Texture2D:
 	return gray_tex
 
 func _input(event):
-	if GameState.is_dialogue_open or ShakerMinigame.active:
+	if GameState.is_dialogue_open or ShakerMinigame.active or PourStreamVisual.is_pour_session_active():
+		if visible:
+			hide()
+		return
+	if GameState.minigame_host and GameState.minigame_host.is_minigame_active:
 		if visible:
 			hide()
 		return

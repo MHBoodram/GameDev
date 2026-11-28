@@ -22,6 +22,7 @@ var in_pour_zone: Glasses:
 	get:
 		return _snap_zone.active_glass
 var _is_pouring: bool = false
+var _cancel_requested: bool = false
 var _active_pouring_glass: Glasses = null
 var _last_sfx_ms: int = -1
 
@@ -45,6 +46,21 @@ func _ready() -> void:
 		mouse_entered.connect(_on_mouse_entered)
 	if not mouse_exited.is_connected(_on_mouse_exited):
 		mouse_exited.connect(_on_mouse_exited)
+
+func _exit_tree() -> void:
+	if Engine.is_editor_hint():
+		return
+	if _is_pouring:
+		PourStreamVisual.end_pour_session()
+
+func _input(event: InputEvent) -> void:
+	if Engine.is_editor_hint() or not _is_pouring:
+		return
+	if get_tree().paused or GameState.is_dialogue_open:
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+		_cancel_requested = true
+		get_viewport().set_input_as_handled()
 
 func _process(_delta: float) -> void:
 	if Engine.is_editor_hint():
@@ -96,7 +112,9 @@ func start_pour() -> void:
 		return
 
 	_is_pouring = true
+	_cancel_requested = false
 	_last_sfx_ms = -1
+	PourStreamVisual.begin_pour_session(get_viewport())
 	var active_glass := in_pour_zone
 	_active_pouring_glass = active_glass
 	var cam_rig: Camera3D = PourStreamVisual.focus_station_camera(self, "sink_camera_marker", 0.55)
@@ -104,25 +122,28 @@ func start_pour() -> void:
 	if active_glass.has_method("start_pour_out"):
 		active_glass.start_pour_out(_get_pour_tilt_degrees())
 
-	while PourStreamVisual.is_pour_button_held() and is_inside_tree() and is_instance_valid(active_glass) and active_glass.total_liquids > 0.0:
+	while PourStreamVisual.is_pour_button_held() and is_inside_tree() and is_instance_valid(active_glass) and active_glass.total_liquids > 0.0 and not _cancel_requested:
 		if active_glass.can_pour_out_from_mouth():
 			var rate_mult: float = clampf(absf(active_glass.pour_tilt_degrees) / (MAX_POUR_TILT_DEGREES * 0.5), 0.15, 2.0)
 			active_glass._pour_out(pour_out_amount * (POUR_INTERVAL / 0.1) * rate_mult)
 			_last_sfx_ms = PourStreamVisual.play_throttled_pour_sfx(_last_sfx_ms, SFX_INTERVAL_MS)
 		await get_tree().create_timer(POUR_INTERVAL).timeout
 		if not is_inside_tree():
+			PourStreamVisual.end_pour_session()
 			_is_pouring = false
 			_active_pouring_glass = null
 			return
 
+	PourStreamVisual.end_pour_session()
 	_active_pouring_glass = null
 	if is_instance_valid(active_glass) and active_glass.has_method("stop_pour_out"):
 		active_glass.stop_pour_out()
 
-	await get_tree().create_timer(0.15).timeout
-	if not is_inside_tree():
-		_is_pouring = false
-		return
+	if not _cancel_requested:
+		await get_tree().create_timer(0.15).timeout
+		if not is_inside_tree():
+			_is_pouring = false
+			return
 
 	_return_glass_to_previous_location(active_glass)
 

@@ -170,6 +170,8 @@ func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 	set_liquid_color(liquid_resource.liquid_color)
 
 func _exit_tree() -> void:
+	if is_pouring:
+		PourStreamVisual.end_pour_session()
 	visual_helper.cleanup()
 	if is_instance_valid(_pour_stream):
 		_pour_stream.set_stream_active(false)
@@ -244,6 +246,30 @@ func _process(delta: float) -> void:
 	visual_helper.update_physics_from_owner(delta, track_pos, camera, self, _get_effective_viscosity(), outside_sprite)
 	_update_liquid_shader()
 
+func _input(event: InputEvent) -> void:
+	if not in_game or is_pouring:
+		return
+	if get_tree().paused or GameState.is_dialogue_open or SettingState.waiting_keybind:
+		return
+	if GameState.minigame_host and GameState.minigame_host.is_minigame_active:
+		return
+	if not (GameState.player and GameState.player.in_game):
+		return
+	if event is InputEventMouseButton and event.pressed:
+		var mb := event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			PourStreamVisual.begin_pour_session(get_viewport(), true)
+			PourStreamVisual._scroll_hold_time = PourStreamVisual.POUR_SCROLL_HOLD_DURATION
+			var delta_step := PourStreamVisual.POUR_SCROLL_STEP if mb.button_index == MOUSE_BUTTON_WHEEL_UP else -PourStreamVisual.POUR_SCROLL_STEP
+			PourStreamVisual._adjust_manual_ratio(delta_step, get_viewport())
+			get_viewport().set_input_as_handled()
+			_pour()
+	elif event is InputEventKey and event.pressed and not event.echo:
+		if (InputMap.has_action("PourUp") and event.is_action_pressed("PourUp")) or (InputMap.has_action("PourDown") and event.is_action_pressed("PourDown")):
+			PourStreamVisual.begin_pour_session(get_viewport(), true)
+			get_viewport().set_input_as_handled()
+			_pour()
+
 func _on_area_3d_input_event(camera_node: Node, event: InputEvent, event_pos: Vector3, normal: Vector3, shape_idx: int) -> void:
 	var left_pressed: bool = event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed
 
@@ -262,7 +288,11 @@ func _get_pour_angle_degrees() -> float:
 
 # tips bottle sideways and addds liquid pixels into the glass while left click is held
 func _pour() -> void:
+	if is_pouring:
+		return
 	is_pouring = true
+	if not PourStreamVisual.is_pour_session_active():
+		PourStreamVisual.begin_pour_session(get_viewport(), false)
 	$CPUParticles3D.emitting = false
 	if GameState.player:
 		GameState.player._update_hand("holding")
@@ -287,8 +317,10 @@ func _pour() -> void:
 				last_sfx_ms = -1
 			await get_tree().create_timer(POUR_INTERVAL).timeout
 			if not is_inside_tree():
+				PourStreamVisual.end_pour_session()
 				return
 
+	PourStreamVisual.end_pour_session()
 	$CPUParticles3D.emitting = false
 	is_pouring = false
 	if is_instance_valid(_pour_stream):
@@ -325,6 +357,8 @@ func _in_game() -> void:
 		pouring_into._on_hover(false)
 
 func _out_of_game() -> void:
+	if is_pouring:
+		PourStreamVisual.end_pour_session()
 	in_game = false
 	visual_helper.set_mouth_monitoring(false)
 	is_pouring = false

@@ -23,6 +23,7 @@ var in_pour_zone: Glasses:
 	get:
 		return _snap_zone.active_glass
 var _is_pouring: bool = false
+var _cancel_requested: bool = false
 var _pour_stream: PourStreamVisual = null
 var _last_sfx_ms: int = -1
 
@@ -31,6 +32,19 @@ func _ready() -> void:
 	add_child(_pour_stream)
 	if is_instance_valid(keg_water_particle):
 		keg_water_particle.emitting = false
+
+func _exit_tree() -> void:
+	if _is_pouring:
+		PourStreamVisual.end_pour_session()
+
+func _input(event: InputEvent) -> void:
+	if not _is_pouring:
+		return
+	if get_tree().paused or GameState.is_dialogue_open:
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+		_cancel_requested = true
+		get_viewport().set_input_as_handled()
 
 func _snap_target() -> Node3D:
 	return snap_point if snap_point else pour_zone
@@ -64,7 +78,9 @@ func _get_beer_stream_target() -> Vector3:
 func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and not _is_pouring:
 		_is_pouring = true
+		_cancel_requested = false
 		_last_sfx_ms = -1
+		PourStreamVisual.begin_pour_session(get_viewport())
 		if is_instance_valid(keg_water_particle):
 			keg_water_particle.emitting = false
 		var focused_glass: Glasses = in_pour_zone
@@ -72,7 +88,7 @@ func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: V
 			focused_glass.set_fill_guides_visible(true)
 		var cam_rig: Camera3D = PourStreamVisual.focus_station_camera(self, "beer_camera_marker", 0.55)
 
-		while PourStreamVisual.is_pour_button_held() and is_inside_tree():
+		while PourStreamVisual.is_pour_button_held() and is_inside_tree() and not _cancel_requested:
 			if focused_glass != in_pour_zone:
 				if is_instance_valid(focused_glass):
 					focused_glass.set_fill_guides_visible(false)
@@ -90,8 +106,10 @@ func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: V
 			if not is_inside_tree():
 				if is_instance_valid(focused_glass):
 					focused_glass.set_fill_guides_visible(false)
+				PourStreamVisual.end_pour_session()
 				_is_pouring = false
 				return
+		PourStreamVisual.end_pour_session()
 		keg_sprite.rotation_degrees.x = KEG_IDLE_ROT_X
 		if is_instance_valid(keg_water_particle):
 			keg_water_particle.emitting = false
@@ -100,7 +118,8 @@ func _on_beer_keg_input_event(camera: Node, event: InputEvent, event_position: V
 		_is_pouring = false
 
 		if cam_rig:
-			await get_tree().create_timer(0.15).timeout
+			if not _cancel_requested:
+				await get_tree().create_timer(0.15).timeout
 			if not is_inside_tree():
 				if is_instance_valid(focused_glass):
 					focused_glass.set_fill_guides_visible(false)

@@ -32,6 +32,46 @@ const SPLASH_SIZE_MAX := 1.00
 const SPLASH_LIFE_MIN := 0.16
 const SPLASH_LIFE_MAX := 0.28
 
+const POUR_SCROLL_STEP := 0.10
+const POUR_SCROLL_HOLD_DURATION := 0.35
+const POUR_KEY_SPEED := 0.85
+
+class PourInputRuntime extends Node:
+	func _ready() -> void:
+		process_mode = Node.PROCESS_MODE_ALWAYS
+		process_priority = -75
+
+	func _process(delta: float) -> void:
+		if not PourStreamVisual._pour_session_active:
+			return
+		PourStreamVisual._scroll_hold_time = maxf(0.0, PourStreamVisual._scroll_hold_time - delta)
+		if SettingState.waiting_keybind or get_tree().paused or GameState.is_dialogue_open:
+			return
+		var vp := get_viewport()
+		if InputMap.has_action("PourUp") and Input.is_action_pressed("PourUp"):
+			PourStreamVisual._adjust_manual_ratio(PourStreamVisual.POUR_KEY_SPEED * delta, vp)
+		if InputMap.has_action("PourDown") and Input.is_action_pressed("PourDown"):
+			PourStreamVisual._adjust_manual_ratio(-PourStreamVisual.POUR_KEY_SPEED * delta, vp)
+
+	func _input(event: InputEvent) -> void:
+		if not PourStreamVisual._pour_session_active:
+			return
+		if SettingState.waiting_keybind or get_tree().paused or GameState.is_dialogue_open:
+			return
+		if event is InputEventMouseMotion:
+			if PourStreamVisual._use_manual_ratio and absf((event as InputEventMouseMotion).position.y - PourStreamVisual._last_mouse_y) > 8.0:
+				PourStreamVisual._use_manual_ratio = false
+		elif event is InputEventMouseButton and event.pressed:
+			var mb := event as InputEventMouseButton
+			if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
+				PourStreamVisual._adjust_manual_ratio(PourStreamVisual.POUR_SCROLL_STEP, get_viewport())
+				PourStreamVisual._scroll_hold_time = PourStreamVisual.POUR_SCROLL_HOLD_DURATION
+				get_viewport().set_input_as_handled()
+			elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+				PourStreamVisual._adjust_manual_ratio(-PourStreamVisual.POUR_SCROLL_STEP, get_viewport())
+				PourStreamVisual._scroll_hold_time = PourStreamVisual.POUR_SCROLL_HOLD_DURATION
+				get_viewport().set_input_as_handled()
+
 class SnapZoneHelper extends RefCounted:
 	var active_glass: Glasses = null
 	var glasses_in_area: Array[Glasses] = []
@@ -91,6 +131,13 @@ class SnapZoneHelper extends RefCounted:
 		glass._remove_displaying_list()
 
 static var _sprite_anchor_cache: Dictionary = {}
+static var _pour_runtime: PourInputRuntime = null
+static var _pour_session_active: bool = false
+static var _use_manual_ratio: bool = false
+static var _manual_pour_ratio: float = 0.5
+static var _last_mouse_y: float = 0.0
+static var _scroll_hold_time: float = 0.0
+
 var _mm_instance: MultiMeshInstance3D = null
 var _multi_mesh: MultiMesh = null
 var _p_pos: PackedVector3Array = PackedVector3Array()
@@ -122,10 +169,72 @@ var _arrival_vel: Vector3 = Vector3(0.0, -1.5, 0.0)
 var _spawn_accum: float = 0.0
 var _next_spawn_interval: float = 0.0
 
+static func install(host: Node) -> Node:
+	if not is_instance_valid(host):
+		return null
+	var existing := host.get_node_or_null("PourInputRuntime")
+	if is_instance_valid(existing):
+		_pour_runtime = existing as PourInputRuntime
+		return existing
+	var runtime := PourInputRuntime.new()
+	runtime.name = "PourInputRuntime"
+	host.add_child(runtime)
+	_pour_runtime = runtime
+	return runtime
+
+static func _ensure_runtime() -> void:
+	if is_instance_valid(_pour_runtime) and _pour_runtime.is_inside_tree():
+		return
+	var tree := Engine.get_main_loop() as SceneTree
+	if not tree or not tree.root:
+		return
+	var gs := tree.root.get_node_or_null("GameState")
+	if is_instance_valid(gs):
+		install(gs)
+	else:
+		install(tree.root)
+
+static func begin_pour_session(viewport: Viewport = null, keep_active: bool = false) -> void:
+	_ensure_runtime()
+	_pour_session_active = true
+	if not keep_active:
+		_use_manual_ratio = false
+		_scroll_hold_time = 0.0
+		_manual_pour_ratio = get_pour_height_ratio(viewport) if viewport else 0.5
+		if viewport:
+			_last_mouse_y = viewport.get_mouse_position().y
+
+static func end_pour_session() -> void:
+	_pour_session_active = false
+	_use_manual_ratio = false
+	_scroll_hold_time = 0.0
+
+static func is_pour_session_active() -> bool:
+	return _pour_session_active
+
+static func is_pour_trigger_active() -> bool:
+	if InputMap.has_action("PourUp") and Input.is_action_pressed("PourUp"):
+		return true
+	if InputMap.has_action("PourDown") and Input.is_action_pressed("PourDown"):
+		return true
+	return _scroll_hold_time > 0.0
+
+static func _adjust_manual_ratio(delta_ratio: float, viewport: Viewport = null) -> void:
+	if not _use_manual_ratio:
+		_manual_pour_ratio = get_pour_height_ratio(viewport) if viewport else 0.5
+		if viewport:
+			_last_mouse_y = viewport.get_mouse_position().y
+		_use_manual_ratio = true
+	_manual_pour_ratio = clampf(_manual_pour_ratio + delta_ratio, 0.0, 1.0)
+
 static func is_pour_button_held() -> bool:
-	return Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.get_action_strength("Left_click") > 0.0
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.get_action_strength("Left_click") > 0.0:
+		return true
+	return is_pour_trigger_active()
 
 static func get_pour_height_ratio(viewport: Viewport) -> float:
+	if _use_manual_ratio:
+		return clampf(_manual_pour_ratio, 0.0, 1.0)
 	if not viewport:
 		return 0.5
 	var vp_height: float = viewport.get_visible_rect().size.y

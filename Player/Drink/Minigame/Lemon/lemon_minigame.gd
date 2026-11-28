@@ -258,10 +258,7 @@ func _update_progress_label() -> void:
 func _update_hint_label() -> void:
 	if not is_instance_valid(_hint_label):
 		return
-	var msg := "Drag a straight line all the way through the green"
-	if _cuts_attempted == 0:
-		msg += "\nRight-click to cancel"
-	_hint_label.text = msg
+	_hint_label.text = "Drag a straight line all the way through the green\nRight-click to cancel"
 
 func _show_feedback(msg: String, col: Color) -> void:
 	if not is_instance_valid(_feedback_label):
@@ -340,8 +337,8 @@ func _input(event: InputEvent) -> void:
 				_evaluate_drag_cut(_drag_start, _drag_current)
 			get_viewport().set_input_as_handled()
 		elif mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
-			if _cuts_attempted == 0 and not _is_dragging:
-				_finish("cancelled", "", Color.WHITE)
+			_is_dragging = false
+			_finish("cancelled", "", Color.WHITE)
 			get_viewport().set_input_as_handled()
 	elif event is InputEventMouseMotion and _is_dragging:
 		_drag_current = (event as InputEventMouseMotion).position
