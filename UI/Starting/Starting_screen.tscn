@@ -361,7 +361,7 @@ tracks/1/keys = {
 "times": PackedFloat32Array(0, 0.45000002),
 "transitions": PackedFloat32Array(1, 1),
 "update": 0,
-"values": [Vector3(-0.1972222, 0, 0), Vector3(0, 0, 0)]
+"values": [Vector3(-0.1099557, 0, 0), Vector3(0, 0, 0)]
 }
 
 [sub_resource type="Animation" id="Animation_8bcmw"]
@@ -390,7 +390,7 @@ tracks/1/keys = {
 "times": PackedFloat32Array(0, 0.3, 0.75, 1.15, 1.5),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [Vector3(0, -1.5707964, 0), Vector3(0, -1.54, 0), Vector3(-0.06, -1.15, 0), Vector3(-0.14, -0.42, 0), Vector3(-0.1972222, 0, 0)]
+"values": [Vector3(0, -1.5707964, 0), Vector3(0, -1.54, 0), Vector3(-0.06, -1.15, 0), Vector3(-0.14, -0.42, 0), Vector3(-0.1099557, 0, 0)]
 }
 tracks/2/type = "value"
 tracks/2/imported = false
@@ -402,7 +402,7 @@ tracks/2/keys = {
 "times": PackedFloat32Array(0, 1.2, 1.5),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 0,
-"values": [Vector3(0.4023632, 1.85, 0.98), Vector3(0.4023632, 1.85, 0.98), Vector3(0.4023632, 2.913868, 0.921178)]
+"values": [Vector3(0.4023632, 1.85, 0.98), Vector3(0.4023632, 1.85, 0.98), Vector3(0.4023632, 2.97749, 0.910377)]
 }
 tracks/3/type = "value"
 tracks/3/imported = false
@@ -414,7 +414,7 @@ tracks/3/keys = {
 "times": PackedFloat32Array(0, 1.2, 1.5),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 0,
-"values": [Vector3(-0.38, 0, 0), Vector3(-0.38, 0, 0), Vector3(-0.1972222, 0, 0)]
+"values": [Vector3(-0.38, 0, 0), Vector3(-0.38, 0, 0), Vector3(-0.1099557, 0, 0)]
 }
 tracks/4/type = "value"
 tracks/4/imported = false
