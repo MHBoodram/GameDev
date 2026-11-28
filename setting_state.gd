@@ -6,8 +6,8 @@ const SHAKEN_MODE_SPLIT = "split"
 const SHAKEN_MODE_AVERAGED = "averaged"
 
 const CONTROL_KEYBIND_DEFS: Array[Dictionary] = [
-	{"action": "Up", "label": "Move Up"},
-	{"action": "Down", "label": "Move Down"},
+	{"action": "Up", "label": "Moving to Counter"},
+	{"action": "Down", "label": "Moving to Counter"},
 	{"action": "Left", "label": "Move Left"},
 	{"action": "Right", "label": "Move Right"},
 	{"action": "PourUp", "label": "Pour Up"},

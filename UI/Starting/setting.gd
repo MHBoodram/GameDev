@@ -7,23 +7,23 @@ func _ready() -> void:
 
 func _apply_ink_paper_theme() -> void:
 	var center := $CenterContainer as Control
-	var panel := $CenterContainer/PanelContainer as PanelContainer
-	var left_col := $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn
-	var right_col := $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn
+	var panel := $CenterContainer/MenuFrame/PanelContainer as PanelContainer
+	var left_col := $CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn
+	var right_col := $CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn
 	if is_instance_valid(center):
 		center.theme = InkTheme.get_theme()
 	if is_instance_valid(panel):
 		InkTheme.apply_panel_variant(panel, "cream", false, Vector4(10.0, 8.0, 10.0, 2.0))
 
 	for div_node in [
-		$CenterContainer/PanelContainer/MarginContainer/VBoxContainer/TopDivider,
+		$CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/TopDivider,
 		left_col.get_node_or_null("Video_Divider"),
 		left_col.get_node_or_null("Audio_Divider"),
 		right_col.get_node_or_null("Control_Divider"),
 	]:
 		if div_node is Control:
 			InkTheme.style_divider(div_node as Control, false)
-	var col_div := $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/ColumnDivider as Control
+	var col_div := $CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/ColumnDivider as Control
 	if is_instance_valid(col_div):
 		InkTheme.style_divider(col_div, true)
 
@@ -55,12 +55,12 @@ func _apply_ink_paper_theme() -> void:
 		if slider is HSlider:
 			InkTheme.apply_dithered_beer_slider(slider as HSlider)
 
-	var save_btn := $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/SaveQuit as Button
+	var save_btn := $CenterContainer/MenuFrame/SaveQuit as Button
 	if is_instance_valid(save_btn):
 		InkTheme.apply_button_variant(save_btn, "primary", false, 28)
 
 func _collect_keybind_buttons() -> Dictionary:
-	var scroll := $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls/KeybindsScroll as KeybindsScroll
+	var scroll := $CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls/KeybindsScroll as KeybindsScroll
 	if is_instance_valid(scroll):
 		return scroll.get_keybind_bindings()
 	return {
@@ -74,8 +74,8 @@ func _get_control_buttons() -> Dictionary:
 
 func _setting_dictionary_start() -> void:
 	var keybind_maps := _collect_keybind_buttons()
-	var left_col := $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn
-	var right_col := $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn
+	var left_col := $CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn
+	var right_col := $CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn
 	SettingState.bind_settings_panel({
 		"master_slider": left_col.get_node("Audio_Container/Master/Master_slider"),
 		"ui_slider": left_col.get_node("Audio_Container/UI/UI_slider"),

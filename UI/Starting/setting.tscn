@@ -179,23 +179,31 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = SubResource("Theme_vvki5")
 
-[node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
+[node name="MenuFrame" type="Control" parent="CenterContainer"]
 custom_minimum_size = Vector2(1080, 620)
 layout_mode = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer/MenuFrame"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/MenuFrame/PanelContainer"]
 layout_mode = 2
 theme_override_constants/margin_left = 28
 theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 28
-theme_override_constants/margin_bottom = 0
+theme_override_constants/margin_bottom = 28
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer" unique_id=1717091295]
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer" unique_id=1717091295]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=88548650]
+[node name="Title" type="Label" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer" unique_id=88548650]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
 theme_override_constants/outline_size = 0
@@ -204,22 +212,22 @@ theme_override_font_sizes/font_size = 54
 text = "Settings"
 horizontal_alignment = 1
 
-[node name="TopDivider" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="TopDivider" type="ColorRect" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
 color = Color(0.117647, 0.101961, 0.086275, 0.85)
 
-[node name="Columns" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="Columns" type="HBoxContainer" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 24
 
-[node name="LeftColumn" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns"]
+[node name="LeftColumn" type="VBoxContainer" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="Video_Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn" unique_id=1532746307]
+[node name="Video_Label" type="Label" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn" unique_id=1532746307]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
 theme_override_constants/outline_size = 0
@@ -228,33 +236,33 @@ theme_override_font_sizes/font_size = 40
 text = "Video"
 horizontal_alignment = 1
 
-[node name="Video_Divider" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn"]
+[node name="Video_Divider" type="ColorRect" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn"]
 custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
 color = Color(0.117647, 0.101961, 0.086275, 0.45)
 
-[node name="Video" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn" unique_id=1064638581]
+[node name="Video" type="VBoxContainer" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn" unique_id=1064638581]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Full_Screen" type="CheckButton" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video" unique_id=1565457149]
+[node name="Full_Screen" type="CheckButton" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video" unique_id=1565457149]
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 26
 text = "Full Screen"
 
-[node name="World_Environment" type="CheckButton" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video" unique_id=1565457150]
+[node name="World_Environment" type="CheckButton" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video" unique_id=1565457150]
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 26
 button_pressed = true
 text = "World Environment"
 
-[node name="Shaken_Receipt" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video" unique_id=1565457151]
+[node name="Shaken_Receipt" type="HBoxContainer" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video" unique_id=1565457151]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Shaken_Receipt" unique_id=1565457152]
+[node name="Label" type="Label" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Shaken_Receipt" unique_id=1565457152]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
@@ -263,12 +271,12 @@ theme_override_fonts/font = ExtResource("1_jiptt")
 theme_override_font_sizes/font_size = 26
 text = "Shaken Receipt"
 
-[node name="Shaken_Receipt_Option" type="OptionButton" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Shaken_Receipt" unique_id=1565457153]
+[node name="Shaken_Receipt_Option" type="OptionButton" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Shaken_Receipt" unique_id=1565457153]
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 24
 
-[node name="Audio_Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn" unique_id=815385343]
+[node name="Audio_Label" type="Label" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn" unique_id=815385343]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
 theme_override_constants/outline_size = 0
@@ -277,20 +285,20 @@ theme_override_font_sizes/font_size = 40
 text = "Audio"
 horizontal_alignment = 1
 
-[node name="Audio_Divider" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn"]
+[node name="Audio_Divider" type="ColorRect" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn"]
 custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
 color = Color(0.117647, 0.101961, 0.086275, 0.45)
 
-[node name="Audio_Container" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn" unique_id=204822112]
+[node name="Audio_Container" type="VBoxContainer" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn" unique_id=204822112]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Master" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container" unique_id=563278775]
+[node name="Master" type="HBoxContainer" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container" unique_id=563278775]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Master" unique_id=282188916]
+[node name="Label" type="Label" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Master" unique_id=282188916]
 custom_minimum_size = Vector2(115, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
@@ -299,7 +307,7 @@ theme_override_fonts/font = ExtResource("1_jiptt")
 theme_override_font_sizes/font_size = 26
 text = "Master"
 
-[node name="Master_slider" type="HSlider" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Master" unique_id=224350312]
+[node name="Master_slider" type="HSlider" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Master" unique_id=224350312]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -312,11 +320,11 @@ theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_8hy2
 min_value = -24.0
 max_value = 24.0
 
-[node name="UI" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container" unique_id=495278573]
+[node name="UI" type="HBoxContainer" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container" unique_id=495278573]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/UI" unique_id=486948423]
+[node name="Label" type="Label" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/UI" unique_id=486948423]
 custom_minimum_size = Vector2(115, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
@@ -325,7 +333,7 @@ theme_override_fonts/font = ExtResource("1_jiptt")
 theme_override_font_sizes/font_size = 26
 text = "UI / SFX"
 
-[node name="UI_slider" type="HSlider" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/UI" unique_id=1942127309]
+[node name="UI_slider" type="HSlider" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/UI" unique_id=1942127309]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -338,12 +346,12 @@ theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_8hy2
 min_value = -24.0
 max_value = 24.0
 
-[node name="SFX" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container" unique_id=1210301951]
+[node name="SFX" type="HBoxContainer" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container" unique_id=1210301951]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/SFX" unique_id=144430740]
+[node name="Label" type="Label" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/SFX" unique_id=144430740]
 custom_minimum_size = Vector2(115, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
@@ -352,7 +360,7 @@ theme_override_fonts/font = ExtResource("1_jiptt")
 theme_override_font_sizes/font_size = 26
 text = "SFX"
 
-[node name="SFX_slider" type="HSlider" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/SFX" unique_id=34580196]
+[node name="SFX_slider" type="HSlider" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/SFX" unique_id=34580196]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -365,11 +373,11 @@ theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_8hy2
 min_value = -24.0
 max_value = 24.0
 
-[node name="Music" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container" unique_id=1719718920]
+[node name="Music" type="HBoxContainer" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container" unique_id=1719718920]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Music" unique_id=308845476]
+[node name="Label" type="Label" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Music" unique_id=308845476]
 custom_minimum_size = Vector2(115, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
@@ -378,7 +386,7 @@ theme_override_fonts/font = ExtResource("1_jiptt")
 theme_override_font_sizes/font_size = 26
 text = "Music"
 
-[node name="Music_slider" type="HSlider" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Music" unique_id=1568376555]
+[node name="Music_slider" type="HSlider" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Music" unique_id=1568376555]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -391,24 +399,24 @@ theme_override_styles/grabber_area_highlight = SubResource("StyleBoxTexture_8hy2
 min_value = -24.0
 max_value = 24.0
 
-[node name="Audio_reset" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container" unique_id=1035674778]
+[node name="Audio_reset" type="Button" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container" unique_id=1035674778]
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 26
 text = "Reset Audio to Default"
 autowrap_mode = 2
 
-[node name="ColumnDivider" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns"]
+[node name="ColumnDivider" type="ColorRect" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns"]
 custom_minimum_size = Vector2(4, 0)
 layout_mode = 2
 color = Color(0.117647, 0.101961, 0.086275, 0.3)
 
-[node name="RightColumn" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns"]
+[node name="RightColumn" type="VBoxContainer" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="Control_Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn" unique_id=954628279]
+[node name="Control_Label" type="Label" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn" unique_id=954628279]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.117647, 0.101961, 0.086275, 1)
 theme_override_constants/outline_size = 0
@@ -417,23 +425,23 @@ theme_override_font_sizes/font_size = 40
 text = "Controls"
 horizontal_alignment = 1
 
-[node name="Control_Divider" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn"]
+[node name="Control_Divider" type="ColorRect" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn"]
 custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
 color = Color(0.117647, 0.101961, 0.086275, 0.45)
 
-[node name="Controls" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn" unique_id=201704516]
+[node name="Controls" type="VBoxContainer" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn" unique_id=201704516]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 8
 
-[node name="Invert_Pour" type="CheckButton" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls" unique_id=1763667782]
+[node name="Invert_Pour" type="CheckButton" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls" unique_id=1763667782]
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 26
 text = "Invert Pouring Angle"
 
-[node name="KeybindsScroll" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls" instance=ExtResource("5_kbscroll")]
+[node name="KeybindsScroll" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls" instance=ExtResource("5_kbscroll")]
 custom_minimum_size = Vector2(0, 260)
 layout_mode = 2
 label_font_size = 26
@@ -442,17 +450,28 @@ button_min_size = Vector2(102, 32)
 icon_button_size = Vector2(32, 32)
 action_icon_size = Vector2(22, 22)
 
-[node name="Control_reset" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls" unique_id=1370199940]
+[node name="Control_reset" type="Button" parent="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls" unique_id=1370199940]
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 26
 text = "Reset All Keybinds"
 autowrap_mode = 2
 
-[node name="SaveQuit" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=167641846]
+[node name="SaveQuit" type="Button" parent="CenterContainer/MenuFrame" unique_id=167641846]
 custom_minimum_size = Vector2(180, 40)
-layout_mode = 2
-size_flags_horizontal = 4
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -90.0
+offset_top = -20.0
+offset_right = 90.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(90, 20)
 focus_mode = 0
 theme_override_font_sizes/font_size = 28
 text = "Save & Quit"
@@ -460,24 +479,24 @@ text = "Save & Quit"
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=166343418]
 libraries/ = SubResource("AnimationLibrary_vvki5")
 
-[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Full_Screen" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Full_Screen" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/World_Environment" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/World_Environment" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Shaken_Receipt/Shaken_Receipt_Option" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Shaken_Receipt/Shaken_Receipt_Option" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Master/Master_slider" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Master/Master_slider" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/UI/UI_slider" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/UI/UI_slider" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Music/Music_slider" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Music/Music_slider" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Audio_reset" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Audio_reset" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls/Invert_Pour" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls/Invert_Pour" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls/Control_reset" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls/Control_reset" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="mouse_entered" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/SaveQuit" to="." method="_on_master_slider_mouse_entered"]
-[connection signal="mouse_exited" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/SaveQuit" to="." method="_on_master_slider_mouse_exited"]
-[connection signal="pressed" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/SaveQuit" to="." method="_on_save_quit_pressed"]
+[connection signal="mouse_entered" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Full_Screen" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Full_Screen" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/World_Environment" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/World_Environment" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Shaken_Receipt/Shaken_Receipt_Option" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Video/Shaken_Receipt/Shaken_Receipt_Option" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Master/Master_slider" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Master/Master_slider" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/UI/UI_slider" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/UI/UI_slider" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Music/Music_slider" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Music/Music_slider" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Audio_reset" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/LeftColumn/Audio_Container/Audio_reset" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls/Invert_Pour" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls/Invert_Pour" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls/Control_reset" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/MenuFrame/PanelContainer/MarginContainer/VBoxContainer/Columns/RightColumn/Controls/Control_reset" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/MenuFrame/SaveQuit" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/MenuFrame/SaveQuit" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="pressed" from="CenterContainer/MenuFrame/SaveQuit" to="." method="_on_save_quit_pressed"]
