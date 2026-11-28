@@ -22,9 +22,8 @@ shader_parameter/sparkle_density = 0.7
 shader_parameter/glass_reflection_strength = 0.28
 shader_parameter/meniscus_curve = 0.03
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_psbjw"]
-radius = 0.45947266
-height = 1.2072754
+[sub_resource type="BoxShape3D" id="BoxShape3D_psbjw"]
+size = Vector3(1, 1, 0.02)
 
 [node name="Beer_cup" type="Area3D" unique_id=1635076155 node_paths=PackedStringArray("area_body", "sprite") groups=["glass"]]
 transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0, 0)
@@ -60,8 +59,7 @@ texture_filter = 0
 texture = ExtResource("5_pq6lo")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=763278799]
-transform = Transform3D(1, 0, 0, 0, 0.99999964, -1.4901161e-07, 0, 1.4901161e-07, 0.99999964, 0, 0, 0)
-shape = SubResource("CapsuleShape3D_psbjw")
+shape = SubResource("BoxShape3D_psbjw")
 
 [connection signal="area_entered" from="." to="." method="_on_area_3d_area_entered"]
 [connection signal="input_event" from="." to="." method="_on_area_3d_input_event"]

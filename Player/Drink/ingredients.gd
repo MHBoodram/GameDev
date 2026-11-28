@@ -10,12 +10,16 @@ static var active_dragging_item: Ingredients = null
 static var current_hovered_target: Ingredients = null
 static var current_hovered_npc: Base_NPC = null
 static var _cached_query: PhysicsRayQueryParameters3D = null
+static var _cup_opaque_rect_cache: Dictionary = {}
+static var _cup_picker_runtime: _CupPickerRuntime = null
+static var _visual_hovered_cup: Ingredients = null
 
 static func reset_interaction_state() -> void:
 	active_selected_item = null
 	active_dragging_item = null
 	current_hovered_target = null
 	current_hovered_npc = null
+	_visual_hovered_cup = null
 
 var is_balls_dragging: bool = false:
 	set(value):
@@ -61,6 +65,450 @@ var _mode_transition_elapsed: float = 0.0
 var _mode_transition_duration: float = 0.35
 var _mode_transition_start_pos: Vector3 = Vector3.ZERO
 
+var _cup_hitbox_min: Vector2 = Vector2.ZERO
+var _cup_hitbox_max: Vector2 = Vector2.ZERO
+var _cup_hitbox_local_center: Vector3 = Vector3.ZERO
+var _cup_inside_base_pos: Vector3 = Vector3.ZERO
+var _cup_inside_base_scale: Vector3 = Vector3.ONE
+var _has_cup_hitbox: bool = false
+
+
+class _CupPickerRuntime extends Node:
+	func _ready() -> void:
+		process_mode = Node.PROCESS_MODE_ALWAYS
+		process_priority = -80
+
+	func _process(_delta: float) -> void:
+		Ingredients._sync_visual_cup_hover(get_viewport())
+
+	func _input(event: InputEvent) -> void:
+		if event is InputEventMouseButton:
+			var mb := event as InputEventMouseButton
+			if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
+				Ingredients._handle_visual_cup_click(get_viewport(), mb)
+
+
+static func _ensure_cup_picker_runtime() -> void:
+	if is_instance_valid(_cup_picker_runtime) and _cup_picker_runtime.is_inside_tree():
+		return
+	var tree := Engine.get_main_loop() as SceneTree
+	if not tree or not tree.root:
+		return
+	var host: Node = tree.root.get_node_or_null("GameState")
+	if not is_instance_valid(host):
+		host = tree.root
+	var existing := host.get_node_or_null("CupPickerRuntime")
+	if is_instance_valid(existing) and existing is _CupPickerRuntime:
+		_cup_picker_runtime = existing as _CupPickerRuntime
+		return
+	var runtime := _CupPickerRuntime.new()
+	runtime.name = "CupPickerRuntime"
+	host.add_child(runtime)
+	_cup_picker_runtime = runtime
+
+
+static func _find_fisheye_node(viewport: Viewport) -> CanvasItem:
+	if GameState and is_instance_valid(GameState.gameplay_ui):
+		var fe := GameState.gameplay_ui.get_node_or_null("FishEye") as CanvasItem
+		if is_instance_valid(fe):
+			return fe
+	if is_instance_valid(viewport) and viewport.get_tree() and viewport.get_tree().current_scene:
+		var found := viewport.get_tree().current_scene.find_child("FishEye", true, false) as CanvasItem
+		if is_instance_valid(found):
+			return found
+	return null
+
+
+static func _unwarp_fisheye_screen_pos(viewport: Viewport, screen_pos: Vector2) -> Vector2:
+	if not is_instance_valid(viewport):
+		return screen_pos
+	var vp_size := viewport.get_visible_rect().size
+	if vp_size.x <= 1.0 or vp_size.y <= 1.0:
+		return screen_pos
+	var fe := _find_fisheye_node(viewport)
+	if not is_instance_valid(fe) or not fe.is_visible_in_tree():
+		return screen_pos
+	var mat := fe.material as ShaderMaterial
+	if mat == null:
+		return screen_pos
+	var raw_power: Variant = mat.get_shader_parameter("effect_amount")
+	var power: float = float(raw_power) if raw_power != null else 1.0
+	if is_zero_approx(power):
+		return screen_pos
+
+	var prop := vp_size.x / vp_size.y
+	var p := Vector2(screen_pos.x / vp_size.x, screen_pos.y / vp_size.x)
+	var m := Vector2(0.5, 0.5 / prop)
+	var d := p - m
+	var r := d.length()
+	if r <= 0.000001:
+		return screen_pos
+
+	var uv := p
+	if power > 0.0:
+		var bind := m.length()
+		var denom := tan(bind * power)
+		if absf(denom) <= 0.000001:
+			return screen_pos
+		var rp := clampf(r * power, -1.55, 1.55)
+		uv = m + (d / r) * tan(rp) * bind / denom
+	else:
+		var bind := m.x if prop < 1.0 else m.y
+		var denom := atan(-power * bind * 10.0)
+		if absf(denom) <= 0.000001:
+			return screen_pos
+		uv = m + (d / r) * atan(r * -power * 10.0) * bind / denom
+
+	uv.y *= prop
+	return Vector2(uv.x * vp_size.x, uv.y * vp_size.y)
+
+
+static func _compute_cup_opaque_rect(s: Sprite3D) -> Variant:
+	if not is_instance_valid(s):
+		return null
+	var dims: Rect2 = s.get_item_rect()
+	if dims.size.x <= 0.0 or dims.size.y <= 0.0:
+		return null
+
+	var pad_left: float = 0.0
+	var pad_right: float = 0.0
+	var pad_bottom: float = 0.0
+	var pad_top: float = 0.0
+
+	if s.texture != null and s.hframes == 1 and s.vframes == 1 and not s.region_enabled:
+		var tex_id: int = s.texture.get_rid().get_id()
+		var used_rect := Rect2i()
+		var tex_size := Vector2i.ZERO
+		if _cup_opaque_rect_cache.has(tex_id):
+			var cached: Dictionary = _cup_opaque_rect_cache[tex_id]
+			used_rect = cached["used"]
+			tex_size = cached["size"]
+		else:
+			var img: Image = s.texture.get_image()
+			if img != null and not img.is_empty():
+				if img.is_compressed():
+					img.decompress()
+				tex_size = img.get_size()
+				var w := tex_size.x
+				var h := tex_size.y
+				var min_x := w
+				var max_x := -1
+				var min_y := h
+				var max_y := -1
+				for y in h:
+					for x in w:
+						if img.get_pixel(x, y).a > 0.05:
+							if x < min_x:
+								min_x = x
+							if x > max_x:
+								max_x = x
+							if y < min_y:
+								min_y = y
+							if y > max_y:
+								max_y = y
+				if max_x >= min_x and max_y >= min_y:
+					used_rect = Rect2i(min_x, min_y, max_x - min_x + 1, max_y - min_y + 1)
+				else:
+					used_rect = img.get_used_rect()
+			_cup_opaque_rect_cache[tex_id] = {"used": used_rect, "size": tex_size}
+
+		if used_rect.size.x > 0 and used_rect.size.y > 0 and tex_size.x > 0 and tex_size.y > 0:
+			var sx: float = dims.size.x / float(tex_size.x)
+			var sy: float = dims.size.y / float(tex_size.y)
+			pad_left = float(tex_size.x - used_rect.end.x if s.flip_h else used_rect.position.x) * sx
+			pad_right = float(used_rect.position.x if s.flip_h else tex_size.x - used_rect.end.x) * sx
+			pad_bottom = float(used_rect.position.y if s.flip_v else tex_size.y - used_rect.end.y) * sy
+			pad_top = float(tex_size.y - used_rect.end.y if s.flip_v else used_rect.position.y) * sy
+
+	var ps: float = s.pixel_size
+	var min_lx: float = (dims.position.x + pad_left) * ps
+	var max_lx: float = (dims.end.x - pad_right) * ps
+	var min_ly: float = (dims.position.y + pad_bottom) * ps
+	var max_ly: float = (dims.end.y - pad_top) * ps
+	return Rect2(min_lx, min_ly, maxf(max_lx - min_lx, 0.001), maxf(max_ly - min_ly, 0.001))
+
+
+func _init_cup_2d_hitbox() -> void:
+	if area_body == null:
+		area_body = get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if not is_instance_valid(area_body):
+		return
+
+	var visual: Sprite3D = get("sprite") as Sprite3D
+	if not is_instance_valid(visual):
+		visual = get_node_or_null("Inside") as Sprite3D
+	if not is_instance_valid(visual):
+		return
+
+	_cup_inside_base_pos = visual.position
+	_cup_inside_base_scale = visual.scale
+
+	var combined_min := Vector2(INF, INF)
+	var combined_max := Vector2(-INF, -INF)
+	var has_rect := false
+
+	var in_rect = _compute_cup_opaque_rect(visual)
+	if in_rect is Rect2:
+		var r := in_rect as Rect2
+		combined_min = r.position
+		combined_max = r.end
+		has_rect = true
+
+	var center_z := 0.0
+	var outside_sp := visual.get_node_or_null("Outside") as Sprite3D
+	var out_rect = _compute_cup_opaque_rect(outside_sp)
+	if out_rect is Rect2:
+		center_z = outside_sp.position.z * 0.5
+		var r_out := out_rect as Rect2
+		var out_xf := outside_sp.transform
+		var corners: Array[Vector3] = [
+			out_xf * Vector3(r_out.position.x, r_out.position.y, 0.0),
+			out_xf * Vector3(r_out.end.x, r_out.position.y, 0.0),
+			out_xf * Vector3(r_out.position.x, r_out.end.y, 0.0),
+			out_xf * Vector3(r_out.end.x, r_out.end.y, 0.0),
+		]
+		for c in corners:
+			if not has_rect:
+				combined_min = Vector2(c.x, c.y)
+				combined_max = Vector2(c.x, c.y)
+				has_rect = true
+			else:
+				combined_min.x = minf(combined_min.x, c.x)
+				combined_min.y = minf(combined_min.y, c.y)
+				combined_max.x = maxf(combined_max.x, c.x)
+				combined_max.y = maxf(combined_max.y, c.y)
+
+	if not has_rect:
+		return
+
+	var min_x := minf(combined_min.x * _cup_inside_base_scale.x, combined_max.x * _cup_inside_base_scale.x)
+	var max_x := maxf(combined_min.x * _cup_inside_base_scale.x, combined_max.x * _cup_inside_base_scale.x)
+	var min_y := minf(combined_min.y * _cup_inside_base_scale.y, combined_max.y * _cup_inside_base_scale.y)
+	var max_y := maxf(combined_min.y * _cup_inside_base_scale.y, combined_max.y * _cup_inside_base_scale.y)
+
+	_cup_hitbox_min = Vector2(min_x, min_y)
+	_cup_hitbox_max = Vector2(max_x, max_y)
+	_cup_hitbox_local_center = Vector3((min_x + max_x) * 0.5, (min_y + max_y) * 0.5, center_z * _cup_inside_base_scale.z)
+	_has_cup_hitbox = true
+
+	var box := area_body.shape as BoxShape3D
+	if box == null:
+		box = BoxShape3D.new()
+		area_body.shape = box
+	elif not box.has_meta("_unique_cup_hitbox"):
+		box = box.duplicate() as BoxShape3D
+		area_body.shape = box
+	box.set_meta("_unique_cup_hitbox", true)
+	box.size = Vector3(maxf(max_x - min_x, 0.01), maxf(max_y - min_y, 0.01), 0.12)
+
+	_sync_cup_2d_hitbox_transform()
+
+
+func _sync_cup_2d_hitbox_transform() -> void:
+	if not _has_cup_hitbox or not is_instance_valid(area_body):
+		return
+	var visual: Node3D = get("sprite") as Node3D
+	if not is_instance_valid(visual):
+		visual = get_node_or_null("Inside") as Node3D
+	if not is_instance_valid(visual):
+		return
+	var rot_basis := visual.transform.basis.orthonormalized()
+	area_body.transform = Transform3D(rot_basis, _cup_inside_base_pos + rot_basis * _cup_hitbox_local_center)
+
+
+func _get_cup_visual_hit(viewport: Viewport, screen_pos: Vector2) -> Dictionary:
+	if not _has_cup_hitbox or not is_inside_tree() or not is_visible_in_tree() or is_preview_only:
+		return {}
+	if "is_consumed" in self and bool(get("is_consumed")):
+		return {}
+	if "is_being_served" in self and bool(get("is_being_served")):
+		return {}
+	if "is_delivering" in self and bool(get("is_delivering")):
+		return {}
+
+	var cam := camera if is_instance_valid(camera) else viewport.get_camera_3d()
+	if not is_instance_valid(cam):
+		return {}
+	var visual: Node3D = get("sprite") as Node3D
+	if not is_instance_valid(visual):
+		visual = get_node_or_null("Inside") as Node3D
+	if not is_instance_valid(visual) or not visual.is_inside_tree():
+		return {}
+
+	var ray_pos := _unwarp_fisheye_screen_pos(viewport, screen_pos)
+	var from := cam.project_ray_origin(ray_pos)
+	var dir := cam.project_ray_normal(ray_pos)
+
+	var rot_basis := visual.transform.basis.orthonormalized()
+	var plane_point_world := global_transform * (_cup_inside_base_pos + rot_basis * _cup_hitbox_local_center)
+	var plane_normal_world := (global_transform.basis * rot_basis.z).normalized()
+	if plane_normal_world.length_squared() < 0.0001:
+		return {}
+
+	var hit = Plane(plane_normal_world, plane_point_world).intersects_ray(from, dir)
+	if hit == null:
+		return {}
+	var hit_world := hit as Vector3
+	if (hit_world - from).dot(dir) <= 0.0:
+		return {}
+
+	var cup_local := global_transform.affine_inverse() * hit_world
+	var rel := rot_basis.inverse() * (cup_local - _cup_inside_base_pos)
+	if (
+		rel.x >= _cup_hitbox_min.x
+		and rel.x <= _cup_hitbox_max.x
+		and rel.y >= _cup_hitbox_min.y
+		and rel.y <= _cup_hitbox_max.y
+	):
+		return {
+			"pos": hit_world,
+			"normal": plane_normal_world,
+			"distance": from.distance_to(hit_world),
+			"ray_from": from,
+			"ray_dir": dir,
+		}
+	return {}
+
+
+static func _pick_cup_hit_at_screen_pos(viewport: Viewport, screen_pos: Vector2, exclude_rid: RID = RID()) -> Dictionary:
+	if not is_instance_valid(viewport):
+		return {}
+	var tree := viewport.get_tree()
+	if tree == null:
+		return {}
+	var best_hit: Dictionary = {}
+	var best_dist := INF
+	for node in tree.get_nodes_in_group("glass"):
+		if not (node is Ingredients):
+			continue
+		var cup := node as Ingredients
+		if not is_instance_valid(cup) or not cup.is_inside_tree():
+			continue
+		if exclude_rid.is_valid() and cup.get_rid() == exclude_rid:
+			continue
+		var hit_data := cup._get_cup_visual_hit(viewport, screen_pos)
+		if hit_data.is_empty():
+			continue
+		var dist := float(hit_data["distance"])
+		if dist < best_dist:
+			best_dist = dist
+			best_hit = hit_data
+			best_hit["cup"] = cup
+	return best_hit
+
+
+static func _has_closer_pickable_blocker(viewport: Viewport, from: Vector3, dir: Vector3, max_dist: float) -> bool:
+	var cam := viewport.get_camera_3d()
+	if not is_instance_valid(cam):
+		return false
+	var space := cam.get_world_3d().direct_space_state
+	var query := PhysicsRayQueryParameters3D.new()
+	query.collide_with_areas = true
+	query.collide_with_bodies = false
+	query.from = from
+	query.to = from + dir * maxf(max_dist, 0.01)
+	var excluded: Array[RID] = []
+	for _step in 6:
+		query.exclude = excluded
+		var hit := space.intersect_ray(query)
+		if hit.is_empty():
+			return false
+		var col: Object = hit.get("collider")
+		if col is Glasses:
+			excluded.append((col as CollisionObject3D).get_rid())
+			continue
+		if col is CollisionObject3D:
+			var co := col as CollisionObject3D
+			if not co.input_ray_pickable:
+				excluded.append(co.get_rid())
+				continue
+			return from.distance_to(hit["position"] as Vector3) < max_dist - 0.005
+		return false
+	return false
+
+
+static func _is_cup_picking_blocked(viewport: Viewport) -> bool:
+	if not is_instance_valid(viewport):
+		return true
+	var tree := viewport.get_tree()
+	if tree == null or tree.paused:
+		return true
+	if GameState:
+		if GameState.is_dialogue_open:
+			return true
+		if is_instance_valid(GameState.pause_menu) and GameState.pause_menu.visible:
+			return true
+		if is_instance_valid(GameState.debug_menu) and GameState.debug_menu.visible:
+			var dbg_box := GameState.debug_menu.get_node_or_null("TextureRect") as Control
+			if is_instance_valid(dbg_box) and dbg_box.get_global_rect().has_point(viewport.get_mouse_position()):
+				return true
+		if GameState.minigame_host and GameState.minigame_host.is_minigame_active:
+			return true
+		if is_instance_valid(GameState.player) and "in_game" in GameState.player and GameState.player.in_game:
+			return true
+		if is_instance_valid(GameState.gameplay_ui):
+			var tc := GameState.gameplay_ui.get_node_or_null("ToolCircle") as Control
+			if is_instance_valid(tc) and tc.visible:
+				return true
+	if ShakerMinigame.active:
+		return true
+	var hovered_ctrl := viewport.gui_get_hovered_control()
+	if is_instance_valid(hovered_ctrl) and hovered_ctrl.is_visible_in_tree():
+		return true
+	return false
+
+
+static func _clear_visual_cup_hover() -> void:
+	if is_instance_valid(_visual_hovered_cup) and _visual_hovered_cup.is_inside_tree():
+		var old_cup := _visual_hovered_cup
+		_visual_hovered_cup = null
+		old_cup._on_area_3d_mouse_exited()
+		if old_cup == active_dragging_item:
+			old_cup.set_highlight(false)
+	else:
+		_visual_hovered_cup = null
+
+
+static func _sync_visual_cup_hover(viewport: Viewport) -> void:
+	if not is_instance_valid(viewport):
+		_clear_visual_cup_hover()
+		return
+	var tree := viewport.get_tree()
+	if tree == null or tree.get_nodes_in_group("glass").is_empty():
+		_clear_visual_cup_hover()
+		return
+	if active_dragging_item != null or _is_cup_picking_blocked(viewport):
+		_clear_visual_cup_hover()
+		return
+
+	var target_cup: Ingredients = null
+	var hit_data := _pick_cup_hit_at_screen_pos(viewport, viewport.get_mouse_position())
+	if not hit_data.is_empty():
+		if not _has_closer_pickable_blocker(viewport, hit_data["ray_from"] as Vector3, hit_data["ray_dir"] as Vector3, float(hit_data["distance"])):
+			target_cup = hit_data["cup"] as Ingredients
+
+	if target_cup != _visual_hovered_cup:
+		_clear_visual_cup_hover()
+		_visual_hovered_cup = target_cup
+		if is_instance_valid(_visual_hovered_cup):
+			_visual_hovered_cup._on_area_3d_mouse_entered()
+
+
+static func _handle_visual_cup_click(viewport: Viewport, mb: InputEventMouseButton) -> void:
+	if not is_instance_valid(viewport) or active_dragging_item != null or _is_cup_picking_blocked(viewport):
+		return
+	var hit_data := _pick_cup_hit_at_screen_pos(viewport, viewport.get_mouse_position())
+	if hit_data.is_empty():
+		return
+	var cup := hit_data["cup"] as Ingredients
+	if not is_instance_valid(cup) or cup._is_drag_blocked():
+		return
+	if _has_closer_pickable_blocker(viewport, hit_data["ray_from"] as Vector3, hit_data["ray_dir"] as Vector3, float(hit_data["distance"])):
+		return
+	var cam_ref := cup.camera if is_instance_valid(cup.camera) else viewport.get_camera_3d()
+	cup._on_area_3d_input_event(cam_ref, mb, hit_data["pos"] as Vector3, hit_data["normal"] as Vector3, 0)
+
+
 func _ready() -> void:
 	if not is_preview_only:
 		add_to_group("interactable")
@@ -74,6 +522,11 @@ func _ready() -> void:
 	_cache_visual_nodes()
 	_setup_render_priority()
 	ready()
+	if self is Glasses:
+		input_ray_pickable = false
+		if not is_preview_only:
+			_ensure_cup_picker_runtime()
+			_init_cup_2d_hitbox()
 
 func _setup_render_priority() -> void:
 	for node in find_children("*", "VisualInstance3D", true, false):
@@ -381,6 +834,8 @@ func _process(delta: float) -> void:
 				GameState.player._update_hand("holding")
 
 	if _is_drag_blocked():
+		if _has_cup_hitbox:
+			_sync_cup_2d_hitbox_transform()
 		return
 
 	if is_balls_dragging:
@@ -409,6 +864,9 @@ func _process(delta: float) -> void:
 		_update_drag_hover()
 	elif is_working_area_item() and camera:
 		_face_camera()
+
+	if _has_cup_hitbox:
+		_sync_cup_2d_hitbox_transform()
 
 	if get_drag_mode() == DragMode.COLLISION and not _is_returning_to_counter and not _is_mode_transitioning:
 		if is_working_area_item():
@@ -461,8 +919,9 @@ static func _get_ray_collider_under_mouse(viewport: Viewport, exclude_rid: RID =
 	if not cam:
 		return null
 	var mouse_pos := viewport.get_mouse_position()
-	var from := cam.project_ray_origin(mouse_pos)
-	var to := from + cam.project_ray_normal(mouse_pos) * 100.0
+	var ray_pos := _unwarp_fisheye_screen_pos(viewport, mouse_pos)
+	var from := cam.project_ray_origin(ray_pos)
+	var to := from + cam.project_ray_normal(ray_pos) * 100.0
 
 	if not _cached_query:
 		_cached_query = PhysicsRayQueryParameters3D.new()
@@ -474,7 +933,22 @@ static func _get_ray_collider_under_mouse(viewport: Viewport, exclude_rid: RID =
 	_cached_query.exclude = [exclude_rid] if exclude_rid.is_valid() else []
 
 	var result := cam.get_world_3d().direct_space_state.intersect_ray(_cached_query)
-	return result.collider if result else null
+	var phys_collider: Object = result.collider if result else null
+	var phys_dist: float = from.distance_to(result.position as Vector3) if result else INF
+
+	var cup_hit: Dictionary = _pick_cup_hit_at_screen_pos(viewport, mouse_pos, exclude_rid)
+	if not cup_hit.is_empty():
+		var cup := cup_hit["cup"] as Ingredients
+		var cup_dist := float(cup_hit["distance"])
+		if (
+			phys_collider == null
+			or phys_collider is Glasses
+			or not (phys_collider is CollisionObject3D and (phys_collider as CollisionObject3D).input_ray_pickable)
+			or cup_dist <= phys_dist
+		):
+			return cup
+
+	return phys_collider
 
 static func get_interactable_under_mouse(viewport: Viewport, exclude_rid: RID = RID()) -> Ingredients:
 	var collider: Object = _get_ray_collider_under_mouse(viewport, exclude_rid)
@@ -575,6 +1049,8 @@ func _on_area_3d_input_event(_cam: Node, event: InputEvent, _pos: Vector3, _norm
 				active_selected_item.set_selected(false)
 				active_selected_item = null
 
+		if self is Glasses:
+			set_highlight(false)
 		_on_drag_started()
 		_is_returning_to_counter = false
 		if _drag_return_tween and _drag_return_tween.is_valid():
@@ -619,7 +1095,7 @@ func _on_area_3d_mouse_exited() -> void:
 		current_hovered_target = null
 	if not is_selected:
 		set_highlight(false)
-	if not is_balls_dragging and not active_selected_item and GameState.player:
+	if not is_balls_dragging and not active_selected_item and current_hovered_target == null and GameState.player:
 		GameState.player._update_hand("idle")
 
 func set_selected(selected: bool) -> void:

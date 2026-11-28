@@ -11,6 +11,9 @@ const OVERFLOW_EPSILON: float = 0.0005
 const INSPECT_DROP_OUTSIDE_MARGIN: float = 0.06
 const INSPECT_MIN_DRAG_DISTANCE: float = 0.035
 const FILL_GUIDE_Z_OFFSET: float = -0.015
+const HITBOX_THICKNESS: float = 0.02
+
+static var _sprite_opaque_rect_cache: Dictionary = {}
 
 @export var liquids: Array = []
 @export var size: float = 1.0
@@ -81,6 +84,8 @@ var _snap_release_speed: float = 16.0
 var _snap_break_distance: float = 0.25
 var _inside_base_scale: Vector3 = Vector3.ONE
 var _inside_base_pos: Vector3 = Vector3.ZERO
+var _sprite_hitbox_local_center: Vector3 = Vector3.ZERO
+var _has_sprite_hitbox: bool = false
 
 @onready var highlight = get_node_or_null("Inside/highlight")
 
@@ -886,12 +891,142 @@ func _update_pour_out_stream() -> void:
 	else:
 		_pour_out_stream.set_stream_active(false)
 
+static func _compute_sprite_local_rect(s: Sprite3D) -> Variant:
+	if not is_instance_valid(s):
+		return null
+	var dims: Rect2 = s.get_item_rect()
+	if dims.size.x <= 0.0 or dims.size.y <= 0.0:
+		return null
+
+	var pad_left: float = 0.0
+	var pad_right: float = 0.0
+	var pad_bottom: float = 0.0
+	var pad_top: float = 0.0
+
+	if s.texture != null and s.hframes == 1 and s.vframes == 1 and not s.region_enabled:
+		var tex_id: int = s.texture.get_rid().get_id()
+		var used_rect: Rect2i
+		var tex_size: Vector2i
+		if _sprite_opaque_rect_cache.has(tex_id):
+			var data: Dictionary = _sprite_opaque_rect_cache[tex_id]
+			used_rect = data["used"]
+			tex_size = data["size"]
+		else:
+			var img: Image = s.texture.get_image()
+			if img != null and not img.is_empty():
+				if img.is_compressed():
+					img.decompress()
+				used_rect = img.get_used_rect()
+				tex_size = img.get_size()
+			_sprite_opaque_rect_cache[tex_id] = {"used": used_rect, "size": tex_size}
+
+		if used_rect.size.x > 0 and used_rect.size.y > 0 and tex_size.x > 0 and tex_size.y > 0:
+			var sx: float = dims.size.x / float(tex_size.x)
+			var sy: float = dims.size.y / float(tex_size.y)
+			pad_left = float(tex_size.x - used_rect.end.x if s.flip_h else used_rect.position.x) * sx
+			pad_right = float(used_rect.position.x if s.flip_h else tex_size.x - used_rect.end.x) * sx
+			pad_bottom = float(used_rect.position.y if s.flip_v else tex_size.y - used_rect.end.y) * sy
+			pad_top = float(tex_size.y - used_rect.end.y if s.flip_v else used_rect.position.y) * sy
+
+	var ps: float = s.pixel_size
+	var min_lx: float = (dims.position.x + pad_left) * ps
+	var max_lx: float = (dims.end.x - pad_right) * ps
+	var min_ly: float = (dims.position.y + pad_bottom) * ps
+	var max_ly: float = (dims.end.y - pad_top) * ps
+	return Rect2(min_lx, min_ly, maxf(max_lx - min_lx, 0.001), maxf(max_ly - min_ly, 0.001))
+
+func _setup_2d_hitbox() -> void:
+	if area_body == null:
+		area_body = get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if not is_instance_valid(area_body):
+		return
+
+	var visual: Sprite3D = sprite if is_instance_valid(sprite) else get_node_or_null("Inside") as Sprite3D
+	if not is_instance_valid(visual):
+		return
+
+	var combined_min := Vector2(INF, INF)
+	var combined_max := Vector2(-INF, -INF)
+	var has_rect: bool = false
+
+	var in_rect = _compute_sprite_local_rect(visual)
+	if in_rect is Rect2:
+		var r: Rect2 = in_rect
+		combined_min = r.position
+		combined_max = r.end
+		has_rect = true
+
+	var center_z: float = 0.0
+	var outside_sp := visual.get_node_or_null("Outside") as Sprite3D
+	var out_rect = _compute_sprite_local_rect(outside_sp)
+	if out_rect is Rect2:
+		center_z = outside_sp.position.z * 0.5
+		var r_out: Rect2 = out_rect
+		var out_xf: Transform3D = outside_sp.transform
+		var corners: Array[Vector3] = [
+			out_xf * Vector3(r_out.position.x, r_out.position.y, 0.0),
+			out_xf * Vector3(r_out.end.x, r_out.position.y, 0.0),
+			out_xf * Vector3(r_out.position.x, r_out.end.y, 0.0),
+			out_xf * Vector3(r_out.end.x, r_out.end.y, 0.0),
+		]
+		for c in corners:
+			if not has_rect:
+				combined_min = Vector2(c.x, c.y)
+				combined_max = Vector2(c.x, c.y)
+				has_rect = true
+			else:
+				combined_min.x = minf(combined_min.x, c.x)
+				combined_min.y = minf(combined_min.y, c.y)
+				combined_max.x = maxf(combined_max.x, c.x)
+				combined_max.y = maxf(combined_max.y, c.y)
+
+	if not has_rect:
+		return
+
+	var width: float = maxf((combined_max.x - combined_min.x) * absf(_inside_base_scale.x), 0.01)
+	var height: float = maxf((combined_max.y - combined_min.y) * absf(_inside_base_scale.y), 0.01)
+
+	var box := area_body.shape as BoxShape3D
+	if box == null:
+		box = BoxShape3D.new()
+		area_body.shape = box
+	elif not box.has_meta("_unique_cup_hitbox"):
+		box = box.duplicate() as BoxShape3D
+		area_body.shape = box
+	box.set_meta("_unique_cup_hitbox", true)
+	box.size = Vector3(width, height, HITBOX_THICKNESS)
+
+	_sprite_hitbox_local_center = Vector3(
+		(combined_min.x + combined_max.x) * 0.5,
+		(combined_min.y + combined_max.y) * 0.5,
+		center_z
+	)
+	_has_sprite_hitbox = true
+	_sync_hitbox_transform()
+
+func _sync_hitbox_transform() -> void:
+	if not is_instance_valid(area_body) or not _has_sprite_hitbox:
+		return
+	var visual: Node3D = sprite if is_instance_valid(sprite) else get_node_or_null("Inside") as Node3D
+	if not is_instance_valid(visual):
+		return
+	var rot_basis := visual.transform.basis.orthonormalized()
+	var scaled_center := Vector3(
+		_sprite_hitbox_local_center.x * _inside_base_scale.x,
+		_sprite_hitbox_local_center.y * _inside_base_scale.y,
+		_sprite_hitbox_local_center.z * _inside_base_scale.z
+	)
+	area_body.transform = Transform3D(rot_basis, _inside_base_pos + rot_basis * scaled_center)
+
 func ready() -> void:
 	rotation = Vector3.ZERO
 	_sync_drink_mix_metadata()
-	if sprite:
-		_inside_base_scale = sprite.scale
-		_inside_base_pos = sprite.position
+	if area_body == null:
+		area_body = get_node_or_null("CollisionShape3D") as CollisionShape3D
+	var inside_node := sprite if is_instance_valid(sprite) else get_node_or_null("Inside") as Sprite3D
+	if inside_node:
+		_inside_base_scale = inside_node.scale
+		_inside_base_pos = inside_node.position
 	if not is_preview_only:
 		_ensure_pour_out_stream()
 		_ensure_pour_splash_stream()
@@ -903,6 +1038,7 @@ func ready() -> void:
 	garnish_visuals.sync_from_mix(drink_mix)
 	if highlight:
 		highlight.modulate = Color(1.5, 1.5, 0.0, 5.0)
+	_setup_2d_hitbox()
 	if camera:
 		_face_camera()
 	if is_preview_only:
@@ -1152,6 +1288,8 @@ func _apply_collision_push(delta: float) -> void:
 			_face_camera()
 
 func _face_camera() -> void:
+	if not is_instance_valid(camera):
+		camera = get_viewport().get_camera_3d()
 	if not camera:
 		return
 	var visual: Node3D = sprite if sprite else get_node_or_null("Inside")
@@ -1162,6 +1300,7 @@ func _face_camera() -> void:
 			visual.look_at(target_flat, Vector3.UP)
 			if not is_zero_approx(pour_tilt_degrees):
 				visual.rotate_object_local(Vector3.BACK, deg_to_rad(pour_tilt_degrees))
+	_sync_hitbox_transform()
 
 func _setup_liquid_shader() -> void:
 	var outside_sprite := get_node_or_null("Inside/Outside") as Sprite3D
