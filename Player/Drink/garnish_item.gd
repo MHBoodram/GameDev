@@ -16,7 +16,8 @@ func is_working_area_item() -> bool:
 	return true
 
 func _is_drag_blocked() -> bool:
-	return super._is_drag_blocked() or is_consumed
+	var minigame_busy := GameState.minigame_host != null and GameState.minigame_host.is_minigame_active
+	return super._is_drag_blocked() or is_consumed or minigame_busy
 
 func setup(p_garnish_id: String, p_counter: Node3D = null) -> void:
 	counter_origin = p_counter
@@ -133,16 +134,106 @@ func handle_immediate_tool_click() -> bool:
 			return true
 		var next_var := GarnishDefinitions.get_next_cut_variation(garnish_id)
 		if next_var != "":
-			set_garnish_id(next_var)
-			GameState.play_sfx("play_stab")
-			_play_cut_bounce()
-			if GarnishDefinitions.get_next_cut_variation(garnish_id) == "":
-				set_highlight(false)
-				if GameState.player:
-					GameState.player._update_hand("idle")
+			if GarnishDefinitions.is_lemon(garnish_id):
+				if GameState.minigame_host:
+					var host_node: Node = GameState.main_node if is_instance_valid(GameState.main_node) else get_tree().current_scene
+					set_highlight(false)
+					GameState.minigame_host.start_lemon_minigame(host_node, GameState.player, self)
+				return true
+			apply_slice_result(next_var, false)
 			return true
 		return true
 	return false
+
+func apply_slice_result(next_var: String, spawn_split_duplicate: bool = false) -> void:
+	if is_consumed or next_var == "":
+		return
+	set_garnish_id(next_var)
+	GameState.play_sfx("play_stab")
+	_play_cut_bounce()
+
+	if spawn_split_duplicate and is_inside_tree() and get_parent():
+		_spawn_split_duplicate(next_var)
+
+	if GarnishDefinitions.get_next_cut_variation(garnish_id) == "":
+		set_highlight(false)
+		if GameState.player:
+			GameState.player._update_hand("idle")
+
+func _spawn_split_duplicate(next_var: String) -> void:
+	var item_scene := load("res://Player/Drink/garnish_item.tscn") as PackedScene
+	if not item_scene:
+		return
+	var parent_node := get_parent()
+	if not is_instance_valid(parent_node):
+		return
+
+	var surface_y := get_working_area_surface_y()
+	var base_pos := _clamp_to_counter(global_position)
+	base_pos.y = surface_y
+
+	var split_sep := 0.065
+	var left_pos := _clamp_to_counter(base_pos + Vector3(-split_sep, 0.0, 0.0))
+	left_pos.y = surface_y
+	var right_pos := _clamp_to_counter(base_pos + Vector3(split_sep, 0.0, 0.0))
+	right_pos.y = surface_y
+
+	if left_pos.distance_to(right_pos) < split_sep * 1.4:
+		left_pos = _clamp_to_counter(right_pos + Vector3(-split_sep * 2.0, 0.0, 0.0))
+		left_pos.y = surface_y
+	if left_pos.distance_to(right_pos) < split_sep * 1.4:
+		right_pos = _clamp_to_counter(left_pos + Vector3(split_sep * 2.0, 0.0, 0.0))
+		right_pos.y = surface_y
+
+	global_position = base_pos
+	base_y_position = surface_y
+	_last_counter_position = left_pos
+	_previous_counter_position = left_pos
+
+	var second := item_scene.instantiate() as GarnishItem
+	if not second:
+		return
+	second.scale = scale
+	second._skip_initial_snap = true
+	second.setup(next_var, counter_origin)
+	parent_node.add_child(second)
+	second.global_position = base_pos
+	second.base_y_position = surface_y
+	second._last_counter_position = right_pos
+	second._previous_counter_position = right_pos
+	second._play_cut_bounce()
+
+	var self_tween := create_tween()
+	self_tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	self_tween.tween_property(self, "global_position", left_pos, 0.18)
+
+	var second_tween := second.create_tween()
+	second_tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	second_tween.tween_property(second, "global_position", right_pos, 0.18)
+
+func waste_and_remove() -> void:
+	if is_consumed:
+		return
+	is_consumed = true
+	_is_pointer_pressed = false
+	is_balls_dragging = false
+	set_highlight(false)
+	if current_hovered_target == self:
+		current_hovered_target = null
+	if _drag_return_tween and _drag_return_tween.is_valid():
+		_drag_return_tween.kill()
+	if area_body:
+		area_body.set_deferred("disabled", true)
+	if GameState.player:
+		GameState.player._update_hand("idle")
+	if is_instance_valid(sprite):
+		sprite.modulate = Color(1.0, 0.3, 0.3, 0.9)
+	var tween := create_tween().set_parallel(true)
+	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.tween_property(self, "scale", Vector3.ONE * 0.02, 0.2)
+	if is_instance_valid(sprite):
+		tween.tween_property(sprite, "modulate:a", 0.0, 0.2)
+	tween.chain().tween_callback(queue_free)
 
 func _play_cut_bounce() -> void:
 	if not is_instance_valid(sprite):

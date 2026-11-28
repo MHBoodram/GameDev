@@ -2,6 +2,11 @@
 class_name DottedLine2D
 extends Control
 
+const DEFAULT_TOLERANCE_HALF_WIDTH: float = 24.0
+const DEFAULT_TOLERANCE_COLOR: Color = Color(0.20, 0.90, 0.35, 0.28)
+const DEFAULT_TOLERANCE_BORDER_COLOR: Color = Color(0.28, 1.0, 0.42, 0.72)
+const DEFAULT_TOLERANCE_BORDER_WIDTH: float = 2.0
+
 @export var start_point: Vector2 = Vector2.ZERO:
 	set(value):
 		start_point = value
@@ -12,6 +17,11 @@ extends Control
 		end_point = value
 		queue_redraw()
 
+@export var dotted: bool = true:
+	set(value):
+		dotted = value
+		queue_redraw()
+
 @export var dash_length: float = 12.0:
 	set(value):
 		dash_length = maxf(1.0, value)
@@ -19,7 +29,7 @@ extends Control
 
 @export var gap_length: float = 8.0:
 	set(value):
-		gap_length = maxf(1.0, value)
+		gap_length = maxf(0.0, value)
 		queue_redraw()
 
 @export var line_width: float = 4.0:
@@ -49,6 +59,37 @@ extends Control
 
 @export var scroll_speed: float = 0.0
 
+@export_group("Tolerance Zone")
+@export var show_tolerance_zone: bool = false:
+	set(value):
+		show_tolerance_zone = value
+		queue_redraw()
+
+@export var tolerance_half_width: float = DEFAULT_TOLERANCE_HALF_WIDTH:
+	set(value):
+		tolerance_half_width = maxf(0.0, value)
+		queue_redraw()
+
+@export var tolerance_color: Color = DEFAULT_TOLERANCE_COLOR:
+	set(value):
+		tolerance_color = value
+		queue_redraw()
+
+@export var tolerance_border_color: Color = DEFAULT_TOLERANCE_BORDER_COLOR:
+	set(value):
+		tolerance_border_color = value
+		queue_redraw()
+
+@export var tolerance_border_width: float = DEFAULT_TOLERANCE_BORDER_WIDTH:
+	set(value):
+		tolerance_border_width = maxf(0.0, value)
+		queue_redraw()
+
+@export var tolerance_zone_length: float = -1.0:
+	set(value):
+		tolerance_zone_length = value
+		queue_redraw()
+
 var _phase: float = 0.0
 
 func _ready() -> void:
@@ -57,7 +98,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if not is_visible_in_tree():
 		return
-	if not Engine.is_editor_hint() and not is_zero_approx(scroll_speed):
+	if not Engine.is_editor_hint() and dotted and gap_length > 0.001 and not is_zero_approx(scroll_speed):
 		_phase += scroll_speed * delta
 		queue_redraw()
 
@@ -71,6 +112,217 @@ func set_points(p_start: Vector2, p_end: Vector2) -> void:
 func set_horizontal(y_pos: float, min_x: float, max_x: float) -> void:
 	set_points(Vector2(min_x, y_pos), Vector2(max_x, y_pos))
 
+func set_vertical(x_pos: float, min_y: float, max_y: float) -> void:
+	set_points(Vector2(x_pos, min_y), Vector2(x_pos, max_y))
+
+func set_from_center(center: Vector2, angle_rad: float, length: float) -> void:
+	var half_vec := Vector2.from_angle(angle_rad) * (maxf(1.0, length) * 0.5)
+	set_points(center - half_vec, center + half_vec)
+
+func set_colors(p_line_color: Color, p_outline_color: Color = outline_color) -> void:
+	if line_color == p_line_color and outline_color == p_outline_color:
+		return
+	line_color = p_line_color
+	outline_color = p_outline_color
+	queue_redraw()
+
+func set_dash_metrics(p_dash_length: float, p_gap_length: float, p_line_width: float, p_outline_width: float = -1.0) -> void:
+	var next_dash := maxf(1.0, p_dash_length)
+	var next_gap := maxf(0.0, p_gap_length)
+	var next_thick := maxf(1.0, p_line_width)
+	var next_outline := outline_width if p_outline_width < 0.0 else maxf(0.0, p_outline_width)
+	if (
+		is_equal_approx(dash_length, next_dash)
+		and is_equal_approx(gap_length, next_gap)
+		and is_equal_approx(line_width, next_thick)
+		and is_equal_approx(outline_width, next_outline)
+	):
+		return
+	dash_length = next_dash
+	gap_length = next_gap
+	line_width = next_thick
+	outline_width = next_outline
+	queue_redraw()
+
+func set_tolerance_zone(
+	enabled: bool,
+	half_width: float = DEFAULT_TOLERANCE_HALF_WIDTH,
+	fill_color: Color = DEFAULT_TOLERANCE_COLOR,
+	border_color: Color = DEFAULT_TOLERANCE_BORDER_COLOR,
+	border_width: float = DEFAULT_TOLERANCE_BORDER_WIDTH,
+	length_override: float = -1.0
+) -> void:
+	show_tolerance_zone = enabled
+	tolerance_half_width = maxf(0.0, half_width)
+	tolerance_color = fill_color
+	tolerance_border_color = border_color
+	tolerance_border_width = maxf(0.0, border_width)
+	tolerance_zone_length = length_override
+	queue_redraw()
+
+func get_line_midpoint() -> Vector2:
+	return (start_point + end_point) * 0.5
+
+func get_line_direction() -> Vector2:
+	var delta_vec := end_point - start_point
+	var len_val := delta_vec.length()
+	return (delta_vec / len_val) if len_val > 0.0001 else Vector2.RIGHT
+
+func get_signed_perpendicular_distance(point: Vector2) -> float:
+	var dir := get_line_direction()
+	var perp := Vector2(-dir.y, dir.x)
+	return (point - get_line_midpoint()).dot(perp)
+
+func get_along_distance(point: Vector2) -> float:
+	var dir := get_line_direction()
+	return (point - get_line_midpoint()).dot(dir)
+
+func is_point_in_tolerance(point: Vector2, check_span: bool = false) -> bool:
+	if absf(get_signed_perpendicular_distance(point)) > tolerance_half_width:
+		return false
+	if check_span:
+		var band_len := start_point.distance_to(end_point) if tolerance_zone_length < 0.0 else maxf(1.0, tolerance_zone_length)
+		if absf(get_along_distance(point)) > band_len * 0.5:
+			return false
+	return true
+
+func evaluate_straight_cut(cut_start: Vector2, cut_end: Vector2, is_inside_shape: Callable, sample_step_px: float = 2.0) -> Dictionary:
+	var delta_vec := end_point - start_point
+	var total_len := delta_vec.length()
+	if total_len <= 0.5 or not is_inside_shape.is_valid():
+		return {"status": "missed", "accuracy": 0.0, "avg_offset": 0.0, "max_offset": 0.0}
+
+	var dir := delta_vec / total_len
+	var perp := Vector2(-dir.y, dir.x)
+	var mid := (start_point + end_point) * 0.5
+
+	var cut_len := cut_start.distance_to(cut_end)
+	var steps := maxi(16, ceili(cut_len / maxf(sample_step_px, 0.5)))
+	var start_inside := bool(is_inside_shape.call(cut_start))
+	var end_inside := bool(is_inside_shape.call(cut_end))
+
+	var hit_shape := false
+	var outside_tolerance := false
+	var min_u := INF
+	var max_u := -INF
+	var max_abs_v := 0.0
+	var sum_abs_v := 0.0
+	var in_shape_count := 0
+
+	for i in range(steps + 1):
+		var t := float(i) / float(steps)
+		var pt := cut_start.lerp(cut_end, t)
+		if bool(is_inside_shape.call(pt)):
+			hit_shape = true
+			var rel := pt - mid
+			var u := rel.dot(dir)
+			var abs_v := absf(rel.dot(perp))
+			min_u = minf(min_u, u)
+			max_u = maxf(max_u, u)
+			max_abs_v = maxf(max_abs_v, abs_v)
+			sum_abs_v += abs_v
+			in_shape_count += 1
+			if abs_v > tolerance_half_width:
+				outside_tolerance = true
+
+	if not hit_shape:
+		return {
+			"status": "missed",
+			"accuracy": 0.0,
+			"avg_offset": 0.0,
+			"max_offset": 0.0,
+		}
+
+	var avg_abs_v := sum_abs_v / float(maxi(in_shape_count, 1))
+	if outside_tolerance:
+		return {
+			"status": "outside_zone",
+			"accuracy": 0.0,
+			"avg_offset": avg_abs_v,
+			"max_offset": max_abs_v,
+		}
+
+	if start_inside or end_inside or not (min_u <= 0.0 and max_u >= 0.0):
+		return {
+			"status": "incomplete",
+			"accuracy": clampf(1.0 - (avg_abs_v / maxf(tolerance_half_width, 1.0)), 0.0, 1.0),
+			"avg_offset": avg_abs_v,
+			"max_offset": max_abs_v,
+		}
+
+	var accuracy := clampf(1.0 - (avg_abs_v / maxf(tolerance_half_width, 1.0)), 0.0, 1.0)
+	return {
+		"status": "success",
+		"accuracy": accuracy,
+		"avg_offset": avg_abs_v,
+		"max_offset": max_abs_v,
+	}
+
+static func evaluate_multi_cuts(guides: Array[DottedLine2D], cut_start: Vector2, cut_end: Vector2, is_inside_shape: Callable, sample_step_px: float = 2.0) -> Dictionary:
+	var best_success_idx := -1
+	var best_success_eval := {}
+	var best_accuracy := -1.0
+	var best_incomplete_idx := -1
+	var best_incomplete_eval := {}
+	var any_hit_shape := false
+
+	for i in guides.size():
+		var g := guides[i]
+		if not is_instance_valid(g) or not g.visible:
+			continue
+		var res := g.evaluate_straight_cut(cut_start, cut_end, is_inside_shape, sample_step_px)
+		var st := str(res.get("status", "missed"))
+		if st != "missed":
+			any_hit_shape = true
+		if st == "success":
+			var acc := float(res.get("accuracy", 0.0))
+			if acc > best_accuracy:
+				best_accuracy = acc
+				best_success_idx = i
+				best_success_eval = res
+		elif st == "incomplete" and best_incomplete_idx == -1:
+			best_incomplete_idx = i
+			best_incomplete_eval = res
+
+	if best_success_idx != -1:
+		return {
+			"status": "success",
+			"guide_index": best_success_idx,
+			"guide": guides[best_success_idx],
+			"accuracy": best_accuracy,
+			"avg_offset": best_success_eval.get("avg_offset", 0.0),
+			"max_offset": best_success_eval.get("max_offset", 0.0),
+		}
+
+	if best_incomplete_idx != -1:
+		return {
+			"status": "incomplete",
+			"guide_index": best_incomplete_idx,
+			"guide": guides[best_incomplete_idx],
+			"accuracy": best_incomplete_eval.get("accuracy", 0.0),
+			"avg_offset": best_incomplete_eval.get("avg_offset", 0.0),
+			"max_offset": best_incomplete_eval.get("max_offset", 0.0),
+		}
+
+	if any_hit_shape:
+		return {
+			"status": "outside_zone",
+			"guide_index": -1,
+			"guide": null,
+			"accuracy": 0.0,
+			"avg_offset": 0.0,
+			"max_offset": 0.0,
+		}
+
+	return {
+		"status": "missed",
+		"guide_index": -1,
+		"guide": null,
+		"accuracy": 0.0,
+		"avg_offset": 0.0,
+		"max_offset": 0.0,
+	}
+
 func _draw() -> void:
 	var delta_vec := end_point - start_point
 	var total_len := delta_vec.length()
@@ -78,30 +330,47 @@ func _draw() -> void:
 		return
 
 	var dir := delta_vec / total_len
-	var pattern := maxf(dash_length + gap_length, 2.0)
-	var ranges: Array[Vector2] = []
+	var perp := Vector2(-dir.y, dir.x)
 
-	if centered_pattern and is_zero_approx(scroll_speed):
-		var num_dashes := maxi(1, int(floor((total_len + gap_length + 0.01) / pattern)))
-		if num_dashes == 1 and dash_length >= total_len:
-			ranges.append(Vector2(0.0, total_len))
+	if show_tolerance_zone and tolerance_half_width > 0.0:
+		var mid := (start_point + end_point) * 0.5
+		var band_len := total_len if tolerance_zone_length < 0.0 else maxf(1.0, tolerance_zone_length)
+		var half_len := band_len * 0.5
+		var b0 := mid - dir * half_len
+		var b1 := mid + dir * half_len
+		var off := perp * tolerance_half_width
+		var poly := PackedVector2Array([b0 - off, b1 - off, b1 + off, b0 + off])
+		draw_colored_polygon(poly, tolerance_color)
+		if tolerance_border_width > 0.0 and tolerance_border_color.a > 0.001:
+			draw_line(b0 - off, b1 - off, tolerance_border_color, tolerance_border_width, false)
+			draw_line(b0 + off, b1 + off, tolerance_border_color, tolerance_border_width, false)
+
+	var ranges: Array[Vector2] = []
+	if not dotted or gap_length <= 0.001:
+		ranges.append(Vector2(0.0, total_len))
+	else:
+		var pattern := maxf(dash_length + gap_length, 2.0)
+		if centered_pattern and is_zero_approx(scroll_speed):
+			var num_dashes := maxi(1, int(floor((total_len + gap_length + 0.01) / pattern)))
+			if num_dashes == 1 and dash_length >= total_len:
+				ranges.append(Vector2(0.0, total_len))
+			else:
+				var used_len := float(num_dashes) * dash_length + float(num_dashes - 1) * gap_length
+				var cursor := maxf(0.0, (total_len - used_len) * 0.5)
+				for _i in num_dashes:
+					var d0 := cursor
+					var d1 := minf(total_len, d0 + dash_length)
+					if d1 - d0 > 0.5:
+						ranges.append(Vector2(d0, d1))
+					cursor += pattern
 		else:
-			var used_len := float(num_dashes) * dash_length + float(num_dashes - 1) * gap_length
-			var cursor := maxf(0.0, (total_len - used_len) * 0.5)
-			for _i in num_dashes:
-				var d0 := cursor
-				var d1 := minf(total_len, d0 + dash_length)
+			var pos := fposmod(_phase, pattern) - pattern
+			while pos < total_len:
+				var d0 := maxf(0.0, pos)
+				var d1 := minf(total_len, pos + dash_length)
 				if d1 - d0 > 0.5:
 					ranges.append(Vector2(d0, d1))
-				cursor += pattern
-	else:
-		var pos := fposmod(_phase, pattern) - pattern
-		while pos < total_len:
-			var d0 := maxf(0.0, pos)
-			var d1 := minf(total_len, pos + dash_length)
-			if d1 - d0 > 0.5:
-				ranges.append(Vector2(d0, d1))
-			pos += pattern
+				pos += pattern
 
 	var draw_outline := outline_width > 0.0 and outline_color.a > 0.001
 	if draw_outline:

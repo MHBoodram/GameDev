@@ -2,6 +2,11 @@
 class_name DottedLine3D
 extends Node3D
 
+const DEFAULT_TOLERANCE_HALF_WIDTH: float = 0.025
+const DEFAULT_TOLERANCE_COLOR: Color = Color(0.20, 0.90, 0.35, 0.28)
+const DEFAULT_TOLERANCE_BORDER_COLOR: Color = Color(0.28, 1.0, 0.42, 0.72)
+const DEFAULT_TOLERANCE_BORDER_WIDTH: float = 0.004
+
 @export var start_point: Vector3 = Vector3(-0.2, 0.0, 0.0):
 	set(value):
 		start_point = value
@@ -17,6 +22,11 @@ extends Node3D
 		plane_normal = value
 		_dirty = true
 
+@export var dotted: bool = true:
+	set(value):
+		dotted = value
+		_dirty = true
+
 @export var dash_length: float = 0.03:
 	set(value):
 		dash_length = maxf(0.001, value)
@@ -24,7 +34,7 @@ extends Node3D
 
 @export var gap_length: float = 0.02:
 	set(value):
-		gap_length = maxf(0.001, value)
+		gap_length = maxf(0.0, value)
 		_dirty = true
 
 @export var line_thickness: float = 0.012:
@@ -66,6 +76,37 @@ extends Node3D
 		if _material:
 			_material.no_depth_test = no_depth_test
 
+@export_group("Tolerance Zone")
+@export var show_tolerance_zone: bool = false:
+	set(value):
+		show_tolerance_zone = value
+		_dirty = true
+
+@export var tolerance_half_width: float = DEFAULT_TOLERANCE_HALF_WIDTH:
+	set(value):
+		tolerance_half_width = maxf(0.0, value)
+		_dirty = true
+
+@export var tolerance_color: Color = DEFAULT_TOLERANCE_COLOR:
+	set(value):
+		tolerance_color = value
+		_dirty = true
+
+@export var tolerance_border_color: Color = DEFAULT_TOLERANCE_BORDER_COLOR:
+	set(value):
+		tolerance_border_color = value
+		_dirty = true
+
+@export var tolerance_border_width: float = DEFAULT_TOLERANCE_BORDER_WIDTH:
+	set(value):
+		tolerance_border_width = maxf(0.0, value)
+		_dirty = true
+
+@export var tolerance_zone_length: float = -1.0:
+	set(value):
+		tolerance_zone_length = value
+		_dirty = true
+
 var _mesh_instance: MeshInstance3D = null
 var _mesh: ArrayMesh = null
 var _material: StandardMaterial3D = null
@@ -79,7 +120,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if not is_visible_in_tree():
 		return
-	if not Engine.is_editor_hint() and not is_zero_approx(scroll_speed):
+	if not Engine.is_editor_hint() and dotted and gap_length > 0.0001 and not is_zero_approx(scroll_speed):
 		_phase += scroll_speed * delta
 		_dirty = true
 	if _dirty:
@@ -97,6 +138,20 @@ func set_points(p_start: Vector3, p_end: Vector3) -> void:
 func set_horizontal(y_pos: float, min_x: float, max_x: float, z_pos: float = 0.0) -> void:
 	set_points(Vector3(min_x, y_pos, z_pos), Vector3(max_x, y_pos, z_pos))
 
+func set_vertical(x_pos: float, min_y: float, max_y: float, z_pos: float = 0.0) -> void:
+	set_points(Vector3(x_pos, min_y, z_pos), Vector3(x_pos, max_y, z_pos))
+
+func set_from_center(center: Vector3, angle_rad: float, length: float) -> void:
+	var normal := plane_normal.normalized() if plane_normal.length_squared() > 0.0001 else Vector3.BACK
+	var ref_right := Vector3.RIGHT
+	if absf(ref_right.dot(normal)) > 0.99:
+		ref_right = Vector3.FORWARD
+	var basis_x := ref_right.slide(normal).normalized()
+	var basis_y := normal.cross(basis_x).normalized()
+	var dir := basis_x * cos(angle_rad) + basis_y * sin(angle_rad)
+	var half_vec := dir * (maxf(0.001, length) * 0.5)
+	set_points(center - half_vec, center + half_vec)
+
 func set_colors(p_line_color: Color, p_outline_color: Color = outline_color) -> void:
 	if line_color == p_line_color and outline_color == p_outline_color:
 		return
@@ -108,7 +163,7 @@ func set_colors(p_line_color: Color, p_outline_color: Color = outline_color) -> 
 
 func set_dash_metrics(p_dash_length: float, p_gap_length: float, p_line_thickness: float, p_outline_thickness: float = -1.0) -> void:
 	var next_dash := maxf(0.001, p_dash_length)
-	var next_gap := maxf(0.001, p_gap_length)
+	var next_gap := maxf(0.0, p_gap_length)
 	var next_thick := maxf(0.0005, p_line_thickness)
 	var next_outline := outline_thickness if p_outline_thickness < 0.0 else maxf(0.0, p_outline_thickness)
 	if (
@@ -122,6 +177,24 @@ func set_dash_metrics(p_dash_length: float, p_gap_length: float, p_line_thicknes
 	gap_length = next_gap
 	line_thickness = next_thick
 	outline_thickness = next_outline
+	_dirty = true
+	if is_inside_tree():
+		_rebuild_mesh()
+
+func set_tolerance_zone(
+	enabled: bool,
+	half_width: float = DEFAULT_TOLERANCE_HALF_WIDTH,
+	fill_color: Color = DEFAULT_TOLERANCE_COLOR,
+	border_color: Color = DEFAULT_TOLERANCE_BORDER_COLOR,
+	border_width: float = DEFAULT_TOLERANCE_BORDER_WIDTH,
+	length_override: float = -1.0
+) -> void:
+	show_tolerance_zone = enabled
+	tolerance_half_width = maxf(0.0, half_width)
+	tolerance_color = fill_color
+	tolerance_border_color = border_color
+	tolerance_border_width = maxf(0.0, border_width)
+	tolerance_zone_length = length_override
 	_dirty = true
 	if is_inside_tree():
 		_rebuild_mesh()
@@ -168,6 +241,24 @@ func _rebuild_mesh() -> void:
 		_mesh_instance.visible = false
 		return
 
+	var zone_verts := PackedVector3Array()
+	var zone_cols := PackedColorArray()
+	var zone_indices := PackedInt32Array()
+
+	if show_tolerance_zone and tolerance_half_width > 0.0001:
+		var mid := (start_point + end_point) * 0.5
+		var band_len := total_len if tolerance_zone_length < 0.0 else maxf(0.001, tolerance_zone_length)
+		var half_len := band_len * 0.5
+		var back_off := -normal * 0.0005
+		var b0 := mid - dir * half_len + back_off
+		var b1 := mid + dir * half_len + back_off
+		_append_quad(zone_verts, zone_cols, zone_indices, b0, b1, perp, tolerance_half_width, tolerance_color)
+		if tolerance_border_width > 0.0001 and tolerance_border_color.a > 0.001:
+			var edge_off := perp * tolerance_half_width
+			var half_bw := tolerance_border_width * 0.5
+			_append_quad(zone_verts, zone_cols, zone_indices, b0 - edge_off, b1 - edge_off, perp, half_bw, tolerance_border_color)
+			_append_quad(zone_verts, zone_cols, zone_indices, b0 + edge_off, b1 + edge_off, perp, half_bw, tolerance_border_color)
+
 	var outline_verts := PackedVector3Array()
 	var outline_cols := PackedColorArray()
 	var outline_indices := PackedInt32Array()
@@ -193,10 +284,17 @@ func _rebuild_mesh() -> void:
 	var combined_cols := PackedColorArray()
 	var combined_indices := PackedInt32Array()
 
+	if not zone_verts.is_empty():
+		combined_verts.append_array(zone_verts)
+		combined_cols.append_array(zone_cols)
+		combined_indices.append_array(zone_indices)
+
 	if draw_outline:
+		var out_base_idx := combined_verts.size()
 		combined_verts.append_array(outline_verts)
 		combined_cols.append_array(outline_cols)
-		combined_indices.append_array(outline_indices)
+		for idx in outline_indices:
+			combined_indices.append(out_base_idx + idx)
 
 	var fill_base_idx := combined_verts.size()
 	combined_verts.append_array(fill_verts)
@@ -218,6 +316,10 @@ func _rebuild_mesh() -> void:
 
 func _compute_dash_ranges(total_len: float) -> Array[Vector2]:
 	var ranges: Array[Vector2] = []
+	if not dotted or gap_length <= 0.0001:
+		ranges.append(Vector2(0.0, total_len))
+		return ranges
+
 	var pattern := maxf(dash_length + gap_length, 0.001)
 
 	if centered_pattern and is_zero_approx(scroll_speed):

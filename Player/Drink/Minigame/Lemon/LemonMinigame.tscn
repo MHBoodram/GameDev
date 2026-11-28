@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Player/Drink/Minigame/Lemon/lemon_minigame.gd" id="1_lemon_minigame"]
+
+[node name="LemonMinigame" type="CanvasLayer"]
+layer = 5
+script = ExtResource("1_lemon_minigame")

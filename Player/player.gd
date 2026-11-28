@@ -119,7 +119,7 @@ func _handle_dialogue_input() -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.is_pressed() and event.button_index == MOUSE_BUTTON_RIGHT:
 		summoning = false
-		if in_game:
+		if in_game and not (GameState.minigame_host and GameState.minigame_host.is_minigame_active):
 			_out_of_game()
 			get_viewport().set_input_as_handled()
 

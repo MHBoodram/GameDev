@@ -5,6 +5,7 @@ const UI_AUDIO_SCRIPT := preload("res://UI/Audio/UIAudio.gd")
 
 @export var knifedraw_stream: AudioStream
 @export var knifestab_stream: AudioStream
+# @export var knifeslice_stream: AudioStream
 @export var entranto_stream: AudioStream
 @export var liquidpour_stream: AudioStream
 @export var shakerrattle_stream: AudioStream
@@ -27,15 +28,17 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	knifedraw_stream = _resolve_stream(knifedraw_stream, "res://Audio/SFX/Knifesheaf.wav", "res://Assets/Audio/SFX/Knifesheaf.wav")
 	knifestab_stream = _resolve_stream(knifestab_stream, "res://Audio/SFX/KnifeStab.wav", "res://Assets/Audio/SFX/KnifeStab.wav")
+	# knifeslice_stream = _resolve_stream(knifeslice_stream, "res://Audio/SFX/KnifeSlice.wav", "res://Assets/Audio/SFX/KnifeSlice.wav")
 	entranto_stream = _resolve_stream(entranto_stream, "res://Audio/SFX/842380__mihacappy__entrance_open1.wav", "res://Assets/Audio/SFX/842380__mihacappy__entrance_open1.wav")
-	liquidpour_stream = _resolve_stream(liquidpour_stream, "res://Audio/SFX/liquidpour.wav", "res://Assets/Audio/SFX/liquidpour.wav")
-	shakerrattle_stream = _resolve_stream(shakerrattle_stream, "res://Audio/SFX/Shaker1.mp3", "res://Assets/Audio/SFX/Shaker1.mp3")
-	mugpickup_stream = _resolve_stream(mugpickup_stream, "res://Audio/SFX/Pickupglass.wav", "res://Assets/Audio/SFX/Pickupglass.wav")
-	slime_stream = _resolve_stream(slime_stream, "res://Audio/SFX/Slime.wav", "res://Assets/Audio/SFX/Slime.wav")
+	liquidpour_stream = _resolve_stream(liquidpour_stream, "res://Audio/SFX/liquidpour.wav", "res://Audio/SFX/liquidpour.wav")
+	shakerrattle_stream = _resolve_stream(shakerrattle_stream, "res://Audio/SFX/Shaker1.mp3", "res://Audio/SFX/Shaker1.mp3")
+	mugpickup_stream = _resolve_stream(mugpickup_stream, "res://Audio/SFX/Pickupglass.wav", "res://Audio/SFX/Pickupglass.wav")
+	slime_stream = _resolve_stream(slime_stream, "res://Audio/SFX/Slime.wav", "res://Audio/SFX/Slime.wav")
 
 	var streams := {
 		&"draw": knifedraw_stream,
 		&"stab": knifestab_stream,
+		# &"slice": knifeslice_stream,
 		&"entranto": entranto_stream,
 		&"liquidpour": liquidpour_stream,
 		&"shakerrattle": shakerrattle_stream,
@@ -53,6 +56,9 @@ func play_draw() -> void:
 
 func play_stab() -> void:
 	_play_key(&"stab")
+
+# func play_slice() -> void:
+# 	_play_key(&"slice")
 
 func play_entranto() -> void:
 	_play_key(&"entranto")
