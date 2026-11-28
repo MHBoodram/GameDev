@@ -1,14 +1,21 @@
 extends Area3D
 @onready var sprite = $Sprite3D
+@onready var area_body: CollisionShape3D = $CollisionShape3D
 var parent_node : Node3D
 var id: String = ""
 var type: String = ""
 var cost: int = 0
 var is_interactable: bool = true
+var _hitbox_data: Dictionary = {}
+var _hitbox_texture_rid: int = -1
 
 func _ready() -> void:
+	input_ray_pickable = false
+	add_to_group("visual_pickable")
+	Ingredients._ensure_cup_picker_runtime()
 	if has_node("CollisionShape3D"):
 		$CollisionShape3D.disabled = not is_interactable
+	_refresh_visual_hitbox()
 
 func setup(parent : Node3D,_id: String,_type: String,_Cost: int = 0) -> void:
 	print("ID: ",_id)
@@ -40,6 +47,37 @@ func setup(parent : Node3D,_id: String,_type: String,_Cost: int = 0) -> void:
 		TextIcons.set_text($Label3D, str(id) + "\n" + str(cost) + " {coin}")
 	else:
 		TextIcons.set_text($Label3D, str(id))
+	if is_node_ready():
+		_refresh_visual_hitbox()
+
+func _refresh_visual_hitbox() -> void:
+	if not is_instance_valid(sprite):
+		return
+	var tex_id: int = sprite.texture.get_rid().get_id() if sprite.texture != null else -1
+	if tex_id != -1 and tex_id == _hitbox_texture_rid and bool(_hitbox_data.get("has_rect", false)):
+		return
+	_hitbox_texture_rid = tex_id
+	_hitbox_data = Ingredients.compute_sprite_hitbox_data(sprite, "")
+	if not bool(_hitbox_data.get("has_rect", false)):
+		var half_x := 0.23 * absf(sprite.scale.x)
+		var half_y := 0.23 * absf(sprite.scale.y)
+		_hitbox_data = {
+			"has_rect": true,
+			"min": Vector2(-half_x, -half_y),
+			"max": Vector2(half_x, half_y),
+			"local_center": Vector3.ZERO,
+			"base_pos": sprite.position,
+			"base_scale": sprite.scale,
+		}
+
+func _get_visual_hit(viewport: Viewport, screen_pos: Vector2) -> Dictionary:
+	if not is_interactable or not is_visible_in_tree() or GameState.is_dialogue_open:
+		return {}
+	if is_instance_valid(parent_node) and "_is_advancing_shop" in parent_node and parent_node._is_advancing_shop:
+		return {}
+	if not bool(_hitbox_data.get("has_rect", false)):
+		_refresh_visual_hitbox()
+	return Ingredients.test_visual_sprite_hit(self, sprite, _hitbox_data, viewport, screen_pos)
 
 func _is_tool_ingredient(item_id: String) -> bool:
 	if not PlayerStats.unlocks.has("Tools"):

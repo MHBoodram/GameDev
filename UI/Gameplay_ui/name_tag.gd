@@ -55,6 +55,7 @@ var _normal_style: StyleBox
 var _hover_style: StyleBox
 var _pressed_style: StyleBox
 var _disabled_style: StyleBox
+var _hitbox_data: Dictionary = {}
 
 func _ready() -> void:
 	if collision_shape and collision_shape.shape:
@@ -62,6 +63,7 @@ func _ready() -> void:
 	if sprite and sub_viewport:
 		sprite.texture = sub_viewport.get_texture()
 
+	Ingredients._ensure_cup_picker_runtime()
 	_build_styles()
 	_sync_collision_enabled()
 	_refresh_tag()
@@ -143,7 +145,11 @@ func _make_style(fill_col: Color) -> StyleBoxFlat:
 func _sync_collision_enabled() -> void:
 	if collision_shape:
 		collision_shape.disabled = not interactive
-	input_ray_pickable = interactive
+	input_ray_pickable = false
+	if interactive:
+		add_to_group("visual_pickable")
+	elif is_in_group("visual_pickable"):
+		remove_from_group("visual_pickable")
 
 func _refresh_tag() -> void:
 	if not is_node_ready() or not tag_button:
@@ -170,6 +176,17 @@ func _refresh_layout() -> void:
 	tag_button.position = Vector2.ZERO
 	tag_button.size = Vector2(float(vp_w), float(vp_h))
 	sprite.pixel_size = pixel_scale
+
+	var half_w := float(vp_w) * pixel_scale * 0.5
+	var half_h := float(vp_h) * pixel_scale * 0.5
+	_hitbox_data = {
+		"has_rect": true,
+		"min": Vector2(-half_w, -half_h),
+		"max": Vector2(half_w, half_h),
+		"local_center": Vector3.ZERO,
+		"base_pos": Vector3.ZERO,
+		"base_scale": sprite.scale,
+	}
 
 	if collision_shape and collision_shape.shape is BoxShape3D:
 		var box := collision_shape.shape as BoxShape3D
@@ -204,6 +221,20 @@ func _can_interact() -> bool:
 	if GameState.gameplay_ui and "down" in GameState.gameplay_ui and not GameState.gameplay_ui.down:
 		return false
 	return true
+
+func _get_visual_hit(viewport: Viewport, screen_pos: Vector2) -> Dictionary:
+	if not _can_interact() or not is_instance_valid(sprite):
+		return {}
+	return Ingredients.test_visual_sprite_hit(self, sprite, _hitbox_data, viewport, screen_pos)
+
+func _on_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:
+	_on_tag_input_event(camera, event, event_position, normal, shape_idx)
+
+func _on_mouse_entered() -> void:
+	_on_tag_mouse_entered()
+
+func _on_mouse_exited() -> void:
+	_on_tag_mouse_exited()
 
 @warning_ignore("unused_parameter")
 func _on_tag_input_event(camera: Node, event: InputEvent, event_position: Vector3, normal: Vector3, shape_idx: int) -> void:

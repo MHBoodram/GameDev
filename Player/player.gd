@@ -33,6 +33,7 @@ var cup_offsets := {
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
+	ToolController.align_hand_hotspot(hand_sprite)
 	_update_hand("idle")
 
 func _process(_delta: float) -> void:

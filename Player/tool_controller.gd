@@ -5,6 +5,7 @@ class_name ToolController
 extends RefCounted
 
 var tool_in_hand: String = "hand"
+static var _hand_hotspot_offset_cache: Dictionary = {}
 
 func _get_player_stats() -> Node:
 	var tree := Engine.get_main_loop() as SceneTree
@@ -64,6 +65,94 @@ func can_npc_interact_with_tool(npc: Sprite3D, interaction_type: String) -> bool
 	if mod and not mod.can_interact_with_tool(npc, tool_in_hand, interaction_type):
 		return false
 	return true
+
+static func align_hand_hotspot(hand_node: Node2D) -> void:
+	if not is_instance_valid(hand_node):
+		return
+	if hand_node is Sprite2D:
+		var sp := hand_node as Sprite2D
+		if sp.texture == null:
+			return
+		var h_cnt := maxi(1, sp.hframes)
+		var v_cnt := maxi(1, sp.vframes)
+		var fw := float(sp.texture.get_width()) / float(h_cnt)
+		var fh := float(sp.texture.get_height()) / float(v_cnt)
+		var ref_frame := 6 if (h_cnt * v_cnt) > 6 else 0
+		var cache_key := "s_%d_%d_%d_%d" % [sp.texture.get_rid().get_id(), h_cnt, v_cnt, ref_frame]
+		var hotspot_offset := Vector2.ZERO
+		if _hand_hotspot_offset_cache.has(cache_key):
+			hotspot_offset = _hand_hotspot_offset_cache[cache_key] as Vector2
+		else:
+			var fx := (ref_frame % h_cnt) * int(fw)
+			var fy := int(ref_frame / h_cnt) * int(fh)
+			var region := Rect2i(fx, fy, int(fw), int(fh))
+			hotspot_offset = _compute_hotspot_offset_from_image(sp.texture.get_image(), region, Vector2(fw, fh))
+			_hand_hotspot_offset_cache[cache_key] = hotspot_offset
+		sp.offset = hotspot_offset if sp.centered else (hotspot_offset - Vector2(fw, fh) * 0.5)
+	elif hand_node is AnimatedSprite2D:
+		var asp := hand_node as AnimatedSprite2D
+		if asp.sprite_frames == null:
+			return
+		var anim_name: StringName = &"Interact" if asp.sprite_frames.has_animation(&"Interact") else asp.animation
+		if asp.sprite_frames.get_frame_count(anim_name) <= 0:
+			return
+		var tex := asp.sprite_frames.get_frame_texture(anim_name, 0)
+		if tex == null:
+			return
+		var frame_size := tex.get_size()
+		var cache_key := "a_%d" % tex.get_rid().get_id()
+		var hotspot_offset := Vector2.ZERO
+		if _hand_hotspot_offset_cache.has(cache_key):
+			hotspot_offset = _hand_hotspot_offset_cache[cache_key] as Vector2
+		else:
+			var img: Image = null
+			var region := Rect2i(Vector2i.ZERO, Vector2i(int(frame_size.x), int(frame_size.y)))
+			if tex is AtlasTexture:
+				var at := tex as AtlasTexture
+				if at.atlas:
+					img = at.atlas.get_image()
+					region = Rect2i(at.region)
+			else:
+				img = tex.get_image()
+			hotspot_offset = _compute_hotspot_offset_from_image(img, region, frame_size)
+			_hand_hotspot_offset_cache[cache_key] = hotspot_offset
+		asp.offset = hotspot_offset if asp.centered else (hotspot_offset - frame_size * 0.5)
+
+static func _compute_hotspot_offset_from_image(img: Image, region: Rect2i, frame_size: Vector2) -> Vector2:
+	if img == null or img.is_empty():
+		return Vector2.ZERO
+	if img.is_compressed():
+		img = img.duplicate() as Image
+		img.decompress()
+	var x0 := clampi(region.position.x, 0, img.get_width() - 1)
+	var y0 := clampi(region.position.y, 0, img.get_height() - 1)
+	var x1 := clampi(region.end.x, x0 + 1, img.get_width())
+	var y1 := clampi(region.end.y, y0 + 1, img.get_height())
+
+	var min_y := y1
+	for y in range(y0, y1):
+		for x in range(x0, x1):
+			if img.get_pixel(x, y).a > 0.2:
+				min_y = y
+				break
+		if min_y < y1:
+			break
+
+	if min_y >= y1:
+		return Vector2.ZERO
+
+	var sample_y_end := mini(y1, min_y + 4)
+	var sum_x := 0.0
+	var count := 0
+	for y in range(min_y, sample_y_end):
+		for x in range(x0, x1):
+			if img.get_pixel(x, y).a > 0.2:
+				sum_x += float(x - x0) + 0.5
+				count += 1
+
+	var tip_x := (sum_x / float(count)) if count > 0 else (frame_size.x * 0.5)
+	var tip_y := float(min_y - y0) + 2.0
+	return Vector2(frame_size.x * 0.5 - tip_x, frame_size.y * 0.5 - tip_y)
 
 static func apply_hand_animation(anim_player: AnimationPlayer, action_state: String, tool_id: String = "hand") -> void:
 	if not anim_player:

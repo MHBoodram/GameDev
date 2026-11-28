@@ -38,6 +38,14 @@ func _init() -> void:
 	snap_to_glass = true
 	follow_speed = 30.0
 
+func uses_visual_2d_hitbox() -> bool:
+	return true
+
+func _get_cup_visual_hit(viewport: Viewport, screen_pos: Vector2) -> Dictionary:
+	if in_game:
+		return {}
+	return super._get_cup_visual_hit(viewport, screen_pos)
+
 func _is_drag_blocked() -> bool:
 	var minigame_busy := GameState.minigame_host != null and GameState.minigame_host.is_minigame_active
 	return super._is_drag_blocked() or minigame_busy
@@ -138,6 +146,7 @@ func ready() -> void:
 		_setup_liquid_shader()
 		_apply_outside_texture()
 		set_liquid_color(liquid_resource.liquid_color)
+		_init_cup_2d_hitbox()
 
 func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 	_ensure_pour_stream()
@@ -168,6 +177,8 @@ func setup(og_position: Marker3D, Counter: Node3D, _liquid: Liquid) -> void:
 	_setup_liquid_shader()
 	_apply_outside_texture()
 	set_liquid_color(liquid_resource.liquid_color)
+	if is_node_ready():
+		_init_cup_2d_hitbox()
 
 func _exit_tree() -> void:
 	if is_pouring:
@@ -346,6 +357,7 @@ func _return_original() -> void:
 
 func _in_game() -> void:
 	in_game = true
+	input_ray_pickable = true
 	visual_helper.set_mouth_monitoring(true)
 	_is_pointer_pressed = false
 	is_balls_dragging = false
@@ -360,6 +372,7 @@ func _out_of_game() -> void:
 	if is_pouring:
 		PourStreamVisual.end_pour_session()
 	in_game = false
+	input_ray_pickable = false
 	visual_helper.set_mouth_monitoring(false)
 	is_pouring = false
 	rotation_degrees.z = 0.0
@@ -374,6 +387,7 @@ func _pouring_game() -> void:
 		return
 	pouring_into.in_game = true
 	in_game = true
+	input_ray_pickable = true
 	GameState.player._perfect_pour(self, pouring_into)
 	$CollisionShape3D.disabled = true
 	await get_tree().create_timer(0.2).timeout
