@@ -37,12 +37,20 @@ void fragment() {
 
 	vec2 res = (pixel_grid.x > 0.0 && pixel_grid.y > 0.0) ? max(pixel_grid, vec2(8.0)) : vec2(max(pixel_resolution, 8.0));
 	vec2 pix_uv = (floor(UV * res) + 0.5) / res;
-	vec4 fluid = texture(fluid_texture, pix_uv);
+	vec2 sample_uv = (texture(texture_albedo, pix_uv).a >= 0.05) ? pix_uv : UV;
+	float half_texel = 0.5 / 64.0;
+	if (texture(texture_albedo, clamp(sample_uv + vec2(0.0, -half_texel), 0.0, 1.0)).a < 0.05) {
+		vec2 nudged_uv = clamp(sample_uv + vec2(0.0, half_texel), 0.0, 1.0);
+		if (texture(texture_albedo, nudged_uv).a >= 0.05) {
+			sample_uv = nudged_uv;
+		}
+	}
+	vec4 fluid = texture(fluid_texture, sample_uv);
 
 	// Diagonal glass specular sheen across the container interior
-	float diag = (pix_uv.x * 0.85 + pix_uv.y * 0.45);
+	float diag = (sample_uv.x * 0.85 + sample_uv.y * 0.45);
 	float sheen_band = smoothstep(0.08, 0.0, abs(diag - 0.52)) * 0.75 + smoothstep(0.04, 0.0, abs(diag - 0.68)) * 0.45;
-	float rim_sheen = smoothstep(0.42, 0.49, abs(pix_uv.x - 0.5)) * 0.35;
+	float rim_sheen = smoothstep(0.42, 0.49, abs(sample_uv.x - 0.5)) * 0.35;
 	float glass_sheen = clamp(sheen_band + rim_sheen, 0.0, 1.0) * glass_reflection_strength;
 
 	if (fluid.a < 0.08) {
@@ -51,29 +59,29 @@ void fragment() {
 	} else {
 		vec2 step_uv = max(1.0 / res, vec2(1.0 / 64.0)) * max(surface_highlight_thickness, 0.5);
 
-		float mask_up = texture(texture_albedo, clamp(pix_uv + vec2(0.0, -step_uv.y), 0.0, 1.0)).a;
-		float mask_dn = texture(texture_albedo, clamp(pix_uv + vec2(0.0, step_uv.y), 0.0, 1.0)).a;
-		float mask_lf = texture(texture_albedo, clamp(pix_uv + vec2(-step_uv.x, 0.0), 0.0, 1.0)).a;
-		float mask_rt = texture(texture_albedo, clamp(pix_uv + vec2(step_uv.x, 0.0), 0.0, 1.0)).a;
+		float mask_up = texture(texture_albedo, clamp(sample_uv + vec2(0.0, -step_uv.y), 0.0, 1.0)).a;
+		float mask_dn = texture(texture_albedo, clamp(sample_uv + vec2(0.0, step_uv.y), 0.0, 1.0)).a;
+		float mask_lf = texture(texture_albedo, clamp(sample_uv + vec2(-step_uv.x, 0.0), 0.0, 1.0)).a;
+		float mask_rt = texture(texture_albedo, clamp(sample_uv + vec2(step_uv.x, 0.0), 0.0, 1.0)).a;
 
-		float flu_up = texture(fluid_texture, clamp(pix_uv + vec2(0.0, -step_uv.y), 0.0, 1.0)).a;
-		float flu_dn = texture(fluid_texture, clamp(pix_uv + vec2(0.0, step_uv.y), 0.0, 1.0)).a;
-		float flu_lf = texture(fluid_texture, clamp(pix_uv + vec2(-step_uv.x, 0.0), 0.0, 1.0)).a;
-		float flu_rt = texture(fluid_texture, clamp(pix_uv + vec2(step_uv.x, 0.0), 0.0, 1.0)).a;
+		float flu_up = texture(fluid_texture, clamp(sample_uv + vec2(0.0, -step_uv.y), 0.0, 1.0)).a;
+		float flu_dn = texture(fluid_texture, clamp(sample_uv + vec2(0.0, step_uv.y), 0.0, 1.0)).a;
+		float flu_lf = texture(fluid_texture, clamp(sample_uv + vec2(-step_uv.x, 0.0), 0.0, 1.0)).a;
+		float flu_rt = texture(fluid_texture, clamp(sample_uv + vec2(step_uv.x, 0.0), 0.0, 1.0)).a;
 
-		bool air_up = (flu_up < 0.25) && (mask_up > 0.1 || pix_uv.y <= step_uv.y * 1.5);
+		bool air_up = (flu_up < 0.25) && (mask_up > 0.1 || sample_uv.y <= step_uv.y * 1.5);
 		bool air_dn = (flu_dn < 0.25) && (mask_dn > 0.1);
 		bool air_lf = (flu_lf < 0.25) && (mask_lf > 0.1);
 		bool air_rt = (flu_rt < 0.25) && (mask_rt > 0.1);
 		float is_surface = (air_up || air_dn || air_lf || air_rt) ? 1.0 : 0.0;
 
-		float depth_factor = clamp((pix_uv.y - inner_margin_top) / max(inner_margin_bottom - inner_margin_top, 0.1), 0.0, 1.0);
+		float depth_factor = clamp((sample_uv.y - inner_margin_top) / max(inner_margin_bottom - inner_margin_top, 0.1), 0.0, 1.0);
 		vec3 base_col = fluid.rgb * mix(1.0, 1.0 - bottom_darkening, depth_factor);
 
-		float beam = sin(pix_uv.x * 14.0 + TIME * 1.4 + pix_uv.y * 5.0) * 0.5 + 0.5;
+		float beam = sin(sample_uv.x * 14.0 + TIME * 1.4 + sample_uv.y * 5.0) * 0.5 + 0.5;
 		base_col += base_col * pow(beam, 3.0) * caustic_beam_strength * (1.0 - depth_factor * 0.5);
 
-		float sp_cell = hash12(floor(pix_uv * res) + floor(TIME * 2.5) * 0.17);
+		float sp_cell = hash12(floor(sample_uv * res) + floor(TIME * 2.5) * 0.17);
 		if (sp_cell > (1.0 - sparkle_density * 0.045)) {
 			base_col += vec3(0.28);
 		}

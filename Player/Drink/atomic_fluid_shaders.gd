@@ -207,7 +207,9 @@ void main() {
 	if (y <= 0 && v.y < 0.0) v.y = 0.0;
 	if (y >= N - 1 && v.y > 0.0) v.y = 0.0;
 
-	if (sdf.w < 0.5 || sdf.z <= 1.05) {
+	float n_len_raw = length(sdf.xy);
+	bool is_top_mouth = (sdf.w > 1.5 && n_len_raw > 0.001 && (sdf.y / n_len_raw) > 0.25);
+	if (sdf.w < 0.5 || (!is_top_mouth && sdf.z <= 1.05) || sdf.z <= 0.55) {
 		vec2 n = sdf.xy;
 		float n_len = length(n);
 		if (n_len > 0.001) {
@@ -507,11 +509,11 @@ void main() {
 	particles[pid].pos_props.xy = pos;
 
 	float d_rho = max(0.0, vol_den - pc.rest_density);
-	float max_pressure = min(40000.0, 35.0 / max(4.0 * pc.dt * vol_w, 0.0001));
+	float max_pressure = rho_p * min(40000.0, 35.0 / max(4.0 * pc.dt * vol_w, 0.0001));
 	float div_v = C[0][0] + C[1][1];
-	float raw_pressure = pc.stiffness * (d_rho + 1.2 * d_rho * d_rho);
+	float raw_pressure = rho_p * pc.stiffness * (d_rho + 1.2 * d_rho * d_rho);
 	if (vol_den > pc.rest_density * 0.85) {
-		raw_pressure -= 12.0 * div_v;
+		raw_pressure -= rho_p * 12.0 * div_v;
 	}
 	float pressure = clamp(raw_pressure, 0.0, max_pressure);
 	float m_p = vol_w * rho_p;

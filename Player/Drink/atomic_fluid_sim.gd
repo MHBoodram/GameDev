@@ -11,9 +11,11 @@ const PARTICLE_STRIDE := 48
 const GRID_GRAVITY := 65.0
 const MAX_GRID_ACCEL := 550.0
 const MAX_IMPULSE_VEL := 65.0
-const EOS_STIFFNESS := 15000.0
-const CFL_PRESSURE_LIMIT := 0.03
+const EOS_STIFFNESS := 20000.0
+const CFL_PRESSURE_LIMIT := 0.04
 const REST_DENSITY := 1.00
+const WALL_PACKING_LOSS := 0.03
+const TOP_SEAL_PRESSURE_OFFSET := 0.85
 const MOUTH_WEIGHT_THRESHOLD := 40
 
 const STEPS_PER_SECOND := 1250.0
@@ -61,6 +63,7 @@ var _bottom_y: int = GRID_SIZE - 5
 var _sdf_bytes: PackedByteArray = PackedByteArray()
 var _max_particles: int = 0
 var _active_count: int = 0
+var _fill_ratio: float = 0.0
 
 var _synced_amounts: Dictionary = {} # ingredient_key -> float amount
 var _synced_total: float = 0.0
@@ -286,6 +289,7 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 		return
 
 	var fill_ratio := clampf(total_amt / capacity, 0.0, 1.0)
+	_fill_ratio = fill_ratio
 	var target_count := clampi(roundi(fill_ratio * float(_max_particles)), 1, _max_particles)
 
 	if _active_count == 0:
@@ -373,6 +377,7 @@ func sync_container_liquids(liquids: Array, capacity: float, is_mixed_flag: bool
 
 func _sync_empty() -> void:
 	_reset_mouth_state()
+	_fill_ratio = 0.0
 	if _active_count == 0 and _synced_total <= 0.0:
 		return
 	_active_count = 0
@@ -383,6 +388,18 @@ func _sync_empty() -> void:
 	_last_single_rho = -1.0
 	_last_single_visc = -1.0
 	_pending_ops.append({"op": "clear"})
+
+
+func _compute_effective_rest_density(fill_ratio: float, effective_stiffness: float) -> float:
+	if fill_ratio <= 0.0:
+		return REST_DENSITY
+	var container_h := float(maxi(1, _bottom_y - _top_rim_y + 1))
+	var col_h := container_h * clampf(fill_ratio, 0.0, 1.0)
+	var avg_pressure := 0.5 * GRID_GRAVITY * col_h
+	var u := avg_pressure / maxf(effective_stiffness, 1.0)
+	var avg_d_rho := (-1.0 + sqrt(1.0 + 4.8 * u)) / 2.4
+	var top_seal := TOP_SEAL_PRESSURE_OFFSET * pow(smoothstep(0.85, 1.0, fill_ratio), 1.6)
+	return clampf((1.0 - WALL_PACKING_LOSS) / (1.0 + top_seal) - avg_d_rho, 0.35, 0.98)
 
 
 func step(delta: float, local_accel_world: Vector2, viscosity: float) -> void:
@@ -424,7 +441,7 @@ func step(delta: float, local_accel_world: Vector2, viscosity: float) -> void:
 
 	if _gpu_available:
 		RenderingServer.call_on_render_thread(
-			AtomicFluidSim._gpu_step_static.bind(self, clamped_delta, accel_with_imp, clampf(viscosity, 0.0, 1.0), _active_count, _last_down_dir, ops_copy, want_mouth_readback, _mouth_readback_gen)
+			AtomicFluidSim._gpu_step_static.bind(self, clamped_delta, accel_with_imp, clampf(viscosity, 0.0, 1.0), _active_count, _fill_ratio, _last_down_dir, ops_copy, want_mouth_readback, _mouth_readback_gen)
 		)
 	else:
 		_cpu_step(clamped_delta, accel_with_imp, clampf(viscosity, 0.0, 1.0), ops_copy)
@@ -518,9 +535,9 @@ static func _gpu_init_static(sim: AtomicFluidSim, sdf_bytes: PackedByteArray) ->
 		sim._gpu_init_instance(sdf_bytes)
 
 
-static func _gpu_step_static(sim: AtomicFluidSim, frame_dt: float, accel: Vector2, viscosity: float, active_count: int, down_dir: Vector2, ops: Array, want_mouth_readback: bool, readback_gen: int) -> void:
+static func _gpu_step_static(sim: AtomicFluidSim, frame_dt: float, accel: Vector2, viscosity: float, active_count: int, fill_ratio: float, down_dir: Vector2, ops: Array, want_mouth_readback: bool, readback_gen: int) -> void:
 	if sim and not sim._disposed:
-		sim._gpu_step(frame_dt, accel, viscosity, active_count, down_dir, ops, want_mouth_readback, readback_gen)
+		sim._gpu_step(frame_dt, accel, viscosity, active_count, fill_ratio, down_dir, ops, want_mouth_readback, readback_gen)
 
 
 static func _free_rids_on_render_thread(rids: Array[RID], uniform_sets: Array[RID] = []) -> void:
@@ -1325,7 +1342,7 @@ static func _dispatch(rd: RenderingDevice, pip: RID, uset: RID, groups_x: int, g
 	rd.compute_list_end()
 
 
-func _gpu_step(frame_dt: float, accel: Vector2, viscosity: float, active_count: int, down_dir: Vector2, ops: Array, want_mouth_readback: bool, readback_gen: int) -> void:
+func _gpu_step(frame_dt: float, accel: Vector2, viscosity: float, active_count: int, fill_ratio: float, down_dir: Vector2, ops: Array, want_mouth_readback: bool, readback_gen: int) -> void:
 	if _disposed or _disposed_rt:
 		return
 	var rd := RenderingServer.get_rendering_device()
@@ -1389,8 +1406,9 @@ func _gpu_step(frame_dt: float, accel: Vector2, viscosity: float, active_count: 
 	var sim_dt := frame_dt * float(maxi(STEP_SKIP, 1))
 	var sub_dt := sim_dt / float(substeps)
 	var effective_stiffness := minf(EOS_STIFFNESS, CFL_PRESSURE_LIMIT / maxf(sub_dt * sub_dt, 0.0000001))
+	var eff_rest_density := _compute_effective_rest_density(fill_ratio, effective_stiffness)
 	var part_groups: int = _groups_for(active_count)
-	var pc := _pack_pc(sub_dt, accel.x, accel.y, viscosity, GRID_GRAVITY, effective_stiffness, REST_DENSITY, active_count)
+	var pc := _pack_pc(sub_dt, accel.x, accel.y, viscosity, GRID_GRAVITY, effective_stiffness, eff_rest_density, active_count)
 
 	for _s in substeps:
 		_flip_flop = not _flip_flop
@@ -1593,6 +1611,10 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 	var sim_dt := frame_dt * float(maxi(STEP_SKIP, 1))
 	var dt := clampf(sim_dt / float(cpu_substeps), 0.001, 0.018)
 	var cpu_stiffness := minf(CPU_PRESSURE_STIFFNESS, CPU_CFL_PRESSURE_LIMIT / maxf(dt * dt, 0.00001))
+	var col_h_cpu := float(maxi(1, _bottom_y - _top_rim_y + 1)) * 0.5 * clampf(_fill_ratio, 0.0, 1.0)
+	var cpu_avg_d_rho := clampf((0.677 * col_h_cpu) / maxf(cpu_stiffness, 1.0), 0.0, 0.35)
+	var cpu_top_seal := TOP_SEAL_PRESSURE_OFFSET * pow(smoothstep(0.85, 1.0, _fill_ratio), 1.6)
+	var cpu_rest_density := clampf((1.0 - WALL_PACKING_LOSS) / (1.0 + cpu_top_seal) - cpu_avg_d_rho, 0.35, 0.98)
 	var half_accel := accel * 0.5
 
 	for _sub in cpu_substeps:
@@ -1614,7 +1636,7 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 			_cpu_cell_visc[idx] += m * p_v
 
 		for idx in CPU_N * CPU_N:
-			_cpu_cell_p[idx] = clampf(maxf(0.0, _cpu_vol[idx] - REST_DENSITY) * cpu_stiffness, 0.0, 120.0)
+			_cpu_cell_p[idx] = clampf(maxf(0.0, _cpu_vol[idx] - cpu_rest_density) * cpu_stiffness, 0.0, 120.0)
 
 		for y in CPU_N:
 			for x in CPU_N:
@@ -1633,7 +1655,7 @@ func _cpu_step(frame_dt: float, accel: Vector2, viscosity: float, ops: Array) ->
 						vx = maxf(vx, 0.0)
 					if x >= CPU_N - 2 or _cpu_mask[idx + 1] == 0:
 						vx = minf(vx, 0.0)
-					if y <= 1 or _cpu_mask[idx - CPU_N] == 0:
+					if y <= 1 or (_cpu_mouth_mask[idx] == 0 and _cpu_mask[idx - CPU_N] == 0):
 						vy = maxf(vy, 0.0)
 					if y >= CPU_N - 2 or _cpu_mask[idx + CPU_N] == 0:
 						vy = minf(vy, 0.0)
