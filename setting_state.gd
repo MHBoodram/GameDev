@@ -1,11 +1,17 @@
 extends Node
+signal shaken_receipt_mode_changed(mode: String)
+
 const SAVE_PATH = "user://setting_state.dat"
+const SHAKEN_MODE_SPLIT = "split"
+const SHAKEN_MODE_AVERAGED = "averaged"
+
 const DEFAULT_SETTING = {
 	"Video" :
 		{
 		"FullScreen" : false,
 		"Resolution" : false,
-		"WorldEnvironment" : true
+		"WorldEnvironment" : true,
+		"ShakenReceiptMode" : SHAKEN_MODE_SPLIT
 		},
 	"Control" :
 		{
@@ -62,13 +68,14 @@ func bind_settings_panel(config: Dictionary) -> void:
 	var sfx_slider := config.get("sfx_slider") as Range
 	var fullscreen_btn := config.get("fullscreen_btn") as BaseButton
 	var world_env_btn := config.get("world_env_btn") as BaseButton
+	var shaken_receipt_btn := config.get("shaken_receipt_btn") as BaseButton
 	var audio_reset_btn := config.get("audio_reset_btn") as BaseButton
 	var control_reset_btn := config.get("control_reset_btn") as BaseButton
 	var invert_pour_btn := config.get("invert_pour_btn") as BaseButton
 	var control_buttons: Dictionary = config.get("control_buttons", {})
 
 	_active_control_buttons = control_buttons
-	apply_settings_to_ui(master_slider, ui_slider, music_slider, fullscreen_btn, world_env_btn, control_buttons, invert_pour_btn)
+	apply_settings_to_ui(master_slider, ui_slider, music_slider, fullscreen_btn, world_env_btn, control_buttons, invert_pour_btn, shaken_receipt_btn)
 
 	if is_instance_valid(master_slider) and not master_slider.get_meta("_setting_state_bound", false):
 		master_slider.set_meta("_setting_state_bound", true)
@@ -105,6 +112,13 @@ func bind_settings_panel(config: Dictionary) -> void:
 		world_env_btn.set_meta("_setting_state_bound", true)
 		world_env_btn.pressed.connect(func() -> void:
 			set_world_environment(world_env_btn.button_pressed)
+		)
+
+	if is_instance_valid(shaken_receipt_btn) and not shaken_receipt_btn.get_meta("_setting_state_bound", false):
+		shaken_receipt_btn.set_meta("_setting_state_bound", true)
+		shaken_receipt_btn.pressed.connect(func() -> void:
+			toggle_shaken_receipt_mode()
+			shaken_receipt_btn.text = get_shaken_receipt_mode_label()
 		)
 
 	if is_instance_valid(invert_pour_btn) and not invert_pour_btn.get_meta("_setting_state_bound", false):
@@ -172,6 +186,8 @@ func _loading_setting():
 							setting_dic[main_key][sub_key] = "_"
 						"Audio":
 							setting_dic[main_key][sub_key] = 0
+		if setting_dic.has("Video"):
+			setting_dic["Video"]["ShakenReceiptMode"] = get_shaken_receipt_mode()
 		apply_world_environment()
 		apply_audio_settings()
 
@@ -245,6 +261,32 @@ func set_world_environment(enabled: bool) -> void:
 	setting_dic["Video"]["WorldEnvironment"] = enabled
 	apply_world_environment()
 
+func get_shaken_receipt_mode() -> String:
+	var raw := str(setting_dic.get("Video", {}).get("ShakenReceiptMode", SHAKEN_MODE_SPLIT)).to_lower().strip_edges()
+	if raw == SHAKEN_MODE_AVERAGED:
+		return SHAKEN_MODE_AVERAGED
+	return SHAKEN_MODE_SPLIT
+
+func set_shaken_receipt_mode(mode: String) -> void:
+	var clean := SHAKEN_MODE_AVERAGED if mode.to_lower().strip_edges() == SHAKEN_MODE_AVERAGED else SHAKEN_MODE_SPLIT
+	if not setting_dic.has("Video"):
+		setting_dic["Video"] = {}
+	var changed: bool = str(setting_dic["Video"].get("ShakenReceiptMode", "")) != clean
+	setting_dic["Video"]["ShakenReceiptMode"] = clean
+	if changed:
+		shaken_receipt_mode_changed.emit(clean)
+
+func toggle_shaken_receipt_mode() -> String:
+	var next_mode := SHAKEN_MODE_AVERAGED if get_shaken_receipt_mode() == SHAKEN_MODE_SPLIT else SHAKEN_MODE_SPLIT
+	set_shaken_receipt_mode(next_mode)
+	return next_mode
+
+func get_shaken_receipt_mode_label(mode: String = "") -> String:
+	var target_mode := get_shaken_receipt_mode() if mode == "" else mode.to_lower().strip_edges()
+	if target_mode == SHAKEN_MODE_AVERAGED:
+		return "Shaken Receipt: Averaged Color"
+	return "Shaken Receipt: Vertical Split"
+
 func set_invert_pouring_angle(enabled: bool) -> void:
 	setting_dic["Control"]["InvertPouringAngle"] = enabled
 
@@ -276,7 +318,8 @@ func apply_settings_to_ui(
 	fullscreen_btn: BaseButton,
 	world_env_btn: BaseButton,
 	control_buttons: Dictionary,
-	invert_pour_btn: BaseButton = null
+	invert_pour_btn: BaseButton = null,
+	shaken_receipt_btn: BaseButton = null
 ) -> void:
 	if is_instance_valid(master_slider):
 		master_slider.value = setting_dic["Audio"]["Master_value"]
@@ -294,6 +337,9 @@ func apply_settings_to_ui(
 	if is_instance_valid(world_env_btn):
 		world_env_btn.button_pressed = world_env_enabled
 	apply_world_environment()
+
+	if is_instance_valid(shaken_receipt_btn):
+		shaken_receipt_btn.text = get_shaken_receipt_mode_label()
 
 	for action_name in control_buttons:
 		var btn := control_buttons[action_name] as Button

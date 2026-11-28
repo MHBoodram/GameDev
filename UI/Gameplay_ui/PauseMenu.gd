@@ -39,6 +39,7 @@ func _load_settings() -> void:
 		"audio_reset_btn": $Inside_paper/Left_color/Left_Page/Audio_Container/Audio_reset,
 		"fullscreen_btn": $Inside_paper/Left_color/Left_Page/Video/Full_Screen,
 		"world_env_btn": $Inside_paper/Left_color/Left_Page/Video/World_Environment,
+		"shaken_receipt_btn": $Inside_paper/Left_color/Left_Page/Video/Shaken_Receipt,
 		"control_buttons": _get_control_buttons(),
 		"control_reset_btn": $Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Control_reset,
 		"invert_pour_btn": $Inside_paper/Right_Color/Right_Page/Controls/Controls/VBoxContainer/Invert_Pour,

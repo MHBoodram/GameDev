@@ -412,6 +412,11 @@ theme_override_font_sizes/font_size = 30
 button_pressed = true
 text = "World Environment"
 
+[node name="Shaken_Receipt" type="Button" parent="Inside_paper/Left_color/Left_Page/Video" unique_id=46790683]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Shaken Receipt: Vertical Split"
+
 [node name="Audio_Label" type="Label" parent="Inside_paper/Left_color/Left_Page" unique_id=235630147]
 layout_mode = 2
 theme_override_colors/font_outline_color = Color(1, 1, 1, 1)

@@ -12,6 +12,10 @@ const LOGOS_SHEET := preload("res://Assets/NPC/UI/Logos-Sheet.png")
 var _has_order_render: bool = false
 var _seat_num: int = 1
 var _drink_name: String = ""
+var _current_order: DrinkOrder = null
+var _current_species_def: SpeciesBase = null
+var _current_modifier: ModifierBase = null
+var _current_aspect_comp: float = 1.4715
 
 func _ready() -> void:
 	if customer_icon and customer_icon.texture == null:
@@ -20,6 +24,17 @@ func _ready() -> void:
 	if order_label:
 		order_label.visible = false
 	_update_header_text()
+	if SettingState and SettingState.has_signal("shaken_receipt_mode_changed"):
+		if not SettingState.shaken_receipt_mode_changed.is_connected(_on_shaken_receipt_mode_changed):
+			SettingState.shaken_receipt_mode_changed.connect(_on_shaken_receipt_mode_changed)
+
+func _exit_tree() -> void:
+	if SettingState and SettingState.has_signal("shaken_receipt_mode_changed"):
+		if SettingState.shaken_receipt_mode_changed.is_connected(_on_shaken_receipt_mode_changed):
+			SettingState.shaken_receipt_mode_changed.disconnect(_on_shaken_receipt_mode_changed)
+
+func _on_shaken_receipt_mode_changed(_mode: String) -> void:
+	refresh_drink_order()
 
 func _update_header_text() -> void:
 	if seat_label:
@@ -50,6 +65,10 @@ func _set_drink_order(
 	aspect_comp: float = 1.4715
 ) -> void:
 	_has_order_render = true
+	_current_order = order
+	_current_species_def = species_def
+	_current_modifier = modifier
+	_current_aspect_comp = aspect_comp
 
 	var resolved_name := drink_name.strip_edges()
 	if resolved_name == "":
@@ -62,6 +81,12 @@ func _set_drink_order(
 		order_label.visible = false
 
 	var tex := ReceiptDrinkRenderer.get_or_render_order_texture(order, species_def, modifier, aspect_comp)
+	_apply_preview_texture(tex)
+
+func refresh_drink_order() -> void:
+	if not _has_order_render or _current_order == null:
+		return
+	var tex := ReceiptDrinkRenderer.get_or_render_order_texture(_current_order, _current_species_def, _current_modifier, _current_aspect_comp)
 	_apply_preview_texture(tex)
 
 func _apply_preview_texture(tex: Texture2D) -> void:
@@ -93,6 +118,9 @@ func _apply_preview_texture(tex: Texture2D) -> void:
 func clear_drink_order() -> void:
 	_has_order_render = false
 	_drink_name = ""
+	_current_order = null
+	_current_species_def = null
+	_current_modifier = null
 	_update_header_text()
 	_apply_preview_texture(null)
 	if order_label:

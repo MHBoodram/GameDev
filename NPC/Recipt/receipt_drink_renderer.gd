@@ -41,6 +41,14 @@ static var _liquid_resources_scanned: bool = false
 static var _liquid_resource_cache: Dictionary = {}
 static var _custom_liquid_colors: Dictionary = {}
 
+static func get_shaken_render_mode() -> String:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree and tree.root:
+		var ss := tree.root.get_node_or_null("SettingState")
+		if is_instance_valid(ss) and ss.has_method("get_shaken_receipt_mode"):
+			return str(ss.call("get_shaken_receipt_mode"))
+	return "split"
+
 static func get_order_display_name(order: DrinkOrder) -> String:
 	if order == null:
 		return ""
@@ -68,8 +76,9 @@ static func get_or_render_order_texture(
 		push_warning("ReceiptDrinkRenderer: order is null.")
 		return null
 
+	var shaken_mode := get_shaken_render_mode()
 	var eff_aspect: float = aspect_comp if aspect_comp > 0.1 else 1.0
-	var cache_key := _build_cache_key(order, species_def, modifier, eff_aspect)
+	var cache_key := _build_cache_key(order, species_def, modifier, eff_aspect, shaken_mode)
 	if _order_tex_cache.has(cache_key):
 		var cached := _order_tex_cache[cache_key] as Texture2D
 		if is_instance_valid(cached):
@@ -113,7 +122,7 @@ static func get_or_render_order_texture(
 
 	# 2. Draw liquid + glass sheen (Outside)
 	if outside_img != null and not outside_img.is_empty():
-		var fluid_grid := _build_fluid_grid(spec, order, fill_ratio, is_shaken, is_anything)
+		var fluid_grid := _build_fluid_grid(spec, order, fill_ratio, is_shaken, is_anything, shaken_mode)
 		var rel_scale: Vector2 = spec["outside_rel_scale"] as Vector2
 		var out_w: int = maxi(1, roundi(float(cup_w) * rel_scale.x))
 		var out_h: int = maxi(1, roundi(float(cup_h) * rel_scale.y))
@@ -537,7 +546,8 @@ static func _build_fluid_grid(
 	order: DrinkOrder,
 	fill_ratio: float,
 	is_shaken: bool,
-	is_anything: bool
+	is_anything: bool,
+	shaken_mode: String = "split"
 ) -> Image:
 	var rows: Array[Dictionary] = spec["mask_rows"] as Array[Dictionary]
 	var img := Image.create(GRID_SIZE, GRID_SIZE, false, Image.FORMAT_RGBA8)
@@ -557,25 +567,37 @@ static func _build_fluid_grid(
 	var bottom_y: int = int(rows[0]["y"])
 	var surface_y: int = int(rows[top_row_idx]["y"])
 	var y_span: float = maxf(float(bottom_y - surface_y), 1.0)
-	var slices := _build_color_slices(order, is_shaken, is_anything)
+	var slices := _build_color_slices(order, is_shaken, is_anything, shaken_mode)
+	var use_vertical_split := (not is_anything) and is_shaken and shaken_mode != "averaged" and slices.size() >= 2
 
 	for r_idx in range(top_row_idx + 1):
 		var row: Dictionary = rows[r_idx]
 		var y: int = int(row["y"])
 		var h_t: float = clampf(float(bottom_y - y) / y_span, 0.0, 1.0)
-		var col: Color
-		if is_anything:
-			var gray := lerpf(0.04, 0.98, h_t)
-			col = Color(gray, gray, gray, 1.0)
-		else:
-			col = _sample_slices_color(slices, h_t)
 		var xs: PackedInt32Array = row["xs"]
-		for x in xs:
-			img.set_pixel(x, y, col)
+		if xs.is_empty():
+			continue
+		if use_vertical_split:
+			var row_min_x: int = xs[0]
+			var row_max_x: int = xs[xs.size() - 1]
+			var x_span: float = maxf(float(row_max_x - row_min_x + 1), 1.0)
+			for x in xs:
+				var w_t: float = clampf((float(x - row_min_x) + 0.5) / x_span, 0.0, 1.0)
+				var col := _sample_slices_color(slices, w_t, 0.0)
+				img.set_pixel(x, y, col)
+		else:
+			var col: Color
+			if is_anything:
+				var gray := lerpf(0.04, 0.98, h_t)
+				col = Color(gray, gray, gray, 1.0)
+			else:
+				col = _sample_slices_color(slices, h_t)
+			for x in xs:
+				img.set_pixel(x, y, col)
 
 	return img
 
-static func _build_color_slices(order: DrinkOrder, is_shaken: bool, is_anything: bool) -> Array[Dictionary]:
+static func _build_color_slices(order: DrinkOrder, is_shaken: bool, is_anything: bool, shaken_mode: String = "split") -> Array[Dictionary]:
 	var slices: Array[Dictionary] = []
 	if is_anything:
 		return slices
@@ -585,7 +607,7 @@ static func _build_color_slices(order: DrinkOrder, is_shaken: bool, is_anything:
 		slices.append({"start": 0.0, "end": 1.0, "color": Color.WHITE})
 		return slices
 
-	if is_shaken and norm_ings.size() >= 2:
+	if is_shaken and norm_ings.size() >= 2 and shaken_mode == "averaged":
 		var color_weights: Array = []
 		for ing_key in norm_ings.keys():
 			var ing_id := str(ing_key).to_lower().strip_edges()
@@ -625,7 +647,7 @@ static func _build_color_slices(order: DrinkOrder, is_shaken: bool, is_anything:
 
 	return slices
 
-static func _sample_slices_color(slices: Array[Dictionary], h_t: float) -> Color:
+static func _sample_slices_color(slices: Array[Dictionary], t: float, blend_band: float = 0.025) -> Color:
 	if slices.is_empty():
 		return Color.WHITE
 	if slices.size() == 1:
@@ -635,17 +657,17 @@ static func _sample_slices_color(slices: Array[Dictionary], h_t: float) -> Color
 		var s: Dictionary = slices[i]
 		var st := float(s["start"])
 		var en := float(s["end"])
-		if h_t <= en or i == slices.size() - 1:
+		if t <= en or i == slices.size() - 1:
 			var col := s["color"] as Color
-			var blend_band := 0.025
-			if i + 1 < slices.size() and en - h_t < blend_band:
-				var next_col := slices[i + 1]["color"] as Color
-				var mix_t := clampf((blend_band - (en - h_t)) / (blend_band * 2.0), 0.0, 0.5)
-				return col.lerp(next_col, mix_t)
-			if i > 0 and h_t - st < blend_band:
-				var prev_col := slices[i - 1]["color"] as Color
-				var mix_t := clampf((blend_band - (h_t - st)) / (blend_band * 2.0), 0.0, 0.5)
-				return col.lerp(prev_col, mix_t)
+			if blend_band > 0.0:
+				if i + 1 < slices.size() and en - t < blend_band:
+					var next_col := slices[i + 1]["color"] as Color
+					var mix_t := clampf((blend_band - (en - t)) / (blend_band * 2.0), 0.0, 0.5)
+					return col.lerp(next_col, mix_t)
+				if i > 0 and t - st < blend_band:
+					var prev_col := slices[i - 1]["color"] as Color
+					var mix_t := clampf((blend_band - (t - st)) / (blend_band * 2.0), 0.0, 0.5)
+					return col.lerp(prev_col, mix_t)
 			return col
 	return slices[slices.size() - 1]["color"] as Color
 
@@ -839,7 +861,8 @@ static func _build_cache_key(
 	order: DrinkOrder,
 	species_def: SpeciesBase,
 	modifier: ModifierBase,
-	aspect_comp: float
+	aspect_comp: float,
+	shaken_mode: String = "split"
 ) -> String:
 	var glass_id := order.required_glass.to_lower().strip_edges()
 	var is_anything := (not order.require_ingredient_match) or order.ingredients.is_empty()
@@ -871,7 +894,7 @@ static func _build_cache_key(
 	var sp_id := species_def.species_id if species_def else order.species_id
 	var mod_id := modifier.modifier_id if modifier else ""
 
-	return "%s|any=%s|fill=%.3f|ing=[%s]|proc=[%s]|gar=[%s]|ice=%s|tiny=%s|sp=%s|mod=%s|ar=%.3f" % [
+	return "%s|any=%s|fill=%.3f|ing=[%s]|proc=[%s]|gar=[%s]|ice=%s|tiny=%s|sp=%s|mod=%s|ar=%.3f|sm=%s" % [
 		glass_id,
 		str(is_anything),
 		fill_ratio,
@@ -883,4 +906,5 @@ static func _build_cache_key(
 		sp_id.to_upper(),
 		mod_id.to_upper(),
 		aspect_comp,
+		shaken_mode,
 	]

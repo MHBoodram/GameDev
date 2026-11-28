@@ -341,6 +341,11 @@ theme_override_font_sizes/font_size = 30
 button_pressed = true
 text = "World Environment"
 
+[node name="Shaken_Receipt" type="Button" parent="CenterContainer/VBoxContainer/Video/HBoxContainer" unique_id=1565457151]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Shaken Receipt: Vertical Split"
+
 [node name="Controls" type="VBoxContainer" parent="CenterContainer/VBoxContainer" unique_id=656008568]
 layout_mode = 2
 theme_override_constants/separation = 7
@@ -478,6 +483,8 @@ libraries/ = SubResource("AnimationLibrary_vvki5")
 [connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Video/HBoxContainer/Full_Screen" to="." method="_on_master_slider_mouse_exited"]
 [connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Video/HBoxContainer/World_Environment" to="." method="_on_master_slider_mouse_entered"]
 [connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Video/HBoxContainer/World_Environment" to="." method="_on_master_slider_mouse_exited"]
+[connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Video/HBoxContainer/Shaken_Receipt" to="." method="_on_master_slider_mouse_entered"]
+[connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Video/HBoxContainer/Shaken_Receipt" to="." method="_on_master_slider_mouse_exited"]
 [connection signal="mouse_entered" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Invert_Pour" to="." method="_on_master_slider_mouse_entered"]
 [connection signal="mouse_exited" from="CenterContainer/VBoxContainer/Controls/VBoxContainer/Invert_Pour" to="." method="_on_master_slider_mouse_exited"]
 [connection signal="mouse_entered" from="CenterContainer/VBoxContainer/SaveQuit" to="." method="_on_master_slider_mouse_entered"]

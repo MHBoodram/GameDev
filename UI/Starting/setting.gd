@@ -21,6 +21,7 @@ func _setting_dictionary_start() -> void:
 		"audio_reset_btn": $CenterContainer/VBoxContainer/Audio_Container/Audio_reset,
 		"fullscreen_btn": $CenterContainer/VBoxContainer/Video/HBoxContainer/Full_Screen,
 		"world_env_btn": $CenterContainer/VBoxContainer/Video/HBoxContainer/World_Environment,
+		"shaken_receipt_btn": $CenterContainer/VBoxContainer/Video/HBoxContainer/Shaken_Receipt,
 		"control_buttons": _get_control_buttons(),
 		"control_reset_btn": $CenterContainer/VBoxContainer/Controls/VBoxContainer/Control_reset,
 		"invert_pour_btn": $CenterContainer/VBoxContainer/Controls/VBoxContainer/Invert_Pour,
